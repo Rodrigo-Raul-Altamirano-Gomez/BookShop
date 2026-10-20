@@ -1,0 +1,43 @@
+@page "/deseados"
+@using Web.Componentes.Paginas.Catalogo
+@inherits PaginaCuenta
+<PageTitle>Deseados y favoritos · BookShop</PageTitle>
+<div class="container">
+    <nav class="breadcrumb">
+        <a href="/">Inicio</a>
+        <span>/</span>
+        <span>Cuenta</span>
+        <span>/</span>
+        <span>Deseados y favoritos</span>
+    </nav>
+    @if (Estado.Usuario is null)
+    {
+        <h1 class="page-heading">Deseados y favoritos</h1>
+        <div class="empty-state">
+            <Icono Nombre="heart" />
+            <h2>Guarda tus próximas lecturas</h2>
+            <p>Inicia sesión para consultar tus listas.</p>
+            <button class="btn btn-primary" @onclick="Estado.MostrarAcceso">Iniciar sesión</button>
+        </div>
+    }
+    else
+    {
+        <div class="tabs" role="tablist" aria-label="Listas personales">
+            <button
+                class="tab @(!PestanaFavoritos ? "active" : "")"
+                role="tab"
+                aria-selected="@(!PestanaFavoritos)"
+                @onclick="MostrarDeseados">
+                Deseados
+            </button>
+            <button
+                class="tab @(PestanaFavoritos ? "active" : "")"
+                role="tab"
+                aria-selected="@PestanaFavoritos"
+                @onclick="MostrarFavoritos">
+                Favoritos
+            </button>
+        </div>
+        <ExploradorCatalogo Libros="Libros" Titulo="Deseados y favoritos" />
+    }
+</div>

@@ -1,0 +1,137 @@
+@page "/comparacion"
+<PageTitle>Comparar libros · BookShop</PageTitle>
+<div class="container comparison-page">
+    <nav class="breadcrumb">
+        <a href="/">Inicio</a>
+        <span>/</span>
+        <span>Comparar libros</span>
+    </nav>
+    <h1>Comparar libros</h1>
+    <a href="/catalogo" class="back-link">← Volver al catálogo</a>
+    @if (First is null || Second is null || First.Id == Second.Id)
+    {
+        <div class="empty-state">
+            <Icono Nombre="compare" />
+            <h2>Elige dos lecturas para comparar</h2>
+            <p>Abre el detalle de un libro y pulsa Comparar para empezar.</p>
+            <a href="/catalogo" class="btn btn-primary">Explorar catálogo</a>
+        </div>
+    }
+    else
+    {
+        <div class="comparison-cards">
+            @foreach (var book in ComparedBooks)
+            {
+                <article class="panel comparison-card">
+                    <img src="@book.Portada" alt="@($"Portada de {book.Titulo}")" />
+                    <div>
+                        <h2>@book.Titulo</h2>
+                        <p>@book.Autor</p>
+                        <a class="btn btn-primary" href="@($"/libros/{book.Id}")">Ver libro</a>
+                        <button class="text-button" @onclick="() => QuitarLibro(book)">× Quitar</button>
+                    </div>
+                </article>
+            }
+        </div>
+        <div class="comparison-table panel">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Característica</th>
+                        <th>@First.Titulo</th>
+                        <th>@Second.Titulo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>Precio</th>
+                        @foreach (var book in ComparedBooks)
+                        {
+                            <td>
+                                <strong>@EstadoDemostracion.Dinero(book.Precio)</strong>
+                                @if (book.Descuento > 0)
+                                {
+                                    <del>@EstadoDemostracion.Dinero(book.PrecioOriginal)</del>
+                                    <span class="badge discount-badge">-@book.Descuento%</span>
+                                }
+                            </td>
+                        }
+                    </tr>
+                    <tr>
+                        <th>Valoración</th>
+                        @foreach (var book in ComparedBooks)
+                        {
+                            <td>
+                                @if (CantidadResenas(book) > 0)
+                                {
+                                    <span class="stars">★★★★★</span>
+                                    <span>@PromedioResenas(book).ToString("N1") / 5</span>
+                                    <small>(@CantidadResenas(book) reseñas)</small>
+                                }
+                                else
+                                {
+                                    <span class="muted">Sin reseñas</span>
+                                }
+                            </td>
+                        }
+                    </tr>
+                    <tr>
+                        <th>Autor</th>
+                        <td>@First.Autor</td>
+                        <td>@Second.Autor</td>
+                    </tr>
+                    <tr>
+                        <th>Idioma</th>
+                        <td>@First.Idioma</td>
+                        <td>@Second.Idioma</td>
+                    </tr>
+                    <tr>
+                        <th>Categoría</th>
+                        <td>@First.Categoria</td>
+                        <td>@Second.Categoria</td>
+                    </tr>
+                    <tr>
+                        <th>Editorial</th>
+                        <td>@First.Editorial</td>
+                        <td>@Second.Editorial</td>
+                    </tr>
+                    <tr>
+                        <th>Año de edición</th>
+                        <td>@First.Anio</td>
+                        <td>@Second.Anio</td>
+                    </tr>
+                    <tr>
+                        <th>Páginas</th>
+                        <td>@First.Paginas</td>
+                        <td>@Second.Paginas</td>
+                    </tr>
+                    <tr>
+                        <th>Peso</th>
+                        <td>@First.Peso</td>
+                        <td>@Second.Peso</td>
+                    </tr>
+                    <tr>
+                        <th>Dimensiones</th>
+                        <td>@First.Dimensiones</td>
+                        <td>@Second.Dimensiones</td>
+                    </tr>
+                    <tr>
+                        <th>Saga</th>
+                        <td>@ValorODash(First.Saga)</td>
+                        <td>@ValorODash(Second.Saga)</td>
+                    </tr>
+                    <tr>
+                        <th>Tomo</th>
+                        <td>@(First.Tomo?.ToString() ?? "—")</td>
+                        <td>@(Second.Tomo?.ToString() ?? "—")</td>
+                    </tr>
+                    <tr>
+                        <th>Disponibilidad</th>
+                        <td>@Disponibilidad(First)</td>
+                        <td>@Disponibilidad(Second)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

@@ -1,0 +1,72 @@
+.admin-reviews {
+    border:1px solid var(--border,#dce4df);
+    border-radius:10px;
+    padding:0 25px;
+    margin-top:22px
+}
+.admin-review {
+    display:flex;
+    align-items:flex-start;
+    gap:24px;
+    padding:27px 0;
+    border-bottom:1px solid #e2e8e4
+}
+.admin-review:last-child {
+    border-bottom:0
+}
+.review-images {
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    width:128px;
+    flex-shrink:0
+}
+.user-image {
+    width:47px;
+    height:47px;
+    object-fit:cover;
+    border-radius:50%
+}
+.book-image {
+    width:53px;
+    height:78px;
+    object-fit:cover;
+    border-radius:3px;
+    box-shadow:0 2px 6px #0002
+}
+.review-content {
+    display:grid;
+    gap:8px;
+    flex:1;
+    min-width:0
+}
+.review-content>a {
+    color:var(--green,#0a5140);
+    font-size:15px
+}
+.review-content>strong {
+    font-size:16px
+}
+.review-content time {
+    font-size:13px
+}
+.review-content p {
+    line-height:1.65;
+    margin:3px 0 7px
+}
+.review-votes {
+    display:flex;
+    align-items:center;
+    gap:7px;
+    font-size:13px
+}
+.review-votes ::deep svg {
+    width:15px;
+    height:15px
+}
+.admin-review>.btn {
+    margin-top:8px
+}
+.results-heading>select {
+    max-width:240px
+}

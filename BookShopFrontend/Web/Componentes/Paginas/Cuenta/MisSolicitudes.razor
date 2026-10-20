@@ -1,0 +1,222 @@
+@page "/mis-solicitudes"
+@inherits PaginaCuenta
+<PageTitle>Mis solicitudes · BookShop</PageTitle>
+<div class="container">
+    <nav class="breadcrumb">
+        <a href="/">Inicio</a>
+        <span>/</span>
+        <span>Cuenta</span>
+        <span>/</span>
+        <span>Mis solicitudes</span>
+    </nav>
+    @if (Estado.Usuario is null)
+    {
+        <h1 class="page-heading">Mis solicitudes</h1>
+        <div class="empty-state">
+            <Icono Nombre="report" />
+            <h2>Consulta tus solicitudes</h2>
+            <p>Inicia sesión para ver tus devoluciones y reportes.</p>
+            <button class="btn btn-primary" @onclick="Estado.MostrarAcceso">Iniciar sesión</button>
+        </div>
+    }
+    else
+    {
+        <div class="catalog-layout">
+            <aside class="filters">
+                <h2>Filtros</h2>
+                <div class="filter-group">
+                    <h3>Estado de la solicitud</h3>
+                    @foreach (var estado in Estados)
+                    {
+                        <label class="check-field">
+                            <input
+                                type="checkbox"
+                                checked="@EstadosPreparados.Contains(estado)"
+                                @onchange="() => SeleccionarEstado(estado)"
+                                />
+                            @estado
+                        </label>
+                    }
+                </div>
+                <div class="filter-group">
+                    <h3>Filtros activos</h3>
+                    <div class="chips">
+                        @if (EstadosAplicados.Count == 0)
+                        {
+                            <span class="muted">Ninguno</span>
+                        }
+                        @foreach (var estado in EstadosAplicados)
+                        {
+                            <button
+                                class="chip"
+                                @onclick="() => QuitarEstado(estado)"
+                                aria-label="Quitar filtro @estado">
+                                @estado
+                                <Icono Nombre="close" />
+                            </button>
+                        }
+                    </div>
+                </div>
+                <button class="btn btn-primary" @onclick="AplicarFiltros">Aplicar filtros</button>
+                <button class="btn btn-secondary" @onclick="LimpiarFiltros">Limpiar filtros</button>
+            </aside>
+            <section>
+                <div class="results-heading">
+                    <h1>
+                        Mis solicitudes
+                        <span>@Solicitudes.Count solicitudes</span>
+                    </h1>
+                </div>
+                <div class="tabs" role="tablist" aria-label="Tipos de solicitud">
+                    <button
+                        class="tab @(Tipo == "Devoluciones" ? "active" : "")"
+                        role="tab"
+                        aria-selected="@(Tipo == "Devoluciones")"
+                        @onclick="MostrarDevoluciones">
+                        Devoluciones
+                    </button>
+                    <button
+                        class="tab @(Tipo == "Reportes" ? "active" : "")"
+                        role="tab"
+                        aria-selected="@(Tipo == "Reportes")"
+                        @onclick="MostrarReportes">
+                        Reportes
+                    </button>
+                </div>
+                @if (Solicitudes.Count == 0)
+                {
+                    <div class="empty-state">
+                        <h2>No hay solicitudes para mostrar</h2>
+                        <p>Prueba a cambiar los filtros o la pestaña seleccionada.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="request-list">
+                        @foreach (var solicitud in SolicitudesPagina)
+                        {
+                            <article class="panel request-row">
+                                <div class="request-identity">
+                                    <h2>Solicitud N.º @solicitud.Id</h2>
+                                    <p class="muted">
+                                        Fecha: @solicitud.FechaCreacion.ToString("dd/MM/yyyy, HH:mm")
+                                    </p>
+                                    <p class="muted">
+                                        @(Tipo == "Devoluciones" ? "Pedido" : "Reseña") N.º
+                                        @solicitud.IdReferencia
+                                    </p>
+                                </div>
+                                <div class="request-reason">
+                                    <span class="muted">Motivo:</span>
+                                    <p>@solicitud.Motivo</p>
+                                </div>
+                                <span class="status @ClaseEstado(solicitud.Estado)">@solicitud.Estado</span>
+                                <div class="request-actions">
+                                    <button class="btn btn-secondary" @onclick="() => Consultar(solicitud)">
+                                        <Icono Nombre="eye" />
+                                        @(Tipo == "Devoluciones" ? "Ver pedido" : "Ver reseña")
+                                    </button>
+                                    @if (solicitud.Estado == "Pendiente")
+                                    {
+                                        <button class="btn btn-secondary" @onclick="() => Editar(solicitud)">
+                                            <Icono Nombre="edit" />
+                                            Editar
+                                        </button>
+                                        <button class="btn btn-danger" @onclick="() => Retirar(solicitud)">
+                                            <Icono Nombre="trash" />
+                                            Retirar
+                                        </button>
+                                    }
+                                </div>
+                            </article>
+                        }
+                    </div>
+                    <Paginacion Pagina="Pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
+                }
+            </section>
+        </div>
+    }
+</div>
+@if (EnEdicion is not null)
+{
+    <Modal
+        Titulo="@(EnEdicion.Tipo == "Devoluciones" ? "Editar solicitud de devolución" : "Editar reporte")"
+        AlCerrar="CerrarEdicion">
+        <form @onsubmit="Guardar" @onsubmit:preventDefault novalidate>
+            <label class="field">
+                Motivo *
+                <select @bind="Motivo">
+                    <option value="">Selecciona un motivo</option>
+                    @foreach (var motivo in Motivos)
+                    {
+                        <option>@motivo</option>
+                    }
+                </select>
+            </label>
+            <label class="field">
+                Comentario adicional
+                <textarea rows="5" @bind="Comentario" @bind:event="oninput" maxlength="2000">
+                </textarea>
+            </label>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" type="button" @onclick="CerrarEdicion">Cancelar</button>
+                <button class="btn btn-primary" type="submit" disabled="@(Motivo.Length == 0)">
+                    Guardar cambios
+                </button>
+            </div>
+        </form>
+    </Modal>
+}
+@if (EnConsulta is not null)
+{
+    @if (EnConsulta.Tipo == "Devoluciones")
+    {
+        <div class="consulta-pedido-modal">
+            <Modal Titulo="@($"Pedido N.º {EnConsulta.IdReferencia}")" Amplio="true" AlCerrar="CerrarConsulta">
+                @if (PedidoConsulta is not null)
+                {
+                    <div class="consulta-pedido-cabecera">
+                        <p>Fecha de pago: @PedidoConsulta.FechaPago.ToString("dd/MM/yyyy, HH:mm")</p>
+                        <span class="status @ClaseEstadoPedido(PedidoConsulta.Estado)">
+                            @PedidoConsulta.Estado
+                        </span>
+                    </div>
+                    <ResumenPedido Pedido="PedidoConsulta" />
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <p>No se encontró la información de este pedido.</p>
+                    </div>
+                }
+            </Modal>
+        </div>
+    }
+    else
+    {
+        <Modal Titulo="@($"Reseña N.º {EnConsulta.IdReferencia}")" AlCerrar="CerrarConsulta">
+            <div class="review-reference">
+                <div>
+                    <span class="muted">Autor de la reseña</span>
+                    <strong>@ResenaConsulta?.Usuario</strong>
+                </div>
+                <div>
+                    <span class="muted">Libro</span>
+                    <strong>@Estado.BuscarLibro(ResenaConsulta?.IdLibro ?? 0)?.Titulo</strong>
+                </div>
+            </div>
+            <div class="original-rating">
+                <span class="muted">Puntuación original</span>
+                <div class="stars" aria-label="@($"{EnConsulta.PuntuacionOriginal} de 5 estrellas")">
+                    @Estrellas(EnConsulta.PuntuacionOriginal)
+                    <span class="unfilled">@Estrellas(5 - EnConsulta.PuntuacionOriginal)</span>
+                </div>
+                <span>@EnConsulta.PuntuacionOriginal de 5</span>
+            </div>
+            <div class="original-comment">
+                <span class="muted">Comentario original</span>
+                <p>@EnConsulta.ComentarioOriginal</p>
+            </div>
+        </Modal>
+    }
+}

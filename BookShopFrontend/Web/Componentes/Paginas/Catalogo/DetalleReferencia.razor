@@ -1,0 +1,68 @@
+@page "/referencias/{Tipo}/{Id:int}"
+<PageTitle>@(Referencia?.Nombre ?? "Referencia") · BookShop</PageTitle>
+<div class="container">
+    <nav class="breadcrumb">
+        <a href="/">Inicio</a>
+        <span>/</span>
+        <a href="@($"/referencias/{Tipo}")">@Titulo</a>
+        <span>/</span>
+        <span>@Referencia?.Nombre</span>
+    </nav>
+    @if (Referencia is null)
+    {
+        <div class="empty-state">
+            <h1>Referencia no encontrada</h1>
+            <a href="/catalogo" class="btn btn-primary">Explorar catálogo</a>
+        </div>
+    }
+    else
+    {
+        <section class="reference-banner">
+            <div class="reference-picture">
+                <img
+                    onerror="this.onerror=null;this.src='/images/reference-placeholder.svg'"
+                    src="@Referencia.Imagen"
+                    alt="@Referencia.Nombre"
+                    />
+                @if (Estado.EsAdministrador)
+                {
+                    <div class="image-actions">
+                        <label class="icon-button" title="Cambiar imagen">
+                            <Icono Nombre="edit" />
+                            <InputFile
+                                OnChange="CambiarImagen"
+                                disabled="@cargandoImagen"
+                                accept="image/png,image/jpeg"
+                                />
+                        </label>
+                        <button
+                            class="icon-button"
+                            title="Quitar imagen"
+                            disabled="@cargandoImagen"
+                            @onclick="QuitarImagen">
+                            <Icono Nombre="trash" />
+                        </button>
+                    </div>
+                }
+            </div>
+            <div class="reference-copy">
+                <h1>@Referencia.Nombre</h1>
+                <p>@Referencia.Descripcion</p>
+                <button class="btn btn-secondary" @onclick="AlternarSeguimiento">
+                    <Icono Nombre="follow" />
+                    @(Seguimientos ? "Dejar de seguir" : $"Seguir {Singular}")
+                </button>
+                @if (Estado.EsAdministrador)
+                {
+                    <GestionReferencia Referencia="Referencia" />
+                }
+            </div>
+        </section>
+        <ExploradorCatalogo
+            Libros="Libros"
+            Titulo="@($"Libros de {Referencia.Nombre}")"
+            TipoAmbito="@Tipo"
+            Administracion="Estado.EsAdministrador"
+            />
+    }
+</div>

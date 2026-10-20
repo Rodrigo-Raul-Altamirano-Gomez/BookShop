@@ -1,0 +1,141 @@
+@page "/carrito"
+<PageTitle>Carrito · BookShop</PageTitle>
+<div class="container">
+    <nav class="breadcrumb">
+        <a href="/">Inicio</a>
+        <span>/</span>
+        Carrito
+    </nav>
+    <div class="page-heading">
+        <div class="action-row">
+            <h1>Tu carrito</h1>
+            <span class="muted">@Estado.CantidadCarrito ejemplares</span>
+        </div>
+        @if (Estado.CantidadCarrito > 0)
+        {
+            <button class="btn btn-secondary" @onclick="Vaciar">Vaciar carrito</button>
+        }
+    </div>
+    @if (Estado.CantidadCarrito == 0)
+    {
+        <div class="empty-state">
+            <Icono Nombre="cart" />
+            <h2>Tu próxima lectura te espera</h2>
+            <p>Aún no has añadido libros al carrito.</p>
+            <a class="btn btn-primary" href="/catalogo">Explorar catálogo</a>
+        </div>
+    }
+    else
+    {
+        <div class="two-column">
+            <section class="panel cart-lines">
+                <table class="line-table">
+                    <thead>
+                        <tr>
+                            <th>Libro</th>
+                            <th>Precio unitario</th>
+                            <th>Cantidad</th>
+                            <th>Subtotal</th>
+                            <th>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var line in Estado.Carrito.ToList())
+                        {
+                            var book = Estado.BuscarLibro(line.Key);
+                            if (book is not null)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="line-book">
+                                            <a href="/libros/@book.Id">
+                                                <img src="@book.Portada" alt="Portada de @book.Titulo" />
+                                            </a>
+                                            <strong>@book.Titulo</strong>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="line-price">
+                                            @if (book.Descuento > 0)
+                                            {
+                                                <del>@EstadoDemostracion.Dinero(book.PrecioOriginal)</del>
+                                                <span class="badge">−@book.Descuento%</span>
+                                            }
+                                            <strong>@EstadoDemostracion.Dinero(book.Precio)</strong>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="quantity">
+                                            <button
+                                                aria-label="Reducir cantidad de @book.Titulo"
+                                                @onclick="() => Cambiar(book.Id, line.Value - 1)">
+                                                −
+                                            </button>
+                                            <span>@line.Value</span>
+                                            <button
+                                                aria-label="Aumentar cantidad de @book.Titulo"
+                                                @onclick="() => Cambiar(book.Id, line.Value + 1)">
+                                                +
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td>@EstadoDemostracion.Dinero(book.Precio * line.Value)</td>
+                                    <td>
+                                        <button
+                                            class="icon-button"
+                                            aria-label="Retirar @book.Titulo"
+                                            @onclick="() => Cambiar(book.Id, 0)">
+                                            <Icono Nombre="trash" />
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+                <a class="text-link" href="/catalogo">← Seguir explorando</a>
+            </section>
+            <aside class="panel cart-summary">
+                <h2>Resumen</h2>
+                <div class="summary-lines">
+                    <div>
+                        <span>Productos</span>
+                        <span>@EstadoDemostracion.Dinero(Productos)</span>
+                    </div>
+                    <div class="discount">
+                        <span>Descuentos de libros</span>
+                        <span>− @EstadoDemostracion.Dinero(Productos - Subtotal)</span>
+                    </div>
+                    <div>
+                        <span>Subtotal</span>
+                        <span>@EstadoDemostracion.Dinero(Subtotal)</span>
+                    </div>
+                    <div>
+                        <span>Envío</span>
+                        <span>@EstadoDemostracion.Dinero(EnvioEjemplo)</span>
+                    </div>
+                    <div class="total">
+                        <span>Total</span>
+                        <span>@EstadoDemostracion.Dinero(Subtotal + EnvioEjemplo)</span>
+                    </div>
+                </div>
+                <button class="btn btn-primary" @onclick="Continuar">
+                    Continuar compra
+                    <Icono Nombre="arrow" />
+                </button>
+            </aside>
+        </div>
+        <section class="section">
+            <div class="section-heading">
+                <h2>Completa tu biblioteca</h2>
+            </div>
+            <div class="book-grid">
+                @foreach (var book in Complementarios)
+                {
+                    <TarjetaLibro Libro="book" />
+                }
+            </div>
+        </section>
+    }
+</div>

@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: bookshop-demo
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /salud
+    envVars:
+      - key: ASPNETCORE_FORWARDEDHEADERS_ENABLED
+        value: "true"

@@ -1,0 +1,81 @@
+@page "/mis-seguimientos"
+@inherits PaginaCuenta
+<PageTitle>Mis seguimientos · BookShop</PageTitle>
+<div class="container">
+    <nav class="breadcrumb">
+        <a href="/">Inicio</a>
+        <span>/</span>
+        <span>Cuenta</span>
+        <span>/</span>
+        <span>Mis seguimientos</span>
+    </nav>
+    <div class="results-heading">
+        <h1>
+            Mis seguimientos
+            <span>@Referencias.Count @Tipo</span>
+        </h1>
+        @if (Estado.Usuario is not null)
+        {
+            <label class="sort-field">
+                Ordenar por:
+                <select @bind="Orden" @bind:after="ReiniciarPagina">
+                    <option value="name">Nombre A–Z</option>
+                    <option value="recent">Más recientes</option>
+                </select>
+            </label>
+        }
+    </div>
+    @if (Estado.Usuario is null)
+    {
+        <div class="empty-state">
+            <Icono Nombre="follow" />
+            <h2>Sigue lo que te inspira</h2>
+            <p>Inicia sesión para consultar tus seguimientos.</p>
+            <button class="btn btn-primary" @onclick="Estado.MostrarAcceso">Iniciar sesión</button>
+        </div>
+    }
+    else
+    {
+        <div class="tabs" role="tablist" aria-label="Tipos de seguimiento">
+            <button
+                class="tab @(Tipo == "autores" ? "active" : "")"
+                role="tab"
+                aria-selected="@(Tipo == "autores")"
+                @onclick="MostrarAutores">
+                Autores
+            </button>
+            <button
+                class="tab @(Tipo == "categorias" ? "active" : "")"
+                role="tab"
+                aria-selected="@(Tipo == "categorias")"
+                @onclick="MostrarCategorias">
+                Categorías
+            </button>
+            <button
+                class="tab @(Tipo == "editoriales" ? "active" : "")"
+                role="tab"
+                aria-selected="@(Tipo == "editoriales")"
+                @onclick="MostrarEditoriales">
+                Editoriales
+            </button>
+        </div>
+        @if (Referencias.Count == 0)
+        {
+            <div class="empty-state">
+                <h2>Aún no hay seguimientos en esta lista</h2>
+                <p>Consulta sus páginas para comenzar a seguirlos.</p>
+                <a class="btn btn-primary" href="/referencias/@Tipo">Explorar @Tipo</a>
+            </div>
+        }
+        else
+        {
+            <div class="reference-grid">
+                @foreach (var referencia in ReferenciasPagina)
+                {
+                    <TarjetaReferencia Referencia="referencia" />
+                }
+            </div>
+            <Paginacion Pagina="Pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
+        }
+    }
+</div>

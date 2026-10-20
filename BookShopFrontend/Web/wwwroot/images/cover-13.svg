@@ -1,0 +1,56 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 280 420'>
+    <defs>
+        <linearGradient id='shade' x2='1' y2='1'>
+            <stop stop-color='#285760'/>
+            <stop offset='1' stop-color='#132c30'/>
+        </linearGradient>
+    </defs>
+    <rect width='280' height='420' fill='url(#shade)'/>
+    <rect x='10' y='10' width='260' height='400' fill='none' stroke='#e0cca0' stroke-opacity='.45'/>
+    <path d='M22 32h236M22 382h236' stroke='#e0cca0' stroke-opacity='.65'/>
+    <text
+        x='140'
+        y='83'
+        text-anchor='middle'
+        font-family='Georgia,serif'
+        font-size='38'
+        letter-spacing='1'
+        fill='#fff7dc'>
+        LA VIDA
+    </text>
+    <text
+        x='140'
+        y='117'
+        text-anchor='middle'
+        font-family='Georgia,serif'
+        font-size='38'
+        letter-spacing='1'
+        fill='#fff7dc'>
+        IMPOSIBLE
+    </text>
+    <text
+        x='140'
+        y='148'
+        text-anchor='middle'
+        fill='#f5e8cd'
+        font-family='sans-serif'
+        font-size='11'
+        letter-spacing='1.3'>
+        MATT HAIG
+    </text>
+    <path d='M25 260Q140 155 255 260Q140 365 25 260Z' fill='#ebccab'/>
+    <circle cx='140' cy='260' r='46' fill='#34463c'/>
+    <circle cx='140' cy='260' r='25' fill='#131e24'/>
+    <circle cx='153' cy='246' r='8' fill='#eee8d8'/>
+    <path d='M0 390L95 307M280 390L190 307' stroke='#d6ad80' stroke-width='3'/>
+    <text
+        x='140'
+        y='399'
+        text-anchor='middle'
+        fill='#fff7dc'
+        font-family='serif'
+        font-size='10'
+        letter-spacing='3'>
+        BOOKSHOP
+    </text>
+</svg>

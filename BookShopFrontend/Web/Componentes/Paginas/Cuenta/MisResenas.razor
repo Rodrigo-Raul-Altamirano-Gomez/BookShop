@@ -1,0 +1,123 @@
+@page "/mis-resenas"
+@inherits PaginaCuenta
+<PageTitle>Mis reseñas · BookShop</PageTitle>
+<div class="container">
+    <nav class="breadcrumb">
+        <a href="/">Inicio</a>
+        <span>/</span>
+        <span>Cuenta</span>
+        <span>/</span>
+        <span>Mis reseñas</span>
+    </nav>
+    <div class="results-heading">
+        <h1>
+            Mis reseñas
+            <span>@Resenas.Count reseñas</span>
+        </h1>
+        @if (Estado.Usuario is not null)
+        {
+            <label class="sort-field">
+                Ordenar por:
+                <select @bind="Orden" @bind:after="ReiniciarPagina">
+                    <option value="recent">Más recientes</option>
+                    <option value="votes-asc">Votos ascendentes</option>
+                    <option value="votes-desc">Votos descendentes</option>
+                    <option value="stars-asc">Puntuación ascendente</option>
+                    <option value="stars-desc">Puntuación descendente</option>
+                </select>
+            </label>
+        }
+    </div>
+    @if (Estado.Usuario is null)
+    {
+        <div class="empty-state">
+            <Icono Nombre="star" />
+            <h2>Tus opiniones cuentan</h2>
+            <p>Inicia sesión para consultar tus reseñas.</p>
+            <button class="btn btn-primary" @onclick="Estado.MostrarAcceso">Iniciar sesión</button>
+        </div>
+    }
+    else if (Resenas.Count == 0)
+    {
+        <div class="empty-state">
+            <h2>Aún no tienes reseñas</h2>
+            <p>Las reseñas que publiques aparecerán aquí.</p>
+            <a href="/catalogo" class="btn btn-primary">Explorar libros</a>
+        </div>
+    }
+    else
+    {
+        <section class="panel review-list">
+            @foreach (var resena in ResenasPagina)
+            {
+                <article class="review-row">
+                    <a href="/libros/@resena.IdLibro" class="review-cover">
+                        <img
+                            src="@Estado.BuscarLibro(resena.IdLibro)?.Portada"
+                            alt="Portada de @Estado.BuscarLibro(resena.IdLibro)?.Titulo"
+                            />
+                    </a>
+                    <div class="review-content">
+                        <a class="review-title" href="/libros/@resena.IdLibro">
+                            @Estado.BuscarLibro(resena.IdLibro)?.Titulo
+                        </a>
+                        <span class="muted">@resena.Fecha.ToString("dd 'de' MMMM 'de' yyyy", Espanol)</span>
+                        <div class="stars" aria-label="@($"{resena.Puntuacion} de 5 estrellas")">
+                            @Estrellas(resena.Puntuacion)
+                            <span class="unfilled">@Estrellas(5 - resena.Puntuacion)</span>
+                        </div>
+                        <p>@resena.Comentario</p>
+                        <span class="muted">@resena.Votos votos útiles</span>
+                    </div>
+                    <div class="review-actions">
+                        <button class="btn btn-secondary" @onclick="() => Editar(resena)">
+                            <Icono Nombre="edit" />
+                            Editar
+                        </button>
+                        <button class="btn btn-danger" @onclick="() => Eliminar(resena)">
+                            <Icono Nombre="trash" />
+                            Eliminar
+                        </button>
+                    </div>
+                </article>
+            }
+            <Paginacion Pagina="Pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
+        </section>
+    }
+</div>
+@if (EnEdicion is not null)
+{
+    <Modal Titulo="Editar reseña" AlCerrar="Cerrar">
+        <h3>@Estado.BuscarLibro(EnEdicion.IdLibro)?.Titulo</h3>
+        <form @onsubmit="Guardar" @onsubmit:preventDefault novalidate>
+            <label class="field">Puntuación *</label>
+            <div class="rating-control" role="group" aria-label="Puntuación de la reseña">
+                @foreach (var estrella in Enumerable.Range(1, 5))
+                {
+                    <button
+                        type="button"
+                        class="rating-star @(estrella <= Puntuacion ? "selected" : "")"
+                        @onclick="() => SeleccionarPuntuacion(estrella)"
+                        aria-label="@($"{estrella} estrellas")"
+                        aria-pressed="@(estrella <= Puntuacion)">
+                        ★
+                    </button>
+                }
+            </div>
+            <label class="field">
+                Comentario *
+                <textarea rows="5" @bind="Comentario" @bind:event="oninput" maxlength="2000">
+                </textarea>
+            </label>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" @onclick="Cerrar">Cancelar</button>
+                <button
+                    class="btn btn-primary"
+                    type="submit"
+                    disabled="@(Puntuacion == 0 || string.IsNullOrWhiteSpace(Comentario))">
+                    Guardar cambios
+                </button>
+            </div>
+        </form>
+    </Modal>
+}

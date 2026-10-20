@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Integration/Integration.csproj" />
+  <Project Path="Web/Web.csproj" DefaultStartup="true" />
+</Solution>

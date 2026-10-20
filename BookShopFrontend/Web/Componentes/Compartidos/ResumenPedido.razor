@@ -1,0 +1,139 @@
+<div class="two-column order-summary">
+    <section class="panel">
+        <h2>Resumen del pedido</h2>
+        <table class="line-table">
+            <thead>
+                <tr>
+                    <th>Libro</th>
+                    <th>Cantidad</th>
+                    <th>Precio unitario</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var line in Pedido.Lineas)
+                {
+                    var book = Estado.BuscarLibro(line.IdLibro);
+                    <tr>
+                        <td>
+                            <div class="line-book">
+                                <img
+                                    src="@(book?.Portada ?? "/images/book-placeholder.svg")"
+                                    alt="@(book?.Titulo ?? "Libro")"
+                                    />
+                                <strong>@(book?.Titulo ?? "Libro")</strong>
+                            </div>
+                        </td>
+                        <td>@line.Cantidad</td>
+                        <td>
+                            <div class="line-price">
+                                @if (line.Descuento > 0)
+                                {
+                                    <del>@EstadoDemostracion.Dinero(line.PrecioOriginal)</del>
+                                }
+                                <strong>@EstadoDemostracion.Dinero(line.Precio)</strong>
+                            </div>
+                        </td>
+                        <td>@EstadoDemostracion.Dinero(line.Precio * line.Cantidad)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <div class="order-data">
+            <h3>Dirección de envío</h3>
+            <strong>@Pedido.Direccion.Alias</strong>
+            <p>
+                @Pedido.Direccion.Calle
+                <br />
+                @Pedido.Direccion.Distrito, @Pedido.Direccion.Ciudad
+                <br />
+                @Pedido.Direccion.ReferenciaAdicional
+            </p>
+            <h3>Método de pago</h3>
+            <p>
+                @Pedido.Metodo.Alias · @Pedido.Metodo.Proveedor
+                <br />
+                @Pedido.Metodo.NumeroEnmascarado
+                <br />
+                @Pedido.Metodo.Titular
+            </p>
+            <p class="muted small">Transacción: @Pedido.Transaccion</p>
+        </div>
+    </section>
+    <section class="panel order-amount">
+        <h2>Importe pagado</h2>
+        <div class="summary-lines">
+            <div>
+                <span>Productos</span>
+                <span>@EstadoDemostracion.Dinero(Pedido.Productos)</span>
+            </div>
+            <div class="discount">
+                <span>Descuentos de libros</span>
+                <span>− @EstadoDemostracion.Dinero(Pedido.DescuentoLibro)</span>
+            </div>
+            <div>
+                <span>Subtotal</span>
+                <span>@EstadoDemostracion.Dinero(Pedido.Subtotal)</span>
+            </div>
+            <hr />
+            <div class="discount">
+                <span>Cupón</span>
+                <span>− @EstadoDemostracion.Dinero(Pedido.DescuentoCupon)</span>
+            </div>
+            <div>
+                <span>Envío</span>
+                <span>@EstadoDemostracion.Dinero(Pedido.Envio)</span>
+            </div>
+            <div class="total">
+                <span>Total pagado</span>
+                <span>@EstadoDemostracion.Dinero(Pedido.Total)</span>
+            </div>
+        </div>
+    </section>
+</div>
+@if (Pedido.Estado is not ("Cancelado" or "Devuelto"))
+{
+    <section class="panel tracking-panel">
+        <div class="section-heading">
+            <h2>Seguimiento del pedido</h2>
+            <span class="muted small">@Pedido.Seguimiento</span>
+        </div>
+        @if (Pedido.Estado != "Entregado")
+        {
+            <ol class="tracking-steps">
+                <li class="complete">
+                    <span>1</span>
+                    En almacén
+                </li>
+                <li class="@(Pedido.Estado == "En camino" ? "complete" : "")">
+                    <span>2</span>
+                    En camino
+                </li>
+                <li>
+                    <span>3</span>
+                    Entregado
+                </li>
+            </ol>
+        }
+        <div class="tracking-dates">
+            <div>
+                <span>Entrega estimada</span>
+                <strong>@Pedido.EntregaEstimada.ToString("dd/MM/yyyy HH:mm")</strong>
+            </div>
+            @if (Pedido.FechaSalida is DateTime departure)
+            {
+                <div>
+                    <span>Fecha de salida</span>
+                    <strong>@departure.ToString("dd/MM/yyyy HH:mm")</strong>
+                </div>
+            }
+            @if (Pedido.FechaEntrega is DateTime delivered)
+            {
+                <div>
+                    <span>Fecha de entrega</span>
+                    <strong>@delivered.ToString("dd/MM/yyyy HH:mm")</strong>
+                </div>
+            }
+        </div>
+    </section>
+}

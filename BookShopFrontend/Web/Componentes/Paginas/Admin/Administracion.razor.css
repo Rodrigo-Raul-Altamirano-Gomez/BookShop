@@ -1,0 +1,106 @@
+.admin-grid {
+    display:grid;
+    gap:22px
+}
+.catalog-admin-grid {
+    grid-template-columns:repeat(4,1fr)
+}
+.general-admin-grid {
+    grid-template-columns:repeat(3,1fr)
+}
+.admin-card {
+    display:block;
+    text-align:left;
+    border:1px solid var(--border,#dce4df);
+    background:white;
+    border-radius:10px;
+    padding:25px 24px;
+    min-height:230px;
+    text-decoration:none;
+    color:var(--ink,#183b2e);
+    cursor:pointer;
+    transition:transform .18s,box-shadow .18s
+}
+.admin-card:hover {
+    transform:translateY(-3px);
+    box-shadow:0 8px 24px #093d2c0d;
+    border-color:#7fada0
+}
+.admin-icon {
+    display:grid;
+    place-items:center;
+    width:66px;
+    height:66px;
+    background:#e5f3eb;
+    color:var(--green,#0a5140);
+    border-radius:50%;
+    margin-bottom:19px
+}
+.admin-icon ::deep svg {
+    width:34px;
+    height:34px
+}
+.admin-card h3 {
+    font-size:25px;
+    margin:0 0 10px;
+    font-family:Georgia,serif
+}
+.admin-card p {
+    color:var(--muted,#66766e);
+    line-height:1.55;
+    font-size:15px;
+    margin:0;
+    max-width:300px
+}
+.general-title {
+    margin-top:42px
+}
+.report-brand {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    border-bottom:2px solid #0a5140;
+    padding-bottom:18px;
+    color:#0a5140
+}
+.report-brand strong {
+    font-size:25px;
+    font-family:Georgia,serif
+}
+.report-brand span {
+    margin-left:auto;
+    font-size:12px
+}
+.report-sheet h2 {
+    font-size:26px
+}
+.report-table-wrap {
+    overflow:auto
+}
+.report-sheet table {
+    width:100%;
+    border-collapse:collapse;
+    font-size:12px;
+    margin:24px 0
+}
+.report-sheet th {
+    background:#eef5f0;
+    text-align:left;
+    padding:12px
+}
+.report-sheet td {
+    padding:12px;
+    border-bottom:1px solid #e0e7e3;
+    vertical-align:top
+}
+.report-sheet td small {
+    display:block;
+    color:#6d7972;
+    margin-top:5px
+}
+.report-foot {
+    border-top:1px solid #dce4df;
+    font-size:12px;
+    text-align:right;
+    padding:16px 0
+}

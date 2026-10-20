@@ -1,0 +1,168 @@
+@page "/pedidos/{Id:int}"
+@page "/confirmacion/{Id:int}"
+<PageTitle>@(confirmacion ? "Pedido confirmado" : "Detalle del pedido") · BookShop</PageTitle>
+<div class="container">
+    <nav class="breadcrumb">
+        <a href="/">Inicio</a>
+        <span>/</span>
+        <a href="/mis-pedidos">Mis pedidos</a>
+        <span>/</span>
+        Pedido #@Id
+    </nav>
+    @if (Estado.Usuario is null)
+    {
+        <div class="empty-state">
+            <h1>Detalle del pedido</h1>
+            <button class="btn btn-primary" @onclick="Estado.MostrarAcceso">Iniciar sesión</button>
+        </div>
+    }
+    else if (pedido is null)
+    {
+        <div class="empty-state">
+            <h1>No encontramos este pedido</h1>
+            <a class="btn btn-secondary" href="/mis-pedidos">Volver a mis pedidos</a>
+        </div>
+    }
+    else
+    {
+        <header class="order-detail-heading">
+            @if (confirmacion)
+            {
+                <span class="success-circle">
+                    <Icono Nombre="check" />
+                </span>
+                <h1>Tu pedido ha sido registrado</h1>
+                <p>Gracias por elegir BookShop.</p>
+            }
+            else
+            {
+                <h1>Pedido #@pedido.Id</h1>
+            }
+            <p class="muted">Fecha de pago: @pedido.FechaPago.ToString("dd/MM/yyyy HH:mm")</p>
+            <span class="status @ClaseEstado(pedido.Estado)">@pedido.Estado</span>
+        </header>
+        <ResumenPedido Pedido="pedido" />
+        <div class="order-detail-actions">
+            @if (pedido.Estado is "En almacén" or "En camino")
+            {
+                <button class="btn btn-secondary" @onclick="ActualizarSeguimiento">Actualizar seguimiento</button>
+            }
+            @if (pedido.Estado == "En almacén")
+            {
+                <button class="btn btn-danger" @onclick="AbrirCancelacion">Cancelar pedido</button>
+            }
+            @if (pedido.Estado == "Entregado")
+            {
+                <button class="btn btn-secondary" @onclick="AbrirDevolucion">Solicitar devolución</button>
+            }
+            <button class="btn btn-secondary" @onclick="AbrirComprobante">
+                <Icono Nombre="report" />
+                Descargar comprobante
+            </button>
+            @if (confirmacion)
+            {
+                <a class="btn btn-primary" href="/catalogo">Seguir explorando</a>
+            }
+            else
+            {
+                <a class="btn btn-primary" href="/mis-pedidos">Volver a mis pedidos</a>
+            }
+        </div>
+    }
+</div>
+@if (modal == "cancelar")
+{
+    <Modal Titulo="Cancelar pedido" AlCerrar="CerrarModal">
+        <form @onsubmit="CancelarPedido" @onsubmit:preventDefault>
+            <label class="field">
+                Motivo *
+                <textarea @bind="motivo" @bind:event="oninput" required>
+                </textarea>
+            </label>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" @onclick="CerrarModal">Volver</button>
+                <button type="submit" class="btn btn-danger">Cancelar pedido</button>
+            </div>
+        </form>
+    </Modal>
+}
+@if (modal == "devolver")
+{
+    <Modal Titulo="Solicitar devolución" AlCerrar="CerrarModal">
+        <form @onsubmit="SolicitarDevolucion" @onsubmit:preventDefault>
+            <label class="field">
+                Motivo *
+                <select @bind="motivo" required>
+                    <option value="">Seleccionar motivo</option>
+                    @foreach (var razon in MotivosDevolucion)
+                    {
+                        <option>@razon</option>
+                    }
+                </select>
+            </label>
+            <label class="field">
+                Comentario adicional
+                <textarea @bind="comentario" @bind:event="oninput">
+                </textarea>
+            </label>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" @onclick="CerrarModal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Enviar solicitud</button>
+            </div>
+        </form>
+    </Modal>
+}
+@if (modal == "comprobante" && pedido is not null)
+{
+    <Modal Titulo="Comprobante de compra" Amplio="true" AlCerrar="CerrarModal">
+        <div class="document-preview">
+            <div class="section-heading">
+                <h2>BookShop</h2>
+                <span>Pedido #@pedido.Id</span>
+            </div>
+            <p>
+                @Estado.Usuario?.Nombre · @Estado.Usuario?.Correo
+                <br />
+                Fecha de pago: @pedido.FechaPago.ToString("dd/MM/yyyy HH:mm")
+            </p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Libro</th>
+                        <th>Cantidad</th>
+                        <th>Precio original</th>
+                        <th>Descuento</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var line in pedido.Lineas)
+                    {
+                        <tr>
+                            <td>@Estado.BuscarLibro(line.IdLibro)?.Titulo</td>
+                            <td>@line.Cantidad</td>
+                            <td>@EstadoDemostracion.Dinero(line.PrecioOriginal)</td>
+                            <td>@(line.Descuento == 0 ? "—" : line.Descuento + "%")</td>
+                            <td>@EstadoDemostracion.Dinero(line.Precio * line.Cantidad)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <p class="receipt-total">
+                Total pagado:
+                <strong>@EstadoDemostracion.Dinero(pedido.Total)</strong>
+            </p>
+            <p>
+                @pedido.Direccion.Calle, @pedido.Direccion.Distrito, @pedido.Direccion.Ciudad
+                <br />
+                @pedido.Metodo.Proveedor · @pedido.Metodo.NumeroEnmascarado
+                <br />
+                Transacción: @pedido.Transaccion
+            </p>
+            <p class="muted">Vista previa del comprobante de ejemplo.</p>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" @onclick="CerrarModal">Cerrar</button>
+        </div>
+    </Modal>
+}

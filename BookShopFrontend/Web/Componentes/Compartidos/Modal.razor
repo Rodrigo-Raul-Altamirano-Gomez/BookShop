@@ -1,0 +1,16 @@
+<div class="modal-overlay" @onclick="Cerrar">
+    <section
+        class="modal-dialog @(Amplio ? "modal-wide" : "")"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="@IdTitulo"
+        @onclick:stopPropagation>
+        <header class="modal-header">
+            <h2 id="@IdTitulo">@Titulo</h2>
+            <button type="button" class="icon-button modal-close" aria-label="Cerrar ventana" @onclick="Cerrar">
+                <Icono Nombre="close" />
+            </button>
+        </header>
+        <div class="modal-content">@ChildContent</div>
+    </section>
+</div>

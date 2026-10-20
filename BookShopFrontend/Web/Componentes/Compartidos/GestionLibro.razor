@@ -1,0 +1,234 @@
+@if (Estado.EsAdministrador)
+{
+    <div class="management-actions">
+        <button class="btn btn-secondary" @onclick="Abrir">
+            <Icono Nombre="settings" />
+            Gestionar
+        </button>
+        <button class="btn btn-secondary" @onclick="AlternarActivo">
+            @(Libro.Activo ? "Desactivar" : "Activar")
+        </button>
+    </div>
+}
+@if (Mostrar)
+{
+    <Modal Titulo="@($"Gestionar libro · {Libro.Titulo}")" AlCerrar="Cerrar" Amplio="true">
+        <div class="tabs" role="tablist">
+            @foreach (var Nombre in NombresPestanas)
+            {
+                <button
+                    class="tab @(Pestana == Nombre ? "active" : "")"
+                    role="tab"
+                    aria-selected="@(Pestana == Nombre)"
+                    @onclick="() => ElegirPestana(Nombre)">
+                    @Nombre
+                </button>
+            }
+        </div>
+        <form @onsubmit="Guardar" @onsubmit:preventDefault>
+            @if (Pestana == "Datos del libro")
+            {
+                <div class="form-grid">
+                    <label class="field full">
+                        Título *
+                        <input @bind="Borrador.Titulo" @bind:event="oninput" required />
+                    </label>
+                    <label class="field">
+                        Idioma *
+                        <input @bind="Borrador.Idioma" @bind:event="oninput" required />
+                    </label>
+                    <label class="field">
+                        Proveedor *
+                        <input @bind="Borrador.Proveedor" @bind:event="oninput" required />
+                    </label>
+                    <label class="field full">
+                        Sinopsis *
+                        <textarea rows="5" @bind="Borrador.Sinopsis" @bind:event="oninput" required>
+                        </textarea>
+                    </label>
+                    <div class="reference-readonly full">
+                        <span>
+                            <small>Autor</small>
+                            <strong>@Libro.Autor</strong>
+                        </span>
+                        <span>
+                            <small>Categoría</small>
+                            <strong>@Libro.Categoria</strong>
+                        </span>
+                        <span>
+                            <small>Editorial</small>
+                            <strong>@Libro.Editorial</strong>
+                        </span>
+                    </div>
+                    <label class="field">
+                        ISBN *
+                        <input @bind="Borrador.ISBN" @bind:event="oninput" required />
+                    </label>
+                    <label class="field">
+                        Año de edición *
+                        <input type="number" @bind="Borrador.Anio" @bind:event="oninput" min="1" required />
+                    </label>
+                    <label class="field">
+                        Número de páginas *
+                        <input type="number" @bind="Borrador.Paginas" @bind:event="oninput" min="1" required />
+                    </label>
+                    <label class="field">
+                        Peso (kg)
+                        <input @bind="Peso" @bind:event="oninput" />
+                    </label>
+                    <label class="field">
+                        Alto (cm)
+                        <input @bind="Alto" @bind:event="oninput" />
+                    </label>
+                    <label class="field">
+                        Ancho (cm)
+                        <input @bind="Ancho" @bind:event="oninput" />
+                    </label>
+                    <label class="field">
+                        Saga
+                        <input @bind="Borrador.Saga" @bind:event="oninput" />
+                    </label>
+                    <label class="field">
+                        Tomo
+                        <input type="number" min="1" @bind="Borrador.Tomo" @bind:event="oninput" />
+                    </label>
+                </div>
+            }
+            else if (Pestana == "Precio")
+            {
+                <div class="price-editor">
+                    <p class="muted">Precio base del libro</p>
+                    <label class="field">
+                        Precio base (S/) *
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0.01"
+                            @bind="Borrador.PrecioOriginal"
+                            @bind:event="oninput"
+                            required
+                            />
+                    </label>
+                </div>
+            }
+            else if (Pestana == "Stock")
+            {
+                <div class="price-editor">
+                    <p class="muted">Ejemplares disponibles</p>
+                    <label class="field">
+                        Stock *
+                        <input type="number" min="0" @bind="Borrador.Stock" @bind:event="oninput" required />
+                    </label>
+                </div>
+            }
+            else
+            {
+                <div class="discount-toolbar">
+                    <button type="button" class="btn btn-secondary" @onclick="AgregarDescuento">
+                        <Icono Nombre="plus" />
+                        Añadir descuento
+                    </button>
+                </div>
+                @if (Descuentos.Count > 0)
+                {
+                    <div class="discount-carousel">
+                        <button
+                            type="button"
+                            class="icon-button"
+                            disabled="@(PosicionDescuentos == 0)"
+                            aria-label="Descuentos anteriores"
+                            @onclick="DescuentoAnterior">
+                            ‹
+                        </button>
+                        <div class="discount-cards">
+                            @foreach (var Descuento in Descuentos.Skip(PosicionDescuentos).Take(2))
+                            {
+                                <button
+                                    type="button"
+                                    class="discount-card @(DescuentoSeleccionado == Descuento ? "selected" : "")"
+                                    @onclick="() => ElegirDescuento(Descuento)">
+                                    <span class="discount-percentage">
+                                        @Descuento.Porcentaje%
+                                        <small>de descuento</small>
+                                    </span>
+                                    <span class="muted">
+                                        Inicio: @Descuento.Inicio.ToString("dd/MM/yyyy, HH:mm")
+                                        <br />
+                                        Fin: @Descuento.Fin.ToString("dd/MM/yyyy, HH:mm")
+                                    </span>
+                                </button>
+                            }
+                        </div>
+                        <button
+                            type="button"
+                            class="icon-button"
+                            disabled="@(PosicionDescuentos + 2 >= Descuentos.Count)"
+                            aria-label="Descuentos siguientes"
+                            @onclick="DescuentoSiguiente">
+                            ›
+                        </button>
+                    </div>
+                    <p class="carousel-position">
+                        @(PosicionDescuentos + 1) – @Math.Min(PosicionDescuentos + 2, Descuentos.Count) de
+                        @Descuentos.Count
+                    </p>
+                }
+                @if (DescuentoSeleccionado is not null)
+                {
+                    <h3>Editar descuento</h3>
+                    <div class="discount-fields">
+                        <label class="field">
+                            Porcentaje *
+                            <input
+                                type="number"
+                                min="1"
+                                max="100"
+                                @bind="Porcentaje"
+                                @bind:event="oninput"
+                                required
+                                />
+                        </label>
+                        <label class="field">
+                            Fecha y hora de inicio *
+                            <input
+                                type="datetime-local"
+                                @bind="InicioDescuento"
+                                @bind:format="yyyy-MM-ddTHH:mm"
+                                required
+                                />
+                        </label>
+                        <label class="field">
+                            Fecha y hora de fin *
+                            <input
+                                type="datetime-local"
+                                @bind="FinDescuento"
+                                @bind:format="yyyy-MM-ddTHH:mm"
+                                required
+                                />
+                        </label>
+                    </div>
+                    <label class="remove-discount">
+                        <input type="checkbox" @bind="EliminarDescuento" />
+                        Eliminar descuento
+                    </label>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <Icono Nombre="report" />
+                        <p>Este libro no tiene descuentos.</p>
+                        <span>Añade uno para completar la vista de gestión.</span>
+                    </div>
+                }
+            }
+            @if (ErrorFormulario.Length > 0)
+            {
+                <p class="form-error" role="alert">@ErrorFormulario</p>
+            }
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" @onclick="Cerrar">Cancelar</button>
+                <button class="btn btn-primary" type="submit">Guardar cambios</button>
+            </div>
+        </form>
+    </Modal>
+}

@@ -1,0 +1,47 @@
+@using Web.Modelos
+<Modal Titulo="@(Valor is null ? "Añadir dirección" : "Editar dirección")" AlCerrar="AlCerrar">
+    <form @onsubmit="Guardar" @onsubmit:preventDefault novalidate>
+        <label class="field">
+            Alias *
+            <input @bind="Borrador.Alias" @bind:event="oninput" maxlength="60" autocomplete="off" />
+        </label>
+        <label class="field">
+            Dirección *
+            <input @bind="Borrador.Calle" @bind:event="oninput" maxlength="200" autocomplete="street-address" />
+        </label>
+        <div class="form-grid">
+            <label class="field">
+                Distrito *
+                <input @bind="Borrador.Distrito" @bind:event="oninput" maxlength="100" />
+            </label>
+            <label class="field">
+                Ciudad *
+                <input
+                    @bind="Borrador.Ciudad"
+                    @bind:event="oninput"
+                    maxlength="100"
+                    autocomplete="address-level2"
+                    />
+            </label>
+        </div>
+        <label class="field">
+            Referencia
+            <textarea @bind="Borrador.ReferenciaAdicional" @bind:event="oninput" maxlength="300" rows="3">
+            </textarea>
+        </label>
+        <label class="check-field">
+            <input type="checkbox" @bind="Borrador.Predeterminada" />
+            Usar como predeterminada
+        </label>
+        @if (MensajeError.Length > 0)
+        {
+            <p class="form-error" role="alert">@MensajeError</p>
+        }
+        <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" @onclick="AlCerrar">Cancelar</button>
+            <button type="submit" class="btn btn-primary" disabled="@(!Completo || Guardando)">
+                @(Valor is null ? "Guardar dirección" : "Guardar cambios")
+            </button>
+        </div>
+    </form>
+</Modal>

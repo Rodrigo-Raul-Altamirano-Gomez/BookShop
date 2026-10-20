@@ -1,0 +1,42 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1240 380'>
+    <defs>
+        <linearGradient id='bg'>
+            <stop stop-color='#dbe3d2'/>
+            <stop offset='1' stop-color='#bdcbb9'/>
+        </linearGradient>
+    </defs>
+    <rect width='1240' height='380' fill='url(#bg)'/>
+    <circle cx='938' cy='206' r='175' fill='#e3d6c1'/>
+    <path d='M660 346h540' stroke='#a0967b' stroke-width='10'/>
+    <path
+        d='M1147 333V80m0 91q-85-15-69-69 65-8 69 69m0 64q83-9 64-63-57-2-64 63m0 57q-73-5-67-53 68-7 67 53'
+        fill='#657953'
+        stroke='#506845'
+        stroke-width='5'/>
+    <rect x='688' y='279' width='182' height='25' rx='3' fill='#ad9470'/>
+    <rect x='706' y='304' width='164' height='33' rx='3' fill='#f2e7cd'/>
+    <rect x='811' y='102' width='132' height='238' rx='3' fill='#153f56' transform='rotate(-6 877 221)'/>
+    <circle cx='877' cy='244' r='38' fill='#babd8e'/>
+    <path d='M877 196l-7-17 8-12 8 12-1 17' fill='#e5c866'/>
+    <text x='877' y='156' fill='#f4e7bd' font-family='Georgia' font-size='18' text-anchor='middle'>
+        EL PRINCIPITO
+    </text>
+    <rect x='949' y='70' width='153' height='271' rx='3' fill='#a65029' transform='rotate(5 1025 200)'/>
+    <circle cx='1032' cy='218' r='51' fill='#ebbb73'/>
+    <path d='M949 306q50-70 100-14t53-20v69H949Z' fill='#5c4036'/>
+    <text
+        x='1025'
+        y='137'
+        fill='#f4e7bd'
+        font-family='Georgia'
+        font-size='34'
+        letter-spacing='4'
+        text-anchor='middle'>
+        DUNE
+    </text>
+    <path
+        d='M745 338V166m0 62q-65-20-57-65 55-1 57 65m0 52q57-5 55-48-43-11-55 48'
+        fill='#778861'
+        stroke='#506845'
+        stroke-width='3'/>
+</svg>

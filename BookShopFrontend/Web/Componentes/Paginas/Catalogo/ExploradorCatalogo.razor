@@ -1,0 +1,194 @@
+<div class="catalog-layout">
+    <aside class="filters">
+        <h2>Filtros</h2>
+        @if (Administracion)
+        {
+            <div class="filter-group">
+                <label>
+                    <input type="checkbox" @bind="soloActivos" />
+                    Solo activos
+                </label>
+            </div>
+        }
+        @if (TipoAmbito != "categorias")
+        {
+            <FiltroReferencias
+                Titulo="Categorías"
+                Singular="categoría"
+                Opciones="OpcionesCategorias"
+                Seleccionados="categorias"
+                SeleccionCambiada="SeleccionarCategoria"
+                />
+        }
+        @if (TipoAmbito != "autores")
+        {
+            <FiltroReferencias
+                Titulo="Autores"
+                Singular="autor"
+                Opciones="OpcionesAutores"
+                Seleccionados="autores"
+                SeleccionCambiada="SeleccionarAutor"
+                />
+        }
+        @if (TipoAmbito != "editoriales")
+        {
+            <FiltroReferencias
+                Titulo="Editoriales"
+                Singular="editorial"
+                Opciones="OpcionesEditoriales"
+                Seleccionados="editoriales"
+                SeleccionCambiada="SeleccionarEditorial"
+                />
+        }
+        <FiltroReferencias
+            Titulo="Idiomas"
+            Singular="idioma"
+            Opciones="OpcionesIdiomas"
+            Seleccionados="idiomas"
+            SeleccionCambiada="SeleccionarIdioma"
+            />
+        <div class="filter-group">
+            <h3>Precio</h3>
+            <div class="price-sliders" style="@EstiloRango">
+                <input
+                    type="range"
+                    min="0"
+                    max="@LimitePrecio"
+                    step="1"
+                    aria-label="Precio mínimo"
+                    @bind="minimo"
+                    @bind:after="AjustarMinimo"
+                    />
+                <input
+                    type="range"
+                    min="0"
+                    max="@LimitePrecio"
+                    step="1"
+                    aria-label="Precio máximo"
+                    @bind="maximo"
+                    @bind:after="AjustarMaximo"
+                    />
+            </div>
+            <div class="price-fields">
+                <label>
+                    Mínimo
+                    <input
+                        type="number"
+                        min="0"
+                        max="@LimitePrecio"
+                        step="1"
+                        @bind="minimo"
+                        @bind:event="oninput"
+                        @bind:after="AjustarMinimo"
+                        />
+                </label>
+                <label>
+                    Máximo
+                    <input
+                        type="number"
+                        min="0"
+                        max="@LimitePrecio"
+                        step="1"
+                        @bind="maximo"
+                        @bind:event="oninput"
+                        @bind:after="AjustarMaximo"
+                        />
+                </label>
+            </div>
+        </div>
+        <div class="filter-group active-filters">
+            <h3>Filtros activos</h3>
+            <div class="chips">
+                @foreach (var item in categoriasAplicadas)
+                {
+                    <button class="chip" @onclick="() => QuitarCategoria(item)">
+                        @item
+                        <Icono Nombre="close" />
+                    </button>
+                }
+                @foreach (var item in autoresAplicados)
+                {
+                    <button class="chip" @onclick="() => QuitarAutor(item)">
+                        @item
+                        <Icono Nombre="close" />
+                    </button>
+                }
+                @foreach (var item in editorialesAplicadas)
+                {
+                    <button class="chip" @onclick="() => QuitarEditorial(item)">
+                        @item
+                        <Icono Nombre="close" />
+                    </button>
+                }
+                @foreach (var item in idiomasAplicados)
+                {
+                    <button class="chip" @onclick="() => QuitarIdioma(item)">
+                        @item
+                        <Icono Nombre="close" />
+                    </button>
+                }
+                @if (precioFiltrado)
+                {
+                    <button class="chip" @onclick="QuitarPrecio">
+                        S/ @minimoAplicado – S/ @maximoAplicado
+                        <Icono Nombre="close" />
+                    </button>
+                }
+                @if (Administracion && soloActivosAplicado)
+                {
+                    <button class="chip" @onclick="QuitarSoloActivos">
+                        Solo activos
+                        <Icono Nombre="close" />
+                    </button>
+                }
+                @if (!HayFiltros)
+                {
+                    <span class="muted">Ninguno</span>
+                }
+            </div>
+        </div>
+        <button class="btn btn-primary filter-action" @onclick="AplicarFiltros">Aplicar filtros</button>
+        <button class="btn btn-secondary filter-action" @onclick="LimpiarFiltros">Limpiar filtros</button>
+    </aside>
+    <section class="catalog-results">
+        <div class="results-heading">
+            <div class="result-title">
+                <h1>@Titulo</h1>
+                <span>@Resultados.Count libros</span>
+            </div>
+            @AccionesCabecera
+            <label class="sort-label">
+                Ordenar por:
+                <select aria-label="Ordenar libros" @bind="orden" @bind:after="CambiarOrden">
+                    @foreach (var order in OpcionesOrden)
+                    {
+                        <option value="@order.Key">@order.Value</option>
+                    }
+                </select>
+            </label>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(Busqueda))
+        {
+            <p class="search-context">Resultados para “@Busqueda”</p>
+        }
+        @if (Resultados.Count == 0)
+        {
+            <div class="empty-state">
+                <Icono Nombre="search" />
+                <h2>No encontramos libros</h2>
+                <p>Prueba con otros filtros o un título diferente.</p>
+                <button class="btn btn-secondary" @onclick="LimpiarFiltros">Limpiar filtros</button>
+            </div>
+        }
+        else
+        {
+            <div class="book-grid">
+                @foreach (var book in LibrosVisibles)
+                {
+                    <TarjetaLibro Libro="book" />
+                }
+            </div>
+            <Paginacion Pagina="pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
+        }
+    </section>
+</div>

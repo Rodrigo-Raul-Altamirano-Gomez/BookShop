@@ -1,0 +1,47 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 280 420'>
+    <defs>
+        <linearGradient id='shade' x2='1' y2='1'>
+            <stop stop-color='#193d61'/>
+            <stop offset='1' stop-color='#132c30'/>
+        </linearGradient>
+    </defs>
+    <rect width='280' height='420' fill='url(#shade)'/>
+    <rect x='10' y='10' width='260' height='400' fill='none' stroke='#e0cca0' stroke-opacity='.45'/>
+    <path d='M22 32h236M22 382h236' stroke='#e0cca0' stroke-opacity='.65'/>
+    <text
+        x='140'
+        y='83'
+        text-anchor='middle'
+        font-family='Georgia,serif'
+        font-size='28'
+        letter-spacing='1'
+        fill='#fff7dc'>
+        EL PRINCIPITO
+    </text>
+    <text
+        x='140'
+        y='148'
+        text-anchor='middle'
+        fill='#f5e8cd'
+        font-family='sans-serif'
+        font-size='11'
+        letter-spacing='1.3'>
+        ANTOINE DE SAINT-EXUPÉRY
+    </text>
+    <circle cx='146' cy='281' r='61' fill='#a7af87'/>
+    <path d='M91 260Q140 227 202 261M98 304Q146 274 197 305' fill='none' stroke='#ddd9a8' stroke-width='5'/>
+    <path d='M143 235l-6-32 9-16 11 16-6 32' fill='#e9cf68'/>
+    <path d='M35 178l4 9 10 1-8 6 3 10-9-6-9 6 3-10-8-6 10-1Z' fill='#f1d49b'/>
+    <circle cx='236' cy='355' r='4' fill='#eee2b7'/>
+    <circle cx='43' cy='328' r='3' fill='#eee2b7'/>
+    <text
+        x='140'
+        y='399'
+        text-anchor='middle'
+        fill='#fff7dc'
+        font-family='serif'
+        font-size='10'
+        letter-spacing='3'>
+        BOOKSHOP
+    </text>
+</svg>

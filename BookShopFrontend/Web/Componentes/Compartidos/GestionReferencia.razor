@@ -1,0 +1,36 @@
+@if (Estado.EsAdministrador)
+{
+    <div class="management-actions">
+        <button class="btn btn-secondary" @onclick="Abrir">
+            <Icono Nombre="edit" />
+            Editar
+        </button>
+        <button class="btn btn-secondary" @onclick="AlternarActivo">
+            @(Referencia.Activo ? "Desactivar" : "Activar")
+        </button>
+    </div>
+}
+@if (Mostrar)
+{
+    <Modal Titulo="@($"Editar {Singular}")" AlCerrar="Cerrar">
+        <form @onsubmit="Guardar" @onsubmit:preventDefault>
+            <label class="field">
+                Nombre *
+                <input @bind="Nombre" @bind:event="oninput" required />
+            </label>
+            <label class="field">
+                @(Referencia.Tipo == "autores" ? "Biografía" : "Descripción") *
+                <textarea @bind="Descripcion" @bind:event="oninput" rows="6" required>
+                </textarea>
+            </label>
+            @if (ErrorFormulario.Length > 0)
+            {
+                <p class="form-error" role="alert">@ErrorFormulario</p>
+            }
+            <div class="modal-actions">
+                <button class="btn btn-secondary" type="button" @onclick="Cerrar">Cancelar</button>
+                <button class="btn btn-primary" type="submit">Guardar cambios</button>
+            </div>
+        </form>
+    </Modal>
+}

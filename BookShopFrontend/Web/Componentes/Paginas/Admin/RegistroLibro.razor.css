@@ -1,0 +1,84 @@
+.full {
+    grid-column:1/-1
+}
+.cover-preview {
+    position:relative;
+    width:125px;
+    height:175px;
+    margin:5px auto 27px
+}
+.cover-preview img {
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    border-radius:3px;
+    box-shadow:0 5px 15px #0002;
+    background:#eef3ef
+}
+.image-buttons {
+    position:absolute;
+    display:flex;
+    gap:7px;
+    bottom:8px;
+    right:8px
+}
+.image-buttons .icon-button {
+    background:white;
+    box-shadow:0 2px 8px #0002
+}
+.file-label {
+    position:relative;
+    overflow:hidden;
+    cursor:pointer
+}
+.file-label ::deep input {
+    position:absolute;
+    opacity:0;
+    inset:0;
+    width:100%;
+    height:100%;
+    cursor:pointer
+}
+.reference-search {
+    display:flex;
+    gap:12px
+}
+.reference-search input {
+    flex:1
+}
+.reference-search .btn {
+    flex-shrink:0
+}
+.reference-options {
+    display:flex;
+    flex-wrap:wrap;
+    gap:9px;
+    margin:10px 0 12px;
+    max-height:130px;
+    overflow:auto
+}
+.reference-option {
+    display:flex;
+    align-items:center;
+    gap:9px;
+    border:1px solid #d8e1dc;
+    border-radius:6px;
+    padding:10px 14px;
+    background:white;
+    cursor:pointer;
+    color:var(--ink,#193c30);
+    font-size:13px
+}
+.reference-option.selected {
+    background:#edf6f0;
+    border-color:#0a5140
+}
+.selection-dot {
+    width:14px;
+    height:14px;
+    border:1px solid #899e92;
+    border-radius:50%
+}
+.selected .selection-dot {
+    border:4px solid #0a5140
+}

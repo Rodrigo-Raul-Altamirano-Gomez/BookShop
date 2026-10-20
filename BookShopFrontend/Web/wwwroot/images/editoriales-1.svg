@@ -1,0 +1,9 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 420 240'>
+    <rect width='420' height='240' fill='#af5129'/>
+    <path
+        d='M210 52q-53-32-106-8v105q58-14 106 16 48-30 106-16V44q-53-24-106 8v113'
+        fill='none'
+        stroke='#eee0c2'
+        stroke-width='5'/>
+    <path d='M120 200h180' stroke='#eee0c2' stroke-width='2'/>
+</svg>

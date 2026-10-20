@@ -1,0 +1,39 @@
+.filter-search {
+    display:flex;
+    gap:6px;
+    margin-bottom:12px
+}
+.filter-search input {
+    min-width:0;
+    flex:1;
+    font-size:12px
+}
+.filter-search .btn {
+    padding:9px 11px;
+    font-size:12px
+}
+.filter-options {
+    max-height:245px;
+    overflow:auto;
+    display:grid;
+    gap:8px
+}
+.filter-options label {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:13px;
+    line-height:1.4
+}
+.filter-options input {
+    flex:none
+}
+.text-button {
+    border:0;
+    padding:9px 0 0;
+    background:none;
+    color:var(--green);
+    text-decoration:underline;
+    font-size:12px;
+    cursor:pointer
+}

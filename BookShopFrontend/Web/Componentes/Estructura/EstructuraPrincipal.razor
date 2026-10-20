@@ -1,0 +1,132 @@
+@inherits LayoutComponentBase
+<a class="skip-link" href="#main-content">Saltar al contenido</a>
+<header class="site-header">
+    <div class="header-inner">
+        <a class="brand" href="/" aria-label="BookShop, inicio">
+            <Icono Nombre="book" />
+            <span>BookShop</span>
+        </a>
+        <form class="global-search" @onsubmit="Buscar" @onsubmit:preventDefault>
+            <Icono Nombre="search" />
+            <input
+                @bind="textoBusqueda"
+                @bind:event="oninput"
+                placeholder="Buscar por título"
+                aria-label="Buscar libros por título"
+                />
+            <button type="submit" aria-label="Buscar">
+                <Icono Nombre="arrow" />
+            </button>
+        </form>
+        <a class="header-action" href="/carrito">
+            <span class="cart-icon">
+                <Icono Nombre="cart" />
+                @if (Estado.CantidadCarrito > 0)
+                {
+                    <span class="cart-count">@Estado.CantidadCarrito</span>
+                }
+            </span>
+            <span>Carrito</span>
+        </a>
+        <button class="header-action" @onclick="AbrirCuenta">
+            <Icono Nombre="user" />
+            <span>Cuenta</span>
+        </button>
+    </div>
+</header>
+<main id="main-content" class="site-main">@Body</main>
+<footer class="site-footer">
+    <div class="footer-inner">
+        <a class="brand footer-brand" href="/">
+            <Icono Nombre="book" />
+            <span>BookShop</span>
+        </a>
+        <span class="footer-motto">Libros para una vida más grande.</span>
+        <div class="footer-links">
+            <span>contacto@@bookshop.pe</span>
+            <button @onclick='() => informacion = "Ayuda"'>Ayuda</button>
+            <button @onclick='() => informacion = "Términos"'>Términos</button>
+            <button @onclick='() => informacion = "Privacidad"'>Privacidad</button>
+        </div>
+    </div>
+</footer>
+@if (cuentaAbierta && Estado.Usuario is not null)
+{
+    <div class="drawer-overlay" @onclick="CerrarCuenta">
+        <aside
+            class="account-drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="account-title"
+            @onclick:stopPropagation>
+            <header>
+                <h2 id="account-title">@Estado.Usuario.Nombre</h2>
+                <button class="icon-button modal-close" aria-label="Cerrar cuenta" @onclick="CerrarCuenta">
+                    <Icono Nombre="close" />
+                </button>
+            </header>
+            <nav aria-label="Mi cuenta">
+                @foreach (var item in EnlacesCuenta)
+                {
+                    <button @onclick="() => NavegarCuenta(item.Ruta)">
+                        <Icono Nombre="@item.Icono" />
+                        @item.Etiqueta
+                        <Icono Nombre="arrow" />
+                    </button>
+                }
+                @if (Estado.EsAdministrador)
+                {
+                    <button @onclick='() => NavegarCuenta("/administracion")'>
+                        <Icono Nombre="settings" />
+                        Administración
+                        <Icono Nombre="arrow" />
+                    </button>
+                }
+            </nav>
+            <button class="logout" @onclick="CerrarSesion">
+                <Icono Nombre="user" />
+                Cerrar sesión
+            </button>
+        </aside>
+    </div>
+}
+@if (accesoAbierto)
+{
+    <FormularioAcceso AlCerrar="CerrarAcceso" />
+}
+@if (aviso is not null)
+{
+    <div class="toast" role="status">
+        <Icono Nombre="check" />
+        <span>@aviso</span>
+        <button class="icon-button" aria-label="Cerrar aviso" @onclick="CerrarAviso">
+            <Icono Nombre="close" />
+        </button>
+    </div>
+}
+@if (informacion is not null)
+{
+    <Modal Titulo="@informacion" AlCerrar="CerrarInformacion">
+        <p>@TextoInformacion</p>
+        <div class="modal-actions">
+            <button class="btn btn-primary" @onclick="CerrarInformacion">Cerrar</button>
+        </div>
+    </Modal>
+}
+@if (Estado.IdComparacion is int compareId && Estado.BuscarLibro(compareId) is Libro compareBook)
+{
+    <div class="comparison-dock">
+        <a href="/libros/@compareId">
+            <img src="@compareBook.Portada" alt="@compareBook.Titulo" />
+            <span>@compareBook.Titulo</span>
+        </a>
+        <button class="icon-button" aria-label="Retirar libro de comparación" @onclick="QuitarComparacion">
+            <Icono Nombre="close" />
+        </button>
+    </div>
+}
+<div id="blazor-error-ui" data-nosnippet>
+    La página perdió la conexión.
+    <a href="">Recargar</a>
+    <button class="dismiss" aria-label="Cerrar">×</button>
+</div>

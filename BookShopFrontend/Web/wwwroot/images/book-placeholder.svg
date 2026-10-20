@@ -1,0 +1,11 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 280 420'>
+    <rect width='280' height='420' fill='#e4eadf'/>
+    <path
+        d='M140 166q-41-26-85-8v95q48-13 85 13 37-26 85-13v-95q-44-18-85 8v100'
+        fill='none'
+        stroke='#8caa96'
+        stroke-width='5'/>
+    <text x='140' y='310' fill='#667b6c' text-anchor='middle' font-family='Georgia' font-size='19'>
+        Sin portada
+    </text>
+</svg>

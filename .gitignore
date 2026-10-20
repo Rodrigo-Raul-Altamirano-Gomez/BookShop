@@ -1,0 +1,48 @@
+# Referencias de trabajo: no forman parte de la publicación.
+/docs/
+
+# Compilaciones, publicaciones y cachés.
+**/target/
+**/bin/
+**/obj/
+**/publicacion/
+**/build/
+**/dist/
+**/node_modules/
+*.class
+*.log
+*.tmp
+*.bak
+*.zip
+
+# Estado y preferencias locales de los IDE.
+**/.idea/
+**/.vs/
+**/.vscode/
+*.iml
+*.ipr
+*.iws
+*.suo
+*.user
+.DS_Store
+Thumbs.db
+
+# Credenciales, claves y configuración privada de ejecución.
+.env
+.env.*
+!.env.example
+**/src/main/resources/db.properties
+/BookShop/db.properties
+**/clave-datos.key
+*.pem
+*.pfx
+*.p12
+*.jks
+*.keystore
+**/secrets.json
+**/appsettings.Local.json
+**/appsettings.*.local.json
+/BookShop/config/
+
+# Datos antiguos incompatibles con el esquema actual.
+/BookShop/DAO/src/main/resources/registers.sql

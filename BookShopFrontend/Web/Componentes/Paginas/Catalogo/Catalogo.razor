@@ -1,0 +1,10 @@
+@page "/catalogo"
+<PageTitle>Catálogo · BookShop</PageTitle>
+<div class="container">
+    <nav class="breadcrumb">
+        <a href="/">Inicio</a>
+        <span>/</span>
+        <span>Catálogo</span>
+    </nav>
+    <ExploradorCatalogo Libros="Libros" Titulo="@Titulo" Busqueda="@(Q ?? "")" OrdenInicial="@Sort" />
+</div>

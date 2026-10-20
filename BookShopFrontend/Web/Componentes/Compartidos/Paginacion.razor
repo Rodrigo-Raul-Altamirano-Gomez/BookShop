@@ -1,0 +1,19 @@
+@if (TotalPaginas > 1)
+{
+    <nav class="pagination" aria-label="Páginas de resultados">
+        <button disabled="@(Pagina <= 1)" @onclick="() => Ir(Pagina - 1)" aria-label="Página anterior">‹</button>
+        @foreach (var p in PaginasVisibles)
+        {
+            <button
+                class="@(Pagina == p ? "active" : "")"
+                aria-current="@(Pagina == p ? "page" : null)"
+                aria-label="Página @p"
+                @onclick="() => Ir(p)">
+                @p
+            </button>
+        }
+        <button disabled="@(Pagina >= TotalPaginas)" @onclick="() => Ir(Pagina + 1)" aria-label="Página siguiente">
+            ›
+        </button>
+    </nav>
+}

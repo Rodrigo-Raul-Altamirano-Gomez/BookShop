@@ -1,0 +1,94 @@
+<Modal Titulo="@(reactivacion ? "Reactivar cuenta" : "Bienvenido a BookShop")" AlCerrar="Cerrar">
+    @if (!reactivacion)
+    {
+        <div class="tabs">
+            <button class="tab @(!registro ? "active" : "")" @onclick="PestanaAcceso">Iniciar sesión</button>
+            <button class="tab @(registro ? "active" : "")" @onclick="PestanaRegistro">Crear cuenta</button>
+        </div>
+    }
+    <form @onsubmit="Enviar" @onsubmit:preventDefault>
+        @if (reactivacion)
+        {
+            <p>Tu cuenta está desactivada. Puedes reactivarla y conservar tus datos.</p>
+        }
+        @if (registro)
+        {
+            <div class="profile-photo-picker">
+                <img src="@foto" alt="Vista previa de la foto de perfil" />
+                <label class="icon-button photo-input" title="Elegir foto">
+                    <Icono Nombre="edit" />
+                    <InputFile
+                        OnChange="ElegirFoto"
+                        accept="image/jpeg,image/png"
+                        aria-label="Elegir foto de perfil"
+                        />
+                </label>
+                <button type="button" class="icon-button" @onclick="QuitarFoto" aria-label="Quitar foto">
+                    <Icono Nombre="trash" />
+                </button>
+            </div>
+            <label class="field">
+                Nombre completo *
+                <input @bind="nombre" @bind:event="oninput" required autocomplete="name" />
+            </label>
+        }
+        @if (!reactivacion)
+        {
+            <label class="field">
+                Correo electrónico *
+                <input type="email" @bind="correo" @bind:event="oninput" required autocomplete="email" />
+            </label>
+        }
+        @if (registro)
+        {
+            <label class="field">
+                Fecha de nacimiento *
+                <input type="date" @bind="nacimiento" required />
+            </label>
+        }
+        @if (!reactivacion)
+        {
+            <label class="field">
+                Contraseña *
+                <div class="password-field">
+                    <input
+                        type="@(mostrarContrasena ? "text" : "password")"
+                        @bind="contrasena"
+                        @bind:event="oninput"
+                        required
+                        autocomplete="@(registro ? "new-password" : "current-password")"
+                        />
+                    <button
+                        type="button"
+                        @onclick="AlternarContrasena"
+                        aria-label="@(mostrarContrasena ? "Ocultar contraseña" : "Mostrar contraseña")">
+                        @(mostrarContrasena ? "Ocultar" : "Mostrar")
+                    </button>
+                </div>
+            </label>
+            @if (registro)
+            {
+                <label class="field">
+                    Confirmar contraseña *
+                    <input
+                        type="@(mostrarContrasena ? "text" : "password")"
+                        @bind="confirmacion"
+                        @bind:event="oninput"
+                        required
+                        autocomplete="new-password"
+                        />
+                </label>
+            }
+        }
+        @if (error is not null)
+        {
+            <p class="form-error" role="alert">@error</p>
+        }
+        <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" @onclick="Cerrar">Cancelar</button>
+            <button type="submit" class="btn btn-primary">
+                @(reactivacion ? "Reactivar cuenta" : registro ? "Crear cuenta" : "Iniciar sesión")
+            </button>
+        </div>
+    </form>
+</Modal>

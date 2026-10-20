@@ -1,0 +1,310 @@
+@page "/compra"
+<PageTitle>Resumen de compra · BookShop</PageTitle>
+<div class="container">
+    <nav class="breadcrumb">
+        <a href="/">Inicio</a>
+        <span>/</span>
+        <a href="/carrito">Carrito</a>
+        <span>/</span>
+        Resumen de compra
+    </nav>
+    <div class="page-heading">
+        <h1>Resumen de compra</h1>
+    </div>
+    @if (Estado.Usuario is null)
+    {
+        <div class="empty-state">
+            <h2>Inicia sesión para continuar</h2>
+            <button class="btn btn-primary" @onclick="Estado.MostrarAcceso">Iniciar sesión</button>
+        </div>
+    }
+    else if (Estado.CantidadCarrito == 0)
+    {
+        <div class="empty-state">
+            <h2>Tu carrito está vacío</h2>
+            <a class="btn btn-primary" href="/catalogo">Explorar catálogo</a>
+        </div>
+    }
+    else
+    {
+        <div class="two-column checkout-layout">
+            <div class="selection-groups">
+                <section class="panel selection-panel">
+                    <div class="section-heading">
+                        <h2>
+                            <Icono Nombre="pin" />
+                            Dirección de envío
+                        </h2>
+                        <button class="btn btn-secondary" @onclick="AbrirDireccion">
+                            <Icono Nombre="plus" />
+                            Añadir dirección
+                        </button>
+                    </div>
+                    @if (Estado.Direcciones.Count == 0)
+                    {
+                        <p class="muted">Añade una dirección de envío.</p>
+                    }
+                    else
+                    {
+                        <div class="carousel">
+                            <button
+                                class="icon-button"
+                                aria-label="Direcciones anteriores"
+                                disabled="@(indiceDireccion == 0)"
+                                @onclick="() => indiceDireccion--">
+                                ‹
+                            </button>
+                            <div class="selection-cards">
+                                @foreach (var address in Estado.Direcciones.Skip(indiceDireccion).Take(2))
+                                {
+                                    <button
+                                        class="selection-card @(direccionId == address.Id ? "selected" : "")"
+                                        @onclick="() => direccionId = address.Id">
+                                        <span class="radio-mark">
+                                        </span>
+                                        <div>
+                                            <h3>
+                                                @address.Alias @if (address.Predeterminada)
+                                                {
+                                                    <span class="badge">Predeterminada</span>
+                                                }
+                                            </h3>
+                                            <p>
+                                                @address.Calle
+                                                <br />
+                                                @address.Distrito, @address.Ciudad
+                                                <br />
+                                                @address.ReferenciaAdicional
+                                            </p>
+                                        </div>
+                                    </button>
+                                }
+                            </div>
+                            <button
+                                class="icon-button"
+                                aria-label="Más direcciones"
+                                disabled="@(indiceDireccion + 2 >= Estado.Direcciones.Count)"
+                                @onclick="() => indiceDireccion++">
+                                ›
+                            </button>
+                        </div>
+                        <p class="carousel-position">
+                            @(indiceDireccion + 1) – @Math.Min(indiceDireccion + 2, Estado.Direcciones.Count) de
+                            @Estado.Direcciones.Count
+                        </p>
+                    }
+                </section>
+                <section class="panel selection-panel">
+                    <div class="section-heading">
+                        <h2>
+                            <Icono Nombre="card" />
+                            Método de pago
+                        </h2>
+                        <button class="btn btn-secondary" @onclick="AbrirMetodo">
+                            <Icono Nombre="plus" />
+                            Añadir método
+                        </button>
+                    </div>
+                    @if (Estado.Metodos.Count == 0)
+                    {
+                        <p class="muted">Añade un método de pago.</p>
+                    }
+                    else
+                    {
+                        <div class="carousel">
+                            <button
+                                class="icon-button"
+                                aria-label="Métodos anteriores"
+                                disabled="@(indiceMetodo == 0)"
+                                @onclick="() => indiceMetodo--">
+                                ‹
+                            </button>
+                            <div class="selection-cards">
+                                @foreach (var method in Estado.Metodos.Skip(indiceMetodo).Take(2))
+                                {
+                                    <button
+                                        class="selection-card @(metodoId == method.Id ? "selected" : "")"
+                                        @onclick="() => metodoId = method.Id">
+                                        <span class="radio-mark">
+                                        </span>
+                                        <div>
+                                            <h3>
+                                                @method.Alias @if (method.Predeterminada)
+                                                {
+                                                    <span class="badge">Predeterminado</span>
+                                                }
+                                            </h3>
+                                            <p>
+                                                <Icono Nombre="@(method.Tipo == "Tarjeta" ? "card" : "wallet")" />
+                                                @method.Proveedor · @method.TipoTarjeta
+                                                <br />
+                                                @method.NumeroEnmascarado
+                                                <br />
+                                                @method.Titular
+                                                <br />
+                                                <span class="muted small">
+                                                    Vence @method.Vencimiento.ToString("MM/yyyy")
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </button>
+                                }
+                            </div>
+                            <button
+                                class="icon-button"
+                                aria-label="Más métodos"
+                                disabled="@(indiceMetodo + 2 >= Estado.Metodos.Count)"
+                                @onclick="() => indiceMetodo++">
+                                ›
+                            </button>
+                        </div>
+                        <p class="carousel-position">
+                            @(indiceMetodo + 1) – @Math.Min(indiceMetodo + 2, Estado.Metodos.Count) de
+                            @Estado.Metodos.Count
+                        </p>
+                    }
+                </section>
+                <section class="panel selection-panel">
+                    <div class="section-heading">
+                        <h2>
+                            <Icono Nombre="tag" />
+                            Cupón
+                        </h2>
+                    </div>
+                    <div class="carousel">
+                        <button
+                            class="icon-button"
+                            aria-label="Cupones anteriores"
+                            disabled="@(indiceCupon == 0)"
+                            @onclick="() => indiceCupon--">
+                            ‹
+                        </button>
+                        <div class="selection-cards">
+                            @foreach (var coupon in CuponesVisibles)
+                            {
+                                <button
+                                    class="selection-card @(cuponId == coupon?.Id ? "selected" : "")"
+                                    @onclick="() => SeleccionarCupon(coupon)">
+                                    <span class="radio-mark">
+                                    </span>
+                                    <div>
+                                        @if (coupon is null)
+                                        {
+                                            <h3>Sin cupón</h3>
+                                        }
+                                        else
+                                        {
+                                            <h3>@coupon.Porcentaje% de descuento</h3>
+                                            <p>
+                                                Mínimo @EstadoDemostracion.Dinero(coupon.Minimo)
+                                                <br />
+                                                Vence @coupon.Vencimiento.ToString("dd/MM/yyyy")
+                                            </p>
+                                        }
+                                    </div>
+                                </button>
+                            }
+                        </div>
+                        <button
+                            class="icon-button"
+                            aria-label="Más cupones"
+                            disabled="@(indiceCupon + 2 >= Cupones.Count)"
+                            @onclick="() => indiceCupon++">
+                            ›
+                        </button>
+                    </div>
+                    <p class="carousel-position">
+                        @(indiceCupon + 1) – @Math.Min(indiceCupon + 2, Cupones.Count) de @Cupones.Count
+                    </p>
+                </section>
+            </div>
+            <aside class="panel checkout-summary">
+                <h2>Tu compra</h2>
+                <table class="line-table">
+                    <thead>
+                        <tr>
+                            <th>Libro</th>
+                            <th>Cant.</th>
+                            <th>Precio</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var line in Estado.Carrito)
+                        {
+                            var book = Estado.BuscarLibro(line.Key);
+                            if (book is not null)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="line-book">
+                                            <img src="@book.Portada" alt="@book.Titulo" />
+                                            <strong>@book.Titulo</strong>
+                                        </div>
+                                    </td>
+                                    <td>@line.Value</td>
+                                    <td>
+                                        <div class="line-price">
+                                            @if (book.Descuento > 0)
+                                            {
+                                                <del>@EstadoDemostracion.Dinero(book.PrecioOriginal)</del>
+                                            }
+                                            @EstadoDemostracion.Dinero(book.Precio)
+                                        </div>
+                                    </td>
+                                    <td>@EstadoDemostracion.Dinero(book.Precio * line.Value)</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+                <div class="summary-lines">
+                    <div>
+                        <span>Productos</span>
+                        <span>@EstadoDemostracion.Dinero(Productos)</span>
+                    </div>
+                    <div class="discount">
+                        <span>Descuentos de libros</span>
+                        <span>− @EstadoDemostracion.Dinero(Productos - Subtotal)</span>
+                    </div>
+                    <div>
+                        <span>Subtotal</span>
+                        <span>@EstadoDemostracion.Dinero(Subtotal)</span>
+                    </div>
+                    <hr />
+                    <div class="discount">
+                        <span>Cupón</span>
+                        <span>− @EstadoDemostracion.Dinero(DescuentoEjemplo)</span>
+                    </div>
+                    <div>
+                        <span>Envío</span>
+                        <span>@EstadoDemostracion.Dinero(EnvioEjemplo)</span>
+                    </div>
+                    <div class="total">
+                        <span>Total a pagar</span>
+                        <span>@EstadoDemostracion.Dinero(Total)</span>
+                    </div>
+                </div>
+                @if (errorPago is not null)
+                {
+                    <p class="form-error" role="alert">@errorPago</p>
+                }
+                <button
+                    class="btn btn-primary"
+                    disabled="@(direccionId is null || metodoId is null || procesando)"
+                    @onclick="Confirmar">
+                    @(procesando ? "Procesando…" : "Confirmar y pagar")
+                </button>
+                <a class="btn btn-secondary" href="/carrito">Volver al carrito</a>
+            </aside>
+        </div>
+    }
+</div>
+@if (formularioDireccion)
+{
+    <FormularioDireccion AlGuardar="GuardarDireccion" AlCerrar="CerrarDireccion" />
+}
+@if (formularioMetodo)
+{
+    <FormularioPago AlGuardar="GuardarMetodo" AlCerrar="CerrarMetodo" />
+}

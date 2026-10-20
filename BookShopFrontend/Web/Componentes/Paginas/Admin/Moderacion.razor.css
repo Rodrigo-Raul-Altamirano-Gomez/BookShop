@@ -1,0 +1,133 @@
+.status-check {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:13px 0
+}
+.request-list {
+    display:grid;
+    gap:15px;
+    margin:22px 0
+}
+.request-card {
+    display:flex;
+    justify-content:space-between;
+    gap:25px;
+    padding:23px 25px;
+    border:1px solid var(--border,#dce4df);
+    border-radius:9px;
+    background:white
+}
+.request-card h3 {
+    margin:0 0 7px;
+    font-size:21px
+}
+.request-card p {
+    font-size:14px;
+    margin:7px 0
+}
+.request-actions {
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:20px;
+    min-width:140px
+}
+.request-summary {
+    text-align:center;
+    margin:0 0 25px
+}
+.request-summary p {
+    font-size:14px;
+    margin-top:15px
+}
+.request-details {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:30px;
+    border-top:1px solid #dce4df;
+    padding-top:24px
+}
+.request-details>div+div {
+    border-left:1px solid #dce4df;
+    padding-left:30px
+}
+.request-details h3 {
+    margin:8px 0 12px;
+    font-size:24px
+}
+.request-details p {
+    margin:10px 0;
+    font-size:17px
+}
+.request-comment {
+    margin:14px 0 25px
+}
+.request-comment p {
+    line-height:1.6
+}
+.reference-box {
+    padding:21px 23px;
+    border:1px solid #dce4df;
+    border-radius:8px;
+    margin:15px 0
+}
+.reference-box h3 {
+    font-size:21px;
+    margin:0 0 17px
+}
+.order-summary {
+    display:grid;
+    grid-template-columns:1.5fr 1fr 1fr 1fr;
+    gap:20px;
+    font-size:15px
+}
+.order-summary small {
+    display:block;
+    color:#6c7c72;
+    margin-bottom:8px
+}
+.review-reference {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:30px;
+    line-height:1.8
+}
+.comparison-content {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px
+}
+.comparison-content .reference-box {
+    margin:0
+}
+.comparison-content p {
+    line-height:1.6
+}
+.resolution-actions {
+    border-top:1px solid #dce4df;
+    padding-top:24px;
+    display:flex;
+    justify-content:space-between;
+    gap:15px;
+    margin-top:25px
+}
+.resolution-actions>div {
+    display:flex;
+    gap:12px;
+    margin-left:auto
+}
+.resolution-result {
+    display:flex;
+    align-items:center;
+    gap:15px;
+    background:#eef6f0;
+    border-radius:8px;
+    padding:19px;
+    margin-top:20px
+}
+.resolution-result p {
+    margin:7px 0 0
+}

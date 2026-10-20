@@ -1,0 +1,359 @@
+@page "/libros/{Id:int}"
+<PageTitle>@(Libro?.Titulo ?? "Libro") · BookShop</PageTitle>
+<div class="container detail-page">
+    <nav class="breadcrumb">
+        <a href="/">Inicio</a>
+        <span>/</span>
+        <a href="/catalogo">Catálogo</a>
+        <span>/</span>
+        <span>@Libro?.Titulo</span>
+    </nav>
+    @if (Libro is null)
+    {
+        <div class="empty-state">
+            <h1>Libro no encontrado</h1>
+            <a href="/catalogo" class="btn btn-primary">Volver al catálogo</a>
+        </div>
+    }
+    else
+    {
+        <section class="book-detail">
+            <div class="cover-column">
+                <img
+                    class="detail-cover"
+                    onerror="this.onerror=null;this.src='/images/book-placeholder.svg'"
+                    src="@Libro.Portada"
+                    alt="@($"Portada de {Libro.Titulo}")"
+                    />
+                @if (Estado.EsAdministrador)
+                {
+                    <div class="image-actions">
+                        <label class="icon-button" title="Cambiar portada">
+                            <Icono Nombre="edit" />
+                            <InputFile
+                                OnChange="CambiarImagen"
+                                disabled="@cargandoImagen"
+                                accept="image/png,image/jpeg"
+                                />
+                        </label>
+                        <button
+                            class="icon-button"
+                            title="Quitar portada"
+                            disabled="@cargandoImagen"
+                            @onclick="QuitarImagen">
+                            <Icono Nombre="trash" />
+                        </button>
+                    </div>
+                }
+            </div>
+            <div class="book-information">
+                <h1>@Libro.Titulo</h1>
+                <div class="book-references">
+                    <a href="@RutaReferencia("autores", Libro.Autor)">@Libro.Autor</a>
+                    <span>·</span>
+                    <a href="@RutaReferencia("categorias", Libro.Categoria)">@Libro.Categoria</a>
+                    <span>·</span>
+                    <a href="@RutaReferencia("editoriales", Libro.Editorial)">@Libro.Editorial</a>
+                </div>
+                <p class="language">Idioma: @Libro.Idioma</p>
+                <div class="detail-rating">
+                    @if (Resenas.Count > 0)
+                    {
+                        <span
+                            class="stars average-stars"
+                            style="@EstiloPromedio"
+                            aria-label="@($"Valoración {Promedio:N1} de 5")">
+                            ★★★★★
+                        </span>
+                        <strong>@Promedio.ToString("N1") / 5</strong>
+                    }
+                    else
+                    {
+                        <span class="muted">Sin reseñas</span>
+                    }
+                    <a href="#resenas">Ver reseñas (@Resenas.Count)</a>
+                </div>
+                <div class="detail-price">
+                    @if (Libro.Descuento > 0)
+                    {
+                        <del>@EstadoDemostracion.Dinero(Libro.PrecioOriginal)</del>
+                    }
+                    <div>
+                        <strong>@EstadoDemostracion.Dinero(Libro.Precio)</strong>
+                        @if (Libro.Descuento > 0)
+                        {
+                            <span class="badge discount-badge">-@Libro.Descuento%</span>
+                        }
+                    </div>
+                </div>
+                <p class="availability">
+                    <span class="availability-dot @(Libro.Stock == 0 || !Libro.Activo ? "unavailable" : "")">
+                    </span>
+                    @(Libro.Stock > 0 && Libro.Activo ? $"Disponible · {Libro.Stock} unidades" : "No disponible")
+                </p>
+                <div class="purchase-actions">
+                    <div class="quantity-control">
+                        <button @onclick="Disminuir" aria-label="Reducir cantidad" disabled="@(cantidad <= 1)">
+                            −
+                        </button>
+                        <span>@cantidad</span>
+                        <button @onclick="Aumentar" aria-label="Aumentar cantidad">+</button>
+                    </div>
+                    <button
+                        class="btn btn-primary add-cart"
+                        @onclick="AgregarCarrito"
+                        disabled="@(Libro.Stock == 0 || !Libro.Activo)">
+                        <Icono Nombre="cart" />
+                        Agregar al carrito
+                    </button>
+                </div>
+                <div class="list-actions">
+                    <button class="btn btn-secondary @(Deseado ? "selected" : "")" @onclick="AlternarDeseado">
+                        <Icono Nombre="heart" />
+                        @(Deseado ? "En deseados" : "Deseados")
+                    </button>
+                    <button class="btn btn-secondary @(Favorito ? "selected" : "")" @onclick="AlternarFavorito">
+                        <Icono Nombre="star" />
+                        @(Favorito ? "En favoritos" : "Favoritos")
+                    </button>
+                    <button class="btn btn-secondary" @onclick="Comparar">
+                        <Icono Nombre="compare" />
+                        Comparar
+                    </button>
+                </div>
+                @if (Estado.EsAdministrador)
+                {
+                    <GestionLibro Libro="Libro" />
+                }
+            </div>
+        </section>
+        <section class="synopsis">
+            <h2>Sinopsis</h2>
+            <p class="@(sinopsisCompleta ? "" : "synopsis-preview")">@Libro.Sinopsis</p>
+            <button class="text-button" @onclick="AlternarSinopsis">
+                @(sinopsisCompleta ? "Leer menos ↑" : "Leer más ↓")
+            </button>
+        </section>
+        <section class="technical-panel panel">
+            <button class="technical-heading" @onclick="AlternarFicha" aria-expanded="@fichaExpandida">
+                <span>@(fichaExpandida ? "⌃" : "⌄")</span>
+                <h3>Ver detalles</h3>
+            </button>
+            @if (fichaExpandida)
+            {
+                <dl class="technical-data">
+                    <div>
+                        <dt>Idioma</dt>
+                        <dd>@Libro.Idioma</dd>
+                    </div>
+                    <div>
+                        <dt>ISBN</dt>
+                        <dd>@Libro.ISBN</dd>
+                    </div>
+                    <div>
+                        <dt>Año de edición</dt>
+                        <dd>@Libro.Anio</dd>
+                    </div>
+                    <div>
+                        <dt>Páginas</dt>
+                        <dd>@Libro.Paginas</dd>
+                    </div>
+                    <div>
+                        <dt>Peso</dt>
+                        <dd>@Libro.Peso</dd>
+                    </div>
+                    <div>
+                        <dt>Dimensiones</dt>
+                        <dd>@Libro.Dimensiones</dd>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(Libro.Saga))
+                    {
+                        <div>
+                            <dt>Saga</dt>
+                            <dd>@Libro.Saga</dd>
+                        </div>
+                    }
+                    @if (Libro.Tomo is not null)
+                    {
+                        <div>
+                            <dt>Tomo</dt>
+                            <dd>@Libro.Tomo</dd>
+                        </div>
+                    }
+                </dl>
+            }
+        </section>
+        <section class="similar-section">
+            <div class="section-heading">
+                <h2>Libros similares</h2>
+            </div>
+            <div class="book-grid">
+                @foreach (var similar in LibrosSimilares)
+                {
+                    <TarjetaLibro Libro="similar" />
+                }
+            </div>
+        </section>
+        <section class="reviews-panel panel" id="resenas">
+            <div class="section-heading">
+                <h2>Reseñas</h2>
+                <button class="btn btn-primary" @onclick="AbrirResena">
+                    <Icono Nombre="edit" />
+                    Escribir reseña
+                </button>
+            </div>
+            <div class="reviews-layout">
+                <div class="reviews-summary">
+                    @if (Resenas.Count > 0)
+                    {
+                        <div class="average">
+                            <strong>
+                                @Promedio.ToString("N1")
+                                <small> / 5</small>
+                            </strong>
+                            <span class="stars average-stars" style="@EstiloPromedio">★★★★★</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <h3>Sin reseñas</h3>
+                    }
+                    <p class="muted">@Resenas.Count reseñas</p>
+                    @foreach (var rating in Puntuaciones)
+                    {
+                        <div class="distribution">
+                            <span>
+                                @rating
+                                <span class="stars">★</span>
+                            </span>
+                            <div class="distribution-track">
+                                <span style="@($"width:{PorcentajePuntuacion(rating)}%")">
+                                </span>
+                            </div>
+                            <span>@Resenas.Count(r => r.Puntuacion == rating)</span>
+                        </div>
+                    }
+                </div>
+                <div class="reviews-list">
+                    @if (Resenas.Count == 0)
+                    {
+                        <div class="empty-state">
+                            <p>Comparte tu opinión sobre este libro.</p>
+                        </div>
+                    }
+                    @foreach (var review in ResenasVisibles)
+                    {
+                        <article class="review-row">
+                            <img class="review-avatar" src="@review.FotoUsuario" alt="" />
+                            <div class="review-content">
+                                <strong>@review.Usuario</strong>
+                                <span class="muted">
+                                    @review.Fecha.ToString("d 'de' MMMM 'de' yyyy", CulturaEspanola)
+                                </span>
+                                <span class="stars" aria-label="@($"{review.Puntuacion} de 5 estrellas")">
+                                    @TextoEstrellas(review.Puntuacion)
+                                </span>
+                                <p>@review.Comentario</p>
+                            </div>
+                            <div class="review-actions">
+                                <button
+                                    class="icon-button @(review.Votada ? "selected" : "")"
+                                    @onclick="() => Votar(review)"
+                                    title="Marcar reseña como útil"
+                                    aria-label="Marcar reseña como útil">
+                                    <Icono Nombre="thumb" />
+                                    @review.Votos
+                                </button>
+                                <button
+                                    class="icon-button"
+                                    @onclick="() => AbrirReporte(review)"
+                                    title="Reportar reseña"
+                                    aria-label="Reportar reseña">
+                                    <Icono Nombre="flag" />
+                                </button>
+                            </div>
+                        </article>
+                    }
+                    <Paginacion
+                        Pagina="paginaResenas"
+                        TotalPaginas="PaginasResenas"
+                        PaginaCambiada="CambiarPaginaResenas"
+                        />
+                </div>
+            </div>
+        </section>
+    }
+</div>
+@if (modalResena && Libro is not null)
+{
+    <Modal Titulo="Escribir reseña" AlCerrar="CerrarResena">
+        <form @onsubmit="PublicarResena" @onsubmit:preventDefault>
+            <p class="form-book">@Libro.Titulo</p>
+            <div class="field">
+                <label>Puntuación *</label>
+                <div class="rating-picker">
+                    @foreach (var rating in PuntuacionesAscendentes)
+                    {
+                        <button
+                            type="button"
+                            class="@(rating <= puntuacionResena ? "chosen" : "")"
+                            @onclick="() => SeleccionarPuntuacion(rating)"
+                            aria-label="@($"Puntuar con {rating} estrellas")">
+                            ★
+                        </button>
+                    }
+                </div>
+            </div>
+            <div class="field">
+                <label for="review-comment">Comentario *</label>
+                <textarea id="review-comment" rows="5" @bind="comentarioResena" @bind:event="oninput">
+                </textarea>
+            </div>
+            @if (errorFormulario.Length > 0)
+            {
+                <p class="form-error">@errorFormulario</p>
+            }
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" @onclick="CerrarResena">Cancelar</button>
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                    disabled="@(puntuacionResena == 0 || string.IsNullOrWhiteSpace(comentarioResena))">
+                    Publicar reseña
+                </button>
+            </div>
+        </form>
+    </Modal>
+}
+@if (modalReporte)
+{
+    <Modal Titulo="Reportar reseña" AlCerrar="CerrarReporte">
+        <form @onsubmit="EnviarReporte" @onsubmit:preventDefault>
+            <div class="field">
+                <label for="report-reason">Motivo *</label>
+                <select id="report-reason" @bind="motivoReporte">
+                    <option value="">Seleccionar motivo</option>
+                    <option>Contenido ofensivo</option>
+                    <option>Publicidad/spam</option>
+                    <option>Contenido ajeno al libro</option>
+                    <option>Otro</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="report-comment">Comentario adicional</label>
+                <textarea id="report-comment" rows="4" @bind="comentarioReporte" @bind:event="oninput">
+                </textarea>
+            </div>
+            @if (errorFormulario.Length > 0)
+            {
+                <p class="form-error">@errorFormulario</p>
+            }
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" @onclick="CerrarReporte">Cancelar</button>
+                <button type="submit" class="btn btn-primary" disabled="@(motivoReporte.Length == 0)">
+                    Enviar reporte
+                </button>
+            </div>
+        </form>
+    </Modal>
+}

@@ -1,0 +1,40 @@
+@page "/referencias/{Tipo}"
+<PageTitle>@Titulo · BookShop</PageTitle>
+<div class="container">
+    <nav class="breadcrumb">
+        <a href="/">Inicio</a>
+        <span>/</span>
+        <span>@Titulo</span>
+    </nav>
+    <div class="results-heading">
+        <div class="result-title">
+            <h1>@Titulo</h1>
+            <span>@Resultados.Count @Tipo</span>
+        </div>
+        <label class="sort-label">
+            Ordenar por:
+            <select aria-label="Ordenar referencias" @bind="orden" @bind:after="CambiarOrden">
+                <option value="nombre">Nombre A-Z</option>
+                <option value="reciente">Más recientes</option>
+            </select>
+        </label>
+    </div>
+    @if (Resultados.Count == 0)
+    {
+        <div class="empty-state">
+            <Icono Nombre="book" />
+            <h2>No hay referencias disponibles</h2>
+            <a href="/catalogo" class="btn btn-secondary">Explorar catálogo</a>
+        </div>
+    }
+    else
+    {
+        <div class="reference-grid references-list">
+            @foreach (var reference in ReferenciasVisibles)
+            {
+                <TarjetaReferencia Referencia="reference" />
+            }
+        </div>
+        <Paginacion Pagina="pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
+    }
+</div>

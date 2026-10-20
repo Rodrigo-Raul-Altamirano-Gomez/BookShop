@@ -1,0 +1,148 @@
+@page "/administracion/libros"
+@page "/administracion/autores"
+@page "/administracion/categorias"
+@page "/administracion/editoriales"
+@using Web.Componentes.Paginas.Catalogo
+@implements IDisposable
+<PageTitle>@Titulo · Administración · BookShop</PageTitle>
+<div class="container">
+    <nav class="breadcrumb">
+        <a href="/">Inicio</a>
+        <span>/</span>
+        <a href="/administracion">Administración</a>
+        <span>/</span>
+        <span>@Titulo</span>
+    </nav>
+    @if (!Estado.EsAdministrador)
+    {
+        <div class="empty-state">
+            <Icono Nombre="user" />
+            <h1>Acceso administrativo</h1>
+            <p>Inicia sesión con demo@@admin.bookshop para recorrer estas pantallas.</p>
+            <button class="btn btn-primary" @onclick="Estado.MostrarAcceso">Iniciar sesión</button>
+        </div>
+    }
+    else if (Tipo == "libros")
+    {
+        <ExploradorCatalogo Libros="Estado.Libros" Titulo="Libros" Administracion="true">
+            <AccionesCabecera>
+                <button class="btn btn-primary" @onclick="AbrirAlta">
+                    <Icono Nombre="plus" />
+                    Añadir libro
+                </button>
+            </AccionesCabecera>
+        </ExploradorCatalogo>
+    }
+    else
+    {
+        <div class="catalog-layout">
+            <aside class="filters">
+                <h2>Filtros</h2>
+                <div class="filter-group">
+                    <label>
+                        <input type="checkbox" @bind="BorradorSoloActivos" />
+                        Solo activos
+                    </label>
+                </div>
+                <div class="filter-group">
+                    <h3>Filtros activos</h3>
+                    <div class="chips">
+                        @if (SoloActivos)
+                        {
+                            <button class="chip" @onclick="QuitarSoloActivos">
+                                Solo activos
+                                <Icono Nombre="close" />
+                            </button>
+                        }
+                        else
+                        {
+                            <span class="muted">Sin filtros</span>
+                        }
+                    </div>
+                </div>
+                <button class="btn btn-primary" @onclick="Aplicar">Aplicar filtros</button>
+                <button class="btn btn-secondary" @onclick="Limpiar">Limpiar filtros</button>
+            </aside>
+            <div>
+                <div class="results-heading">
+                    <div>
+                        <h1>@Titulo</h1>
+                        <span class="muted">@Filtrados.Count() @Titulo.ToLower()</span>
+                    </div>
+                    <div class="list-actions">
+                        <select aria-label="Ordenar" @bind="Orden" @bind:after="ReiniciarPagina">
+                            <option value="Nombre">Nombre A-Z</option>
+                            <option value="recent">Más recientes</option>
+                        </select>
+                        <button class="btn btn-primary" @onclick="AbrirAlta">
+                            <Icono Nombre="plus" />
+                            Añadir @Singular
+                        </button>
+                    </div>
+                </div>
+                @if (!Filtrados.Any())
+                {
+                    <div class="empty-state">
+                        <Icono Nombre="search" />
+                        <h2>No hay @Tipo</h2>
+                        <p>Prueba con otros filtros o añade una referencia.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="reference-grid">
+                        @foreach (var Referencia in ElementosPagina)
+                        {
+                            <TarjetaReferencia Referencia="Referencia" />
+                        }
+                    </div>
+                    <Paginacion Pagina="Pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
+                }
+            </div>
+        </div>
+    }
+</div>
+@if (MostrarLibro)
+{
+    <RegistroLibro AlCerrar="CerrarLibro" />
+}
+@if (MostrarReferencia)
+{
+    <Modal Titulo="@($"Añadir {Singular}")" AlCerrar="CerrarReferencia">
+        <form @onsubmit="AgregarReferencia" @onsubmit:preventDefault>
+            <div class="image-preview">
+                <img src="@ImagenReferencia" alt="Vista previa de la imagen" />
+                <div class="image-buttons">
+                    <label class="icon-button file-label" title="Elegir imagen">
+                        <Icono Nombre="edit" />
+                        <InputFile OnChange="LeerImagenReferencia" accept="image/jpeg,image/png" />
+                    </label>
+                    <button
+                        type="button"
+                        class="icon-button"
+                        title="Quitar imagen"
+                        @onclick="QuitarImagenReferencia">
+                        <Icono Nombre="trash" />
+                    </button>
+                </div>
+            </div>
+            <label class="field">
+                Nombre *
+                <input @bind="NombreReferencia" @bind:event="oninput" required />
+            </label>
+            <label class="field">
+                @(Tipo == "autores" ? "Biografía" : "Descripción") *
+                <textarea rows="6" @bind="DescripcionReferencia" @bind:event="oninput" required>
+                </textarea>
+            </label>
+            @if (ErrorFormulario.Length > 0)
+            {
+                <p class="form-error" role="alert">@ErrorFormulario</p>
+            }
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" @onclick="CerrarReferencia">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Añadir @Singular</button>
+            </div>
+        </form>
+    </Modal>
+}

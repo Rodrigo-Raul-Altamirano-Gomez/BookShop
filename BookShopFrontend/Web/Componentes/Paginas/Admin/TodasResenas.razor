@@ -1,0 +1,80 @@
+@page "/todas-resenas"
+@implements IDisposable
+<PageTitle>Todas las reseñas · BookShop</PageTitle>
+<div class="container">
+    <nav class="breadcrumb">
+        <a href="/">Inicio</a>
+        <span>/</span>
+        <a href="/administracion">Administración</a>
+        <span>/</span>
+        <a href="/moderacion">Moderación</a>
+        <span>/</span>
+        <span>Todas las reseñas</span>
+    </nav>
+    @if (!Estado.EsAdministrador)
+    {
+        <div class="empty-state">
+            <Icono Nombre="user" />
+            <h1>Acceso administrativo</h1>
+            <p>Inicia sesión con demo@@admin.bookshop para recorrer estas pantallas.</p>
+            <button class="btn btn-primary" @onclick="Estado.MostrarAcceso">Iniciar sesión</button>
+        </div>
+    }
+    else
+    {
+        <div class="results-heading">
+            <div>
+                <h1>Todas las reseñas</h1>
+                <span class="muted">@Filtrados.Count() reseñas</span>
+            </div>
+            <select aria-label="Ordenar reseñas" @bind="Orden" @bind:after="ReiniciarPagina">
+                <option value="recent">Más recientes</option>
+                <option value="votes-asc">Votos: menor a mayor</option>
+                <option value="votes-desc">Votos: mayor a menor</option>
+                <option value="stars-asc">Puntuación: menor a mayor</option>
+                <option value="stars-desc">Puntuación: mayor a menor</option>
+            </select>
+        </div>
+        @if (!Filtrados.Any())
+        {
+            <div class="empty-state">
+                <Icono Nombre="star" />
+                <h2>No hay reseñas</h2>
+                <p>Las reseñas publicadas aparecerán aquí.</p>
+            </div>
+        }
+        else
+        {
+            <div class="admin-reviews">
+                @foreach (var Resena in ElementosPagina)
+                {
+                    var Libro = Estado.BuscarLibro(Resena.IdLibro);
+                    <article class="admin-review">
+                        <div class="review-images">
+                            <img class="user-image" src="@Resena.FotoUsuario" alt="@Resena.Usuario" />
+                            <a href="@($"/libros/{Resena.IdLibro}")">
+                                <img class="book-image" src="@Libro?.Portada" alt="@Libro?.Titulo" />
+                            </a>
+                        </div>
+                        <div class="review-content">
+                            <strong>@Resena.Usuario</strong>
+                            <a href="@($"/libros/{Resena.IdLibro}")">@Libro?.Titulo</a>
+                            <time class="muted">@Resena.Fecha.ToString("dd/MM/yyyy")</time>
+                            <span class="stars">@MostrarEstrellas(Resena.Puntuacion)</span>
+                            <p>@Resena.Comentario</p>
+                            <span class="review-votes muted">
+                                <Icono Nombre="thumb" />
+                                @Resena.Votos votos útiles
+                            </span>
+                        </div>
+                        <button class="btn btn-danger" @onclick="() => Eliminar(Resena)">
+                            <Icono Nombre="trash" />
+                            Eliminar
+                        </button>
+                    </article>
+                }
+            </div>
+            <Paginacion Pagina="Pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
+        }
+    }
+</div>

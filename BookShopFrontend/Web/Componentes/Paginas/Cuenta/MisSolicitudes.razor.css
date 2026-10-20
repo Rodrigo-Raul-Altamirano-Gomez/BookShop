@@ -1,0 +1,112 @@
+.request-list  {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.request-row  {
+    display: grid;
+    grid-template-columns: 190px minmax(100px, 1fr) 90px auto;
+    align-items: center;
+    gap: 18px;
+    padding: 23px 20px;
+}
+.request-identity  {
+    padding-right: 12px;
+    border-right: 1px solid #e1e8e4;
+}
+.request-identity h2  {
+    font-size: 21px;
+    margin: 0 0 8px;
+}
+.request-identity p  {
+    margin: 5px 0;
+    font-size: 13px;
+}
+.request-reason p  {
+    margin: 6px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+.request-actions  {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    justify-content: flex-end;
+    min-width: 286px;
+}
+.request-actions .btn  {
+    padding: 9px;
+    font-size: 12px;
+}
+.request-row .status  {
+    font-size: 12px;
+    text-align: center;
+    justify-self: start;
+}
+.review-reference  {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 22px 0;
+    border-top: 1px solid #e1e8e4;
+    border-bottom: 1px solid #e1e8e4;
+}
+.review-reference > div  {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 18px;
+}
+.review-reference > div + div  {
+    border-left: 1px solid #e1e8e4;
+}
+.review-reference strong  {
+    font-weight: 500;
+    font-size: 20px;
+}
+.original-rating  {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 10px;
+    padding: 24px 0;
+}
+.original-rating .stars  {
+    font-size: 30px;
+    color: #d99126;
+    letter-spacing: 3px;
+}
+.unfilled  {
+    color: #d9dfdc;
+}
+.original-comment  {
+    border-top: 1px solid #e1e8e4;
+    padding-top: 22px;
+}
+.original-comment p  {
+    line-height: 1.6;
+    font-size: 18px;
+}
+.consulta-pedido-modal ::deep .modal-header  {
+    justify-content: center;
+    position: relative;
+    padding-right: 60px;
+    padding-left: 60px;
+}
+.consulta-pedido-modal ::deep .modal-header h2  {
+    text-align: center;
+}
+.consulta-pedido-modal ::deep .modal-close  {
+    position: absolute;
+    right: 24px;
+}
+.consulta-pedido-cabecera  {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+    margin-bottom: 26px;
+}
+.consulta-pedido-cabecera p  {
+    margin: 0;
+}

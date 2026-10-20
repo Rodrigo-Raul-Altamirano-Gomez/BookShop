@@ -1,0 +1,132 @@
+@page "/"
+<PageTitle>BookShop · Encuentra tu próxima lectura</PageTitle>
+<div class="container home-page">
+    <section class="home-hero">
+        <div class="hero-copy">
+            <span class="hero-eyebrow">UN MUNDO ENTRE PÁGINAS</span>
+            <h1>
+                Encuentra tu
+                <br />
+                próxima lectura
+            </h1>
+            <p>
+                Historias que inspiran, conocimiento que transforma
+                <br />
+                y mundos por descubrir.
+            </p>
+            <a href="/catalogo" class="btn btn-primary">
+                Explorar catálogo
+                <Icono Nombre="arrow" />
+            </a>
+        </div>
+        <img class="hero-art" src="/images/home-hero.svg" alt="Una selección de libros junto a una planta" />
+    </section>
+    <section class="home-section">
+        <div class="section-heading">
+            <h2>Categorías</h2>
+            <a href="/referencias/categorias">
+                Ver más
+                <Icono Nombre="arrow" />
+            </a>
+        </div>
+        <div class="reference-grid">
+            @foreach (var reference in Categorias)
+            {
+                <TarjetaReferencia Referencia="reference" />
+            }
+        </div>
+    </section>
+    <section class="home-section">
+        <div class="section-heading">
+            <h2>Libros nuevos</h2>
+            <a href="/catalogo?criterio=nuevos">
+                Ver más
+                <Icono Nombre="arrow" />
+            </a>
+        </div>
+        <div class="book-grid">
+            @foreach (var book in LibrosNuevos)
+            {
+                <TarjetaLibro Libro="book" />
+            }
+        </div>
+    </section>
+    <section class="home-section">
+        <div class="section-heading">
+            <h2>Autores</h2>
+            <a href="/referencias/autores">
+                Ver más
+                <Icono Nombre="arrow" />
+            </a>
+        </div>
+        <div class="reference-grid">
+            @foreach (var reference in Autores)
+            {
+                <TarjetaReferencia Referencia="reference" />
+            }
+        </div>
+    </section>
+    <section class="home-section">
+        <div class="section-heading">
+            <h2>Más vendidos</h2>
+            <a href="/catalogo?criterio=vendidos">
+                Ver más
+                <Icono Nombre="arrow" />
+            </a>
+        </div>
+        <div class="book-grid">
+            @foreach (var book in MasVendidos)
+            {
+                <TarjetaLibro Libro="book" />
+            }
+        </div>
+    </section>
+    <section class="home-section">
+        <div class="section-heading">
+            <h2>Editoriales</h2>
+            <a href="/referencias/editoriales">
+                Ver más
+                <Icono Nombre="arrow" />
+            </a>
+        </div>
+        <div class="reference-grid">
+            @foreach (var reference in Editoriales)
+            {
+                <TarjetaReferencia Referencia="reference" />
+            }
+        </div>
+    </section>
+    <section class="home-section">
+        <div class="section-heading">
+            <h2>Más populares</h2>
+            <a href="/populares">
+                Ver más
+                <Icono Nombre="arrow" />
+            </a>
+        </div>
+        <div class="book-grid">
+            @foreach (var book in LibrosPopulares)
+            {
+                <TarjetaLibro Libro="book" />
+            }
+        </div>
+    </section>
+    @if (Estado.Usuario is not null)
+    {
+        <section class="home-section">
+            <div class="section-heading">
+                <h2>Para ti</h2>
+                <a href="/para-ti">
+                    Ver más
+                    <Icono Nombre="arrow" />
+                </a>
+            </div>
+            <div class="book-grid">
+                @foreach (var book in LibrosPersonales)
+                {
+                    <TarjetaLibro Libro="book" />
+                }
+            </div>
+        </section>
+    }
+</div>

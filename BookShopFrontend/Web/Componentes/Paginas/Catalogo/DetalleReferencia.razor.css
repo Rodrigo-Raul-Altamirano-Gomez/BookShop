@@ -1,0 +1,55 @@
+.reference-banner {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    background:#e6ebe1;
+    border-radius:8px;
+    overflow:hidden;
+    margin-bottom:34px;
+    min-height:250px
+}
+.reference-picture {
+    position:relative;
+    min-height:250px
+}
+.reference-picture>img {
+    width:100%;
+    height:100%;
+    max-height:320px;
+    object-fit:cover
+}
+.reference-copy {
+    padding:30px 35px;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:center
+}
+.reference-copy h1 {
+    font-size:38px;
+    margin-bottom:13px
+}
+.reference-copy p {
+    line-height:1.65;
+    margin-bottom:18px;
+    color:#435449
+}
+.image-actions {
+    position:absolute;
+    bottom:14px;
+    right:14px;
+    display:flex;
+    gap:7px
+}
+.image-actions .icon-button {
+    background:white
+}
+.image-actions label {
+    position:relative;
+    overflow:hidden
+}
+.image-actions ::deep input[type=file] {
+    position:absolute;
+    inset:0;
+    opacity:0;
+    cursor:pointer
+}

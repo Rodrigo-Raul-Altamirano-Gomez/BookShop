@@ -1,0 +1,12 @@
+**
+!Web.csproj
+!Program.cs
+!appsettings.json
+!Modelos/
+!Modelos/**
+!Demostracion/
+!Demostracion/**
+!Componentes/
+!Componentes/**
+!wwwroot/
+!wwwroot/**

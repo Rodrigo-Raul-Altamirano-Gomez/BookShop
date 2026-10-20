@@ -1,0 +1,15 @@
+package me.Model.dto.catalogo;
+
+// Catalogo excluye RECOMENDADOS_PRIMERO; recomendaciones excluyen MAS_VENDIDOS.
+public enum OrdenLibro {
+    MAS_RECIENTES,
+    MAS_VENDIDOS,
+    PRECIO_ASCENDENTE,
+    PRECIO_DESCENDENTE,
+    TITULO_ASCENDENTE,
+    PAGINAS_ASCENDENTE,
+    PAGINAS_DESCENDENTE,
+    STOCK_DESCENDENTE,
+    ANIO_EDICION_DESCENDENTE,
+    RECOMENDADOS_PRIMERO
+}

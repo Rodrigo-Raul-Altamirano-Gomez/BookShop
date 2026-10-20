@@ -1,0 +1,45 @@
+@page "/populares"
+@page "/para-ti"
+<PageTitle>@Titulo · BookShop</PageTitle>
+<div class="container">
+    <nav class="breadcrumb">
+        <a href="/">Inicio</a>
+        <span>/</span>
+        <span>@Titulo</span>
+    </nav>
+    @if (Personal && Estado.Usuario is null)
+    {
+        <div class="empty-state">
+            <Icono Nombre="user" />
+            <h1>Lecturas para ti</h1>
+            <p>Inicia sesión para consultar esta selección de ejemplo.</p>
+            <button class="btn btn-primary" @onclick="AbrirAcceso">Iniciar sesión</button>
+        </div>
+    }
+    else
+    {
+        <div class="results-heading">
+            <div class="result-title">
+                <h1>@Titulo</h1>
+                <span>@Libros.Count libros</span>
+            </div>
+            <label class="sort-label">
+                Ordenar por:
+                <select @bind="orden" @bind:after="CambiarOrden" aria-label="Ordenar recomendaciones">
+                    <option value="recomendados">Recomendados primero</option>
+                    @foreach (var order in ExploradorCatalogo.OpcionesOrden.Where(o => o.Key != "vendidos"))
+                    {
+                        <option value="@order.Key">@order.Value</option>
+                    }
+                </select>
+            </label>
+        </div>
+        <div class="book-grid">
+            @foreach (var book in LibrosVisibles)
+            {
+                <TarjetaLibro Libro="book" />
+            }
+        </div>
+        <Paginacion Pagina="pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
+    }
+</div>

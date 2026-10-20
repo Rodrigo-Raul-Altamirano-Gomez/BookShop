@@ -1,0 +1,207 @@
+@page "/datos-compra"
+@inherits PaginaCuenta
+<PageTitle>Datos de compra · BookShop</PageTitle>
+<div class="container">
+    <nav class="breadcrumb">
+        <a href="/">Inicio</a>
+        <span>/</span>
+        <span>Cuenta</span>
+        <span>/</span>
+        <span>Datos de compra</span>
+    </nav>
+    <div class="results-heading">
+        <h1>
+            Datos de compra
+            <span>@Cantidad @EtiquetaCantidad</span>
+        </h1>
+        @if (Estado.Usuario is not null && Pestana != "coupons")
+        {
+            <button class="btn btn-primary" @onclick="Anadir">
+                <Icono Nombre="plus" />
+                @(Pestana == "addresses" ? "Añadir dirección" : "Añadir método")
+            </button>
+        }
+    </div>
+    @if (Estado.Usuario is null)
+    {
+        <div class="empty-state">
+            <Icono Nombre="card" />
+            <h2>Todo listo para tu próxima compra</h2>
+            <p>Inicia sesión para consultar tus direcciones, métodos y cupones.</p>
+            <button class="btn btn-primary" @onclick="Estado.MostrarAcceso">Iniciar sesión</button>
+        </div>
+    }
+    else
+    {
+        <div class="tabs" role="tablist" aria-label="Datos de compra">
+            <button
+                class="tab @(Pestana == "addresses" ? "active" : "")"
+                role="tab"
+                aria-selected="@(Pestana == "addresses")"
+                @onclick="MostrarDirecciones">
+                Direcciones
+            </button>
+            <button
+                class="tab @(Pestana == "methods" ? "active" : "")"
+                role="tab"
+                aria-selected="@(Pestana == "methods")"
+                @onclick="MostrarMetodos">
+                Métodos de pago
+            </button>
+            <button
+                class="tab @(Pestana == "coupons" ? "active" : "")"
+                role="tab"
+                aria-selected="@(Pestana == "coupons")"
+                @onclick="MostrarCupones">
+                Cupones
+            </button>
+        </div>
+        @if (Cantidad == 0)
+        {
+            <div class="empty-state">
+                <h2>No tienes @EtiquetaCantidad en esta lista</h2>
+                <p>
+                    @(Pestana == "coupons" ? "Aquí aparecerán tus cupones disponibles, utilizados y vencidos." :
+                    "Añade tus datos para tenerlos a mano en tu próxima compra.")
+                </p>
+            </div>
+        }
+        else
+        {
+            <div class="purchase-data-grid">
+                @if (Pestana == "addresses")
+                {
+                    @foreach (var direccion in DireccionesPagina)
+                    {
+                        <article class="panel data-card">
+                            <div class="data-card-heading">
+                                <span class="data-icon">
+                                    <Icono Nombre="pin" />
+                                </span>
+                                <h2>@direccion.Alias</h2>
+                                @if (direccion.Predeterminada)
+                                {
+                                    <span class="badge">Predeterminada</span>
+                                }
+                            </div>
+                            <div class="card-details">
+                                <p>@direccion.Calle</p>
+                                <p>@direccion.Distrito, @direccion.Ciudad</p>
+                                @if (direccion.ReferenciaAdicional.Length > 0)
+                                {
+                                    <p>
+                                        <span class="muted">Referencia:</span>
+                                        @direccion.ReferenciaAdicional
+                                    </p>
+                                }
+                            </div>
+                            <div class="data-card-actions">
+                                <button class="btn btn-secondary" @onclick="() => EditarDireccion(direccion)">
+                                    <Icono Nombre="edit" />
+                                    Editar
+                                </button>
+                                <button class="btn btn-danger" @onclick="() => EliminarDireccion(direccion)">
+                                    <Icono Nombre="trash" />
+                                    Eliminar
+                                </button>
+                            </div>
+                            @if (!direccion.Predeterminada)
+                            {
+                                <button
+                                    class="btn btn-secondary default-button"
+                                    @onclick="() => PredeterminarDireccion(direccion)">
+                                    Establecer predeterminada
+                                </button>
+                            }
+                        </article>
+                    }
+                }
+                else if (Pestana == "methods")
+                {
+                    @foreach (var metodo in MetodosPagina)
+                    {
+                        <article class="panel data-card">
+                            <div class="data-card-heading">
+                                <span class="data-icon">
+                                    <Icono Nombre="@(metodo.Tipo == "Tarjeta" ? "card" : "wallet")" />
+                                </span>
+                                <h2>@TituloMetodo(metodo)</h2>
+                                @if (metodo.Predeterminada)
+                                {
+                                    <span class="badge">Predeterminado</span>
+                                }
+                            </div>
+                            <div class="card-details">
+                                <p>
+                                    @metodo.Proveedor @(metodo.Tipo == "Tarjeta" ? "· " + metodo.TipoTarjeta :
+                                    "")
+                                </p>
+                                <p class="masked">@metodo.NumeroEnmascarado</p>
+                                <dl>
+                                    <div>
+                                        <dt>Titular:</dt>
+                                        <dd>@metodo.Titular</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Vence:</dt>
+                                        <dd>@metodo.Vencimiento.ToString("dd/MM/yyyy")</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                            <div class="data-card-actions">
+                                <button class="btn btn-secondary" @onclick="() => EditarMetodo(metodo)">
+                                    <Icono Nombre="edit" />
+                                    Editar
+                                </button>
+                                <button class="btn btn-danger" @onclick="() => EliminarMetodo(metodo)">
+                                    <Icono Nombre="trash" />
+                                    Eliminar
+                                </button>
+                            </div>
+                            @if (!metodo.Predeterminada)
+                            {
+                                <button
+                                    class="btn btn-secondary default-button"
+                                    @onclick="() => PredeterminarMetodo(metodo)">
+                                    Establecer predeterminado
+                                </button>
+                            }
+                        </article>
+                    }
+                }
+                else
+                {
+                    @foreach (var cupon in CuponesPagina)
+                    {
+                        <article class="panel data-card coupon-card">
+                            <span class="data-icon">
+                                <Icono Nombre="tag" />
+                            </span>
+                            <h2>@cupon.Porcentaje% de descuento</h2>
+                            <span class="status @ClaseCupon(cupon)">@cupon.Estado</span>
+                            <dl>
+                                <div>
+                                    <dt>Compra mínima</dt>
+                                    <dd>@Importe(cupon.Minimo)</dd>
+                                </div>
+                                <div>
+                                    <dt>Vencimiento</dt>
+                                    <dd>@cupon.Vencimiento.ToString("dd/MM/yyyy")</dd>
+                                </div>
+                            </dl>
+                        </article>
+                    }
+                }
+            </div>
+            <Paginacion Pagina="Pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
+        }
+    }
+</div>
+@if (ModalAbierto == "address")
+{
+    <FormularioDireccion Valor="DireccionEnEdicion" AlGuardar="GuardarDireccion" AlCerrar="Cerrar" />
+}
+@if (ModalAbierto == "method")
+{
+    <FormularioPago Valor="MetodoEnEdicion" AlGuardar="GuardarMetodo" AlCerrar="Cerrar" />
+}

@@ -1,0 +1,131 @@
+<Modal Titulo="Registrar libro" AlCerrar="AlCerrar" Amplio="true">
+    <div class="registro-formulario">
+        <div class="cover-preview">
+            <img src="@Borrador.Portada" alt="Vista previa de la portada" />
+            <div class="image-buttons">
+                <label class="icon-button file-label" title="Elegir portada">
+                    <Icono Nombre="edit" />
+                    <InputFile OnChange="LeerPortada" accept="image/jpeg,image/png" />
+                </label>
+                <button type="button" class="icon-button" title="Quitar portada" @onclick="QuitarPortada">
+                    <Icono Nombre="trash" />
+                </button>
+            </div>
+        </div>
+        <div class="form-grid">
+            <label class="field full">
+                Título *
+                <input @bind="Borrador.Titulo" @bind:event="oninput" required />
+            </label>
+            <label class="field full">
+                Idioma *
+                <input @bind="Borrador.Idioma" @bind:event="oninput" required />
+            </label>
+            <label class="field full">
+                Sinopsis *
+                <textarea rows="5" @bind="Borrador.Sinopsis" @bind:event="oninput" required>
+                </textarea>
+            </label>
+            @foreach (var TipoReferencia in TiposReferencias)
+            {
+                <div class="reference-picker full">
+                    <label class="field">
+                        @EtiquetaReferencia(TipoReferencia) *
+                        <span class="reference-search">
+                            <input
+                                value="@Busquedas[TipoReferencia]"
+                                @oninput="e => CambiarBusqueda(TipoReferencia, e)"
+                                @onkeydown="e => BuscarConEnter(TipoReferencia, e)"
+                                placeholder="Buscar por nombre"
+                                />
+                            <button
+                                type="button"
+                                class="btn btn-secondary"
+                                @onclick="() => Buscar(TipoReferencia)">
+                                <Icono Nombre="search" />
+                                Buscar
+                            </button>
+                        </span>
+                    </label>
+                    <div class="reference-options">
+                        @foreach (var Referencia in Opciones(TipoReferencia))
+                        {
+                            <button
+                                type="button"
+                                class="reference-option @(Selecciones[TipoReferencia] == Referencia.Nombre ?
+                                    "selected" : "")"
+                                @onclick="() => Elegir(Referencia)">
+                                <span class="selection-dot">
+                                </span>
+                                @Referencia.Nombre
+                            </button>
+                        }
+                        @if (!Opciones(TipoReferencia).Any())
+                        {
+                            <span class="muted">No hay resultados con ese nombre.</span>
+                        }
+                    </div>
+                </div>
+            }
+            <label class="field">
+                ISBN *
+                <input @bind="Borrador.ISBN" @bind:event="oninput" required />
+            </label>
+            <label class="field">
+                Proveedor *
+                <input @bind="Borrador.Proveedor" @bind:event="oninput" required />
+            </label>
+            <label class="field">
+                Año de edición *
+                <input type="number" min="1" @bind="Borrador.Anio" @bind:event="oninput" required />
+            </label>
+            <label class="field">
+                Número de páginas *
+                <input type="number" min="1" @bind="Borrador.Paginas" @bind:event="oninput" required />
+            </label>
+            <label class="field">
+                Precio base (S/) *
+                <input
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    @bind="Borrador.PrecioOriginal"
+                    @bind:event="oninput"
+                    required
+                    />
+            </label>
+            <label class="field">
+                Stock inicial *
+                <input type="number" min="0" @bind="Borrador.Stock" @bind:event="oninput" required />
+            </label>
+            <label class="field">
+                Peso (kg)
+                <input @bind="Peso" @bind:event="oninput" />
+            </label>
+            <label class="field">
+                Alto (cm)
+                <input @bind="Alto" @bind:event="oninput" />
+            </label>
+            <label class="field">
+                Ancho (cm)
+                <input @bind="Ancho" @bind:event="oninput" />
+            </label>
+            <label class="field">
+                Saga
+                <input @bind="Borrador.Saga" @bind:event="oninput" />
+            </label>
+            <label class="field">
+                Tomo
+                <input type="number" min="1" @bind="Borrador.Tomo" @bind:event="oninput" />
+            </label>
+        </div>
+        @if (ErrorFormulario.Length > 0)
+        {
+            <p class="form-error" role="alert">@ErrorFormulario</p>
+        }
+        <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" @onclick="AlCerrar">Cancelar</button>
+            <button type="button" class="btn btn-primary" @onclick="Registrar">Registrar libro</button>
+        </div>
+    </div>
+</Modal>

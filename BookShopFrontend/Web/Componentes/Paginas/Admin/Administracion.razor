@@ -1,0 +1,320 @@
+@page "/administracion"
+@implements IDisposable
+<PageTitle>Administración · BookShop</PageTitle>
+<div class="container">
+    <nav class="breadcrumb">
+        <a href="/">Inicio</a>
+        <span>/</span>
+        <span>Cuenta</span>
+        <span>/</span>
+        <span>Administración</span>
+    </nav>
+    <h1 class="page-heading">Administración</h1>
+    @if (!Estado.EsAdministrador)
+    {
+        <div class="empty-state">
+            <Icono Nombre="user" />
+            <h2>Acceso administrativo</h2>
+            <p>Inicia sesión con la cuenta de demostración demo@@admin.bookshop.</p>
+            <button class="btn btn-primary" @onclick="Estado.MostrarAcceso">Iniciar sesión</button>
+        </div>
+    }
+    else
+    {
+        <h2 class="section-heading">Gestión del catálogo</h2>
+        <div class="admin-grid catalog-admin-grid">
+            <a href="/administracion/libros" class="admin-card">
+                <span class="admin-icon">
+                    <Icono Nombre="book" />
+                </span>
+                <h3>Libros</h3>
+                <p>Consulta, registra y administra los libros.</p>
+            </a>
+            <a href="/administracion/autores" class="admin-card">
+                <span class="admin-icon">
+                    <Icono Nombre="edit" />
+                </span>
+                <h3>Autores</h3>
+                <p>Gestiona los autores del catálogo.</p>
+            </a>
+            <a href="/administracion/categorias" class="admin-card">
+                <span class="admin-icon">
+                    <Icono Nombre="grid" />
+                </span>
+                <h3>Categorías</h3>
+                <p>Organiza y administra las categorías.</p>
+            </a>
+            <a href="/administracion/editoriales" class="admin-card">
+                <span class="admin-icon">
+                    <Icono Nombre="building" />
+                </span>
+                <h3>Editoriales</h3>
+                <p>Gestiona las editoriales del catálogo.</p>
+            </a>
+        </div>
+        <h2 class="section-heading general-title">Administración general</h2>
+        <div class="admin-grid general-admin-grid">
+            <a href="/moderacion" class="admin-card">
+                <span class="admin-icon">
+                    <Icono Nombre="flag" />
+                </span>
+                <h3>Moderación</h3>
+                <p>Revisa solicitudes de devolución y reportes de reseñas.</p>
+            </a>
+            <button class="admin-card" @onclick="AbrirReportes">
+                <span class="admin-icon">
+                    <Icono Nombre="report" />
+                </span>
+                <h3>Reportes</h3>
+                <p>Consulta reportes de libros y usuarios.</p>
+            </button>
+            <button class="admin-card" @onclick="AbrirConfiguracion">
+                <span class="admin-icon">
+                    <Icono Nombre="settings" />
+                </span>
+                <h3>Configuración</h3>
+                <p>Ajusta envío, devoluciones y cupones.</p>
+            </button>
+        </div>
+    }
+</div>
+@if (ConfiguracionAbierta)
+{
+    <Modal Titulo="Configuración" AlCerrar="CerrarConfiguracion">
+        <form @onsubmit="GuardarConfiguracion" @onsubmit:preventDefault>
+            <div class="form-grid">
+                <label class="field">
+                    Porcentaje de envío (%) *
+                    <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        @bind="BorradorConfiguracion.PorcentajeEnvio"
+                        @bind:event="oninput"
+                        required
+                        />
+                </label>
+                <label class="field">
+                    Plazo de devolución (días) *
+                    <input
+                        type="number"
+                        min="1"
+                        @bind="BorradorConfiguracion.DiasDevolucion"
+                        @bind:event="oninput"
+                        required
+                        />
+                </label>
+                <label class="field">
+                    Máximo de intentos de devolución *
+                    <input
+                        type="number"
+                        min="1"
+                        @bind="BorradorConfiguracion.IntentosDevolucion"
+                        @bind:event="oninput"
+                        required
+                        />
+                </label>
+                <label class="field">
+                    Pedidos entregados por cupón *
+                    <input
+                        type="number"
+                        min="1"
+                        @bind="BorradorConfiguracion.PedidosEntregados"
+                        @bind:event="oninput"
+                        required
+                        />
+                </label>
+                <label class="field">
+                    Porcentaje del cupón (%) *
+                    <input
+                        type="number"
+                        min="1"
+                        max="100"
+                        step="0.01"
+                        @bind="BorradorConfiguracion.PorcentajeCupon"
+                        @bind:event="oninput"
+                        required
+                        />
+                </label>
+                <label class="field">
+                    Monto mínimo del cupón (S/) *
+                    <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        @bind="BorradorConfiguracion.MontoMinimoCupon"
+                        @bind:event="oninput"
+                        required
+                        />
+                </label>
+                <label class="field">
+                    Duración del cupón (días) *
+                    <input
+                        type="number"
+                        min="1"
+                        @bind="BorradorConfiguracion.DiasCupon"
+                        @bind:event="oninput"
+                        required
+                        />
+                </label>
+            </div>
+            @if (ErrorFormulario.Length > 0)
+            {
+                <p class="form-error" role="alert">@ErrorFormulario</p>
+            }
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" @onclick="CerrarConfiguracion">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+            </div>
+        </form>
+    </Modal>
+}
+@if (ReportesAbiertos)
+{
+    <Modal Titulo="Reportes" AlCerrar="CerrarReportes">
+        <div class="tabs">
+            <button class="tab @(PestanaReporte == "Libros" ? "active" : "")" @onclick="ElegirLibros">
+                Libros
+            </button>
+            <button class="tab @(PestanaReporte == "Usuarios" ? "active" : "")" @onclick="ElegirUsuarios">
+                Usuarios
+            </button>
+        </div>
+        <form @onsubmit="GenerarReporte" @onsubmit:preventDefault>
+            <div class="form-grid">
+                @if (PestanaReporte == "Libros")
+                {
+                    <label class="field">
+                        Inicio del período *
+                        <input type="date" @bind="InicioReporte" required />
+                    </label>
+                    <label class="field">
+                        Fin del período *
+                        <input type="date" @bind="FinReporte" required />
+                    </label>
+                }
+                else
+                {
+                    <label class="field">
+                        Mes *
+                        <select @bind="MesReporte">
+                            @for (var Mes = 1; Mes <= 12; Mes++)
+                            {
+                                <option value="@Mes">@NombresMeses[Mes - 1]</option>
+                            }
+                        </select>
+                    </label>
+                    <label class="field">
+                        Año *
+                        <input type="number" min="1" @bind="AnioReporte" @bind:event="oninput" required />
+                    </label>
+                }
+                <label class="field">
+                    Cantidad máxima
+                    <input type="number" min="1" @bind="LimiteReporte" @bind:event="oninput" />
+                </label>
+            </div>
+            @if (ErrorFormulario.Length > 0)
+            {
+                <p class="form-error" role="alert">@ErrorFormulario</p>
+            }
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" @onclick="CerrarReportes">Cancelar</button>
+                <button type="submit" class="btn btn-primary">
+                    <Icono Nombre="report" />
+                    Generar
+                </button>
+            </div>
+        </form>
+    </Modal>
+}
+@if (VistaReporte)
+{
+    <Modal
+        Titulo="@($"Reporte de {PestanaReporte.ToLower()} · vista previa")"
+        AlCerrar="CerrarVistaReporte"
+        Amplio="true">
+        <div class="report-sheet">
+            <div class="report-brand">
+                <Icono Nombre="book" />
+                <strong>BookShop</strong>
+                <span>Más que libros, grandes historias.</span>
+            </div>
+            <h2>@(PestanaReporte == "Libros" ? "Reporte de ventas de libros" : "Reporte mensual de usuarios")</h2>
+            <p>
+                @(PestanaReporte == "Libros" ? $"Período: {InicioReporte:dd/MM/yyyy} — {FinReporte:dd/MM/yyyy}" :
+                $"Período: {NombresMeses[MesReporte - 1]} {AnioReporte}")
+            </p>
+            <p class="muted">
+                Generado: 07/10/2026 · Máximo solicitado: @(LimiteReporte?.ToString() ?? "Sin límite") · Cantidad
+                obtenida: @(PestanaReporte == "Libros" ? LibrosReporte.Count() : UsuariosReporte.Count())
+            </p>
+            <div class="report-table-wrap">
+                @if (PestanaReporte == "Libros")
+                {
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Libro</th>
+                                <th>Categoría</th>
+                                <th>Autor</th>
+                                <th>Editorial</th>
+                                <th>Cantidad vendida</th>
+                                <th>Importe de ventas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var Libro in LibrosReporte)
+                            {
+                                <tr>
+                                    <td>@Libro.Titulo</td>
+                                    <td>@Libro.Categoria</td>
+                                    <td>@Libro.Autor</td>
+                                    <td>@Libro.Editorial</td>
+                                    <td>12</td>
+                                    <td>@EstadoDemostracion.Dinero(Libro.Precio * 12)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Activo</th>
+                                <th>Gasto</th>
+                                <th>Tiempo</th>
+                                <th>Categoría</th>
+                                <th>Autor</th>
+                                <th>Editorial</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var Usuario in UsuariosReporte)
+                            {
+                                <tr>
+                                    <td>
+                                        @Usuario.Nombre
+                                        <small>@Usuario.Correo</small>
+                                    </td>
+                                    <td>@Usuario.Activo</td>
+                                    <td>@Usuario.Gasto</td>
+                                    <td>@Usuario.Tiempo</td>
+                                    <td>@Usuario.Categoria</td>
+                                    <td>@Usuario.Autor</td>
+                                    <td>@Usuario.Editorial</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+            <div class="report-foot">Vista previa con datos de ejemplo · Página 1</div>
+        </div>
+        <p class="muted">La generación de PDF se conectará en la fase de integración.</p>
+    </Modal>
+}

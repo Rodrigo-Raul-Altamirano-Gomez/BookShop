@@ -1,0 +1,23 @@
+<a class="book-card" href="/libros/@Libro.Id">
+    <div class="cover-wrap">
+        <img
+            src="@Libro.Portada"
+            alt="Portada de @Libro.Titulo"
+            loading="lazy"
+            onerror="this.onerror=null;this.src='/images/book-placeholder.svg'"
+            />
+        @if (Libro.Descuento > 0)
+        {
+            <span class="discount-pill">−@Libro.Descuento%</span>
+        }
+    </div>
+    <h3>@Libro.Titulo</h3>
+    <p>@Libro.Autor</p>
+    <div class="book-price">
+        @if (Libro.Descuento > 0)
+        {
+            <del>@EstadoDemostracion.Dinero(Libro.PrecioOriginal)</del>
+        }
+        <strong>@EstadoDemostracion.Dinero(Libro.Precio)</strong>
+    </div>
+</a>
