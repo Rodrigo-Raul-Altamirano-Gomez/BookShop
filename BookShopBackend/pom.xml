@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>me</groupId>
-    <artifactId>BookShop</artifactId>
+    <artifactId>BookShopBackend</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
@@ -13,6 +13,7 @@
         <module>DBManager</module>
         <module>DAO</module>
         <module>Business</module>
+        <module>App</module>
     </modules>
 
     <properties>
@@ -34,15 +35,5 @@
             </plugin>
         </plugins>
     </build>
-
-    <!-- App se incorpora explicitamente cuando se adapte a Business. -->
-    <profiles>
-        <profile>
-            <id>aplicacion</id>
-            <modules>
-                <module>App</module>
-            </modules>
-        </profile>
-    </profiles>
 
 </project>

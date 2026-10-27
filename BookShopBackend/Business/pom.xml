@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>me</groupId>
-        <artifactId>BookShop</artifactId>
+        <artifactId>BookShopBackend</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>DAO</artifactId>
+    <artifactId>Business</artifactId>
 
     <properties>
         <maven.compiler.release>21</maven.compiler.release>
@@ -25,14 +25,18 @@
         </dependency>
         <dependency>
             <groupId>me</groupId>
-            <artifactId>DBManager</artifactId>
+            <artifactId>Model</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>me</groupId>
-            <artifactId>Model</artifactId>
+            <artifactId>DAO</artifactId>
             <version>${project.version}</version>
-            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>me</groupId>
+            <artifactId>DBManager</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -47,5 +51,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
 </project>

@@ -156,24 +156,14 @@ migración y no se ejecutó sobre la base del proyecto. Una base ya creada debe
 adaptarse al esquema antes de utilizar estos DAO. `registers.sql` conserva sus
 datos antiguos y no debe usarse con este DDL sin adaptarlos primero.
 
-Desde BookShop, con Maven y un JDK 21 o posterior:
+Desde BookShopBackend, con Maven y un JDK 21 o posterior:
 
 ```powershell
 mvn -pl DAO -am clean test
 ```
 
-En este equipo no hay Maven disponible. Se compiló desde las fuentes de Model,
-DBManager y DAO con `--release 21`, usando las dependencias de la caché local:
-
-```powershell
-./scripts/pruebas-dao.ps1
-# También admite -Jdk 'C:/ruta/al/jdk' y -RepositorioMaven 'C:/ruta/al/repository'.
-```
-
-El script usa una carpeta nueva en target por ejecución para evitar clases
-compiladas antiguas y guarda `resultado.txt`. Al completar DAO pasaron **154 de
-154 pruebas**, sin omisiones. Business añadió comprobaciones sobre estos contratos;
-la verificación conjunta se documenta en `../Business/README.md`. Incluye mapeos, filtros,
+Maven ejecuta las pruebas y guarda los informes en `target/surefire-reports`.
+Business incluye comprobaciones sobre estos contratos; la verificación conjunta se documenta en `../Business/README.md`. Incluye mapeos, filtros,
 paginación, historial de precios, relaciones, vigencias, vetos, predeterminados,
 auditoría, estados, rollbacks y liberación de recursos.
 
@@ -181,5 +171,5 @@ Las pruebas usan H2 en modo MySQL y un driver simulado para DBManager, sin las
 credenciales de la base real. H2 no reproduce todas las restricciones ni los
 bloqueos de MySQL; queda validar el DDL y la concurrencia en una instancia MySQL
 aislada. Business ya está implementado y registrado en el reactor Maven, con sus
-contratos en `../Business/README.md`. App se incorpora explícitamente con el perfil
-`aplicacion` cuando se adapte a Business. El frontend continúa en su fase.
+contratos en `../Business/README.md`. App forma parte del reactor normal y demuestra
+la validación de filtros sin consultar la base. El frontend continúa en su fase.

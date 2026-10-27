@@ -33,6 +33,7 @@ Thumbs.db
 !.env.example
 **/src/main/resources/db.properties
 /BookShop/db.properties
+/BookShopBackend/db.properties
 **/clave-datos.key
 *.pem
 *.pfx
@@ -43,6 +44,8 @@ Thumbs.db
 **/appsettings.Local.json
 **/appsettings.*.local.json
 /BookShop/config/
+/BookShopBackend/config/
 
 # Datos antiguos incompatibles con el esquema actual.
 /BookShop/DAO/src/main/resources/registers.sql
+/BookShopBackend/DAO/src/main/resources/registers.sql

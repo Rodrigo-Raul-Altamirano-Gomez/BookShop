@@ -38,13 +38,12 @@ Su resultado no sustituye las verificaciones de MySQL real ni las pruebas del si
 ## Estructura
 
 ```text
-BookShop/                       Backend Java y proyecto Maven multimódulo
+BookShopBackend/                Backend Java y proyecto Maven multimódulo
 ├── Model/                      Entidades y DTO
 ├── DBManager/                  Pool JDBC y contexto de transacciones
 ├── DAO/                        Persistencia, consultas y esquema SQL
 ├── Business/                   Servicios y reglas de negocio
-├── App/                        Demostración antigua de consola, fuera del reactor normal
-└── scripts/                    Alternativa local para ejecutar las pruebas
+└── App/                        Demostración de validación con los contratos de Business
 
 BookShopFrontend/               Solución .NET
 ├── Web/                        Aplicación Blazor
@@ -88,18 +87,15 @@ La interfaz está orientada a escritorio; la adaptación completa a móviles sig
 
 ## Compilar y probar el backend
 
-Requisitos: **JDK 21 o posterior** y **Maven**. Desde `BookShop`:
+Requisitos: **JDK 21 o posterior** y **Maven**. Desde `BookShopBackend`:
 
 ```powershell
-cd BookShop
+cd BookShopBackend
 mvn clean test
 ```
 
-El reactor normal incluye `Model`, `DBManager`, `DAO` y `Business`. No inicia un servidor HTTP.
-`App` conserva una demostración de consola anterior y no es el punto de entrada de una API.
-
-En Windows también se incluye `scripts/pruebas-backend.ps1` como alternativa cuando
-las dependencias Maven ya están descargadas. El script admite `-Jdk` y `-RepositorioMaven`.
+El reactor normal incluye `Model`, `DBManager`, `DAO`, `Business` y `App`. No inicia un servidor HTTP.
+`App` contiene una demostración de consola que valida filtros sin acceder a la base de datos.
 
 ### Configuración de MySQL
 
@@ -107,7 +103,7 @@ Para usar los DAO contra MySQL, copiar la plantilla de configuración y completa
 los valores de una base local:
 
 ```powershell
-# Desde BookShop
+# Desde BookShopBackend
 Copy-Item DBManager/src/main/resources/db.example.properties DBManager/src/main/resources/db.properties
 ```
 
@@ -144,4 +140,4 @@ credenciales, las claves, los datos antiguos, los resultados de compilación y e
 estado local de los editores.
 
 Más detalles: [frontend](BookShopFrontend/Web/README.md),
-[negocio](BookShop/Business/README.md) y [persistencia](BookShop/DAO/README.md).
+[negocio](BookShopBackend/Business/README.md) y [persistencia](BookShopBackend/DAO/README.md).

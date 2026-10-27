@@ -187,17 +187,10 @@ el método ya está enmascarado. **No generan archivos ni añaden bibliotecas PD
 La generación se implementará con Jaspersoft Studio en la fase indicada por el
 usuario. Preparar esos datos no repite ni confirma el pago.
 
-Desde BookShop:
+Desde BookShopBackend:
 
 ```powershell
 mvn -pl Business -am clean test
-```
-
-En el equipo de esta implementación se usó la alternativa sin Maven, con las
-dependencias ya presentes en la caché y compilación desde fuentes --release 21:
-
-```powershell
-./scripts/pruebas-backend.ps1
 ```
 
 La ejecución conjunta pasó **251/251 pruebas** de Model, DBManager, DAO y Business.
@@ -206,4 +199,5 @@ rollback, importes, reintentos, estados, premios, intentos, recomendaciones y
 configuración conservada tras reinicio. H2 y Mockito aíslan las pruebas; no se
 usó la base real ni se ejecutó el DDL. MySQL real, integración HTTP/Blazor, tiempos
 en el entorno completo y generación de documentos pertenecen a sus verificaciones
-posteriores. App conserva su demostración antigua y sigue fuera del reactor normal.
+posteriores. App forma parte del reactor normal e incluye una demostración pequeña
+de normalización y validación de filtros con los contratos actuales de Business.
