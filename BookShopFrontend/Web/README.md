@@ -1,6 +1,6 @@
 # Interfaz de BookShop
 
-Implementación de escritorio en Blazor / .NET 10, limitada al proyecto **Web**.
+Implementación de escritorio en Blazor / .NET 10 y Bootstrap 5.3.8, limitada al proyecto **Web**.
 Demostración pública: [BookShop en Render](https://bookshop-demo.onrender.com).
 Basada en los cinco documentos de `../../docs`, sus referencias visuales y los
 campos de los DTO de Java. El texto del diseño prevalece sobre las variaciones
@@ -30,6 +30,23 @@ Las páginas y componentes con interacción separan su marcado `.razor` del esta
 eventos y operaciones de pantalla en `.razor.cs`. Los componentes que solo muestran
 texto no necesitan code-behind. El CSS compartido está en `wwwroot/app.css`; el CSS
 particular acompaña a su componente en `.razor.css`.
+
+## Bootstrap
+
+Bootstrap es la base de todas las pantallas: contenedores, cuadrícula `row`/`col`,
+formularios, botones, tarjetas, tablas, pestañas, alertas, paginación y modales.
+El panel de cuenta utiliza `offcanvas` y los avisos utilizan `toast`.
+
+El CSS oficial y su licencia MIT están incluidos en `wwwroot/vendor/bootstrap`,
+de modo que la interfaz no depende de una CDN ni requiere Node para ejecutarse.
+Se carga antes de `app.css` y de los estilos aislados. El CSS propio conserva los
+colores y la tipografía de BookShop, las imágenes y los detalles de cada pantalla.
+
+Los eventos, la apertura de modales y los cambios de pestaña siguen en Blazor y
+sus archivos code-behind. No se carga el JavaScript de Bootstrap para evitar que
+dos sistemas controlen los mismos elementos. No se añadieron dependencias NuGet
+ni proyectos o capas adicionales. El código propio mantiene el límite de 115
+caracteres por línea; el CSS del proveedor se conserva sin modificar.
 
 ## Recorridos
 

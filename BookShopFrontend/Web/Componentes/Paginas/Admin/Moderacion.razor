@@ -1,13 +1,13 @@
 @page "/moderacion"
 @implements IDisposable
 <PageTitle>Moderación · BookShop</PageTitle>
-<div class="container">
-    <nav class="breadcrumb">
-        <a href="/">Inicio</a>
-        <span>/</span>
-        <a href="/administracion">Administración</a>
-        <span>/</span>
-        <span>Moderación</span>
+<div class="container py-4">
+    <nav aria-label="Ruta de navegación">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="/administracion">Administración</a></li>
+            <li class="breadcrumb-item active" aria-current="page"><span>Moderación</span></li>
+        </ol>
     </nav>
     @if (!Estado.EsAdministrador)
     {
@@ -20,15 +20,15 @@
     }
     else
     {
-        <div class="catalog-layout">
-            <aside class="filters">
+        <div class="row g-4">
+            <aside class="filters col-12 col-lg-3">
                 <h2>Filtros</h2>
                 <div class="filter-group">
                     <h3>Estado de la solicitud</h3>
                     @foreach (var EstadoSolicitud in EstadosSolicitud)
                     {
-                        <label class="status-check">
-                            <input
+                        <label class="status-check form-check d-flex align-items-center gap-2">
+                            <input class="form-check-input"
                                 type="checkbox"
                                 checked="@BorradorEstados.Contains(EstadoSolicitud)"
                                 @onchange="() => AlternarEstado(EstadoSolicitud)"
@@ -39,39 +39,45 @@
                 </div>
                 <div class="filter-group">
                     <h3>Filtros activos</h3>
-                    <div class="chips">
+                    <div class="d-flex flex-wrap gap-2">
                         @foreach (var EstadoSolicitud in EstadosAplicados)
                         {
-                            <button class="chip" @onclick="() => QuitarEstado(EstadoSolicitud)">
+                            <button
+                                class="btn btn-sm btn-outline-secondary rounded-pill"
+                                @onclick="() => QuitarEstado(EstadoSolicitud)">
                                 @EstadoSolicitud
                                 <Icono Nombre="close" />
                             </button>
                         }
                         @if (EstadosAplicados.Count == 0)
                         {
-                            <span class="muted">Sin filtros</span>
+                            <span class="text-body-secondary">Sin filtros</span>
                         }
                     </div>
                 </div>
                 <button class="btn btn-primary" @onclick="Aplicar">Aplicar filtros</button>
                 <button class="btn btn-secondary" @onclick="Limpiar">Limpiar filtros</button>
             </aside>
-            <div>
-                <div class="results-heading">
+            <div class="col-12 col-lg-9">
+                <div class="results-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
                     <div>
                         <h1>Moderación</h1>
-                        <span class="muted">@Filtrados.Count() @Pestana.ToLower()</span>
+                        <span class="text-body-secondary">@Filtrados.Count() @Pestana.ToLower()</span>
                     </div>
                     @if (Pestana == "Reportes")
                     {
                         <a class="btn btn-secondary" href="/todas-resenas">Ver todas las reseñas</a>
                     }
                 </div>
-                <div class="tabs">
-                    <button class="tab @(Pestana == "Devoluciones" ? "active" : "")" @onclick="ElegirDevoluciones">
+                <div class="nav nav-tabs bookshop-tabs">
+                    <button
+                        class="nav-link bookshop-tab @(Pestana == "Devoluciones" ? "active" : "")"
+                        @onclick="ElegirDevoluciones">
                         Devoluciones
                     </button>
-                    <button class="tab @(Pestana == "Reportes" ? "active" : "")" @onclick="ElegirReportes">
+                    <button
+                        class="nav-link bookshop-tab @(Pestana == "Reportes" ? "active" : "")"
+                        @onclick="ElegirReportes">
                         Reportes
                     </button>
                 </div>
@@ -85,13 +91,15 @@
                 }
                 else
                 {
-                    <div class="request-list">
+                    <div class="request-list d-grid gap-3">
                         @foreach (var Solicitud in ElementosPagina)
                         {
-                            <article class="request-card">
+                            <article class="request-card card flex-sm-row justify-content-between gap-4 p-4">
                                 <div>
                                     <h3>Solicitud N.° @Solicitud.Id</h3>
-                                    <p class="muted">@Solicitud.FechaCreacion.ToString("dd/MM/yyyy, HH:mm")</p>
+                                    <p class="text-body-secondary">
+                                        @Solicitud.FechaCreacion.ToString("dd/MM/yyyy, HH:mm")
+                                    </p>
                                     <p>
                                         <strong>Solicitante:</strong>
                                         @Solicitud.Usuario
@@ -100,13 +108,18 @@
                                         <strong>Motivo:</strong>
                                         @Solicitud.Motivo
                                     </p>
-                                    <p class="muted">
+                                    <p class="text-body-secondary">
                                         @(Solicitud.Tipo == "Devoluciones" ? "Pedido" : "Reseña") N.°
                                         @Solicitud.IdReferencia
                                     </p>
                                 </div>
-                                <div class="request-actions">
-                                    <span class="status @ClaseEstado(Solicitud.Estado)">@Solicitud.Estado</span>
+                                <div
+                                    class="request-actions d-flex flex-column gap-3
+                                        justify-content-between align-items-end">
+                                    <span
+                                        class="badge bookshop-status @ClaseEstado(Solicitud.Estado)">
+                                        @Solicitud.Estado
+                                    </span>
                                     <button class="btn btn-secondary" @onclick="() => Abrir(Solicitud)">
                                         Ver solicitud
                                     </button>
@@ -129,23 +142,26 @@
         AlCerrar="Cerrar"
         Amplio="true">
         <div class="request-summary">
-            <span class="status @ClaseEstado(SolicitudSeleccionada.Estado)">@SolicitudSeleccionada.Estado</span>
-            <p class="muted">
+            <span
+                class="badge bookshop-status @ClaseEstado(SolicitudSeleccionada.Estado)">
+                @SolicitudSeleccionada.Estado
+            </span>
+            <p class="text-body-secondary">
                 Fecha de solicitud: @SolicitudSeleccionada.FechaCreacion.ToString("dd/MM/yyyy, HH:mm")
             </p>
         </div>
-        <div class="request-details">
-            <div>
-                <span class="muted">Solicitante</span>
+        <div class="request-details row g-4 border-top pt-4">
+            <div class="col-12 col-md-6">
+                <span class="text-body-secondary">Solicitante</span>
                 <h3>@SolicitudSeleccionada.Usuario</h3>
             </div>
-            <div>
-                <span class="muted">Motivo</span>
+            <div class="col-12 col-md-6">
+                <span class="text-body-secondary">Motivo</span>
                 <p>@SolicitudSeleccionada.Motivo</p>
             </div>
         </div>
         <div class="request-comment">
-            <span class="muted">Comentario adicional</span>
+            <span class="text-body-secondary">Comentario adicional</span>
             <p>
                 @(string.IsNullOrWhiteSpace(SolicitudSeleccionada.Comentario) ? "Sin comentario adicional" :
                 SolicitudSeleccionada.Comentario)
@@ -155,22 +171,22 @@
         {
             @if (PedidoRelacionado is { } Pedido)
             {
-                <div class="reference-box">
+                <div class="reference-box card p-4">
                     <h3>Pedido N.° @Pedido.Id</h3>
-                    <div class="order-summary">
-                        <span>
+                    <div class="order-summary row g-3">
+                        <span class="col-6 col-lg-3">
                             <small>Fecha de pago</small>
                             @Pedido.FechaPago.ToString("dd/MM/yyyy, HH:mm")
                         </span>
-                        <span>
+                        <span class="col-6 col-lg-3">
                             <small>Cantidad de libros</small>
                             @Pedido.Lineas.Sum(l => l.Cantidad)
                         </span>
-                        <span>
+                        <span class="col-6 col-lg-3">
                             <small>Total pagado</small>
                             <strong>@EstadoDemostracion.Dinero(Pedido.Total)</strong>
                         </span>
-                        <span>
+                        <span class="col-6 col-lg-3">
                             <small>Estado</small>
                             @Pedido.Estado
                         </span>
@@ -179,9 +195,9 @@
             }
             else
             {
-                <div class="reference-box">
+                <div class="reference-box card p-4">
                     <h3>Pedido N.° @SolicitudSeleccionada.IdReferencia</h3>
-                    <p class="muted">La referencia no está disponible en estos datos de ejemplo.</p>
+                    <p class="text-body-secondary">La referencia no está disponible en estos datos de ejemplo.</p>
                 </div>
             }
         }
@@ -189,9 +205,10 @@
         {
             @if (ResenaRelacionada is { } Resena)
             {
-                <div class="reference-box">
+                <div class="reference-box card p-4">
                     <h3>Reseña N.° @Resena.Id</h3>
-                    <div class="review-reference">
+                    <div
+                        class="review-reference d-flex flex-wrap justify-content-between align-items-center gap-3">
                         <span>
                             Autor:
                             <strong>@Resena.Usuario</strong>
@@ -199,40 +216,44 @@
                             Libro:
                             <strong>@Estado.BuscarLibro(Resena.IdLibro)?.Titulo</strong>
                         </span>
-                        <span class="status @(Resena.Activo ? "status-green" : "")">
+                        <span class="badge bookshop-status @(Resena.Activo ? "status-green" : "")">
                             @(Resena.Activo ? "Activa" : "Inactiva")
                         </span>
                     </div>
                 </div>
-                <div class="comparison-content">
-                    <div class="reference-box">
-                        <h3>Contenido original</h3>
-                        <span class="stars">@MostrarEstrellas(SolicitudSeleccionada.PuntuacionOriginal)</span>
-                        <p>@SolicitudSeleccionada.ComentarioOriginal</p>
+                <div class="comparison-content row g-3">
+                    <div class="col-12 col-md-6">
+                        <div class="reference-box card h-100 p-4">
+                            <h3>Contenido original</h3>
+                            <span class="stars">@MostrarEstrellas(SolicitudSeleccionada.PuntuacionOriginal)</span>
+                            <p>@SolicitudSeleccionada.ComentarioOriginal</p>
+                        </div>
                     </div>
-                    <div class="reference-box">
-                        <h3>Contenido actual</h3>
-                        <span class="stars">@MostrarEstrellas(Resena.Puntuacion)</span>
-                        <p>@Resena.Comentario</p>
+                    <div class="col-12 col-md-6">
+                        <div class="reference-box card h-100 p-4">
+                            <h3>Contenido actual</h3>
+                            <span class="stars">@MostrarEstrellas(Resena.Puntuacion)</span>
+                            <p>@Resena.Comentario</p>
+                        </div>
                     </div>
                 </div>
             }
             else
             {
-                <div class="reference-box">
+                <div class="reference-box card p-4">
                     <h3>Reseña N.° @SolicitudSeleccionada.IdReferencia</h3>
-                    <p class="muted">La referencia no está disponible en estos datos de ejemplo.</p>
+                    <p class="text-body-secondary">La referencia no está disponible en estos datos de ejemplo.</p>
                 </div>
             }
         }
         @if (SolicitudSeleccionada.Estado == "Pendiente")
         {
-            <div class="resolution-actions">
+            <div class="resolution-actions d-flex flex-wrap justify-content-between gap-3 border-top pt-4">
                 @if (SolicitudSeleccionada.Tipo == "Reportes")
                 {
                     <button class="btn btn-secondary" @onclick="ResolverCerrada">Cerrar solicitud</button>
                 }
-                <div>
+                <div class="d-flex flex-wrap gap-2 ms-auto">
                     <button class="btn btn-danger" @onclick="ResolverRechazada">Rechazar</button>
                     <button class="btn btn-primary" @onclick="ResolverAceptada">
                         Aceptar @(SolicitudSeleccionada.Tipo == "Devoluciones" ? "devolución" : "reporte")
@@ -242,11 +263,11 @@
         }
         else
         {
-            <div class="resolution-result">
+            <div class="resolution-result alert alert-success d-flex align-items-center gap-3">
                 <Icono Nombre="check" />
                 <div>
                     <strong>Solicitud @SolicitudSeleccionada.Estado.ToLower()</strong>
-                    <p class="muted">
+                    <p class="text-body-secondary">
                         Fecha de resolución:
                         @SolicitudSeleccionada.FechaResolucion?.ToString("dd/MM/yyyy, HH:mm")
                     </p>

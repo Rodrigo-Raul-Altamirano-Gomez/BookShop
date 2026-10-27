@@ -1,7 +1,7 @@
 <div class="filter-group">
     <h3>@Titulo</h3>
-    <form class="filter-search" @onsubmit="Buscar" @onsubmit:preventDefault>
-        <input
+    <form class="filter-search d-flex gap-2 mb-3" @onsubmit="Buscar" @onsubmit:preventDefault>
+        <input class="form-control"
             aria-label="@($"Buscar {Singular}")"
             placeholder="@($"Buscar {Singular}")"
             @bind="textoBusqueda"
@@ -9,11 +9,11 @@
             />
         <button class="btn btn-primary" type="submit">Buscar</button>
     </form>
-    <div class="filter-options">
+    <div class="filter-options d-grid gap-2 overflow-auto">
         @foreach (var option in VisibleOptions)
         {
-            <label>
-                <input
+            <label class="form-check d-flex align-items-center gap-2">
+                <input class="form-check-input"
                     type="checkbox"
                     checked="@Seleccionados.Contains(option)"
                     @onchange="() => Seleccionar(option)"
@@ -23,12 +23,12 @@
         }
         @if (!VisibleOptions.Any())
         {
-            <p class="muted">Sin coincidencias</p>
+            <p class="text-body-secondary">Sin coincidencias</p>
         }
     </div>
     @if (OpcionesFiltradas.Count > 4)
     {
-        <button class="text-button" @onclick="AlternarExpansion">
+        <button class="btn btn-link text-button" @onclick="AlternarExpansion">
             @(expandido ? "Ver menos" : "Ver más")
             <span aria-hidden="true">→</span>
         </button>

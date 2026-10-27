@@ -1,19 +1,37 @@
 @if (TotalPaginas > 1)
 {
-    <nav class="pagination" aria-label="Páginas de resultados">
-        <button disabled="@(Pagina <= 1)" @onclick="() => Ir(Pagina - 1)" aria-label="Página anterior">‹</button>
-        @foreach (var p in PaginasVisibles)
-        {
-            <button
-                class="@(Pagina == p ? "active" : "")"
-                aria-current="@(Pagina == p ? "page" : null)"
-                aria-label="Página @p"
-                @onclick="() => Ir(p)">
-                @p
-            </button>
-        }
-        <button disabled="@(Pagina >= TotalPaginas)" @onclick="() => Ir(Pagina + 1)" aria-label="Página siguiente">
-            ›
-        </button>
+    <nav class="mt-4" aria-label="Páginas de resultados">
+        <ul class="pagination justify-content-center gap-2 mb-0">
+            <li class="page-item @(Pagina <= 1 ? "disabled" : "")">
+                <button
+                    class="page-link"
+                    disabled="@(Pagina <= 1)"
+                    @onclick="() => Ir(Pagina - 1)"
+                    aria-label="Página anterior">
+                    ‹
+                </button>
+            </li>
+            @foreach (var p in PaginasVisibles)
+            {
+                <li class="page-item @(Pagina == p ? "active" : "")">
+                    <button
+                        class="page-link"
+                        aria-current="@(Pagina == p ? "page" : null)"
+                        aria-label="Página @p"
+                        @onclick="() => Ir(p)">
+                        @p
+                    </button>
+                </li>
+            }
+            <li class="page-item @(Pagina >= TotalPaginas ? "disabled" : "")">
+                <button
+                    class="page-link"
+                    disabled="@(Pagina >= TotalPaginas)"
+                    @onclick="() => Ir(Pagina + 1)"
+                    aria-label="Página siguiente">
+                    ›
+                </button>
+            </li>
+        </ul>
     </nav>
 }

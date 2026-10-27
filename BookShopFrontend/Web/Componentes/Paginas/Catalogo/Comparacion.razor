@@ -1,10 +1,11 @@
 @page "/comparacion"
 <PageTitle>Comparar libros · BookShop</PageTitle>
 <div class="container comparison-page">
-    <nav class="breadcrumb">
-        <a href="/">Inicio</a>
-        <span>/</span>
-        <span>Comparar libros</span>
+    <nav aria-label="Ruta de navegación">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+            <li class="breadcrumb-item active" aria-current="page"><span>Comparar libros</span></li>
+        </ol>
     </nav>
     <h1>Comparar libros</h1>
     <a href="/catalogo" class="back-link">← Volver al catálogo</a>
@@ -19,22 +20,26 @@
     }
     else
     {
-        <div class="comparison-cards">
+        <div class="comparison-cards row g-4">
             @foreach (var book in ComparedBooks)
             {
-                <article class="panel comparison-card">
-                    <img src="@book.Portada" alt="@($"Portada de {book.Titulo}")" />
-                    <div>
-                        <h2>@book.Titulo</h2>
-                        <p>@book.Autor</p>
-                        <a class="btn btn-primary" href="@($"/libros/{book.Id}")">Ver libro</a>
-                        <button class="text-button" @onclick="() => QuitarLibro(book)">× Quitar</button>
-                    </div>
-                </article>
+                <div class="col-12 col-md-6">
+                    <article class="card bookshop-panel comparison-card flex-row gap-4 p-4 h-100">
+                        <img src="@book.Portada" alt="@($"Portada de {book.Titulo}")" />
+                        <div class="d-flex flex-column align-items-stretch justify-content-center flex-grow-1">
+                            <h2>@book.Titulo</h2>
+                            <p>@book.Autor</p>
+                            <a class="btn btn-primary" href="@($"/libros/{book.Id}")">Ver libro</a>
+                            <button
+                                class="btn btn-link text-button"
+                                @onclick="() => QuitarLibro(book)">× Quitar</button>
+                        </div>
+                    </article>
+                </div>
             }
         </div>
-        <div class="comparison-table panel">
-            <table>
+        <div class="comparison-table table-responsive card">
+            <table class="table table-striped align-middle mb-0">
                 <thead>
                     <tr>
                         <th>Característica</th>
@@ -52,7 +57,7 @@
                                 @if (book.Descuento > 0)
                                 {
                                     <del>@EstadoDemostracion.Dinero(book.PrecioOriginal)</del>
-                                    <span class="badge discount-badge">-@book.Descuento%</span>
+                                    <span class="badge badge-bookshop discount-badge">-@book.Descuento%</span>
                                 }
                             </td>
                         }
@@ -70,7 +75,7 @@
                                 }
                                 else
                                 {
-                                    <span class="muted">Sin reseñas</span>
+                                    <span class="text-body-secondary">Sin reseñas</span>
                                 }
                             </td>
                         }

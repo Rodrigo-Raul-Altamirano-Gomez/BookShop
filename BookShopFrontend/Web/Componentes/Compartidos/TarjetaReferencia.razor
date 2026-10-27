@@ -1,9 +1,15 @@
-<a class="reference-card" href="/referencias/@Referencia.Tipo/@Referencia.Id">
-    <img
-        src="@Referencia.Imagen"
-        alt="@Referencia.Nombre"
-        loading="lazy"
-        onerror="this.onerror=null;this.src='/images/reference-placeholder.svg'"
-        />
-    <h3>@Referencia.Nombre</h3>
-</a>
+<div class="col">
+    <a
+        class="card h-100 border-0 bg-transparent reference-card"
+        href="/referencias/@Referencia.Tipo/@Referencia.Id"
+    >
+        <img
+            src="@Referencia.Imagen"
+            class="card-img-top img-fluid rounded"
+            alt="@Referencia.Nombre"
+            loading="lazy"
+            onerror="this.onerror=null;this.src='/images/reference-placeholder.svg'"
+            />
+        <h3 class="card-title">@Referencia.Nombre</h3>
+    </a>
+</div>

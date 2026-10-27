@@ -1,9 +1,7 @@
 .book-detail {
-    display:grid;
-    grid-template-columns:310px 1fr;
-    gap:52px;
     padding:12px 20px 30px
 }
+
 .cover-column {
     position:relative;
     align-self:start
@@ -16,19 +14,17 @@
     box-shadow:0 12px 22px #182d2325
 }
 .book-information {
-    padding:8px 0
+    padding-top:8px
 }
 .book-information h1 {
     font-size:44px;
     margin-bottom:15px
 }
 .book-references {
-    display:flex;
-    align-items:center;
     flex-wrap:wrap;
-    gap:9px;
     font-size:16px
 }
+
 .book-references a {
     text-decoration:underline
 }
@@ -37,11 +33,9 @@
     margin:15px 0
 }
 .detail-rating {
-    display:flex;
-    align-items:center;
-    gap:13px;
     margin:22px 0
 }
+
 .detail-rating .stars {
     font-size:26px;
     letter-spacing:1px
@@ -71,12 +65,10 @@
     color:var(--green)
 }
 .availability {
-    display:flex;
-    align-items:center;
-    gap:8px;
     font-size:14px;
     margin:16px 0
 }
+
 .availability-dot {
     width:9px;
     height:9px;
@@ -87,17 +79,15 @@
     background:#a06c4c
 }
 .purchase-actions {
-    display:flex;
-    gap:12px;
     margin-top:22px
 }
+
 .quantity-control {
-    display:flex;
     border:1px solid var(--line);
     border-radius:5px;
-    overflow:hidden;
-    align-items:center
+    overflow:hidden
 }
+
 .quantity-control button {
     background:white;
     border:0;
@@ -114,11 +104,9 @@
     flex:1
 }
 .list-actions {
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:10px;
     margin-top:12px
 }
+
 .list-actions .btn {
     padding:11px 9px;
     font-size:13px
@@ -143,15 +131,6 @@
     -webkit-box-orient:vertical;
     overflow:hidden
 }
-.text-button {
-    padding:0;
-    border:0;
-    background:none;
-    text-decoration:underline;
-    color:var(--green);
-    font-size:14px;
-    cursor:pointer
-}
 .technical-panel {
     padding:0;
     overflow:hidden
@@ -161,13 +140,11 @@
     border:0;
     background:none;
     padding:17px 24px;
-    display:flex;
-    align-items:center;
-    gap:18px;
     color:var(--green);
     cursor:pointer;
     text-align:left
 }
+
 .technical-heading h3 {
     margin:0
 }
@@ -175,22 +152,20 @@
     font-size:25px
 }
 .technical-data {
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:0 45px;
     padding:4px 26px 22px;
     margin:0;
     border-top:1px solid var(--line)
 }
+
 .technical-data>div {
-    display:flex;
     padding:13px 0;
     border-bottom:1px solid #e8e9e3;
     font-size:13px
 }
+
 .technical-data dt {
     width:44%;
-    color:var(--muted)
+    color:var(--text-body-secondary)
 }
 .technical-data dd {
     margin:0
@@ -201,19 +176,9 @@
 .reviews-panel {
     padding:25px
 }
-.reviews-layout {
-    display:grid;
-    grid-template-columns:265px 1fr;
-    gap:30px
-}
 .reviews-summary {
     border-right:1px solid var(--line);
     padding-right:28px
-}
-.average {
-    display:flex;
-    flex-direction:column;
-    gap:6px
 }
 .average strong {
     font-family:Georgia,serif;
@@ -227,13 +192,10 @@
     font-size:24px
 }
 .distribution {
-    display:grid;
-    grid-template-columns:29px 1fr 24px;
-    align-items:center;
-    gap:9px;
     margin:12px 0;
     font-size:13px
 }
+
 .distribution-track {
     height:9px;
     border-radius:3px;
@@ -246,11 +208,6 @@
     background:var(--green);
     border-radius:3px
 }
-.reviews-list .review-row {
-    display:flex;
-    align-items:flex-start;
-    gap:12px
-}
 .review-avatar {
     width:43px;
     height:43px;
@@ -258,13 +215,10 @@
     object-fit:cover
 }
 .review-content {
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    gap:5px;
     font-size:13px
 }
-.review-content .muted {
+
+.review-content .text-body-secondary {
     font-size:12px
 }
 .review-content p {
@@ -272,20 +226,15 @@
     margin:4px 0
 }
 .review-actions {
-    display:flex;
-    gap:6px;
     align-self:center
 }
+
 .review-actions .icon-button {
     width:auto;
     min-width:33px;
     padding:7px;
     gap:5px;
     font-size:12px
-}
-.rating-picker {
-    display:flex;
-    gap:5px
 }
 .rating-picker button {
     border:0;
@@ -308,10 +257,9 @@
 .image-actions {
     position:absolute;
     bottom:13px;
-    right:13px;
-    display:flex;
-    gap:7px
+    right:13px
 }
+
 .image-actions .icon-button {
     background:white
 }

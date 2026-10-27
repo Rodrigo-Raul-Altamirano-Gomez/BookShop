@@ -1,6 +1,6 @@
 @if (Estado.EsAdministrador)
 {
-    <div class="management-actions">
+    <div class="management-actions d-flex flex-wrap gap-2 my-3">
         <button class="btn btn-secondary" @onclick="Abrir">
             <Icono Nombre="edit" />
             Editar
@@ -14,20 +14,20 @@
 {
     <Modal Titulo="@($"Editar {Singular}")" AlCerrar="Cerrar">
         <form @onsubmit="Guardar" @onsubmit:preventDefault>
-            <label class="field">
+            <label class="field form-label d-block mb-3">
                 Nombre *
-                <input @bind="Nombre" @bind:event="oninput" required />
+                <input class="form-control" @bind="Nombre" @bind:event="oninput" required />
             </label>
-            <label class="field">
+            <label class="field form-label d-block mb-3">
                 @(Referencia.Tipo == "autores" ? "Biografía" : "Descripción") *
-                <textarea @bind="Descripcion" @bind:event="oninput" rows="6" required>
+                <textarea class="form-control" @bind="Descripcion" @bind:event="oninput" rows="6" required>
                 </textarea>
             </label>
             @if (ErrorFormulario.Length > 0)
             {
-                <p class="form-error" role="alert">@ErrorFormulario</p>
+                <p class="alert alert-danger form-error" role="alert">@ErrorFormulario</p>
             }
-            <div class="modal-actions">
+            <div class="modal-footer px-0 pb-0 mt-4">
                 <button class="btn btn-secondary" type="button" @onclick="Cerrar">Cancelar</button>
                 <button class="btn btn-primary" type="submit">Guardar cambios</button>
             </div>

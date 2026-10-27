@@ -1,12 +1,12 @@
 @page "/referencias/{Tipo}/{Id:int}"
 <PageTitle>@(Referencia?.Nombre ?? "Referencia") · BookShop</PageTitle>
-<div class="container">
-    <nav class="breadcrumb">
-        <a href="/">Inicio</a>
-        <span>/</span>
-        <a href="@($"/referencias/{Tipo}")">@Titulo</a>
-        <span>/</span>
-        <span>@Referencia?.Nombre</span>
+<div class="container py-4">
+    <nav aria-label="Ruta de navegación">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="@($"/referencias/{Tipo}")">@Titulo</a></li>
+            <li class="breadcrumb-item active" aria-current="page"><span>@Referencia?.Nombre</span></li>
+        </ol>
     </nav>
     @if (Referencia is null)
     {
@@ -17,8 +17,8 @@
     }
     else
     {
-        <section class="reference-banner">
-            <div class="reference-picture">
+        <section class="reference-banner row g-0">
+            <div class="reference-picture col-12 col-md-6">
                 <img
                     onerror="this.onerror=null;this.src='/images/reference-placeholder.svg'"
                     src="@Referencia.Imagen"
@@ -26,17 +26,17 @@
                     />
                 @if (Estado.EsAdministrador)
                 {
-                    <div class="image-actions">
-                        <label class="icon-button" title="Cambiar imagen">
+                    <div class="image-actions d-flex gap-2">
+                        <label class="btn btn-outline-secondary icon-button" title="Cambiar imagen">
                             <Icono Nombre="edit" />
-                            <InputFile
+                            <InputFile class="form-control"
                                 OnChange="CambiarImagen"
                                 disabled="@cargandoImagen"
                                 accept="image/png,image/jpeg"
                                 />
                         </label>
                         <button
-                            class="icon-button"
+                            class="btn btn-outline-secondary icon-button"
                             title="Quitar imagen"
                             disabled="@cargandoImagen"
                             @onclick="QuitarImagen">
@@ -45,7 +45,8 @@
                     </div>
                 }
             </div>
-            <div class="reference-copy">
+            <div class="reference-copy col-12 col-md-6 d-flex flex-column p-4
+                align-items-start justify-content-center">
                 <h1>@Referencia.Nombre</h1>
                 <p>@Referencia.Descripcion</p>
                 <button class="btn btn-secondary" @onclick="AlternarSeguimiento">

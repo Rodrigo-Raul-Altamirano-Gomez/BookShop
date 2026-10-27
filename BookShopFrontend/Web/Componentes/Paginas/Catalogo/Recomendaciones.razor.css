@@ -1,9 +1,3 @@
-.result-title {
-    display:flex;
-    align-items:baseline;
-    gap:18px;
-    flex:1
-}
 .result-title span {
     font-size:13px
 }

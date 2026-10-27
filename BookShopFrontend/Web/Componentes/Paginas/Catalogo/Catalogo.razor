@@ -1,10 +1,11 @@
 @page "/catalogo"
 <PageTitle>Catálogo · BookShop</PageTitle>
-<div class="container">
-    <nav class="breadcrumb">
-        <a href="/">Inicio</a>
-        <span>/</span>
-        <span>Catálogo</span>
+<div class="container py-4">
+    <nav aria-label="Ruta de navegación">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+            <li class="breadcrumb-item active" aria-current="page"><span>Catálogo</span></li>
+        </ol>
     </nav>
     <ExploradorCatalogo Libros="Libros" Titulo="@Titulo" Busqueda="@(Q ?? "")" OrdenInicial="@Sort" />
 </div>

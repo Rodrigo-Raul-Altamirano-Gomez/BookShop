@@ -1,11 +1,11 @@
 @using Web.Modelos
 <Modal Titulo="@(Valor is null ? "Añadir método de pago" : "Editar método de pago")" AlCerrar="AlCerrar">
-    <div class="tabs" role="tablist" aria-label="Tipo de método">
+    <div class="nav nav-tabs bookshop-tabs mb-4" role="tablist" aria-label="Tipo de método">
         <button
             type="button"
             role="tab"
             aria-selected="@(Borrador.Tipo == "Tarjeta")"
-            class="tab @(Borrador.Tipo == "Tarjeta" ? "active" : "")"
+            class="nav-link bookshop-tab @(Borrador.Tipo == "Tarjeta" ? "active" : "")"
             @onclick="MostrarTarjeta"
             disabled="@(Valor is not null && Valor.Tipo != "Tarjeta")">
             <Icono Nombre="card" />
@@ -15,7 +15,7 @@
             type="button"
             role="tab"
             aria-selected="@(Borrador.Tipo == "Billetera")"
-            class="tab @(Borrador.Tipo == "Billetera" ? "active" : "")"
+            class="nav-link bookshop-tab @(Borrador.Tipo == "Billetera" ? "active" : "")"
             @onclick="MostrarBilletera"
             disabled="@(Valor is not null && Valor.Tipo != "Billetera")">
             <Icono Nombre="wallet" />
@@ -23,33 +23,39 @@
         </button>
     </div>
     <form @onsubmit="Guardar" @onsubmit:preventDefault novalidate>
-        <label class="field">
+        <label class="field form-label d-block mb-3">
             Titular *
-            <input @bind="Borrador.Titular" @bind:event="oninput" maxlength="100" autocomplete="cc-name" />
+            <input
+                class="form-control"
+                @bind="Borrador.Titular"
+                @bind:event="oninput"
+                maxlength="100"
+                autocomplete="cc-name"
+            />
         </label>
-        <div class="form-grid">
-            <label class="field">
+        <div class="row g-3">
+            <label class="field form-label d-block mb-3 col-md-6">
                 Proveedor *
-                <input @bind="Borrador.Proveedor" @bind:event="oninput" maxlength="60" />
+                <input class="form-control" @bind="Borrador.Proveedor" @bind:event="oninput" maxlength="60" />
             </label>
-            <label class="field">
+            <label class="field form-label d-block mb-3 col-md-6">
                 Alias
-                <input @bind="Borrador.Alias" @bind:event="oninput" maxlength="60" />
+                <input class="form-control" @bind="Borrador.Alias" @bind:event="oninput" maxlength="60" />
             </label>
         </div>
         @if (Borrador.Tipo == "Tarjeta")
         {
-            <label class="field">
+            <label class="field form-label d-block mb-3">
                 Tipo de tarjeta *
-                <select @bind="Borrador.TipoTarjeta">
+                <select class="form-select" @bind="Borrador.TipoTarjeta">
                     <option>Crédito</option>
                     <option>Débito</option>
                 </select>
             </label>
         }
-        <label class="field">
+        <label class="field form-label d-block mb-3">
             @(Borrador.Tipo == "Tarjeta" ? "Número de tarjeta" : "Número de celular") @(Valor is null ? "*" : "")
-            <input
+            <input class="form-control"
                 @bind="Numero"
                 @bind:event="oninput"
                 inputmode="numeric"
@@ -61,24 +67,24 @@
         </label>
         @if (Valor is not null)
         {
-            <p class="muted">Número registrado: @Valor.NumeroEnmascarado</p>
+            <p class="text-body-secondary">Número registrado: @Valor.NumeroEnmascarado</p>
         }
         @if (Borrador.Tipo == "Tarjeta")
         {
-            <label class="field">
+            <label class="field form-label d-block mb-3">
                 Fecha de vencimiento *
-                <input type="date" @bind="FechaVencimiento" />
+                <input class="form-control" type="date" @bind="FechaVencimiento" />
             </label>
         }
-        <label class="check-field">
-            <input type="checkbox" @bind="Borrador.Predeterminada" />
+        <label class="form-check form-check-label my-3">
+            <input class="form-check-input" type="checkbox" @bind="Borrador.Predeterminada" />
             Usar como predeterminado
         </label>
         @if (MensajeError.Length > 0)
         {
-            <p class="form-error" role="alert">@MensajeError</p>
+            <p class="alert alert-danger form-error" role="alert">@MensajeError</p>
         }
-        <div class="modal-actions">
+        <div class="modal-footer px-0 pb-0 mt-4">
             <button type="button" class="btn btn-secondary" @onclick="AlCerrar">Cancelar</button>
             <button type="submit" class="btn btn-primary" disabled="@(!Completo || Guardando)">
                 @(Valor is null ? "Guardar método" : "Guardar cambios")

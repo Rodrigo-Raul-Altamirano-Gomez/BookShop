@@ -1,12 +1,12 @@
 @page "/libros/{Id:int}"
 <PageTitle>@(Libro?.Titulo ?? "Libro") · BookShop</PageTitle>
 <div class="container detail-page">
-    <nav class="breadcrumb">
-        <a href="/">Inicio</a>
-        <span>/</span>
-        <a href="/catalogo">Catálogo</a>
-        <span>/</span>
-        <span>@Libro?.Titulo</span>
+    <nav aria-label="Ruta de navegación">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="/catalogo">Catálogo</a></li>
+            <li class="breadcrumb-item active" aria-current="page"><span>@Libro?.Titulo</span></li>
+        </ol>
     </nav>
     @if (Libro is null)
     {
@@ -17,8 +17,8 @@
     }
     else
     {
-        <section class="book-detail">
-            <div class="cover-column">
+        <section class="book-detail row g-5">
+            <div class="cover-column col-12 col-md-4">
                 <img
                     class="detail-cover"
                     onerror="this.onerror=null;this.src='/images/book-placeholder.svg'"
@@ -27,17 +27,17 @@
                     />
                 @if (Estado.EsAdministrador)
                 {
-                    <div class="image-actions">
-                        <label class="icon-button" title="Cambiar portada">
+                    <div class="image-actions d-flex gap-2">
+                        <label class="btn btn-outline-secondary icon-button" title="Cambiar portada">
                             <Icono Nombre="edit" />
-                            <InputFile
+                            <InputFile class="form-control"
                                 OnChange="CambiarImagen"
                                 disabled="@cargandoImagen"
                                 accept="image/png,image/jpeg"
                                 />
                         </label>
                         <button
-                            class="icon-button"
+                            class="btn btn-outline-secondary icon-button"
                             title="Quitar portada"
                             disabled="@cargandoImagen"
                             @onclick="QuitarImagen">
@@ -46,9 +46,9 @@
                     </div>
                 }
             </div>
-            <div class="book-information">
+            <div class="book-information col-12 col-md-8">
                 <h1>@Libro.Titulo</h1>
-                <div class="book-references">
+                <div class="book-references d-flex flex-wrap align-items-center gap-2">
                     <a href="@RutaReferencia("autores", Libro.Autor)">@Libro.Autor</a>
                     <span>·</span>
                     <a href="@RutaReferencia("categorias", Libro.Categoria)">@Libro.Categoria</a>
@@ -56,7 +56,7 @@
                     <a href="@RutaReferencia("editoriales", Libro.Editorial)">@Libro.Editorial</a>
                 </div>
                 <p class="language">Idioma: @Libro.Idioma</p>
-                <div class="detail-rating">
+                <div class="detail-rating d-flex flex-wrap align-items-center gap-3">
                     @if (Resenas.Count > 0)
                     {
                         <span
@@ -69,7 +69,7 @@
                     }
                     else
                     {
-                        <span class="muted">Sin reseñas</span>
+                        <span class="text-body-secondary">Sin reseñas</span>
                     }
                     <a href="#resenas">Ver reseñas (@Resenas.Count)</a>
                 </div>
@@ -82,22 +82,29 @@
                         <strong>@EstadoDemostracion.Dinero(Libro.Precio)</strong>
                         @if (Libro.Descuento > 0)
                         {
-                            <span class="badge discount-badge">-@Libro.Descuento%</span>
+                            <span class="badge badge-bookshop discount-badge">-@Libro.Descuento%</span>
                         }
                     </div>
                 </div>
-                <p class="availability">
+                <p class="availability d-flex align-items-center gap-2">
                     <span class="availability-dot @(Libro.Stock == 0 || !Libro.Activo ? "unavailable" : "")">
                     </span>
                     @(Libro.Stock > 0 && Libro.Activo ? $"Disponible · {Libro.Stock} unidades" : "No disponible")
                 </p>
-                <div class="purchase-actions">
-                    <div class="quantity-control">
-                        <button @onclick="Disminuir" aria-label="Reducir cantidad" disabled="@(cantidad <= 1)">
+                <div class="purchase-actions d-flex gap-2">
+                    <div class="quantity-control btn-group align-items-center">
+                        <button
+                            class="btn btn-outline-secondary"
+                            @onclick="Disminuir"
+                            aria-label="Reducir cantidad"
+                            disabled="@(cantidad <= 1)">
                             −
                         </button>
                         <span>@cantidad</span>
-                        <button @onclick="Aumentar" aria-label="Aumentar cantidad">+</button>
+                        <button
+                            class="btn btn-outline-secondary"
+                            @onclick="Aumentar"
+                            aria-label="Aumentar cantidad">+</button>
                     </div>
                     <button
                         class="btn btn-primary add-cart"
@@ -107,7 +114,7 @@
                         Agregar al carrito
                     </button>
                 </div>
-                <div class="list-actions">
+                <div class="list-actions d-flex flex-wrap align-items-center gap-2">
                     <button class="btn btn-secondary @(Deseado ? "selected" : "")" @onclick="AlternarDeseado">
                         <Icono Nombre="heart" />
                         @(Deseado ? "En deseados" : "Deseados")
@@ -130,52 +137,55 @@
         <section class="synopsis">
             <h2>Sinopsis</h2>
             <p class="@(sinopsisCompleta ? "" : "synopsis-preview")">@Libro.Sinopsis</p>
-            <button class="text-button" @onclick="AlternarSinopsis">
+            <button class="btn btn-link text-button" @onclick="AlternarSinopsis">
                 @(sinopsisCompleta ? "Leer menos ↑" : "Leer más ↓")
             </button>
         </section>
-        <section class="technical-panel panel">
-            <button class="technical-heading" @onclick="AlternarFicha" aria-expanded="@fichaExpandida">
+        <section class="technical-panel card bookshop-panel">
+            <button
+                class="technical-heading btn btn-link text-decoration-none d-flex align-items-center gap-3"
+                @onclick="AlternarFicha"
+                aria-expanded="@fichaExpandida">
                 <span>@(fichaExpandida ? "⌃" : "⌄")</span>
                 <h3>Ver detalles</h3>
             </button>
             @if (fichaExpandida)
             {
-                <dl class="technical-data">
-                    <div>
+                <dl class="technical-data row gx-5">
+                    <div class="col-12 col-md-6 d-flex">
                         <dt>Idioma</dt>
                         <dd>@Libro.Idioma</dd>
                     </div>
-                    <div>
+                    <div class="col-12 col-md-6 d-flex">
                         <dt>ISBN</dt>
                         <dd>@Libro.ISBN</dd>
                     </div>
-                    <div>
+                    <div class="col-12 col-md-6 d-flex">
                         <dt>Año de edición</dt>
                         <dd>@Libro.Anio</dd>
                     </div>
-                    <div>
+                    <div class="col-12 col-md-6 d-flex">
                         <dt>Páginas</dt>
                         <dd>@Libro.Paginas</dd>
                     </div>
-                    <div>
+                    <div class="col-12 col-md-6 d-flex">
                         <dt>Peso</dt>
                         <dd>@Libro.Peso</dd>
                     </div>
-                    <div>
+                    <div class="col-12 col-md-6 d-flex">
                         <dt>Dimensiones</dt>
                         <dd>@Libro.Dimensiones</dd>
                     </div>
                     @if (!string.IsNullOrWhiteSpace(Libro.Saga))
                     {
-                        <div>
+                        <div class="col-12 col-md-6 d-flex">
                             <dt>Saga</dt>
                             <dd>@Libro.Saga</dd>
                         </div>
                     }
                     @if (Libro.Tomo is not null)
                     {
-                        <div>
+                        <div class="col-12 col-md-6 d-flex">
                             <dt>Tomo</dt>
                             <dd>@Libro.Tomo</dd>
                         </div>
@@ -184,29 +194,29 @@
             }
         </section>
         <section class="similar-section">
-            <div class="section-heading">
+            <div class="section-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
                 <h2>Libros similares</h2>
             </div>
-            <div class="book-grid">
+            <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-4">
                 @foreach (var similar in LibrosSimilares)
                 {
                     <TarjetaLibro Libro="similar" />
                 }
             </div>
         </section>
-        <section class="reviews-panel panel" id="resenas">
-            <div class="section-heading">
+        <section class="reviews-panel card bookshop-panel" id="resenas">
+            <div class="section-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
                 <h2>Reseñas</h2>
                 <button class="btn btn-primary" @onclick="AbrirResena">
                     <Icono Nombre="edit" />
                     Escribir reseña
                 </button>
             </div>
-            <div class="reviews-layout">
-                <div class="reviews-summary">
+            <div class="reviews-layout row g-4">
+                <div class="reviews-summary col-12 col-lg-3">
                     @if (Resenas.Count > 0)
                     {
-                        <div class="average">
+                        <div class="average d-flex flex-column gap-2">
                             <strong>
                                 @Promedio.ToString("N1")
                                 <small> / 5</small>
@@ -218,23 +228,23 @@
                     {
                         <h3>Sin reseñas</h3>
                     }
-                    <p class="muted">@Resenas.Count reseñas</p>
+                    <p class="text-body-secondary">@Resenas.Count reseñas</p>
                     @foreach (var rating in Puntuaciones)
                     {
-                        <div class="distribution">
+                        <div class="distribution d-flex align-items-center gap-2">
                             <span>
                                 @rating
                                 <span class="stars">★</span>
                             </span>
-                            <div class="distribution-track">
-                                <span style="@($"width:{PorcentajePuntuacion(rating)}%")">
+                            <div class="distribution-track progress flex-grow-1">
+                                <span class="progress-bar" style="@($"width:{PorcentajePuntuacion(rating)}%")">
                                 </span>
                             </div>
                             <span>@Resenas.Count(r => r.Puntuacion == rating)</span>
                         </div>
                     }
                 </div>
-                <div class="reviews-list">
+                <div class="reviews-list col-12 col-lg-9">
                     @if (Resenas.Count == 0)
                     {
                         <div class="empty-state">
@@ -243,11 +253,11 @@
                     }
                     @foreach (var review in ResenasVisibles)
                     {
-                        <article class="review-row">
+                        <article class="review-row d-flex align-items-start gap-3">
                             <img class="review-avatar" src="@review.FotoUsuario" alt="" />
-                            <div class="review-content">
+                            <div class="review-content d-flex flex-column gap-2 flex-grow-1">
                                 <strong>@review.Usuario</strong>
-                                <span class="muted">
+                                <span class="text-body-secondary">
                                     @review.Fecha.ToString("d 'de' MMMM 'de' yyyy", CulturaEspanola)
                                 </span>
                                 <span class="stars" aria-label="@($"{review.Puntuacion} de 5 estrellas")">
@@ -255,9 +265,10 @@
                                 </span>
                                 <p>@review.Comentario</p>
                             </div>
-                            <div class="review-actions">
+                            <div class="review-actions d-flex gap-2 align-self-center">
                                 <button
-                                    class="icon-button @(review.Votada ? "selected" : "")"
+                                    class="btn btn-outline-secondary icon-button
+                                        @(review.Votada ? "selected" : "")"
                                     @onclick="() => Votar(review)"
                                     title="Marcar reseña como útil"
                                     aria-label="Marcar reseña como útil">
@@ -265,7 +276,7 @@
                                     @review.Votos
                                 </button>
                                 <button
-                                    class="icon-button"
+                                    class="btn btn-outline-secondary icon-button"
                                     @onclick="() => AbrirReporte(review)"
                                     title="Reportar reseña"
                                     aria-label="Reportar reseña">
@@ -289,14 +300,14 @@
     <Modal Titulo="Escribir reseña" AlCerrar="CerrarResena">
         <form @onsubmit="PublicarResena" @onsubmit:preventDefault>
             <p class="form-book">@Libro.Titulo</p>
-            <div class="field">
+            <div class="field form-label d-block">
                 <label>Puntuación *</label>
-                <div class="rating-picker">
+                <div class="rating-picker d-flex gap-1">
                     @foreach (var rating in PuntuacionesAscendentes)
                     {
                         <button
                             type="button"
-                            class="@(rating <= puntuacionResena ? "chosen" : "")"
+                            class="btn btn-link p-0 @(rating <= puntuacionResena ? "chosen" : "")"
                             @onclick="() => SeleccionarPuntuacion(rating)"
                             aria-label="@($"Puntuar con {rating} estrellas")">
                             ★
@@ -304,16 +315,20 @@
                     }
                 </div>
             </div>
-            <div class="field">
+            <div class="field form-label d-block">
                 <label for="review-comment">Comentario *</label>
-                <textarea id="review-comment" rows="5" @bind="comentarioResena" @bind:event="oninput">
+                <textarea
+                    class="form-control"
+                    id="review-comment" rows="5"
+                    @bind="comentarioResena"
+                    @bind:event="oninput">
                 </textarea>
             </div>
             @if (errorFormulario.Length > 0)
             {
-                <p class="form-error">@errorFormulario</p>
+                <p class="alert alert-danger py-2">@errorFormulario</p>
             }
-            <div class="modal-actions">
+            <div class="modal-footer px-0 pb-0 d-flex flex-wrap justify-content-end gap-2 mt-4">
                 <button type="button" class="btn btn-secondary" @onclick="CerrarResena">Cancelar</button>
                 <button
                     type="submit"
@@ -329,9 +344,9 @@
 {
     <Modal Titulo="Reportar reseña" AlCerrar="CerrarReporte">
         <form @onsubmit="EnviarReporte" @onsubmit:preventDefault>
-            <div class="field">
+            <div class="field form-label d-block">
                 <label for="report-reason">Motivo *</label>
-                <select id="report-reason" @bind="motivoReporte">
+                <select class="form-select" id="report-reason" @bind="motivoReporte">
                     <option value="">Seleccionar motivo</option>
                     <option>Contenido ofensivo</option>
                     <option>Publicidad/spam</option>
@@ -339,16 +354,20 @@
                     <option>Otro</option>
                 </select>
             </div>
-            <div class="field">
+            <div class="field form-label d-block">
                 <label for="report-comment">Comentario adicional</label>
-                <textarea id="report-comment" rows="4" @bind="comentarioReporte" @bind:event="oninput">
+                <textarea
+                    class="form-control"
+                    id="report-comment" rows="4"
+                    @bind="comentarioReporte"
+                    @bind:event="oninput">
                 </textarea>
             </div>
             @if (errorFormulario.Length > 0)
             {
-                <p class="form-error">@errorFormulario</p>
+                <p class="alert alert-danger py-2">@errorFormulario</p>
             }
-            <div class="modal-actions">
+            <div class="modal-footer px-0 pb-0 d-flex flex-wrap justify-content-end gap-2 mt-4">
                 <button type="button" class="btn btn-secondary" @onclick="CerrarReporte">Cancelar</button>
                 <button type="submit" class="btn btn-primary" disabled="@(motivoReporte.Length == 0)">
                     Enviar reporte

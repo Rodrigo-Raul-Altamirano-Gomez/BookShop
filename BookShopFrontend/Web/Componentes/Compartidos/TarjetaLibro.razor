@@ -1,23 +1,26 @@
-<a class="book-card" href="/libros/@Libro.Id">
-    <div class="cover-wrap">
-        <img
-            src="@Libro.Portada"
-            alt="Portada de @Libro.Titulo"
-            loading="lazy"
-            onerror="this.onerror=null;this.src='/images/book-placeholder.svg'"
-            />
-        @if (Libro.Descuento > 0)
-        {
-            <span class="discount-pill">−@Libro.Descuento%</span>
-        }
-    </div>
-    <h3>@Libro.Titulo</h3>
-    <p>@Libro.Autor</p>
-    <div class="book-price">
-        @if (Libro.Descuento > 0)
-        {
-            <del>@EstadoDemostracion.Dinero(Libro.PrecioOriginal)</del>
-        }
-        <strong>@EstadoDemostracion.Dinero(Libro.Precio)</strong>
-    </div>
-</a>
+<div class="col">
+    <a class="card h-100 border-0 bg-transparent book-card" href="/libros/@Libro.Id">
+        <div class="cover-wrap position-relative">
+            <img
+                src="@Libro.Portada"
+                class="card-img-top img-fluid"
+                alt="Portada de @Libro.Titulo"
+                loading="lazy"
+                onerror="this.onerror=null;this.src='/images/book-placeholder.svg'"
+                />
+            @if (Libro.Descuento > 0)
+            {
+                <span class="badge rounded-pill discount-pill">−@Libro.Descuento%</span>
+            }
+        </div>
+        <h3 class="card-title">@Libro.Titulo</h3>
+        <p class="card-text text-body-secondary">@Libro.Autor</p>
+        <div class="book-price d-flex flex-wrap align-items-center gap-2">
+            @if (Libro.Descuento > 0)
+            {
+                <del>@EstadoDemostracion.Dinero(Libro.PrecioOriginal)</del>
+            }
+            <strong>@EstadoDemostracion.Dinero(Libro.Precio)</strong>
+        </div>
+    </a>
+</div>

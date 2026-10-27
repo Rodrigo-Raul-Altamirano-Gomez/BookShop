@@ -1,34 +1,37 @@
 @inherits LayoutComponentBase
-<a class="skip-link" href="#main-content">Saltar al contenido</a>
-<header class="site-header">
-    <div class="header-inner">
-        <a class="brand" href="/" aria-label="BookShop, inicio">
+<a class="visually-hidden-focusable skip-link" href="#main-content">Saltar al contenido</a>
+<header class="navbar sticky-top site-header">
+    <div class="container d-flex flex-wrap align-items-center gap-3 header-inner">
+        <a class="navbar-brand brand d-flex align-items-center gap-2" href="/" aria-label="BookShop, inicio">
             <Icono Nombre="book" />
             <span>BookShop</span>
         </a>
-        <form class="global-search" @onsubmit="Buscar" @onsubmit:preventDefault>
-            <Icono Nombre="search" />
+        <form class="input-group global-search" @onsubmit="Buscar" @onsubmit:preventDefault>
+            <span class="input-group-text bg-white border-end-0">
+                <Icono Nombre="search" />
+            </span>
             <input
+                class="form-control border-start-0 border-end-0"
                 @bind="textoBusqueda"
                 @bind:event="oninput"
                 placeholder="Buscar por título"
                 aria-label="Buscar libros por título"
                 />
-            <button type="submit" aria-label="Buscar">
+            <button class="btn btn-outline-secondary border-start-0" type="submit" aria-label="Buscar">
                 <Icono Nombre="arrow" />
             </button>
         </form>
-        <a class="header-action" href="/carrito">
-            <span class="cart-icon">
+        <a class="btn header-action d-flex flex-column align-items-center gap-1" href="/carrito">
+            <span class="position-relative">
                 <Icono Nombre="cart" />
                 @if (Estado.CantidadCarrito > 0)
                 {
-                    <span class="cart-count">@Estado.CantidadCarrito</span>
+                    <span class="badge rounded-pill cart-count">@Estado.CantidadCarrito</span>
                 }
             </span>
             <span>Carrito</span>
         </a>
-        <button class="header-action" @onclick="AbrirCuenta">
+        <button class="btn header-action d-flex flex-column align-items-center gap-1" @onclick="AbrirCuenta">
             <Icono Nombre="user" />
             <span>Cuenta</span>
         </button>
@@ -36,39 +39,39 @@
 </header>
 <main id="main-content" class="site-main">@Body</main>
 <footer class="site-footer">
-    <div class="footer-inner">
-        <a class="brand footer-brand" href="/">
+    <div class="container d-flex flex-wrap align-items-center gap-3 footer-inner">
+        <a class="brand footer-brand d-flex align-items-center gap-2" href="/">
             <Icono Nombre="book" />
             <span>BookShop</span>
         </a>
         <span class="footer-motto">Libros para una vida más grande.</span>
-        <div class="footer-links">
+        <div class="footer-links d-flex flex-wrap align-items-center gap-3 ms-md-auto">
             <span>contacto@@bookshop.pe</span>
-            <button @onclick='() => informacion = "Ayuda"'>Ayuda</button>
-            <button @onclick='() => informacion = "Términos"'>Términos</button>
-            <button @onclick='() => informacion = "Privacidad"'>Privacidad</button>
+            <button class="btn btn-link p-0" @onclick='() => informacion = "Ayuda"'>Ayuda</button>
+            <button class="btn btn-link p-0" @onclick='() => informacion = "Términos"'>Términos</button>
+            <button class="btn btn-link p-0" @onclick='() => informacion = "Privacidad"'>Privacidad</button>
         </div>
     </div>
 </footer>
 @if (cuentaAbierta && Estado.Usuario is not null)
 {
-    <div class="drawer-overlay" @onclick="CerrarCuenta">
+    <div class="offcanvas-backdrop fade show" @onclick="CerrarCuenta"></div>
         <aside
-            class="account-drawer"
+            class="offcanvas offcanvas-end show account-drawer"
             role="dialog"
             aria-modal="true"
             aria-labelledby="account-title"
             @onclick:stopPropagation>
-            <header>
-                <h2 id="account-title">@Estado.Usuario.Nombre</h2>
-                <button class="icon-button modal-close" aria-label="Cerrar cuenta" @onclick="CerrarCuenta">
+            <header class="offcanvas-header gap-3">
+                <h2 class="offcanvas-title" id="account-title">@Estado.Usuario.Nombre</h2>
+                <button class="btn icon-button modal-close" aria-label="Cerrar cuenta" @onclick="CerrarCuenta">
                     <Icono Nombre="close" />
                 </button>
             </header>
-            <nav aria-label="Mi cuenta">
+            <nav class="offcanvas-body d-flex flex-column gap-1" aria-label="Mi cuenta">
                 @foreach (var item in EnlacesCuenta)
                 {
-                    <button @onclick="() => NavegarCuenta(item.Ruta)">
+                    <button class="btn d-flex align-items-center gap-3" @onclick="() => NavegarCuenta(item.Ruta)">
                         <Icono Nombre="@item.Icono" />
                         @item.Etiqueta
                         <Icono Nombre="arrow" />
@@ -76,19 +79,20 @@
                 }
                 @if (Estado.EsAdministrador)
                 {
-                    <button @onclick='() => NavegarCuenta("/administracion")'>
+                    <button
+                        class="btn d-flex align-items-center gap-3"
+                        @onclick='() => NavegarCuenta("/administracion")'>
                         <Icono Nombre="settings" />
                         Administración
                         <Icono Nombre="arrow" />
                     </button>
                 }
             </nav>
-            <button class="logout" @onclick="CerrarSesion">
+            <button class="btn logout d-flex align-items-center gap-3" @onclick="CerrarSesion">
                 <Icono Nombre="user" />
                 Cerrar sesión
             </button>
         </aside>
-    </div>
 }
 @if (accesoAbierto)
 {
@@ -96,10 +100,10 @@
 }
 @if (aviso is not null)
 {
-    <div class="toast" role="status">
+    <div class="toast show bookshop-toast d-flex align-items-center gap-3 p-3 shadow-sm" role="status">
         <Icono Nombre="check" />
-        <span>@aviso</span>
-        <button class="icon-button" aria-label="Cerrar aviso" @onclick="CerrarAviso">
+        <span class="toast-body p-0">@aviso</span>
+        <button class="btn icon-button ms-auto" aria-label="Cerrar aviso" @onclick="CerrarAviso">
             <Icono Nombre="close" />
         </button>
     </div>
@@ -108,19 +112,19 @@
 {
     <Modal Titulo="@informacion" AlCerrar="CerrarInformacion">
         <p>@TextoInformacion</p>
-        <div class="modal-actions">
+        <div class="modal-footer px-0 pb-0">
             <button class="btn btn-primary" @onclick="CerrarInformacion">Cerrar</button>
         </div>
     </Modal>
 }
 @if (Estado.IdComparacion is int compareId && Estado.BuscarLibro(compareId) is Libro compareBook)
 {
-    <div class="comparison-dock">
-        <a href="/libros/@compareId">
+    <div class="card comparison-dock d-flex flex-row align-items-center gap-3 p-3 shadow-sm">
+        <a class="d-flex align-items-center gap-2" href="/libros/@compareId">
             <img src="@compareBook.Portada" alt="@compareBook.Titulo" />
             <span>@compareBook.Titulo</span>
         </a>
-        <button class="icon-button" aria-label="Retirar libro de comparación" @onclick="QuitarComparacion">
+        <button class="btn icon-button" aria-label="Retirar libro de comparación" @onclick="QuitarComparacion">
             <Icono Nombre="close" />
         </button>
     </div>

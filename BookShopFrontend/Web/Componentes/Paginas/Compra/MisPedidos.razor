@@ -1,57 +1,62 @@
 @page "/mis-pedidos"
 <PageTitle>Mis pedidos · BookShop</PageTitle>
-<div class="container">
-    <nav class="breadcrumb">
-        <a href="/">Inicio</a>
-        <span>/</span>
-        Mis pedidos
+<div class="container py-4">
+    <nav aria-label="Ruta de navegación">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+            <li class="breadcrumb-item active"
+                aria-current="page">Mis pedidos</li>
+        </ol>
     </nav>
     @if (Estado.Usuario is null)
     {
         <h1>Mis pedidos</h1>
-        <div class="empty-state">
+        <div class="empty-state card border-0 text-center align-items-center py-5">
             <h2>Todos tus pedidos, en un lugar</h2>
             <button class="btn btn-primary" @onclick="Estado.MostrarAcceso">Iniciar sesión</button>
         </div>
     }
     else
     {
-        <div class="catalog-layout">
-            <aside class="filters">
-                <h2>Filtros</h2>
-                <div class="filter-group">
-                    <h3>Estado del pedido</h3>
-                    @foreach (var status in Estados)
-                    {
-                        <label>
-                            <input
-                                type="checkbox"
-                                checked="@preparados.Contains(status)"
-                                @onchange="() => SeleccionarEstado(status)"
-                                />
-                            @status
-                        </label>
-                    }
-                </div>
-                <h3>Filtros activos</h3>
-                <div class="chips">
-                    @foreach (var status in aplicados)
-                    {
-                        <button class="chip" @onclick="() => QuitarEstado(status)">@status ×</button>
-                    }
-                </div>
-                <button class="btn btn-primary" @onclick="Aplicar">Aplicar filtros</button>
-                <button class="btn btn-secondary" @onclick="Limpiar">Limpiar filtros</button>
-            </aside>
-            <section>
-                <div class="results-heading">
-                    <div class="action-row">
-                        <h1>Mis pedidos</h1>
-                        <span class="muted">@Filtrados.Count pedidos</span>
+        <div class="row g-4">
+            <div class="col-12 col-lg-3">
+                <aside class="filters card p-3">
+                    <h2>Filtros</h2>
+                    <div class="filter-group">
+                        <h3>Estado del pedido</h3>
+                        @foreach (var status in Estados)
+                        {
+                            <label class="form-check d-flex align-items-center gap-2 ps-0">
+                                <input class="form-check-input m-0"
+                                    type="checkbox"
+                                    checked="@preparados.Contains(status)"
+                                    @onchange="() => SeleccionarEstado(status)"
+                                    />
+                                @status
+                            </label>
+                        }
                     </div>
-                    <label class="sort-field">
+                    <h3>Filtros activos</h3>
+                    <div class="chips d-flex flex-wrap gap-2 my-3">
+                        @foreach (var status in aplicados)
+                        {
+                            <button class="btn btn-sm btn-outline-secondary chip"
+                                @onclick="() => QuitarEstado(status)">@status ×</button>
+                        }
+                    </div>
+                    <button class="btn btn-primary" @onclick="Aplicar">Aplicar filtros</button>
+                    <button class="btn btn-secondary" @onclick="Limpiar">Limpiar filtros</button>
+                </aside>
+            </div>
+            <section class="col-12 col-lg-9">
+                <div class="results-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div class="action-row d-flex flex-wrap align-items-center gap-2">
+                        <h1>Mis pedidos</h1>
+                        <span class="text-body-secondary">@Filtrados.Count pedidos</span>
+                    </div>
+                    <label class="sort-field form-label d-flex align-items-center gap-2">
                         Ordenar por:
-                        <select @bind="orden" @bind:after="ReiniciarPagina">
+                        <select class="form-select" @bind="orden" @bind:after="ReiniciarPagina">
                             <option value="fecha">Más recientes</option>
                             <option value="menor">Total: menor a mayor</option>
                             <option value="mayor">Total: mayor a menor</option>
@@ -60,15 +65,15 @@
                 </div>
                 @if (Filtrados.Count == 0)
                 {
-                    <div class="empty-state">
+                    <div class="empty-state card border-0 text-center align-items-center py-5">
                         <h2>No hay pedidos con estos filtros</h2>
                         <button class="btn btn-secondary" @onclick="Limpiar">Limpiar filtros</button>
                     </div>
                 }
                 @foreach (var order in Filtrados.Skip((pagina - 1) * 10).Take(10))
                 {
-                    <article class="panel order-card">
-                        <div class="order-covers">
+                    <article class="card p-4 mb-3 order-card flex-md-row align-items-md-center gap-4">
+                        <div class="order-covers d-flex align-items-center">
                             @foreach (var line in order.Lineas.Take(3))
                             {
                                 var book = Estado.BuscarLibro(line.IdLibro);
@@ -82,14 +87,16 @@
                                 <span>+@(order.Lineas.Count - 3)</span>
                             }
                         </div>
-                        <div class="order-card-info">
+                        <div class="order-card-info flex-grow-1">
                             <h3>Pedido #@order.Id</h3>
-                            <p class="muted">Fecha de pago: @order.FechaPago.ToString("dd/MM/yyyy HH:mm")</p>
+                            <p class="text-body-secondary">
+                                Fecha de pago: @order.FechaPago.ToString("dd/MM/yyyy HH:mm")
+                            </p>
                             <p>Cantidad de libros: @order.Lineas.Sum(l => l.Cantidad)</p>
                             <strong>@EstadoDemostracion.Dinero(order.Total)</strong>
                         </div>
-                        <div class="order-card-actions">
-                            <span class="status @ClaseEstado(order.Estado)">@order.Estado</span>
+                        <div class="order-card-actions d-flex flex-column align-items-start gap-2">
+                            <span class="badge bookshop-status @ClaseEstado(order.Estado)">@order.Estado</span>
                             <a class="btn btn-secondary" href="/pedidos/@order.Id">Ver detalle</a>
                         </div>
                     </article>

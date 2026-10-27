@@ -1,8 +1,8 @@
 @page "/"
 <PageTitle>BookShop · Encuentra tu próxima lectura</PageTitle>
-<div class="container home-page">
-    <section class="home-hero">
-        <div class="hero-copy">
+<div class="container py-4 home-page">
+    <section class="row g-0 align-items-center home-hero">
+        <div class="col-12 col-md-6 hero-copy">
             <span class="hero-eyebrow">UN MUNDO ENTRE PÁGINAS</span>
             <h1>
                 Encuentra tu
@@ -14,22 +14,25 @@
                 <br />
                 y mundos por descubrir.
             </p>
-            <a href="/catalogo" class="btn btn-primary">
+            <a href="/catalogo" class="btn btn-primary d-inline-flex align-items-center gap-2">
                 Explorar catálogo
                 <Icono Nombre="arrow" />
             </a>
         </div>
-        <img class="hero-art" src="/images/home-hero.svg" alt="Una selección de libros junto a una planta" />
+        <img
+            class="img-fluid hero-art"
+            src="/images/home-hero.svg"
+            alt="Una selección de libros junto a una planta" />
     </section>
     <section class="home-section">
-        <div class="section-heading">
+        <div class="section-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
             <h2>Categorías</h2>
             <a href="/referencias/categorias">
                 Ver más
                 <Icono Nombre="arrow" />
             </a>
         </div>
-        <div class="reference-grid">
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
             @foreach (var reference in Categorias)
             {
                 <TarjetaReferencia Referencia="reference" />
@@ -37,14 +40,14 @@
         </div>
     </section>
     <section class="home-section">
-        <div class="section-heading">
+        <div class="section-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
             <h2>Libros nuevos</h2>
             <a href="/catalogo?criterio=nuevos">
                 Ver más
                 <Icono Nombre="arrow" />
             </a>
         </div>
-        <div class="book-grid">
+        <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-4">
             @foreach (var book in LibrosNuevos)
             {
                 <TarjetaLibro Libro="book" />
@@ -52,14 +55,14 @@
         </div>
     </section>
     <section class="home-section">
-        <div class="section-heading">
+        <div class="section-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
             <h2>Autores</h2>
             <a href="/referencias/autores">
                 Ver más
                 <Icono Nombre="arrow" />
             </a>
         </div>
-        <div class="reference-grid">
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
             @foreach (var reference in Autores)
             {
                 <TarjetaReferencia Referencia="reference" />
@@ -67,14 +70,14 @@
         </div>
     </section>
     <section class="home-section">
-        <div class="section-heading">
+        <div class="section-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
             <h2>Más vendidos</h2>
             <a href="/catalogo?criterio=vendidos">
                 Ver más
                 <Icono Nombre="arrow" />
             </a>
         </div>
-        <div class="book-grid">
+        <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-4">
             @foreach (var book in MasVendidos)
             {
                 <TarjetaLibro Libro="book" />
@@ -82,14 +85,14 @@
         </div>
     </section>
     <section class="home-section">
-        <div class="section-heading">
+        <div class="section-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
             <h2>Editoriales</h2>
             <a href="/referencias/editoriales">
                 Ver más
                 <Icono Nombre="arrow" />
             </a>
         </div>
-        <div class="reference-grid">
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
             @foreach (var reference in Editoriales)
             {
                 <TarjetaReferencia Referencia="reference" />
@@ -97,14 +100,14 @@
         </div>
     </section>
     <section class="home-section">
-        <div class="section-heading">
+        <div class="section-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
             <h2>Más populares</h2>
             <a href="/populares">
                 Ver más
                 <Icono Nombre="arrow" />
             </a>
         </div>
-        <div class="book-grid">
+        <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-4">
             @foreach (var book in LibrosPopulares)
             {
                 <TarjetaLibro Libro="book" />
@@ -114,14 +117,14 @@
     @if (Estado.Usuario is not null)
     {
         <section class="home-section">
-            <div class="section-heading">
+            <div class="section-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
                 <h2>Para ti</h2>
                 <a href="/para-ti">
                     Ver más
                     <Icono Nombre="arrow" />
                 </a>
             </div>
-            <div class="book-grid">
+            <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-4">
                 @foreach (var book in LibrosPersonales)
                 {
                     <TarjetaLibro Libro="book" />

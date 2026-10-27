@@ -1,9 +1,13 @@
 <Modal Titulo="@(reactivacion ? "Reactivar cuenta" : "Bienvenido a BookShop")" AlCerrar="Cerrar">
     @if (!reactivacion)
     {
-        <div class="tabs">
-            <button class="tab @(!registro ? "active" : "")" @onclick="PestanaAcceso">Iniciar sesión</button>
-            <button class="tab @(registro ? "active" : "")" @onclick="PestanaRegistro">Crear cuenta</button>
+        <div class="nav nav-tabs bookshop-tabs mb-4" role="tablist">
+            <button class="nav-link bookshop-tab @(!registro ? "active" : "")"
+                role="tab"
+                aria-selected="@(!registro)" @onclick="PestanaAcceso">Iniciar sesión</button>
+            <button class="nav-link bookshop-tab @(registro ? "active" : "")"
+                role="tab"
+                aria-selected="@registro" @onclick="PestanaRegistro">Crear cuenta</button>
         </div>
     }
     <form @onsubmit="Enviar" @onsubmit:preventDefault>
@@ -13,9 +17,9 @@
         }
         @if (registro)
         {
-            <div class="profile-photo-picker">
+            <div class="profile-photo-picker d-flex align-items-center gap-3 mb-3">
                 <img src="@foto" alt="Vista previa de la foto de perfil" />
-                <label class="icon-button photo-input" title="Elegir foto">
+                <label class="btn btn-outline-secondary icon-button photo-input" title="Elegir foto">
                     <Icono Nombre="edit" />
                     <InputFile
                         OnChange="ElegirFoto"
@@ -23,35 +27,47 @@
                         aria-label="Elegir foto de perfil"
                         />
                 </label>
-                <button type="button" class="icon-button" @onclick="QuitarFoto" aria-label="Quitar foto">
+                <button
+                    type="button"
+                    class="btn btn-outline-secondary icon-button"
+                    @onclick="QuitarFoto"
+                    aria-label="Quitar foto"
+                >
                     <Icono Nombre="trash" />
                 </button>
             </div>
-            <label class="field">
+            <label class="field form-label d-block mb-3">
                 Nombre completo *
-                <input @bind="nombre" @bind:event="oninput" required autocomplete="name" />
+                <input class="form-control" @bind="nombre" @bind:event="oninput" required autocomplete="name" />
             </label>
         }
         @if (!reactivacion)
         {
-            <label class="field">
+            <label class="field form-label d-block mb-3">
                 Correo electrónico *
-                <input type="email" @bind="correo" @bind:event="oninput" required autocomplete="email" />
+                <input
+                    class="form-control"
+                    type="email"
+                    @bind="correo"
+                    @bind:event="oninput"
+                    required
+                    autocomplete="email"
+                />
             </label>
         }
         @if (registro)
         {
-            <label class="field">
+            <label class="field form-label d-block mb-3">
                 Fecha de nacimiento *
-                <input type="date" @bind="nacimiento" required />
+                <input class="form-control" type="date" @bind="nacimiento" required />
             </label>
         }
         @if (!reactivacion)
         {
-            <label class="field">
+            <label class="field form-label d-block mb-3">
                 Contraseña *
-                <div class="password-field">
-                    <input
+                <div class="input-group">
+                    <input class="form-control"
                         type="@(mostrarContrasena ? "text" : "password")"
                         @bind="contrasena"
                         @bind:event="oninput"
@@ -59,6 +75,7 @@
                         autocomplete="@(registro ? "new-password" : "current-password")"
                         />
                     <button
+                        class="btn btn-outline-secondary"
                         type="button"
                         @onclick="AlternarContrasena"
                         aria-label="@(mostrarContrasena ? "Ocultar contraseña" : "Mostrar contraseña")">
@@ -68,9 +85,9 @@
             </label>
             @if (registro)
             {
-                <label class="field">
+                <label class="field form-label d-block mb-3">
                     Confirmar contraseña *
-                    <input
+                    <input class="form-control"
                         type="@(mostrarContrasena ? "text" : "password")"
                         @bind="confirmacion"
                         @bind:event="oninput"
@@ -82,9 +99,9 @@
         }
         @if (error is not null)
         {
-            <p class="form-error" role="alert">@error</p>
+            <p class="alert alert-danger form-error" role="alert">@error</p>
         }
-        <div class="modal-actions">
+        <div class="modal-footer px-0 pb-0 mt-4">
             <button type="button" class="btn btn-secondary" @onclick="Cerrar">Cancelar</button>
             <button type="submit" class="btn btn-primary">
                 @(reactivacion ? "Reactivar cuenta" : registro ? "Crear cuenta" : "Iniciar sesión")

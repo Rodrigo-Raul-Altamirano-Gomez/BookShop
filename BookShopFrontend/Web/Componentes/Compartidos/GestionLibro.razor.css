@@ -1,85 +1,25 @@
-.management-actions {
-    display:flex;
-    gap:12px;
-    flex-wrap:wrap;
-    margin:14px 0
-}
-.full {
-    grid-column:1/-1
-}
 .reference-readonly {
-    display:flex;
-    justify-content:space-between;
-    background:var(--surface-alt,#f5f8f6);
-    padding:18px;
-    border-radius:10px;
-    gap:20px
+    background:var(--soft);
 }
-.reference-readonly span {
-    display:grid;
-    gap:5px
-}
+
 .reference-readonly small {
-    color:var(--muted,#68736e)
+    color:var(--text-body-secondary);
 }
+
 .price-editor {
     max-width:420px;
-    margin:30px 0 55px
 }
-.discount-toolbar {
-    display:flex;
-    justify-content:flex-end;
-    margin:22px 0
-}
-.discount-carousel {
-    display:flex;
-    align-items:center;
-    gap:18px
-}
-.discount-cards {
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:14px;
-    flex:1
-}
-.discount-card {
-    display:grid;
-    text-align:left;
-    gap:20px;
-    border:1px solid var(--border,#d9e0dc);
-    border-radius:9px;
-    padding:24px;
-    background:white;
-    color:var(--ink,#193c30);
-    cursor:pointer
-}
+
 .discount-card.selected {
-    background:#eef7f0;
-    border:2px solid var(--green,#0a5140)
+    background:var(--soft);
+    border-color:var(--green);
 }
+
 .discount-percentage {
     font-family:Georgia,serif;
-    font-size:34px
+    font-size:34px;
 }
+
 .discount-percentage small {
     font-size:19px;
-    display:block
-}
-.carousel-position {
-    text-align:center;
-    color:var(--muted,#68736e);
-    font-size:14px;
-    margin:15px 0 28px
-}
-.discount-fields {
-    display:grid;
-    grid-template-columns:1fr 1fr 1fr;
-    gap:18px
-}
-.remove-discount {
-    display:flex;
-    align-items:center;
-    gap:10px;
-    margin:22px 0;
-    color:#a13737
 }

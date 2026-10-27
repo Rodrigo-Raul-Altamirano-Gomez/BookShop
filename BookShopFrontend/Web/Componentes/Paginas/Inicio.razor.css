@@ -2,9 +2,6 @@
     padding-top:28px
 }
 .home-hero {
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
     min-height:340px;
     overflow:hidden;
     padding:42px 50px;
@@ -18,7 +15,7 @@
     color:#4a6559
 }
 .hero-copy {
-    min-width:400px
+    min-width:0
 }
 .hero-copy h1 {
     font-size:49px;
@@ -38,18 +35,12 @@
 .home-section {
     margin:39px 0
 }
-.home-section .book-grid {
-    row-gap:28px
-}
 @media(max-width:1050px) {
     .home-hero {
         padding:35px
     }
     .hero-copy h1 {
         font-size:42px
-    }
-    .hero-copy {
-        min-width:350px
     }
 }
 .home-hero {

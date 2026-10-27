@@ -1,99 +1,106 @@
 @page "/mi-perfil"
 @inherits PaginaCuenta
 <PageTitle>Mi perfil · BookShop</PageTitle>
-<div class="container">
-    <nav class="breadcrumb">
-        <a href="/">Inicio</a>
-        <span>/</span>
-        <span>Cuenta</span>
-        <span>/</span>
-        <span>Mi perfil</span>
+<div class="container py-4">
+    <nav aria-label="Ruta de navegación">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+            <li class="breadcrumb-item">Cuenta</li>
+            <li class="breadcrumb-item active"
+                aria-current="page">Mi perfil</li>
+        </ol>
     </nav>
-    <h1 class="page-heading">Mi perfil</h1>
+    <h1 class="page-heading d-flex flex-wrap align-items-center justify-content-between gap-3">Mi perfil</h1>
     @if (Estado.Usuario is null)
     {
-        <div class="empty-state">
+        <div class="empty-state card border-0 text-center align-items-center py-5">
             <Icono Nombre="user" />
-            <h2>Tu cuenta, en un solo lugar</h2>
+            <h2 class="d-flex align-items-center gap-3">Tu cuenta, en un solo lugar</h2>
             <p>Inicia sesión para consultar tu perfil.</p>
             <button class="btn btn-primary" @onclick="Estado.MostrarAcceso">Iniciar sesión</button>
         </div>
     }
     else
     {
-        <div class="profile-layout">
-            <section class="panel">
-                <div class="section-heading">
-                    <h2>
-                        <Icono Nombre="user" />
-                        Datos personales
-                    </h2>
-                    <button class="btn btn-secondary" @onclick="EditarPerfil">
-                        <Icono Nombre="edit" />
-                        Editar datos
-                    </button>
-                </div>
-                <div class="profile-photo">
-                    <img src="@Estado.Usuario.Imagen" alt="Foto de perfil de @Estado.Usuario.Nombre" />
-                    <div class="photo-actions">
-                        <label class="btn btn-secondary photo-picker" aria-label="Cambiar foto de perfil">
+        <div class="profile-layout row g-4">
+            <div class="col-12 col-lg-7">
+                <section class="card p-4">
+                    <div class="section-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <h2 class="d-flex align-items-center gap-3">
+                            <Icono Nombre="user" />
+                            Datos personales
+                        </h2>
+                        <button class="btn btn-secondary" @onclick="EditarPerfil">
                             <Icono Nombre="edit" />
-                            Cambiar foto
-                            <InputFile
-                                OnChange="CargarFoto"
-                                accept="image/jpeg,image/png"
-                                disabled="@CargandoImagen"
-                                />
-                        </label>
-                        <button class="btn btn-secondary" @onclick="QuitarFoto" disabled="@CargandoImagen">
-                            Quitar
+                            Editar datos
                         </button>
                     </div>
-                    @if (CargandoImagen)
-                    {
-                        <span class="muted" role="status">Cargando imagen…</span>
-                    }
-                    @if (ErrorImagen.Length > 0)
-                    {
-                        <p class="form-error" role="alert">@ErrorImagen</p>
-                    }
-                </div>
-                <dl class="profile-data">
-                    <div>
-                        <dt>Nombre completo</dt>
-                        <dd>@Estado.Usuario.Nombre</dd>
+                    <div class="profile-photo d-flex align-items-center flex-wrap gap-3 py-3">
+                        <img class="rounded-circle" src="@Estado.Usuario.Imagen"
+                            alt="Foto de perfil de @Estado.Usuario.Nombre" />
+                        <div class="photo-actions d-flex flex-wrap gap-2">
+                            <label class="btn btn-secondary photo-picker position-relative overflow-hidden"
+                                aria-label="Cambiar foto de perfil">
+                                <Icono Nombre="edit" />
+                                Cambiar foto
+                                <InputFile
+                                    OnChange="CargarFoto"
+                                    accept="image/jpeg,image/png"
+                                    disabled="@CargandoImagen"
+                                    />
+                            </label>
+                            <button class="btn btn-secondary" @onclick="QuitarFoto" disabled="@CargandoImagen">
+                                Quitar
+                            </button>
+                        </div>
+                        @if (CargandoImagen)
+                        {
+                            <span class="text-body-secondary" role="status">Cargando imagen…</span>
+                        }
+                        @if (ErrorImagen.Length > 0)
+                        {
+                            <p class="alert alert-danger py-2" role="alert">@ErrorImagen</p>
+                        }
                     </div>
-                    <div>
-                        <dt>Correo electrónico</dt>
-                        <dd>@Estado.Usuario.Correo</dd>
+                    <dl class="profile-data mb-0">
+                        <div class="border-top py-3">
+                            <dt class="mb-2">Nombre completo</dt>
+                            <dd class="mb-0">@Estado.Usuario.Nombre</dd>
+                        </div>
+                        <div class="border-top py-3">
+                            <dt class="mb-2">Correo electrónico</dt>
+                            <dd class="mb-0">@Estado.Usuario.Correo</dd>
+                        </div>
+                        <div class="border-top py-3">
+                            <dt class="mb-2">Fecha de nacimiento</dt>
+                            <dd class="mb-0">@Estado.Usuario.Nacimiento.ToString("dd/MM/yyyy")</dd>
+                        </div>
+                    </dl>
+                </section>
+            </div>
+            <div class="col-12 col-lg-5">
+                <section class="card p-4 security-panel">
+                    <h2 class="d-flex align-items-center gap-3">
+                        <Icono Nombre="shield" />
+                        Seguridad y cuenta
+                    </h2>
+                    <div class="border-top mt-4 pt-4">
+                        <h3 class="d-flex align-items-center gap-2 mb-3">
+                            <Icono Nombre="key" />
+                            Contraseña
+                        </h3>
+                        <button class="btn btn-secondary" @onclick="AbrirContrasena">Cambiar contraseña</button>
                     </div>
-                    <div>
-                        <dt>Fecha de nacimiento</dt>
-                        <dd>@Estado.Usuario.Nacimiento.ToString("dd/MM/yyyy")</dd>
+                    <div class="border-top mt-4 pt-4">
+                        <h3 class="d-flex align-items-center gap-2 mb-3">
+                            <Icono Nombre="power" />
+                            Cuenta
+                        </h3>
+                        <button class="btn btn-danger" @onclick="AbrirDesactivacion">Desactivar cuenta</button>
+                        <p class="text-body-secondary">Conservarás tus datos y podrás reactivarla.</p>
                     </div>
-                </dl>
-            </section>
-            <section class="panel security-panel">
-                <h2>
-                    <Icono Nombre="shield" />
-                    Seguridad y cuenta
-                </h2>
-                <div>
-                    <h3>
-                        <Icono Nombre="key" />
-                        Contraseña
-                    </h3>
-                    <button class="btn btn-secondary" @onclick="AbrirContrasena">Cambiar contraseña</button>
-                </div>
-                <div>
-                    <h3>
-                        <Icono Nombre="power" />
-                        Cuenta
-                    </h3>
-                    <button class="btn btn-danger" @onclick="AbrirDesactivacion">Desactivar cuenta</button>
-                    <p class="muted">Conservarás tus datos y podrás reactivarla.</p>
-                </div>
-            </section>
+                </section>
+            </div>
         </div>
     }
 </div>
@@ -101,19 +108,20 @@
 {
     <Modal Titulo="Editar datos personales" AlCerrar="Cerrar">
         <form @onsubmit="GuardarPerfil" @onsubmit:preventDefault novalidate>
-            <label class="field">
+            <label class="field form-label d-block mb-3">
                 Nombre completo *
-                <input @bind="Nombre" @bind:event="oninput" maxlength="100" autocomplete="name" />
+                <input class="form-control" @bind="Nombre" @bind:event="oninput"
+                    maxlength="100" autocomplete="name" />
             </label>
-            <label class="field">
+            <label class="field form-label d-block mb-3">
                 Fecha de nacimiento *
-                <input type="date" @bind="Nacimiento" />
+                <input class="form-control" type="date" @bind="Nacimiento" />
             </label>
             @if (MensajeError.Length > 0)
             {
-                <p class="form-error" role="alert">@MensajeError</p>
+                <p class="alert alert-danger py-2" role="alert">@MensajeError</p>
             }
-            <div class="modal-actions">
+            <div class="modal-footer px-0 pb-0 d-flex flex-wrap gap-2 justify-content-end">
                 <button type="button" class="btn btn-secondary" @onclick="Cerrar">Cancelar</button>
                 <button class="btn btn-primary" type="submit" disabled="@(string.IsNullOrWhiteSpace(Nombre))">
                     Guardar cambios
@@ -126,10 +134,10 @@
 {
     <Modal Titulo="Cambiar contraseña" AlCerrar="Cerrar">
         <form @onsubmit="GuardarContrasena" @onsubmit:preventDefault novalidate>
-            <label class="field">
+            <label class="field form-label d-block mb-3">
                 Contraseña actual *
-                <div class="password-field">
-                    <input
+                <div class="input-group">
+                    <input class="form-control"
                         type="@TipoContrasena"
                         @bind="ContrasenaActual"
                         @bind:event="oninput"
@@ -137,25 +145,25 @@
                         />
                     <button
                         type="button"
-                        class="icon-button"
+                        class="btn btn-outline-secondary icon-button"
                         @onclick="AlternarContrasenas"
                         aria-label="Mostrar u ocultar contraseña">
                         <Icono Nombre="eye" />
                     </button>
                 </div>
             </label>
-            <label class="field">
+            <label class="field form-label d-block mb-3">
                 Nueva contraseña *
-                <input
+                <input class="form-control"
                     type="@TipoContrasena"
                     @bind="NuevaContrasena"
                     @bind:event="oninput"
                     autocomplete="new-password"
                     />
             </label>
-            <label class="field">
+            <label class="field form-label d-block mb-3">
                 Confirmar nueva contraseña *
-                <input
+                <input class="form-control"
                     type="@TipoContrasena"
                     @bind="ConfirmacionContrasena"
                     @bind:event="oninput"
@@ -164,9 +172,9 @@
             </label>
             @if (MensajeError.Length > 0)
             {
-                <p class="form-error" role="alert">@MensajeError</p>
+                <p class="alert alert-danger py-2" role="alert">@MensajeError</p>
             }
-            <div class="modal-actions">
+            <div class="modal-footer px-0 pb-0 d-flex flex-wrap gap-2 justify-content-end">
                 <button type="button" class="btn btn-secondary" @onclick="Cerrar">Cancelar</button>
                 <button type="submit" class="btn btn-primary" disabled="@(!ContrasenasCompletas)">
                     Guardar cambios
@@ -180,10 +188,10 @@
     <Modal Titulo="Desactivar cuenta" AlCerrar="Cerrar">
         <p>Tu cuenta quedará desactivada. Conservarás tus datos, pedidos y listas para cuando decidas volver.</p>
         <form @onsubmit="Desactivar" @onsubmit:preventDefault novalidate>
-            <label class="field">
+            <label class="field form-label d-block mb-3">
                 Contraseña *
-                <div class="password-field">
-                    <input
+                <div class="input-group">
+                    <input class="form-control"
                         type="@TipoContrasena"
                         @bind="ContrasenaActual"
                         @bind:event="oninput"
@@ -191,14 +199,14 @@
                         />
                     <button
                         type="button"
-                        class="icon-button"
+                        class="btn btn-outline-secondary icon-button"
                         @onclick="AlternarContrasenas"
                         aria-label="Mostrar u ocultar contraseña">
                         <Icono Nombre="eye" />
                     </button>
                 </div>
             </label>
-            <div class="modal-actions">
+            <div class="modal-footer px-0 pb-0 d-flex flex-wrap gap-2 justify-content-end">
                 <button type="button" class="btn btn-secondary" @onclick="Cerrar">Cancelar</button>
                 <button type="submit" class="btn btn-danger" disabled="@(ContrasenaActual.Length == 0)">
                     Desactivar cuenta

@@ -1,6 +1,6 @@
 <script type="module" src="@Assets["Componentes/Estructura/ModalReconexion.razor.js"]">
 </script>
-<dialog id="components-reconnect-modal" data-nosnippet>
+<dialog class="border-0 rounded shadow" id="components-reconnect-modal" data-nosnippet>
     <div class="components-reconnect-container">
         <div class="components-rejoining-animation" aria-hidden="true">
             <div>
@@ -22,7 +22,9 @@
             <br />
             Vuelve a intentarlo o recarga la página.
         </p>
-        <button id="components-reconnect-button" class="components-reconnect-failed-visible">
+        <button
+            class="btn btn-primary components-reconnect-failed-visible"
+            id="components-reconnect-button">
             Reintentar
         </button>
         <p class="components-pause-visible">
@@ -33,7 +35,9 @@
             <br />
             Vuelve a intentarlo o recarga la página.
         </p>
-        <button id="components-resume-button" class="components-pause-visible components-resume-failed-visible">
+        <button
+            class="btn btn-primary components-pause-visible components-resume-failed-visible"
+            id="components-resume-button">
             Reanudar
         </button>
     </div>

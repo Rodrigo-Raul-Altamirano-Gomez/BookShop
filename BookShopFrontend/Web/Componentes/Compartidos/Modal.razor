@@ -1,16 +1,26 @@
-<div class="modal-overlay" @onclick="Cerrar">
-    <section
-        class="modal-dialog @(Amplio ? "modal-wide" : "")"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="@IdTitulo"
+<div class="modal-backdrop fade show"></div>
+<div
+    class="modal d-block bookshop-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="@IdTitulo"
+    tabindex="-1"
+    @onclick="Cerrar">
+    <div
+        class="modal-dialog modal-dialog-centered modal-dialog-scrollable @(Amplio ? "modal-lg" : "")"
         @onclick:stopPropagation>
-        <header class="modal-header">
-            <h2 id="@IdTitulo">@Titulo</h2>
-            <button type="button" class="icon-button modal-close" aria-label="Cerrar ventana" @onclick="Cerrar">
-                <Icono Nombre="close" />
-            </button>
-        </header>
-        <div class="modal-content">@ChildContent</div>
-    </section>
+        <section class="modal-content">
+            <header class="modal-header">
+                <h2 class="modal-title fs-4" id="@IdTitulo">@Titulo</h2>
+                <button
+                    type="button"
+                    class="btn btn-link icon-button modal-close"
+                    aria-label="Cerrar ventana"
+                    @onclick="Cerrar">
+                    <Icono Nombre="close" />
+                </button>
+            </header>
+            <div class="modal-body">@ChildContent</div>
+        </section>
+    </div>
 </div>

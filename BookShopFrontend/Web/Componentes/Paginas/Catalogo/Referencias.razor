@@ -1,19 +1,20 @@
 @page "/referencias/{Tipo}"
 <PageTitle>@Titulo · BookShop</PageTitle>
-<div class="container">
-    <nav class="breadcrumb">
-        <a href="/">Inicio</a>
-        <span>/</span>
-        <span>@Titulo</span>
+<div class="container py-4">
+    <nav aria-label="Ruta de navegación">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+            <li class="breadcrumb-item active" aria-current="page"><span>@Titulo</span></li>
+        </ol>
     </nav>
-    <div class="results-heading">
-        <div class="result-title">
+    <div class="results-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div class="result-title d-flex flex-wrap align-items-baseline gap-3 flex-grow-1">
             <h1>@Titulo</h1>
             <span>@Resultados.Count @Tipo</span>
         </div>
-        <label class="sort-label">
+        <label class="sort-label d-flex align-items-center gap-2">
             Ordenar por:
-            <select aria-label="Ordenar referencias" @bind="orden" @bind:after="CambiarOrden">
+            <select class="form-select" aria-label="Ordenar referencias" @bind="orden" @bind:after="CambiarOrden">
                 <option value="nombre">Nombre A-Z</option>
                 <option value="reciente">Más recientes</option>
             </select>
@@ -29,7 +30,7 @@
     }
     else
     {
-        <div class="reference-grid references-list">
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4 references-list">
             @foreach (var reference in ReferenciasVisibles)
             {
                 <TarjetaReferencia Referencia="reference" />

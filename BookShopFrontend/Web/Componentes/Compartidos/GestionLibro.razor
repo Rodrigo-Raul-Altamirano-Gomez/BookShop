@@ -1,6 +1,6 @@
 @if (Estado.EsAdministrador)
 {
-    <div class="management-actions">
+    <div class="management-actions d-flex flex-wrap gap-2 my-3">
         <button class="btn btn-secondary" @onclick="Abrir">
             <Icono Nombre="settings" />
             Gestionar
@@ -13,11 +13,11 @@
 @if (Mostrar)
 {
     <Modal Titulo="@($"Gestionar libro · {Libro.Titulo}")" AlCerrar="Cerrar" Amplio="true">
-        <div class="tabs" role="tablist">
+        <div class="nav nav-tabs bookshop-tabs mb-4" role="tablist">
             @foreach (var Nombre in NombresPestanas)
             {
                 <button
-                    class="tab @(Pestana == Nombre ? "active" : "")"
+                    class="nav-link bookshop-tab @(Pestana == Nombre ? "active" : "")"
                     role="tab"
                     aria-selected="@(Pestana == Nombre)"
                     @onclick="() => ElegirPestana(Nombre)">
@@ -28,79 +28,107 @@
         <form @onsubmit="Guardar" @onsubmit:preventDefault>
             @if (Pestana == "Datos del libro")
             {
-                <div class="form-grid">
-                    <label class="field full">
+                <div class="row g-3">
+                    <label class="field form-label d-block mb-3 col-12">
                         Título *
-                        <input @bind="Borrador.Titulo" @bind:event="oninput" required />
+                        <input class="form-control" @bind="Borrador.Titulo" @bind:event="oninput" required />
                     </label>
-                    <label class="field">
+                    <label class="field form-label d-block mb-3 col-md-6">
                         Idioma *
-                        <input @bind="Borrador.Idioma" @bind:event="oninput" required />
+                        <input class="form-control" @bind="Borrador.Idioma" @bind:event="oninput" required />
                     </label>
-                    <label class="field">
+                    <label class="field form-label d-block mb-3 col-md-6">
                         Proveedor *
-                        <input @bind="Borrador.Proveedor" @bind:event="oninput" required />
+                        <input class="form-control" @bind="Borrador.Proveedor" @bind:event="oninput" required />
                     </label>
-                    <label class="field full">
+                    <label class="field form-label d-block mb-3 col-12">
                         Sinopsis *
-                        <textarea rows="5" @bind="Borrador.Sinopsis" @bind:event="oninput" required>
+                        <textarea
+                            class="form-control"
+                            rows="5"
+                            @bind="Borrador.Sinopsis"
+                            @bind:event="oninput"
+                            required
+                        >
                         </textarea>
                     </label>
-                    <div class="reference-readonly full">
-                        <span>
-                            <small>Autor</small>
-                            <strong>@Libro.Autor</strong>
-                        </span>
-                        <span>
-                            <small>Categoría</small>
-                            <strong>@Libro.Categoria</strong>
-                        </span>
-                        <span>
-                            <small>Editorial</small>
-                            <strong>@Libro.Editorial</strong>
-                        </span>
+                    <div class="col-12">
+                        <div class="reference-readonly d-flex flex-wrap justify-content-between gap-3 p-3 rounded">
+                            <span class="d-grid gap-1">
+                                <small>Autor</small>
+                                <strong>@Libro.Autor</strong>
+                            </span>
+                            <span class="d-grid gap-1">
+                                <small>Categoría</small>
+                                <strong>@Libro.Categoria</strong>
+                            </span>
+                            <span class="d-grid gap-1">
+                                <small>Editorial</small>
+                                <strong>@Libro.Editorial</strong>
+                            </span>
+                        </div>
                     </div>
-                    <label class="field">
+                    <label class="field form-label d-block mb-3 col-md-6">
                         ISBN *
-                        <input @bind="Borrador.ISBN" @bind:event="oninput" required />
+                        <input class="form-control" @bind="Borrador.ISBN" @bind:event="oninput" required />
                     </label>
-                    <label class="field">
+                    <label class="field form-label d-block mb-3 col-md-6">
                         Año de edición *
-                        <input type="number" @bind="Borrador.Anio" @bind:event="oninput" min="1" required />
+                        <input
+                            class="form-control"
+                            type="number"
+                            @bind="Borrador.Anio"
+                            @bind:event="oninput"
+                            min="1"
+                            required
+                        />
                     </label>
-                    <label class="field">
+                    <label class="field form-label d-block mb-3 col-md-6">
                         Número de páginas *
-                        <input type="number" @bind="Borrador.Paginas" @bind:event="oninput" min="1" required />
+                        <input
+                            class="form-control"
+                            type="number"
+                            @bind="Borrador.Paginas"
+                            @bind:event="oninput"
+                            min="1"
+                            required
+                        />
                     </label>
-                    <label class="field">
+                    <label class="field form-label d-block mb-3 col-md-6">
                         Peso (kg)
-                        <input @bind="Peso" @bind:event="oninput" />
+                        <input class="form-control" @bind="Peso" @bind:event="oninput" />
                     </label>
-                    <label class="field">
+                    <label class="field form-label d-block mb-3 col-md-6">
                         Alto (cm)
-                        <input @bind="Alto" @bind:event="oninput" />
+                        <input class="form-control" @bind="Alto" @bind:event="oninput" />
                     </label>
-                    <label class="field">
+                    <label class="field form-label d-block mb-3 col-md-6">
                         Ancho (cm)
-                        <input @bind="Ancho" @bind:event="oninput" />
+                        <input class="form-control" @bind="Ancho" @bind:event="oninput" />
                     </label>
-                    <label class="field">
+                    <label class="field form-label d-block mb-3 col-md-6">
                         Saga
-                        <input @bind="Borrador.Saga" @bind:event="oninput" />
+                        <input class="form-control" @bind="Borrador.Saga" @bind:event="oninput" />
                     </label>
-                    <label class="field">
+                    <label class="field form-label d-block mb-3 col-md-6">
                         Tomo
-                        <input type="number" min="1" @bind="Borrador.Tomo" @bind:event="oninput" />
+                        <input
+                            class="form-control"
+                            type="number"
+                            min="1"
+                            @bind="Borrador.Tomo"
+                            @bind:event="oninput"
+                        />
                     </label>
                 </div>
             }
             else if (Pestana == "Precio")
             {
-                <div class="price-editor">
-                    <p class="muted">Precio base del libro</p>
-                    <label class="field">
+                <div class="price-editor my-4">
+                    <p class="text-body-secondary">Precio base del libro</p>
+                    <label class="field form-label d-block mb-3">
                         Precio base (S/) *
-                        <input
+                        <input class="form-control"
                             type="number"
                             step="0.01"
                             min="0.01"
@@ -113,17 +141,24 @@
             }
             else if (Pestana == "Stock")
             {
-                <div class="price-editor">
-                    <p class="muted">Ejemplares disponibles</p>
-                    <label class="field">
+                <div class="price-editor my-4">
+                    <p class="text-body-secondary">Ejemplares disponibles</p>
+                    <label class="field form-label d-block mb-3">
                         Stock *
-                        <input type="number" min="0" @bind="Borrador.Stock" @bind:event="oninput" required />
+                        <input
+                            class="form-control"
+                            type="number"
+                            min="0"
+                            @bind="Borrador.Stock"
+                            @bind:event="oninput"
+                            required
+                        />
                     </label>
                 </div>
             }
             else
             {
-                <div class="discount-toolbar">
+                <div class="d-flex justify-content-end my-4">
                     <button type="button" class="btn btn-secondary" @onclick="AgregarDescuento">
                         <Icono Nombre="plus" />
                         Añadir descuento
@@ -131,44 +166,47 @@
                 </div>
                 @if (Descuentos.Count > 0)
                 {
-                    <div class="discount-carousel">
+                    <div class="d-flex align-items-center gap-3">
                         <button
                             type="button"
-                            class="icon-button"
+                            class="btn btn-outline-secondary icon-button"
                             disabled="@(PosicionDescuentos == 0)"
                             aria-label="Descuentos anteriores"
                             @onclick="DescuentoAnterior">
                             ‹
                         </button>
-                        <div class="discount-cards">
+                        <div class="row row-cols-1 row-cols-md-2 g-3 flex-grow-1">
                             @foreach (var Descuento in Descuentos.Skip(PosicionDescuentos).Take(2))
                             {
-                                <button
-                                    type="button"
-                                    class="discount-card @(DescuentoSeleccionado == Descuento ? "selected" : "")"
-                                    @onclick="() => ElegirDescuento(Descuento)">
-                                    <span class="discount-percentage">
-                                        @Descuento.Porcentaje%
-                                        <small>de descuento</small>
-                                    </span>
-                                    <span class="muted">
-                                        Inicio: @Descuento.Inicio.ToString("dd/MM/yyyy, HH:mm")
-                                        <br />
-                                        Fin: @Descuento.Fin.ToString("dd/MM/yyyy, HH:mm")
-                                    </span>
-                                </button>
+                                <div class="col">
+                                    <button
+                                        type="button"
+                                        class="card discount-card h-100 w-100 text-start gap-3 p-3
+                                            @(DescuentoSeleccionado == Descuento ? "selected border-2" : "")"
+                                        @onclick="() => ElegirDescuento(Descuento)">
+                                        <span class="discount-percentage">
+                                            @Descuento.Porcentaje%
+                                            <small class="d-block">de descuento</small>
+                                        </span>
+                                        <span class="text-body-secondary">
+                                            Inicio: @Descuento.Inicio.ToString("dd/MM/yyyy, HH:mm")
+                                            <br />
+                                            Fin: @Descuento.Fin.ToString("dd/MM/yyyy, HH:mm")
+                                        </span>
+                                    </button>
+                                </div>
                             }
                         </div>
                         <button
                             type="button"
-                            class="icon-button"
+                            class="btn btn-outline-secondary icon-button"
                             disabled="@(PosicionDescuentos + 2 >= Descuentos.Count)"
                             aria-label="Descuentos siguientes"
                             @onclick="DescuentoSiguiente">
                             ›
                         </button>
                     </div>
-                    <p class="carousel-position">
+                    <p class="text-center text-body-secondary small mt-3 mb-4">
                         @(PosicionDescuentos + 1) – @Math.Min(PosicionDescuentos + 2, Descuentos.Count) de
                         @Descuentos.Count
                     </p>
@@ -176,10 +214,10 @@
                 @if (DescuentoSeleccionado is not null)
                 {
                     <h3>Editar descuento</h3>
-                    <div class="discount-fields">
-                        <label class="field">
+                    <div class="row g-3">
+                        <label class="field form-label d-block mb-3 col-md-4">
                             Porcentaje *
-                            <input
+                            <input class="form-control"
                                 type="number"
                                 min="1"
                                 max="100"
@@ -188,18 +226,18 @@
                                 required
                                 />
                         </label>
-                        <label class="field">
+                        <label class="field form-label d-block mb-3 col-md-4">
                             Fecha y hora de inicio *
-                            <input
+                            <input class="form-control"
                                 type="datetime-local"
                                 @bind="InicioDescuento"
                                 @bind:format="yyyy-MM-ddTHH:mm"
                                 required
                                 />
                         </label>
-                        <label class="field">
+                        <label class="field form-label d-block mb-3 col-md-4">
                             Fecha y hora de fin *
-                            <input
+                            <input class="form-control"
                                 type="datetime-local"
                                 @bind="FinDescuento"
                                 @bind:format="yyyy-MM-ddTHH:mm"
@@ -207,14 +245,14 @@
                                 />
                         </label>
                     </div>
-                    <label class="remove-discount">
-                        <input type="checkbox" @bind="EliminarDescuento" />
+                    <label class="form-check form-check-label my-4 text-danger">
+                        <input class="form-check-input" type="checkbox" @bind="EliminarDescuento" />
                         Eliminar descuento
                     </label>
                 }
                 else
                 {
-                    <div class="empty-state">
+                    <div class="empty-state d-flex flex-column align-items-center justify-content-center">
                         <Icono Nombre="report" />
                         <p>Este libro no tiene descuentos.</p>
                         <span>Añade uno para completar la vista de gestión.</span>
@@ -223,9 +261,9 @@
             }
             @if (ErrorFormulario.Length > 0)
             {
-                <p class="form-error" role="alert">@ErrorFormulario</p>
+                <p class="alert alert-danger form-error" role="alert">@ErrorFormulario</p>
             }
-            <div class="modal-actions">
+            <div class="modal-footer px-0 pb-0 mt-4">
                 <button type="button" class="btn btn-secondary" @onclick="Cerrar">Cancelar</button>
                 <button class="btn btn-primary" type="submit">Guardar cambios</button>
             </div>

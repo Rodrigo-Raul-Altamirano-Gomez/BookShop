@@ -2,37 +2,41 @@
     <div class="registro-formulario">
         <div class="cover-preview">
             <img src="@Borrador.Portada" alt="Vista previa de la portada" />
-            <div class="image-buttons">
-                <label class="icon-button file-label" title="Elegir portada">
+            <div class="image-buttons d-flex gap-2">
+                <label class="btn btn-outline-secondary icon-button file-label" title="Elegir portada">
                     <Icono Nombre="edit" />
-                    <InputFile OnChange="LeerPortada" accept="image/jpeg,image/png" />
+                    <InputFile class="form-control" OnChange="LeerPortada" accept="image/jpeg,image/png" />
                 </label>
-                <button type="button" class="icon-button" title="Quitar portada" @onclick="QuitarPortada">
+                <button
+                    type="button"
+                    class="btn btn-outline-secondary icon-button"
+                    title="Quitar portada"
+                    @onclick="QuitarPortada">
                     <Icono Nombre="trash" />
                 </button>
             </div>
         </div>
-        <div class="form-grid">
-            <label class="field full">
+        <div class="row g-3">
+            <label class="field form-label d-block col-12">
                 Título *
-                <input @bind="Borrador.Titulo" @bind:event="oninput" required />
+                <input class="form-control" @bind="Borrador.Titulo" @bind:event="oninput" required />
             </label>
-            <label class="field full">
+            <label class="field form-label d-block col-12">
                 Idioma *
-                <input @bind="Borrador.Idioma" @bind:event="oninput" required />
+                <input class="form-control" @bind="Borrador.Idioma" @bind:event="oninput" required />
             </label>
-            <label class="field full">
+            <label class="field form-label d-block col-12">
                 Sinopsis *
-                <textarea rows="5" @bind="Borrador.Sinopsis" @bind:event="oninput" required>
+                <textarea class="form-control" rows="5" @bind="Borrador.Sinopsis" @bind:event="oninput" required>
                 </textarea>
             </label>
             @foreach (var TipoReferencia in TiposReferencias)
             {
-                <div class="reference-picker full">
-                    <label class="field">
+                <div class="reference-picker col-12">
+                    <label class="field form-label d-block">
                         @EtiquetaReferencia(TipoReferencia) *
-                        <span class="reference-search">
-                            <input
+                        <span class="reference-search d-flex gap-2">
+                            <input class="form-control"
                                 value="@Busquedas[TipoReferencia]"
                                 @oninput="e => CambiarBusqueda(TipoReferencia, e)"
                                 @onkeydown="e => BuscarConEnter(TipoReferencia, e)"
@@ -47,12 +51,13 @@
                             </button>
                         </span>
                     </label>
-                    <div class="reference-options">
+                    <div class="reference-options d-flex flex-wrap gap-2 overflow-auto">
                         @foreach (var Referencia in Opciones(TipoReferencia))
                         {
                             <button
                                 type="button"
-                                class="reference-option @(Selecciones[TipoReferencia] == Referencia.Nombre ?
+                                class="reference-option btn btn-outline-secondary d-flex align-items-center gap-2
+                                    @(Selecciones[TipoReferencia] == Referencia.Nombre ?
                                     "selected" : "")"
                                 @onclick="() => Elegir(Referencia)">
                                 <span class="selection-dot">
@@ -62,30 +67,40 @@
                         }
                         @if (!Opciones(TipoReferencia).Any())
                         {
-                            <span class="muted">No hay resultados con ese nombre.</span>
+                            <span class="text-body-secondary">No hay resultados con ese nombre.</span>
                         }
                     </div>
                 </div>
             }
-            <label class="field">
+            <label class="field form-label d-block col-12 col-md-6">
                 ISBN *
-                <input @bind="Borrador.ISBN" @bind:event="oninput" required />
+                <input class="form-control" @bind="Borrador.ISBN" @bind:event="oninput" required />
             </label>
-            <label class="field">
+            <label class="field form-label d-block col-12 col-md-6">
                 Proveedor *
-                <input @bind="Borrador.Proveedor" @bind:event="oninput" required />
+                <input class="form-control" @bind="Borrador.Proveedor" @bind:event="oninput" required />
             </label>
-            <label class="field">
+            <label class="field form-label d-block col-12 col-md-6">
                 Año de edición *
-                <input type="number" min="1" @bind="Borrador.Anio" @bind:event="oninput" required />
-            </label>
-            <label class="field">
-                Número de páginas *
-                <input type="number" min="1" @bind="Borrador.Paginas" @bind:event="oninput" required />
-            </label>
-            <label class="field">
-                Precio base (S/) *
                 <input
+                    class="form-control"
+                    type="number"
+                    min="1"
+                    @bind="Borrador.Anio"
+                    @bind:event="oninput" required />
+            </label>
+            <label class="field form-label d-block col-12 col-md-6">
+                Número de páginas *
+                <input
+                    class="form-control"
+                    type="number"
+                    min="1"
+                    @bind="Borrador.Paginas"
+                    @bind:event="oninput" required />
+            </label>
+            <label class="field form-label d-block col-12 col-md-6">
+                Precio base (S/) *
+                <input class="form-control"
                     type="number"
                     min="0.01"
                     step="0.01"
@@ -94,36 +109,41 @@
                     required
                     />
             </label>
-            <label class="field">
+            <label class="field form-label d-block col-12 col-md-6">
                 Stock inicial *
-                <input type="number" min="0" @bind="Borrador.Stock" @bind:event="oninput" required />
+                <input
+                    class="form-control"
+                    type="number"
+                    min="0"
+                    @bind="Borrador.Stock"
+                    @bind:event="oninput" required />
             </label>
-            <label class="field">
+            <label class="field form-label d-block col-12 col-md-6">
                 Peso (kg)
-                <input @bind="Peso" @bind:event="oninput" />
+                <input class="form-control" @bind="Peso" @bind:event="oninput" />
             </label>
-            <label class="field">
+            <label class="field form-label d-block col-12 col-md-6">
                 Alto (cm)
-                <input @bind="Alto" @bind:event="oninput" />
+                <input class="form-control" @bind="Alto" @bind:event="oninput" />
             </label>
-            <label class="field">
+            <label class="field form-label d-block col-12 col-md-6">
                 Ancho (cm)
-                <input @bind="Ancho" @bind:event="oninput" />
+                <input class="form-control" @bind="Ancho" @bind:event="oninput" />
             </label>
-            <label class="field">
+            <label class="field form-label d-block col-12 col-md-6">
                 Saga
-                <input @bind="Borrador.Saga" @bind:event="oninput" />
+                <input class="form-control" @bind="Borrador.Saga" @bind:event="oninput" />
             </label>
-            <label class="field">
+            <label class="field form-label d-block col-12 col-md-6">
                 Tomo
-                <input type="number" min="1" @bind="Borrador.Tomo" @bind:event="oninput" />
+                <input class="form-control" type="number" min="1" @bind="Borrador.Tomo" @bind:event="oninput" />
             </label>
         </div>
         @if (ErrorFormulario.Length > 0)
         {
-            <p class="form-error" role="alert">@ErrorFormulario</p>
+            <p class="alert alert-danger py-2" role="alert">@ErrorFormulario</p>
         }
-        <div class="modal-actions">
+        <div class="modal-footer px-0 pb-0 d-flex flex-wrap justify-content-end gap-2 mt-4">
             <button type="button" class="btn btn-secondary" @onclick="AlCerrar">Cancelar</button>
             <button type="button" class="btn btn-primary" @onclick="Registrar">Registrar libro</button>
         </div>

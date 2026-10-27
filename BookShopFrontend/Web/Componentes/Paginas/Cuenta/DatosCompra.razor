@@ -1,15 +1,16 @@
 @page "/datos-compra"
 @inherits PaginaCuenta
 <PageTitle>Datos de compra · BookShop</PageTitle>
-<div class="container">
-    <nav class="breadcrumb">
-        <a href="/">Inicio</a>
-        <span>/</span>
-        <span>Cuenta</span>
-        <span>/</span>
-        <span>Datos de compra</span>
+<div class="container py-4">
+    <nav aria-label="Ruta de navegación">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+            <li class="breadcrumb-item">Cuenta</li>
+            <li class="breadcrumb-item active"
+                aria-current="page">Datos de compra</li>
+        </ol>
     </nav>
-    <div class="results-heading">
+    <div class="results-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
         <h1>
             Datos de compra
             <span>@Cantidad @EtiquetaCantidad</span>
@@ -24,32 +25,32 @@
     </div>
     @if (Estado.Usuario is null)
     {
-        <div class="empty-state">
+        <div class="empty-state card border-0 text-center align-items-center py-5">
             <Icono Nombre="card" />
             <h2>Todo listo para tu próxima compra</h2>
-            <p>Inicia sesión para consultar tus direcciones, métodos y cupones.</p>
+            <p class="mb-2">Inicia sesión para consultar tus direcciones, métodos y cupones.</p>
             <button class="btn btn-primary" @onclick="Estado.MostrarAcceso">Iniciar sesión</button>
         </div>
     }
     else
     {
-        <div class="tabs" role="tablist" aria-label="Datos de compra">
+        <div class="nav nav-tabs bookshop-tabs" role="tablist" aria-label="Datos de compra">
             <button
-                class="tab @(Pestana == "addresses" ? "active" : "")"
+                class="nav-link bookshop-tab @(Pestana == "addresses" ? "active" : "")"
                 role="tab"
                 aria-selected="@(Pestana == "addresses")"
                 @onclick="MostrarDirecciones">
                 Direcciones
             </button>
             <button
-                class="tab @(Pestana == "methods" ? "active" : "")"
+                class="nav-link bookshop-tab @(Pestana == "methods" ? "active" : "")"
                 role="tab"
                 aria-selected="@(Pestana == "methods")"
                 @onclick="MostrarMetodos">
                 Métodos de pago
             </button>
             <button
-                class="tab @(Pestana == "coupons" ? "active" : "")"
+                class="nav-link bookshop-tab @(Pestana == "coupons" ? "active" : "")"
                 role="tab"
                 aria-selected="@(Pestana == "coupons")"
                 @onclick="MostrarCupones">
@@ -58,9 +59,9 @@
         </div>
         @if (Cantidad == 0)
         {
-            <div class="empty-state">
+            <div class="empty-state card border-0 text-center align-items-center py-5">
                 <h2>No tienes @EtiquetaCantidad en esta lista</h2>
-                <p>
+                <p class="mb-2">
                     @(Pestana == "coupons" ? "Aquí aparecerán tus cupones disponibles, utilizados y vencidos." :
                     "Añade tus datos para tenerlos a mano en tu próxima compra.")
                 </p>
@@ -68,128 +69,144 @@
         }
         else
         {
-            <div class="purchase-data-grid">
+            <div class="purchase-data-grid row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
                 @if (Pestana == "addresses")
                 {
                     @foreach (var direccion in DireccionesPagina)
                     {
-                        <article class="panel data-card">
-                            <div class="data-card-heading">
-                                <span class="data-icon">
-                                    <Icono Nombre="pin" />
-                                </span>
-                                <h2>@direccion.Alias</h2>
-                                @if (direccion.Predeterminada)
+                        <div class="col">
+                            <article class="card p-4 data-card h-100">
+                                <div class="data-card-heading d-flex align-items-center flex-wrap gap-2">
+                                    <span
+                                        class="data-icon d-inline-flex align-items-center
+                                            justify-content-center rounded-circle">
+                                        <Icono Nombre="pin" />
+                                    </span>
+                                    <h2>@direccion.Alias</h2>
+                                    @if (direccion.Predeterminada)
+                                    {
+                                        <span class="badge badge-bookshop">Predeterminada</span>
+                                    }
+                                </div>
+                                <div class="card-details flex-grow-1 py-3">
+                                    <p class="mb-2">@direccion.Calle</p>
+                                    <p class="mb-2">@direccion.Distrito, @direccion.Ciudad</p>
+                                    @if (direccion.ReferenciaAdicional.Length > 0)
+                                    {
+                                        <p class="mb-2">
+                                            <span class="text-body-secondary">Referencia:</span>
+                                            @direccion.ReferenciaAdicional
+                                        </p>
+                                    }
+                                </div>
+                                <div class="data-card-actions d-flex gap-2">
+                                    <button class="btn btn-secondary flex-fill"
+                                        @onclick="() => EditarDireccion(direccion)">
+                                        <Icono Nombre="edit" />
+                                        Editar
+                                    </button>
+                                    <button class="btn btn-danger flex-fill"
+                                        @onclick="() => EliminarDireccion(direccion)">
+                                        <Icono Nombre="trash" />
+                                        Eliminar
+                                    </button>
+                                </div>
+                                @if (!direccion.Predeterminada)
                                 {
-                                    <span class="badge">Predeterminada</span>
+                                    <button
+                                        class="btn btn-secondary default-button w-100 mt-2"
+                                        @onclick="() => PredeterminarDireccion(direccion)">
+                                        Establecer predeterminada
+                                    </button>
                                 }
-                            </div>
-                            <div class="card-details">
-                                <p>@direccion.Calle</p>
-                                <p>@direccion.Distrito, @direccion.Ciudad</p>
-                                @if (direccion.ReferenciaAdicional.Length > 0)
-                                {
-                                    <p>
-                                        <span class="muted">Referencia:</span>
-                                        @direccion.ReferenciaAdicional
-                                    </p>
-                                }
-                            </div>
-                            <div class="data-card-actions">
-                                <button class="btn btn-secondary" @onclick="() => EditarDireccion(direccion)">
-                                    <Icono Nombre="edit" />
-                                    Editar
-                                </button>
-                                <button class="btn btn-danger" @onclick="() => EliminarDireccion(direccion)">
-                                    <Icono Nombre="trash" />
-                                    Eliminar
-                                </button>
-                            </div>
-                            @if (!direccion.Predeterminada)
-                            {
-                                <button
-                                    class="btn btn-secondary default-button"
-                                    @onclick="() => PredeterminarDireccion(direccion)">
-                                    Establecer predeterminada
-                                </button>
-                            }
-                        </article>
+                            </article>
+                        </div>
                     }
                 }
                 else if (Pestana == "methods")
                 {
                     @foreach (var metodo in MetodosPagina)
                     {
-                        <article class="panel data-card">
-                            <div class="data-card-heading">
-                                <span class="data-icon">
-                                    <Icono Nombre="@(metodo.Tipo == "Tarjeta" ? "card" : "wallet")" />
-                                </span>
-                                <h2>@TituloMetodo(metodo)</h2>
-                                @if (metodo.Predeterminada)
+                        <div class="col">
+                            <article class="card p-4 data-card h-100">
+                                <div class="data-card-heading d-flex align-items-center flex-wrap gap-2">
+                                    <span
+                                        class="data-icon d-inline-flex align-items-center
+                                            justify-content-center rounded-circle">
+                                        <Icono Nombre="@(metodo.Tipo == "Tarjeta" ? "card" : "wallet")" />
+                                    </span>
+                                    <h2>@TituloMetodo(metodo)</h2>
+                                    @if (metodo.Predeterminada)
+                                    {
+                                        <span class="badge badge-bookshop">Predeterminado</span>
+                                    }
+                                </div>
+                                <div class="card-details flex-grow-1 py-3">
+                                    <p class="mb-2">
+                                        @metodo.Proveedor @(metodo.Tipo == "Tarjeta" ? "· " + metodo.TipoTarjeta :
+                                        "")
+                                    </p>
+                                    <p class="masked">@metodo.NumeroEnmascarado</p>
+                                    <dl class="border-top pt-3 mb-0">
+                                        <div>
+                                            <dt class="text-body-secondary">Titular:</dt>
+                                            <dd class="mb-0">@metodo.Titular</dd>
+                                        </div>
+                                        <div>
+                                            <dt class="text-body-secondary">Vence:</dt>
+                                            <dd class="mb-0">@metodo.Vencimiento.ToString("dd/MM/yyyy")</dd>
+                                        </div>
+                                    </dl>
+                                </div>
+                                <div class="data-card-actions d-flex gap-2">
+                                    <button class="btn btn-secondary flex-fill"
+                                        @onclick="() => EditarMetodo(metodo)">
+                                        <Icono Nombre="edit" />
+                                        Editar
+                                    </button>
+                                    <button class="btn btn-danger flex-fill"
+                                        @onclick="() => EliminarMetodo(metodo)">
+                                        <Icono Nombre="trash" />
+                                        Eliminar
+                                    </button>
+                                </div>
+                                @if (!metodo.Predeterminada)
                                 {
-                                    <span class="badge">Predeterminado</span>
+                                    <button
+                                        class="btn btn-secondary default-button w-100 mt-2"
+                                        @onclick="() => PredeterminarMetodo(metodo)">
+                                        Establecer predeterminado
+                                    </button>
                                 }
-                            </div>
-                            <div class="card-details">
-                                <p>
-                                    @metodo.Proveedor @(metodo.Tipo == "Tarjeta" ? "· " + metodo.TipoTarjeta :
-                                    "")
-                                </p>
-                                <p class="masked">@metodo.NumeroEnmascarado</p>
-                                <dl>
-                                    <div>
-                                        <dt>Titular:</dt>
-                                        <dd>@metodo.Titular</dd>
-                                    </div>
-                                    <div>
-                                        <dt>Vence:</dt>
-                                        <dd>@metodo.Vencimiento.ToString("dd/MM/yyyy")</dd>
-                                    </div>
-                                </dl>
-                            </div>
-                            <div class="data-card-actions">
-                                <button class="btn btn-secondary" @onclick="() => EditarMetodo(metodo)">
-                                    <Icono Nombre="edit" />
-                                    Editar
-                                </button>
-                                <button class="btn btn-danger" @onclick="() => EliminarMetodo(metodo)">
-                                    <Icono Nombre="trash" />
-                                    Eliminar
-                                </button>
-                            </div>
-                            @if (!metodo.Predeterminada)
-                            {
-                                <button
-                                    class="btn btn-secondary default-button"
-                                    @onclick="() => PredeterminarMetodo(metodo)">
-                                    Establecer predeterminado
-                                </button>
-                            }
-                        </article>
+                            </article>
+                        </div>
                     }
                 }
                 else
                 {
                     @foreach (var cupon in CuponesPagina)
                     {
-                        <article class="panel data-card coupon-card">
-                            <span class="data-icon">
-                                <Icono Nombre="tag" />
-                            </span>
-                            <h2>@cupon.Porcentaje% de descuento</h2>
-                            <span class="status @ClaseCupon(cupon)">@cupon.Estado</span>
-                            <dl>
-                                <div>
-                                    <dt>Compra mínima</dt>
-                                    <dd>@Importe(cupon.Minimo)</dd>
-                                </div>
-                                <div>
-                                    <dt>Vencimiento</dt>
-                                    <dd>@cupon.Vencimiento.ToString("dd/MM/yyyy")</dd>
-                                </div>
-                            </dl>
-                        </article>
+                        <div class="col">
+                            <article class="card p-4 data-card h-100 coupon-card">
+                                <span
+                                    class="data-icon d-inline-flex align-items-center
+                                        justify-content-center rounded-circle">
+                                    <Icono Nombre="tag" />
+                                </span>
+                                <h2 class="my-3">@cupon.Porcentaje% de descuento</h2>
+                                <span class="badge bookshop-status @ClaseCupon(cupon)">@cupon.Estado</span>
+                                <dl class="border-top pt-3 mb-0">
+                                    <div>
+                                        <dt class="text-body-secondary">Compra mínima</dt>
+                                        <dd class="mb-0">@Importe(cupon.Minimo)</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-body-secondary">Vencimiento</dt>
+                                        <dd class="mb-0">@cupon.Vencimiento.ToString("dd/MM/yyyy")</dd>
+                                    </div>
+                                </dl>
+                            </article>
+                        </div>
                     }
                 }
             </div>

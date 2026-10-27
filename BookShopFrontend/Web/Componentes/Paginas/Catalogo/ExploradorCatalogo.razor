@@ -1,11 +1,11 @@
-<div class="catalog-layout">
-    <aside class="filters">
+<div class="row g-4">
+    <aside class="filters col-12 col-lg-3">
         <h2>Filtros</h2>
         @if (Administracion)
         {
             <div class="filter-group">
-                <label>
-                    <input type="checkbox" @bind="soloActivos" />
+                <label class="form-check d-flex align-items-center gap-2 ps-0">
+                    <input class="form-check-input m-0" type="checkbox" @bind="soloActivos" />
                     Solo activos
                 </label>
             </div>
@@ -50,7 +50,7 @@
         <div class="filter-group">
             <h3>Precio</h3>
             <div class="price-sliders" style="@EstiloRango">
-                <input
+                <input class="form-range"
                     type="range"
                     min="0"
                     max="@LimitePrecio"
@@ -59,7 +59,7 @@
                     @bind="minimo"
                     @bind:after="AjustarMinimo"
                     />
-                <input
+                <input class="form-range"
                     type="range"
                     min="0"
                     max="@LimitePrecio"
@@ -69,10 +69,10 @@
                     @bind:after="AjustarMaximo"
                     />
             </div>
-            <div class="price-fields">
-                <label>
+            <div class="row g-2">
+                <label class="col-6 form-label">
                     Mínimo
-                    <input
+                    <input class="form-control"
                         type="number"
                         min="0"
                         max="@LimitePrecio"
@@ -82,9 +82,9 @@
                         @bind:after="AjustarMinimo"
                         />
                 </label>
-                <label>
+                <label class="col-6 form-label">
                     Máximo
-                    <input
+                    <input class="form-control"
                         type="number"
                         min="0"
                         max="@LimitePrecio"
@@ -96,70 +96,78 @@
                 </label>
             </div>
         </div>
-        <div class="filter-group active-filters">
+        <div class="filter-group active-filters border-top pt-3">
             <h3>Filtros activos</h3>
-            <div class="chips">
+            <div class="d-flex flex-wrap gap-2">
                 @foreach (var item in categoriasAplicadas)
                 {
-                    <button class="chip" @onclick="() => QuitarCategoria(item)">
+                    <button
+                        class="btn btn-sm btn-outline-secondary rounded-pill"
+                        @onclick="() => QuitarCategoria(item)">
                         @item
                         <Icono Nombre="close" />
                     </button>
                 }
                 @foreach (var item in autoresAplicados)
                 {
-                    <button class="chip" @onclick="() => QuitarAutor(item)">
+                    <button
+                        class="btn btn-sm btn-outline-secondary rounded-pill"
+                        @onclick="() => QuitarAutor(item)">
                         @item
                         <Icono Nombre="close" />
                     </button>
                 }
                 @foreach (var item in editorialesAplicadas)
                 {
-                    <button class="chip" @onclick="() => QuitarEditorial(item)">
+                    <button
+                        class="btn btn-sm btn-outline-secondary rounded-pill"
+                        @onclick="() => QuitarEditorial(item)">
                         @item
                         <Icono Nombre="close" />
                     </button>
                 }
                 @foreach (var item in idiomasAplicados)
                 {
-                    <button class="chip" @onclick="() => QuitarIdioma(item)">
+                    <button
+                        class="btn btn-sm btn-outline-secondary rounded-pill"
+                        @onclick="() => QuitarIdioma(item)">
                         @item
                         <Icono Nombre="close" />
                     </button>
                 }
                 @if (precioFiltrado)
                 {
-                    <button class="chip" @onclick="QuitarPrecio">
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill" @onclick="QuitarPrecio">
                         S/ @minimoAplicado – S/ @maximoAplicado
                         <Icono Nombre="close" />
                     </button>
                 }
                 @if (Administracion && soloActivosAplicado)
                 {
-                    <button class="chip" @onclick="QuitarSoloActivos">
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill" @onclick="QuitarSoloActivos">
                         Solo activos
                         <Icono Nombre="close" />
                     </button>
                 }
                 @if (!HayFiltros)
                 {
-                    <span class="muted">Ninguno</span>
+                    <span class="text-body-secondary">Ninguno</span>
                 }
             </div>
         </div>
         <button class="btn btn-primary filter-action" @onclick="AplicarFiltros">Aplicar filtros</button>
         <button class="btn btn-secondary filter-action" @onclick="LimpiarFiltros">Limpiar filtros</button>
     </aside>
-    <section class="catalog-results">
-        <div class="results-heading">
-            <div class="result-title">
+    <section class="catalog-results col-12 col-lg-9">
+        <div class="results-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="result-title d-flex flex-wrap align-items-baseline gap-3 flex-grow-1">
                 <h1>@Titulo</h1>
                 <span>@Resultados.Count libros</span>
             </div>
             @AccionesCabecera
-            <label class="sort-label">
+            <label class="sort-label d-flex align-items-center gap-2">
                 Ordenar por:
-                <select aria-label="Ordenar libros" @bind="orden" @bind:after="CambiarOrden">
+                <select class="form-select" aria-label="Ordenar libros" @bind="orden" @bind:after="CambiarOrden">
                     @foreach (var order in OpcionesOrden)
                     {
                         <option value="@order.Key">@order.Value</option>
@@ -182,7 +190,7 @@
         }
         else
         {
-            <div class="book-grid">
+            <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-4">
                 @foreach (var book in LibrosVisibles)
                 {
                     <TarjetaLibro Libro="book" />

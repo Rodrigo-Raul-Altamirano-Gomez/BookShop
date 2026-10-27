@@ -1,15 +1,15 @@
 @page "/administracion"
 @implements IDisposable
 <PageTitle>Administración · BookShop</PageTitle>
-<div class="container">
-    <nav class="breadcrumb">
-        <a href="/">Inicio</a>
-        <span>/</span>
-        <span>Cuenta</span>
-        <span>/</span>
-        <span>Administración</span>
+<div class="container py-4">
+    <nav aria-label="Ruta de navegación">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+            <li class="breadcrumb-item"><span>Cuenta</span></li>
+            <li class="breadcrumb-item active" aria-current="page"><span>Administración</span></li>
+        </ol>
     </nav>
-    <h1 class="page-heading">Administración</h1>
+    <h1 class="page-heading d-flex flex-wrap align-items-center justify-content-between gap-3">Administración</h1>
     @if (!Estado.EsAdministrador)
     {
         <div class="empty-state">
@@ -21,60 +21,81 @@
     }
     else
     {
-        <h2 class="section-heading">Gestión del catálogo</h2>
-        <div class="admin-grid catalog-admin-grid">
-            <a href="/administracion/libros" class="admin-card">
-                <span class="admin-icon">
-                    <Icono Nombre="book" />
-                </span>
-                <h3>Libros</h3>
-                <p>Consulta, registra y administra los libros.</p>
-            </a>
-            <a href="/administracion/autores" class="admin-card">
-                <span class="admin-icon">
-                    <Icono Nombre="edit" />
-                </span>
-                <h3>Autores</h3>
-                <p>Gestiona los autores del catálogo.</p>
-            </a>
-            <a href="/administracion/categorias" class="admin-card">
-                <span class="admin-icon">
-                    <Icono Nombre="grid" />
-                </span>
-                <h3>Categorías</h3>
-                <p>Organiza y administra las categorías.</p>
-            </a>
-            <a href="/administracion/editoriales" class="admin-card">
-                <span class="admin-icon">
-                    <Icono Nombre="building" />
-                </span>
-                <h3>Editoriales</h3>
-                <p>Gestiona las editoriales del catálogo.</p>
-            </a>
+        <h2
+            class="section-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
+            Gestión del catálogo
+        </h2>
+        <div class="row g-4 row-cols-1 row-cols-sm-2 row-cols-xl-4">
+            <div class="col">
+                <a href="/administracion/libros" class="admin-card card h-100 w-100 p-4 text-start">
+                    <span class="admin-icon d-flex align-items-center justify-content-center">
+                        <Icono Nombre="book" />
+                    </span>
+                    <h3>Libros</h3>
+                    <p>Consulta, registra y administra los libros.</p>
+                </a>
+            </div>
+            <div class="col">
+                <a href="/administracion/autores" class="admin-card card h-100 w-100 p-4 text-start">
+                    <span class="admin-icon d-flex align-items-center justify-content-center">
+                        <Icono Nombre="edit" />
+                    </span>
+                    <h3>Autores</h3>
+                    <p>Gestiona los autores del catálogo.</p>
+                </a>
+            </div>
+            <div class="col">
+                <a href="/administracion/categorias" class="admin-card card h-100 w-100 p-4 text-start">
+                    <span class="admin-icon d-flex align-items-center justify-content-center">
+                        <Icono Nombre="grid" />
+                    </span>
+                    <h3>Categorías</h3>
+                    <p>Organiza y administra las categorías.</p>
+                </a>
+            </div>
+            <div class="col">
+                <a href="/administracion/editoriales" class="admin-card card h-100 w-100 p-4 text-start">
+                    <span class="admin-icon d-flex align-items-center justify-content-center">
+                        <Icono Nombre="building" />
+                    </span>
+                    <h3>Editoriales</h3>
+                    <p>Gestiona las editoriales del catálogo.</p>
+                </a>
+            </div>
         </div>
-        <h2 class="section-heading general-title">Administración general</h2>
-        <div class="admin-grid general-admin-grid">
-            <a href="/moderacion" class="admin-card">
-                <span class="admin-icon">
-                    <Icono Nombre="flag" />
-                </span>
-                <h3>Moderación</h3>
-                <p>Revisa solicitudes de devolución y reportes de reseñas.</p>
-            </a>
-            <button class="admin-card" @onclick="AbrirReportes">
-                <span class="admin-icon">
-                    <Icono Nombre="report" />
-                </span>
-                <h3>Reportes</h3>
-                <p>Consulta reportes de libros y usuarios.</p>
-            </button>
-            <button class="admin-card" @onclick="AbrirConfiguracion">
-                <span class="admin-icon">
-                    <Icono Nombre="settings" />
-                </span>
-                <h3>Configuración</h3>
-                <p>Ajusta envío, devoluciones y cupones.</p>
-            </button>
+        <h2
+            class="section-heading general-title d-flex flex-wrap gap-3
+                align-items-center justify-content-between">
+            Administración general
+        </h2>
+        <div class="row g-4 row-cols-1 row-cols-sm-2 row-cols-lg-3">
+            <div class="col">
+                <a href="/moderacion" class="admin-card card h-100 w-100 p-4 text-start">
+                    <span class="admin-icon d-flex align-items-center justify-content-center">
+                        <Icono Nombre="flag" />
+                    </span>
+                    <h3>Moderación</h3>
+                    <p>Revisa solicitudes de devolución y reportes de reseñas.</p>
+                </a>
+            </div>
+            <div class="col">
+                <button class="admin-card card h-100 w-100 p-4 text-start" @onclick="AbrirReportes">
+                    <span class="admin-icon d-flex align-items-center justify-content-center">
+                        <Icono Nombre="report" />
+                    </span>
+                    <h3>Reportes</h3>
+                    <p>Consulta reportes de libros y usuarios.</p>
+                </button>
+            </div>
+            <div class="col">
+                <button class="admin-card card h-100 w-100 p-4 text-start" @onclick="AbrirConfiguracion">
+                    <span class="admin-icon d-flex align-items-center justify-content-center">
+                        <Icono Nombre="settings" />
+                    </span>
+                    <h3>Configuración</h3>
+                    <p>Ajusta envío, devoluciones y cupones.</p>
+                </button>
+            </div>
         </div>
     }
 </div>
@@ -82,10 +103,10 @@
 {
     <Modal Titulo="Configuración" AlCerrar="CerrarConfiguracion">
         <form @onsubmit="GuardarConfiguracion" @onsubmit:preventDefault>
-            <div class="form-grid">
-                <label class="field">
+            <div class="row g-3">
+                <label class="field form-label d-block col-12 col-md-6">
                     Porcentaje de envío (%) *
-                    <input
+                    <input class="form-control"
                         type="number"
                         min="0"
                         max="100"
@@ -95,9 +116,9 @@
                         required
                         />
                 </label>
-                <label class="field">
+                <label class="field form-label d-block col-12 col-md-6">
                     Plazo de devolución (días) *
-                    <input
+                    <input class="form-control"
                         type="number"
                         min="1"
                         @bind="BorradorConfiguracion.DiasDevolucion"
@@ -105,9 +126,9 @@
                         required
                         />
                 </label>
-                <label class="field">
+                <label class="field form-label d-block col-12 col-md-6">
                     Máximo de intentos de devolución *
-                    <input
+                    <input class="form-control"
                         type="number"
                         min="1"
                         @bind="BorradorConfiguracion.IntentosDevolucion"
@@ -115,9 +136,9 @@
                         required
                         />
                 </label>
-                <label class="field">
+                <label class="field form-label d-block col-12 col-md-6">
                     Pedidos entregados por cupón *
-                    <input
+                    <input class="form-control"
                         type="number"
                         min="1"
                         @bind="BorradorConfiguracion.PedidosEntregados"
@@ -125,9 +146,9 @@
                         required
                         />
                 </label>
-                <label class="field">
+                <label class="field form-label d-block col-12 col-md-6">
                     Porcentaje del cupón (%) *
-                    <input
+                    <input class="form-control"
                         type="number"
                         min="1"
                         max="100"
@@ -137,9 +158,9 @@
                         required
                         />
                 </label>
-                <label class="field">
+                <label class="field form-label d-block col-12 col-md-6">
                     Monto mínimo del cupón (S/) *
-                    <input
+                    <input class="form-control"
                         type="number"
                         min="0"
                         step="0.01"
@@ -148,9 +169,9 @@
                         required
                         />
                 </label>
-                <label class="field">
+                <label class="field form-label d-block col-12 col-md-6">
                     Duración del cupón (días) *
-                    <input
+                    <input class="form-control"
                         type="number"
                         min="1"
                         @bind="BorradorConfiguracion.DiasCupon"
@@ -161,9 +182,9 @@
             </div>
             @if (ErrorFormulario.Length > 0)
             {
-                <p class="form-error" role="alert">@ErrorFormulario</p>
+                <p class="alert alert-danger py-2" role="alert">@ErrorFormulario</p>
             }
-            <div class="modal-actions">
+            <div class="modal-footer px-0 pb-0 d-flex flex-wrap justify-content-end gap-2 mt-4">
                 <button type="button" class="btn btn-secondary" @onclick="CerrarConfiguracion">Cancelar</button>
                 <button type="submit" class="btn btn-primary">Guardar cambios</button>
             </div>
@@ -173,53 +194,67 @@
 @if (ReportesAbiertos)
 {
     <Modal Titulo="Reportes" AlCerrar="CerrarReportes">
-        <div class="tabs">
-            <button class="tab @(PestanaReporte == "Libros" ? "active" : "")" @onclick="ElegirLibros">
+        <div class="nav nav-tabs bookshop-tabs">
+            <button
+                class="nav-link bookshop-tab @(PestanaReporte == "Libros" ? "active" : "")"
+                @onclick="ElegirLibros">
                 Libros
             </button>
-            <button class="tab @(PestanaReporte == "Usuarios" ? "active" : "")" @onclick="ElegirUsuarios">
+            <button
+                class="nav-link bookshop-tab @(PestanaReporte == "Usuarios" ? "active" : "")"
+                @onclick="ElegirUsuarios">
                 Usuarios
             </button>
         </div>
         <form @onsubmit="GenerarReporte" @onsubmit:preventDefault>
-            <div class="form-grid">
+            <div class="row g-3">
                 @if (PestanaReporte == "Libros")
                 {
-                    <label class="field">
+                    <label class="field form-label d-block col-12 col-md-6">
                         Inicio del período *
-                        <input type="date" @bind="InicioReporte" required />
+                        <input class="form-control" type="date" @bind="InicioReporte" required />
                     </label>
-                    <label class="field">
+                    <label class="field form-label d-block col-12 col-md-6">
                         Fin del período *
-                        <input type="date" @bind="FinReporte" required />
+                        <input class="form-control" type="date" @bind="FinReporte" required />
                     </label>
                 }
                 else
                 {
-                    <label class="field">
+                    <label class="field form-label d-block col-12 col-md-6">
                         Mes *
-                        <select @bind="MesReporte">
+                        <select class="form-select" @bind="MesReporte">
                             @for (var Mes = 1; Mes <= 12; Mes++)
                             {
                                 <option value="@Mes">@NombresMeses[Mes - 1]</option>
                             }
                         </select>
                     </label>
-                    <label class="field">
+                    <label class="field form-label d-block col-12 col-md-6">
                         Año *
-                        <input type="number" min="1" @bind="AnioReporte" @bind:event="oninput" required />
+                        <input
+                            class="form-control"
+                            type="number"
+                            min="1"
+                            @bind="AnioReporte"
+                            @bind:event="oninput" required />
                     </label>
                 }
-                <label class="field">
+                <label class="field form-label d-block col-12 col-md-6">
                     Cantidad máxima
-                    <input type="number" min="1" @bind="LimiteReporte" @bind:event="oninput" />
+                    <input
+                        class="form-control"
+                        type="number"
+                        min="1"
+                        @bind="LimiteReporte"
+                        @bind:event="oninput" />
                 </label>
             </div>
             @if (ErrorFormulario.Length > 0)
             {
-                <p class="form-error" role="alert">@ErrorFormulario</p>
+                <p class="alert alert-danger py-2" role="alert">@ErrorFormulario</p>
             }
-            <div class="modal-actions">
+            <div class="modal-footer px-0 pb-0 d-flex flex-wrap justify-content-end gap-2 mt-4">
                 <button type="button" class="btn btn-secondary" @onclick="CerrarReportes">Cancelar</button>
                 <button type="submit" class="btn btn-primary">
                     <Icono Nombre="report" />
@@ -236,7 +271,7 @@
         AlCerrar="CerrarVistaReporte"
         Amplio="true">
         <div class="report-sheet">
-            <div class="report-brand">
+            <div class="report-brand d-flex align-items-center gap-2">
                 <Icono Nombre="book" />
                 <strong>BookShop</strong>
                 <span>Más que libros, grandes historias.</span>
@@ -246,14 +281,14 @@
                 @(PestanaReporte == "Libros" ? $"Período: {InicioReporte:dd/MM/yyyy} — {FinReporte:dd/MM/yyyy}" :
                 $"Período: {NombresMeses[MesReporte - 1]} {AnioReporte}")
             </p>
-            <p class="muted">
+            <p class="text-body-secondary">
                 Generado: 07/10/2026 · Máximo solicitado: @(LimiteReporte?.ToString() ?? "Sin límite") · Cantidad
                 obtenida: @(PestanaReporte == "Libros" ? LibrosReporte.Count() : UsuariosReporte.Count())
             </p>
-            <div class="report-table-wrap">
+            <div class="table-responsive">
                 @if (PestanaReporte == "Libros")
                 {
-                    <table>
+                    <table class="table table-striped align-middle mb-0">
                         <thead>
                             <tr>
                                 <th>Libro</th>
@@ -281,7 +316,7 @@
                 }
                 else
                 {
-                    <table>
+                    <table class="table table-striped align-middle mb-0">
                         <thead>
                             <tr>
                                 <th>Usuario</th>
@@ -315,6 +350,6 @@
             </div>
             <div class="report-foot">Vista previa con datos de ejemplo · Página 1</div>
         </div>
-        <p class="muted">La generación de PDF se conectará en la fase de integración.</p>
+        <p class="text-body-secondary">La generación de PDF se conectará en la fase de integración.</p>
     </Modal>
 }

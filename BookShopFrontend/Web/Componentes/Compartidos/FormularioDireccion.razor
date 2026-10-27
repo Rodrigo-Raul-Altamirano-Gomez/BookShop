@@ -1,22 +1,34 @@
 @using Web.Modelos
 <Modal Titulo="@(Valor is null ? "Añadir dirección" : "Editar dirección")" AlCerrar="AlCerrar">
     <form @onsubmit="Guardar" @onsubmit:preventDefault novalidate>
-        <label class="field">
+        <label class="field form-label d-block mb-3">
             Alias *
-            <input @bind="Borrador.Alias" @bind:event="oninput" maxlength="60" autocomplete="off" />
+            <input
+                class="form-control"
+                @bind="Borrador.Alias"
+                @bind:event="oninput"
+                maxlength="60"
+                autocomplete="off"
+            />
         </label>
-        <label class="field">
+        <label class="field form-label d-block mb-3">
             Dirección *
-            <input @bind="Borrador.Calle" @bind:event="oninput" maxlength="200" autocomplete="street-address" />
+            <input
+                class="form-control"
+                @bind="Borrador.Calle"
+                @bind:event="oninput"
+                maxlength="200"
+                autocomplete="street-address"
+            />
         </label>
-        <div class="form-grid">
-            <label class="field">
+        <div class="row g-3">
+            <label class="field form-label d-block mb-3 col-md-6">
                 Distrito *
-                <input @bind="Borrador.Distrito" @bind:event="oninput" maxlength="100" />
+                <input class="form-control" @bind="Borrador.Distrito" @bind:event="oninput" maxlength="100" />
             </label>
-            <label class="field">
+            <label class="field form-label d-block mb-3 col-md-6">
                 Ciudad *
-                <input
+                <input class="form-control"
                     @bind="Borrador.Ciudad"
                     @bind:event="oninput"
                     maxlength="100"
@@ -24,20 +36,26 @@
                     />
             </label>
         </div>
-        <label class="field">
+        <label class="field form-label d-block mb-3">
             Referencia
-            <textarea @bind="Borrador.ReferenciaAdicional" @bind:event="oninput" maxlength="300" rows="3">
+            <textarea
+                class="form-control"
+                @bind="Borrador.ReferenciaAdicional"
+                @bind:event="oninput"
+                maxlength="300"
+                rows="3"
+            >
             </textarea>
         </label>
-        <label class="check-field">
-            <input type="checkbox" @bind="Borrador.Predeterminada" />
+        <label class="form-check form-check-label my-3">
+            <input class="form-check-input" type="checkbox" @bind="Borrador.Predeterminada" />
             Usar como predeterminada
         </label>
         @if (MensajeError.Length > 0)
         {
-            <p class="form-error" role="alert">@MensajeError</p>
+            <p class="alert alert-danger form-error" role="alert">@MensajeError</p>
         }
-        <div class="modal-actions">
+        <div class="modal-footer px-0 pb-0 mt-4">
             <button type="button" class="btn btn-secondary" @onclick="AlCerrar">Cancelar</button>
             <button type="submit" class="btn btn-primary" disabled="@(!Completo || Guardando)">
                 @(Valor is null ? "Guardar dirección" : "Guardar cambios")

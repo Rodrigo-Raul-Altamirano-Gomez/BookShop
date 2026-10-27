@@ -1,64 +1,35 @@
-.review-list  {
-    padding: 0 24px;
-}
-.review-row  {
-    display: flex;
-    align-items: center;
-    gap: 22px;
-    padding: 25px 0;
-    border-bottom: 1px solid #e1e8e4;
-}
-.review-cover  {
+.review-cover {
     flex: 0 0 72px;
 }
-.review-cover img  {
+.review-cover img {
     width: 72px;
     height: 105px;
     object-fit: cover;
-    border-radius: 3px;
 }
-.review-content  {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
+.review-content {
     min-width: 0;
-    gap: 5px;
 }
-.review-content p  {
-    margin: 0;
+.review-content p {
     line-height: 1.6;
     overflow-wrap: anywhere;
 }
-.review-title  {
+.review-title {
     color: #085c46;
     font-family: Georgia, serif;
     font-size: 23px;
     font-weight: bold;
 }
-.review-actions  {
-    display: flex;
-    gap: 10px;
-}
-.stars  {
+.stars {
     color: #d99126;
     font-size: 21px;
 }
-.unfilled  {
+.unfilled {
     color: #d9dfdc;
 }
-.rating-control  {
-    display: flex;
-    gap: 7px;
-    margin: 0 0 22px;
-}
-.rating-star  {
-    background: transparent;
-    border: 0;
+.rating-star {
     color: #d9dfdc;
     font-size: 38px;
-    cursor: pointer;
-    padding: 0 4px;
 }
-.rating-star.selected  {
+.rating-star.selected {
     color: #d99126;
 }

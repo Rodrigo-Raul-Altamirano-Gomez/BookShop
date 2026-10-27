@@ -2,18 +2,19 @@
 @using Web.Componentes.Paginas.Catalogo
 @inherits PaginaCuenta
 <PageTitle>Deseados y favoritos · BookShop</PageTitle>
-<div class="container">
-    <nav class="breadcrumb">
-        <a href="/">Inicio</a>
-        <span>/</span>
-        <span>Cuenta</span>
-        <span>/</span>
-        <span>Deseados y favoritos</span>
+<div class="container py-4">
+    <nav aria-label="Ruta de navegación">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+            <li class="breadcrumb-item">Cuenta</li>
+            <li class="breadcrumb-item active"
+                aria-current="page">Deseados y favoritos</li>
+        </ol>
     </nav>
     @if (Estado.Usuario is null)
     {
         <h1 class="page-heading">Deseados y favoritos</h1>
-        <div class="empty-state">
+        <div class="empty-state card border-0 text-center align-items-center py-5">
             <Icono Nombre="heart" />
             <h2>Guarda tus próximas lecturas</h2>
             <p>Inicia sesión para consultar tus listas.</p>
@@ -22,16 +23,16 @@
     }
     else
     {
-        <div class="tabs" role="tablist" aria-label="Listas personales">
+        <div class="nav nav-tabs bookshop-tabs" role="tablist" aria-label="Listas personales">
             <button
-                class="tab @(!PestanaFavoritos ? "active" : "")"
+                class="nav-link bookshop-tab @(!PestanaFavoritos ? "active" : "")"
                 role="tab"
                 aria-selected="@(!PestanaFavoritos)"
                 @onclick="MostrarDeseados">
                 Deseados
             </button>
             <button
-                class="tab @(PestanaFavoritos ? "active" : "")"
+                class="nav-link bookshop-tab @(PestanaFavoritos ? "active" : "")"
                 role="tab"
                 aria-selected="@PestanaFavoritos"
                 @onclick="MostrarFavoritos">

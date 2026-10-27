@@ -1,17 +1,6 @@
-.result-title {
-    display:flex;
-    align-items:baseline;
-    gap:15px;
-    flex:1
-}
 .result-title span {
     white-space:nowrap;
     font-size:13px
-}
-.price-fields {
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px
 }
 .price-fields label {
     font-size:12px;
@@ -42,7 +31,7 @@
 }
 .search-context {
     font-size:13px;
-    color:var(--muted);
+    color:var(--text-body-secondary);
     margin:0 0 20px
 }
 .price-sliders {

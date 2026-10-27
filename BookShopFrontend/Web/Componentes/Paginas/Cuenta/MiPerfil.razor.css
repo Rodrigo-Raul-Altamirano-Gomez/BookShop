@@ -1,81 +1,27 @@
-.profile-layout  {
-    display: grid;
-    grid-template-columns: 1.3fr 1fr;
-    gap: 24px;
-}
-.profile-layout h2  {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
-.profile-photo  {
-    display: flex;
-    align-items: center;
-    gap: 22px;
-    flex-wrap: wrap;
-    padding: 8px 0 22px;
-}
-.profile-photo img  {
+.profile-photo img {
     width: 100px;
     height: 100px;
-    border-radius: 50%;
     object-fit: cover;
     background: #edf4f1;
 }
-.photo-actions  {
-    display: flex;
-    gap: 10px;
-}
-.photo-picker  {
-    position: relative;
-    overflow: hidden;
+.photo-picker {
     cursor: pointer;
 }
-.photo-picker ::deep input[type=file]  {
+.photo-picker ::deep input[type=file] {
     position: absolute;
     inset: 0;
     opacity: 0;
     width: 100%;
     cursor: pointer;
 }
-.profile-data  {
-    margin: 0;
-}
-.profile-data div  {
-    padding: 20px 0;
-    border-top: 1px solid #e1e8e4;
-}
-.profile-data dt  {
+.profile-data dt {
     color: #65766f;
     font-size: 14px;
-    margin-bottom: 7px;
 }
-.profile-data dd  {
+.profile-data dd {
     font-size: 19px;
-    margin: 0;
     overflow-wrap: anywhere;
 }
-.security-panel > div  {
-    padding: 26px 0;
-}
-.security-panel > div + div  {
-    border-top: 1px solid #e1e8e4;
-}
-.security-panel h3  {
-    display: flex;
-    gap: 12px;
-    align-items: center;
+.security-panel h3 {
     font-size: 23px;
-}
-.security-panel .muted  {
-    margin-top: 16px;
-}
-.password-field  {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-.password-field input  {
-    flex: 1;
-    min-width: 0;
 }

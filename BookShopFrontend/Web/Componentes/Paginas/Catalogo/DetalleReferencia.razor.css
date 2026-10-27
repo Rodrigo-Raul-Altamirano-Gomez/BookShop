@@ -1,12 +1,11 @@
 .reference-banner {
-    display:grid;
-    grid-template-columns:1fr 1fr;
     background:#e6ebe1;
     border-radius:8px;
     overflow:hidden;
     margin-bottom:34px;
     min-height:250px
 }
+
 .reference-picture {
     position:relative;
     min-height:250px
@@ -16,13 +15,6 @@
     height:100%;
     max-height:320px;
     object-fit:cover
-}
-.reference-copy {
-    padding:30px 35px;
-    display:flex;
-    flex-direction:column;
-    align-items:flex-start;
-    justify-content:center
 }
 .reference-copy h1 {
     font-size:38px;
@@ -36,10 +28,9 @@
 .image-actions {
     position:absolute;
     bottom:14px;
-    right:14px;
-    display:flex;
-    gap:7px
+    right:14px
 }
+
 .image-actions .icon-button {
     background:white
 }

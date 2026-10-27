@@ -5,13 +5,13 @@
 @using Web.Componentes.Paginas.Catalogo
 @implements IDisposable
 <PageTitle>@Titulo · Administración · BookShop</PageTitle>
-<div class="container">
-    <nav class="breadcrumb">
-        <a href="/">Inicio</a>
-        <span>/</span>
-        <a href="/administracion">Administración</a>
-        <span>/</span>
-        <span>@Titulo</span>
+<div class="container py-4">
+    <nav aria-label="Ruta de navegación">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="/administracion">Administración</a></li>
+            <li class="breadcrumb-item active" aria-current="page"><span>@Titulo</span></li>
+        </ol>
     </nav>
     @if (!Estado.EsAdministrador)
     {
@@ -35,42 +35,48 @@
     }
     else
     {
-        <div class="catalog-layout">
-            <aside class="filters">
+        <div class="row g-4">
+            <aside class="filters col-12 col-lg-3">
                 <h2>Filtros</h2>
                 <div class="filter-group">
-                    <label>
-                        <input type="checkbox" @bind="BorradorSoloActivos" />
+                    <label class="form-check d-flex align-items-center gap-2 ps-0">
+                        <input class="form-check-input m-0" type="checkbox" @bind="BorradorSoloActivos" />
                         Solo activos
                     </label>
                 </div>
                 <div class="filter-group">
                     <h3>Filtros activos</h3>
-                    <div class="chips">
+                    <div class="d-flex flex-wrap gap-2">
                         @if (SoloActivos)
                         {
-                            <button class="chip" @onclick="QuitarSoloActivos">
+                            <button
+                                class="btn btn-sm btn-outline-secondary rounded-pill"
+                                @onclick="QuitarSoloActivos">
                                 Solo activos
                                 <Icono Nombre="close" />
                             </button>
                         }
                         else
                         {
-                            <span class="muted">Sin filtros</span>
+                            <span class="text-body-secondary">Sin filtros</span>
                         }
                     </div>
                 </div>
                 <button class="btn btn-primary" @onclick="Aplicar">Aplicar filtros</button>
                 <button class="btn btn-secondary" @onclick="Limpiar">Limpiar filtros</button>
             </aside>
-            <div>
-                <div class="results-heading">
+            <div class="col-12 col-lg-9">
+                <div class="results-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
                     <div>
                         <h1>@Titulo</h1>
-                        <span class="muted">@Filtrados.Count() @Titulo.ToLower()</span>
+                        <span class="text-body-secondary">@Filtrados.Count() @Titulo.ToLower()</span>
                     </div>
-                    <div class="list-actions">
-                        <select aria-label="Ordenar" @bind="Orden" @bind:after="ReiniciarPagina">
+                    <div class="list-actions d-flex flex-wrap align-items-center gap-2">
+                        <select
+                            class="form-select"
+                            aria-label="Ordenar"
+                            @bind="Orden"
+                            @bind:after="ReiniciarPagina">
                             <option value="Nombre">Nombre A-Z</option>
                             <option value="recent">Más recientes</option>
                         </select>
@@ -90,7 +96,7 @@
                 }
                 else
                 {
-                    <div class="reference-grid">
+                    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
                         @foreach (var Referencia in ElementosPagina)
                         {
                             <TarjetaReferencia Referencia="Referencia" />
@@ -112,34 +118,39 @@
         <form @onsubmit="AgregarReferencia" @onsubmit:preventDefault>
             <div class="image-preview">
                 <img src="@ImagenReferencia" alt="Vista previa de la imagen" />
-                <div class="image-buttons">
-                    <label class="icon-button file-label" title="Elegir imagen">
+                <div class="image-buttons d-flex gap-2">
+                    <label class="btn btn-outline-secondary icon-button file-label" title="Elegir imagen">
                         <Icono Nombre="edit" />
-                        <InputFile OnChange="LeerImagenReferencia" accept="image/jpeg,image/png" />
+                        <InputFile
+                            class="form-control" OnChange="LeerImagenReferencia"
+                            accept="image/jpeg,image/png" />
                     </label>
                     <button
                         type="button"
-                        class="icon-button"
+                        class="btn btn-outline-secondary icon-button"
                         title="Quitar imagen"
                         @onclick="QuitarImagenReferencia">
                         <Icono Nombre="trash" />
                     </button>
                 </div>
             </div>
-            <label class="field">
+            <label class="field form-label d-block">
                 Nombre *
-                <input @bind="NombreReferencia" @bind:event="oninput" required />
+                <input class="form-control" @bind="NombreReferencia" @bind:event="oninput" required />
             </label>
-            <label class="field">
+            <label class="field form-label d-block">
                 @(Tipo == "autores" ? "Biografía" : "Descripción") *
-                <textarea rows="6" @bind="DescripcionReferencia" @bind:event="oninput" required>
+                <textarea
+                    class="form-control" rows="6"
+                    @bind="DescripcionReferencia"
+                    @bind:event="oninput" required>
                 </textarea>
             </label>
             @if (ErrorFormulario.Length > 0)
             {
-                <p class="form-error" role="alert">@ErrorFormulario</p>
+                <p class="alert alert-danger py-2" role="alert">@ErrorFormulario</p>
             }
-            <div class="modal-actions">
+            <div class="modal-footer px-0 pb-0 d-flex flex-wrap justify-content-end gap-2 mt-4">
                 <button type="button" class="btn btn-secondary" @onclick="CerrarReferencia">Cancelar</button>
                 <button type="submit" class="btn btn-primary">Añadir @Singular</button>
             </div>
