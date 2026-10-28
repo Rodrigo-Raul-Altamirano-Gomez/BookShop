@@ -155,9 +155,10 @@ public class RecomendacionBOImpl implements RecomendacionBO {
             ConsultaRecomendacionesDTO consulta) throws SQLException {
         LocalDateTime fecha = LocalDateTime.now(reloj);
         Map<Integer, TarjetaLibroDTO> precios = new HashMap<>();
-        for (var tarjeta : libros.listarTarjetasSinImagenPorIds(conjunto.ids, fecha)) precios.put(tarjeta.id(), tarjeta);
+        for (TarjetaLibroDTO tarjeta : libros.listarTarjetasSinImagenPorIds(conjunto.ids, fecha))
+            precios.put(tarjeta.id(), tarjeta);
         Map<Integer, Libro> atributos = new HashMap<>();
-        for (var libro : libros.listarParaRecomendaciones()) atributos.put(libro.getId(), libro);
+        for (Libro libro : libros.listarParaRecomendaciones()) atributos.put(libro.getId(), libro);
         // Refresca atributos del conjunto original; no repite el algoritmo ni incorpora otros libros.
         List<Integer> ids = new ArrayList<>(conjunto.ids.stream()
                 .filter(id -> precios.containsKey(id) && atributos.containsKey(id)).toList());

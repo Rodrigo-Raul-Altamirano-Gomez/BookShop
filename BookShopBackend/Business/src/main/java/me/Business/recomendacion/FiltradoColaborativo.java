@@ -11,21 +11,21 @@ final class FiltradoColaborativo {
     private FiltradoColaborativo() { }
     static Set<Integer> pedidosUsuario(int idUsuario, List<VentaLibroDTO> ventas) {
         Set<Integer> pedidos = new HashSet<>();
-        for (var venta : ventas) if (venta.idUsuario() == idUsuario) pedidos.add(venta.idPedido());
+        for (VentaLibroDTO venta : ventas) if (venta.idUsuario() == idUsuario) pedidos.add(venta.idPedido());
         return pedidos;
     }
     static Set<Integer> librosUsuario(int idUsuario, List<VentaLibroDTO> ventas) {
         Set<Integer> libros = new HashSet<>();
-        for (var venta : ventas) if (venta.idUsuario() == idUsuario) libros.add(venta.idLibro());
+        for (VentaLibroDTO venta : ventas) if (venta.idUsuario() == idUsuario) libros.add(venta.idLibro());
         return libros;
     }
     static Map<Integer, Double> puntuar(int idUsuario, List<VentaLibroDTO> ventas) {
         Map<Integer, Set<Integer>> porUsuario = new HashMap<>();
-        for (var venta : ventas)
+        for (VentaLibroDTO venta : ventas)
             porUsuario.computeIfAbsent(venta.idUsuario(), id -> new HashSet<>()).add(venta.idLibro());
         Set<Integer> propios = porUsuario.getOrDefault(idUsuario, Set.of());
         Map<Integer, Double> puntos = new HashMap<>();
-        for (var entrada : porUsuario.entrySet()) {
+        for (Map.Entry<Integer, Set<Integer>> entrada : porUsuario.entrySet()) {
             if (entrada.getKey() == idUsuario) continue;
             Set<Integer> comunes = new HashSet<>(entrada.getValue());
             comunes.retainAll(propios);

@@ -1,5 +1,6 @@
 package me.Business.compra;
 
+import me.Model.entities.usuario.Usuario;
 import java.sql.SQLException;
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -32,7 +33,7 @@ public class CuponBOImpl implements CuponBO {
 
     @Override
     public ResultadoPaginadoDTO<CuponDTO> listar(int idActor, int pagina, int tamanio) throws NegocioException {
-        var usuario = autorizacion.usuarioActivo(idActor);
+        Usuario usuario = autorizacion.usuarioActivo(idActor);
         Validaciones.pagina(pagina, tamanio);
         try {
             cupones.actualizarVigencias(LocalDateTime.now(reloj), usuario.getEmail());

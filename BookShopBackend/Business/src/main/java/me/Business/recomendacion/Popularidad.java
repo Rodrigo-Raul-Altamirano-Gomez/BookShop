@@ -14,12 +14,12 @@ final class Popularidad {
     static Map<Integer, Double> puntuar(List<Libro> libros, List<VentaLibroDTO> ventas,
             List<ValoracionLibroDTO> valoraciones, LocalDateTime ahora) {
         Map<Integer, Long> cantidades = new HashMap<>();
-        for (var venta : ventas)
+        for (VentaLibroDTO venta : ventas)
             if (!venta.fechaPago().isBefore(ahora.minusDays(90)) && !venta.fechaPago().isAfter(ahora))
                 cantidades.merge(venta.idLibro(), (long) venta.cantidad(), Long::sum);
         Map<Integer, ValoracionLibroDTO> porLibro = new HashMap<>();
         long resenas = 0, suma = 0;
-        for (var v : valoraciones) {
+        for (ValoracionLibroDTO v : valoraciones) {
             porLibro.put(v.idLibro(), v);
             resenas += v.cantidadResenas();
             suma += v.sumaPuntuaciones();
@@ -28,7 +28,7 @@ final class Popularidad {
         long maximo = cantidades.values().stream().mapToLong(Long::longValue).max().orElse(0);
         Map<Integer, Double> puntos = new HashMap<>();
         for (Libro libro : libros) {
-            var v = porLibro.get(libro.getId());
+            ValoracionLibroDTO v = porLibro.get(libro.getId());
             long n = v == null ? 0 : v.cantidadResenas();
             long estrellas = v == null ? 0 : v.sumaPuntuaciones();
             double bayesiana = (estrellas + 5 * promedioGlobal) / (n + 5.0);

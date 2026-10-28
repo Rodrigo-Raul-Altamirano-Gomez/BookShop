@@ -43,7 +43,7 @@ BookShopBackend/                Backend Java y proyecto Maven multimódulo
 ├── DBManager/                  Pool JDBC y contexto de transacciones
 ├── DAO/                        Persistencia, consultas y esquema SQL
 ├── Business/                   Servicios y reglas de negocio
-└── App/                        Demostración de validación con los contratos de Business
+└── App/                        Prueba por consola del flujo de compra
 
 BookShopFrontend/               Solución .NET
 ├── Web/                        Aplicación Blazor
@@ -95,7 +95,7 @@ mvn clean test
 ```
 
 El reactor normal incluye `Model`, `DBManager`, `DAO`, `Business` y `App`. No inicia un servidor HTTP.
-`App` contiene una demostración de consola que valida filtros sin acceder a la base de datos.
+`App` prueba un flujo de compra por consola con Business y MySQL de desarrollo. Consulta su README.
 
 ### Configuración de MySQL
 

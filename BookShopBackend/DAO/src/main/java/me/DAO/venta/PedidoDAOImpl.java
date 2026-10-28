@@ -294,7 +294,7 @@ public class PedidoDAOImpl implements PedidoDAO {
                     AND p.estado IN ('EN_ALMACEN', 'EN_CAMINO', 'ENTREGADO')
                 ORDER BY p.id FOR UPDATE
                 """;
-        var conexion = TransactionContext.getConnection();
+        Connection conexion = TransactionContext.getConnection();
         try (PreparedStatement statement = conexion.prepareStatement(sql)) {
             statement.setInt(1, idUsuario);
             statement.setInt(2, idLibro);

@@ -199,5 +199,4 @@ rollback, importes, reintentos, estados, premios, intentos, recomendaciones y
 configuración conservada tras reinicio. H2 y Mockito aíslan las pruebas; no se
 usó la base real ni se ejecutó el DDL. MySQL real, integración HTTP/Blazor, tiempos
 en el entorno completo y generación de documentos pertenecen a sus verificaciones
-posteriores. App forma parte del reactor normal e incluye una demostración pequeña
-de normalización y validación de filtros con los contratos actuales de Business.
+posteriores. App forma parte del reactor normal y prueba un flujo de compra con los servicios de Business.

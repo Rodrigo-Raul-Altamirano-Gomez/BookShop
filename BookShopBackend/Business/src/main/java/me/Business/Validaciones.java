@@ -1,5 +1,6 @@
 package me.Business;
 
+import java.util.Iterator;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Locale;
@@ -44,7 +45,7 @@ public final class Validaciones {
         if (!"image/jpeg".equals(mime) && !"image/png".equals(mime))
             throw new ValidacionException("imagen", "Solo se admiten JPEG y PNG.");
         try (ImageInputStream entrada = ImageIO.createImageInputStream(new ByteArrayInputStream(bytes))) {
-            var lectores = ImageIO.getImageReaders(entrada);
+            Iterator<ImageReader> lectores = ImageIO.getImageReaders(entrada);
             if (!lectores.hasNext()) throw new ValidacionException("imagen", "El archivo no es una imagen válida.");
             ImageReader lector = lectores.next();
             try {

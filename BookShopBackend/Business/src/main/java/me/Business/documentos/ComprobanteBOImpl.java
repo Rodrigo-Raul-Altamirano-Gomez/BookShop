@@ -1,5 +1,7 @@
 package me.Business.documentos;
 
+import me.Model.dto.compra.DetallePedidoDTO;
+import me.Model.entities.usuario.Usuario;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -26,8 +28,8 @@ public class ComprobanteBOImpl implements ComprobanteBO {
     }
     @Override
     public ComprobanteCompraDTO preparar(int idActor, int idPedido) throws NegocioException {
-        var comprador = autorizacion.usuarioActivo(idActor);
-        var pedido = pedidos.consultar(idActor, idPedido);
+        Usuario comprador = autorizacion.usuarioActivo(idActor);
+        DetallePedidoDTO pedido = pedidos.consultar(idActor, idPedido);
         return new ComprobanteCompraDTO(pedido,
                 new TarjetaUsuarioDTO(comprador.getId(), comprador.getNombre(), comprador.getEmail(), null),
                 LocalDateTime.now(reloj));
