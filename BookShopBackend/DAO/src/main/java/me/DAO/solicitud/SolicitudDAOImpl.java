@@ -177,7 +177,7 @@ public class SolicitudDAOImpl implements SolicitudDAO {
 
     @Override
     public ResultadoPaginadoDTO<ResumenSolicitudDTO> listar(int idUsuario, FiltroSolicitudDTO filtro) throws SQLException {
-        if (filtro == null) filtro = new FiltroSolicitudDTO();
+        if (filtro == null) filtro = FiltroSolicitudDTO.porDefecto();
         if (filtro.tipo() == null) throw new IllegalArgumentException("Debe indicarse el tipo de solicitud.");
         if (filtro.pagina() < 1 || filtro.tamanioPagina() < 1) throw new IllegalArgumentException("Pagina y tamanio deben ser positivos.");
         String condiciones = " WHERE s.tipo_solicitud = ? AND NOT s.eliminado";

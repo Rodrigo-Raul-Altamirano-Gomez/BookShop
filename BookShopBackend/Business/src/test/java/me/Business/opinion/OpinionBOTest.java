@@ -155,13 +155,13 @@ class OpinionBOTest {
 
     @Test
     void listasPropiasPublicasYAdministrativasConservanAmbito() throws Exception {
-        bo.listarPorLibro(0, 5, new ConsultaResenasDTO());
-        bo.listarPropias(1, new ConsultaResenasDTO());
-        bo.listarAdministracion(3, new ConsultaResenasDTO());
+        bo.listarPorLibro(0, 5, ConsultaResenasDTO.porDefecto());
+        bo.listarPropias(1, ConsultaResenasDTO.porDefecto());
+        bo.listarAdministracion(3, ConsultaResenasDTO.porDefecto());
         verify(resenas).listar(eq(5), eq(0), eq(0), any());
         verify(resenas).listar(eq(0), eq(1), eq(1), any());
         verify(resenas).listar(eq(0), eq(0), eq(3), any());
-        assertThrows(AccesoDenegadoException.class, () -> bo.listarAdministracion(1, new ConsultaResenasDTO()));
+        assertThrows(AccesoDenegadoException.class, () -> bo.listarAdministracion(1, ConsultaResenasDTO.porDefecto()));
     }
 
     @Test

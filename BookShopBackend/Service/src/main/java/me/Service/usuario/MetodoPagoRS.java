@@ -1,0 +1,72 @@
+package me.Service.usuario;
+
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import me.Business.exceptions.NegocioException;
+import me.Model.dto.ResultadoPaginadoDTO;
+import me.Model.dto.compra.DatosMetodoPagoDTO;
+import me.Model.dto.compra.MetodoPagoDTO;
+import me.Service.Servicios;
+import me.Service.Sesion;
+
+@Path("cuenta/metodos")
+@Consumes(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)
+@RequestScoped
+public class MetodoPagoRS {
+    @Inject
+    private Servicios servicios;
+    @Context
+    private HttpServletRequest request;
+
+    @POST
+    public MetodoPagoDTO registrar(DatosMetodoPagoDTO datos) throws NegocioException {
+        return servicios.metodoPago().registrar(Sesion.exigir(request), datos);
+    }
+
+    @PUT
+    @Path("{idMetodo}")
+    public MetodoPagoDTO modificar(
+            @PathParam("idMetodo") int idMetodo,
+            DatosMetodoPagoDTO datos) throws NegocioException {
+        return servicios.metodoPago().modificar(Sesion.exigir(request), idMetodo, datos);
+    }
+
+    @GET
+    @Path("{idMetodo}")
+    public MetodoPagoDTO consultar(@PathParam("idMetodo") int idMetodo) throws NegocioException {
+        return servicios.metodoPago().consultar(Sesion.exigir(request), idMetodo);
+    }
+
+    @GET
+    public ResultadoPaginadoDTO<MetodoPagoDTO> listar(
+            @DefaultValue("1") @QueryParam("pagina") int pagina,
+            @DefaultValue("10") @QueryParam("tamanioPagina") int tamanioPagina) throws NegocioException {
+        return servicios.metodoPago().listar(Sesion.exigir(request), pagina, tamanioPagina);
+    }
+
+    @DELETE
+    @Path("{idMetodo}")
+    public void eliminar(@PathParam("idMetodo") int idMetodo) throws NegocioException {
+        servicios.metodoPago().eliminar(Sesion.exigir(request), idMetodo);
+    }
+
+    @PUT
+    @Path("{idMetodo}/predeterminado")
+    public void establecerPredeterminado(@PathParam("idMetodo") int idMetodo) throws NegocioException {
+        servicios.metodoPago().establecerPredeterminado(Sesion.exigir(request), idMetodo);
+    }
+}

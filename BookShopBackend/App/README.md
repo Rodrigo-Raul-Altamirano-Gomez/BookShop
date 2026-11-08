@@ -20,7 +20,7 @@ pertenecientes al cliente. El cupón 0 significa no utilizar cupón.
 Configura `db.properties` y la protección de datos según el README principal.
 Las claves deben permitir leer el método de pago almacenado.
 
-Desde `BookShopBackend`, con JDK 21 o posterior y Maven:
+Desde `BookShopBackend`, con JDK 25 o posterior y Maven:
 
 ```powershell
 mvn -pl App -am compile

@@ -14,7 +14,7 @@ public record FiltroPedidoDTO(
         estados = estados == null ? List.of() : List.copyOf(estados);
     }
 
-    public FiltroPedidoDTO() {
-        this(List.of(), OrdenPedido.FECHA_PAGO_DESCENDENTE, 1, 10);
+    public static FiltroPedidoDTO porDefecto() {
+        return new FiltroPedidoDTO(List.of(), OrdenPedido.FECHA_PAGO_DESCENDENTE, 1, 10);
     }
 }

@@ -118,7 +118,7 @@ public class ResenaDAOImpl implements ResenaDAO {
 
     @Override
     public ResultadoPaginadoDTO<ResenaDTO> listar(int idLibro, int idUsuario, int idUsuarioActual, ConsultaResenasDTO consulta) throws SQLException {
-        if (consulta == null) consulta = new ConsultaResenasDTO();
+        if (consulta == null) consulta = ConsultaResenasDTO.porDefecto();
         if (consulta.pagina() < 1 || consulta.tamanioPagina() < 1) throw new IllegalArgumentException("Pagina y tamanio deben ser positivos.");
         // Cero/cero representa Todas las reseñas; Business autoriza ese ámbito.
         String condiciones = " WHERE NOT r.eliminado";

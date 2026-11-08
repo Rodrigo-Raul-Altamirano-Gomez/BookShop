@@ -29,7 +29,8 @@ operaciones de tienda no se ejecutan contra servicios reales desde el frontend.
 | Negocio Java | Servicios BO, validaciones, permisos y reglas implementados; incluye pruebas. |
 | Base de datos | DDL para MySQL incluido; falta verificar el conjunto en una instancia MySQL real. |
 | Frontend Web | Interfaz de escritorio e interacción implementadas con datos de demostración. |
-| Integración | Pendiente: API de comunicación, consumo desde Blazor y conexión de los recorridos reales. |
+| Servicio REST | Módulo Service con Jakarta EE para los doce RF elegidos; pendiente de verificar desplegado con MySQL real. |
+| Integración | Pendiente: consumo desde Blazor y conexión de los recorridos reales. |
 | Documentos | Backend prepara los datos; la generación de archivos PDF está pendiente. |
 
 Las pruebas del backend usan H2, Mockito y un driver de prueba para aislar dependencias.
@@ -43,7 +44,8 @@ BookShopBackend/                Backend Java y proyecto Maven multimódulo
 ├── DBManager/                  Pool JDBC y contexto de transacciones
 ├── DAO/                        Persistencia, consultas y esquema SQL
 ├── Business/                   Servicios y reglas de negocio
-└── App/                        Prueba por consola del flujo de compra
+├── App/                        Prueba por consola del flujo de compra
+└── Service/                    API REST Jakarta EE para los doce RF elegidos
 
 BookShopFrontend/               Solución .NET
 ├── Web/                        Aplicación Blazor
@@ -60,7 +62,7 @@ acompañan al componente en archivos `.razor.css`.
 
 ## Tecnologías
 
-- Backend: Java 21, Maven, JDBC, MySQL Connector/J y HikariCP.
+- Backend: Java 25, Maven, JDBC, MySQL Connector/J y HikariCP.
 - Pruebas: JUnit 5, Mockito y H2.
 - Frontend: .NET 10, ASP.NET Core Blazor con interactividad en servidor, C#, CSS y JavaScript.
 - Demostración desplegada: contenedor Docker en Render.
@@ -87,15 +89,21 @@ La interfaz está orientada a escritorio; la adaptación completa a móviles sig
 
 ## Compilar y probar el backend
 
-Requisitos: **JDK 21 o posterior** y **Maven**. Desde `BookShopBackend`:
+Requisitos: **JDK 25 o posterior** y **Maven**. Todos los módulos heredan Java 25
+como versión de compilación del POM raíz. Maven debe ejecutarse con JDK 25 o posterior;
+comprueba el JDK utilizado con `mvn -version`. Desde `BookShopBackend`:
 
 ```powershell
 cd BookShopBackend
 mvn clean test
 ```
 
-El reactor normal incluye `Model`, `DBManager`, `DAO`, `Business` y `App`. No inicia un servidor HTTP.
+El reactor normal incluye `Model`, `DBManager`, `DAO`, `Business`, `App` y `Service`.
+Empaqueta la API como WAR, pero no inicia un servidor HTTP.
 `App` prueba un flujo de compra por consola con Business y MySQL de desarrollo. Consulta su README.
+
+Las pruebas de DAO y Business cargan Mockito como agente al iniciar la JVM,
+configurado en Maven, para evitar su carga dinámica durante la ejecución.
 
 ### Configuración de MySQL
 
@@ -126,7 +134,7 @@ carpeta, no la raíz de este repositorio.
 
 ## Próximos pasos
 
-1. Implementar la capa de comunicación con el backend y completar `Integration`.
+1. Desplegar y verificar `Service`, y completar `Integration` para consumir la API.
 2. Sustituir los datos ficticios por las operaciones reales y conectar la gestión de sesión.
 3. Verificar esquema, persistencia y concurrencia en MySQL.
 4. Implementar la generación de reportes y comprobantes.

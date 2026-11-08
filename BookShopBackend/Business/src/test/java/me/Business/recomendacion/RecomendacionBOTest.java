@@ -57,7 +57,7 @@ class RecomendacionBOTest {
         verify(libros).listarTarjetasPorIds(eq(List.of(2,1)),any());
     }
     @Test void refrescaPreciosDeTodoElConjuntoAntesDeOrdenarSinAnadirNuevosLibros() throws Exception {
-        var resultado = bo.abrirPopulares(new ConsultaRecomendacionesDTO());
+        var resultado = bo.abrirPopulares(ConsultaRecomendacionesDTO.porDefecto());
         tarjetas.put(4,tarjeta(4,BigDecimal.ONE));
         disponibles.add(AlgoritmosRecomendacionTest.libro(5,10));
         tarjetas.put(5,tarjeta(5,BigDecimal.ZERO));
@@ -72,17 +72,17 @@ class RecomendacionBOTest {
                 AlgoritmosRecomendacionTest.venta(4,2,2,1));
         when(pedidos.listarDetalleVentas(any())).thenReturn(ventas);
         assertTrue(bo.puedeMostrarParaTi(1));
-        var resultado = bo.abrirParaTi(1,new ConsultaRecomendacionesDTO());
+        var resultado = bo.abrirParaTi(1,ConsultaRecomendacionesDTO.porDefecto());
         assertFalse(resultado.resultados().items().stream().anyMatch(t -> t.id()==1));
-        assertThrows(AccesoDenegadoException.class, () -> bo.consultar(2,resultado.idConsulta(),new ConsultaRecomendacionesDTO()));
+        assertThrows(AccesoDenegadoException.class, () -> bo.consultar(2,resultado.idConsulta(),ConsultaRecomendacionesDTO.porDefecto()));
         bo.descartar(1,resultado.idConsulta());
-        assertThrows(RecursoNoEncontradoException.class, () -> bo.consultar(1,resultado.idConsulta(),new ConsultaRecomendacionesDTO()));
+        assertThrows(RecursoNoEncontradoException.class, () -> bo.consultar(1,resultado.idConsulta(),ConsultaRecomendacionesDTO.porDefecto()));
     }
     @Test void historialInsuficienteNoHacePasarEjemplaresPorPedidos() throws Exception {
         when(pedidos.listarDetalleVentas(any())).thenReturn(List.of(AlgoritmosRecomendacionTest.venta(1,1,1,10)));
         assertFalse(bo.puedeMostrarParaTi(0));
         assertFalse(bo.puedeMostrarParaTi(1));
-        assertThrows(ConflictoException.class, () -> bo.abrirParaTi(1,new ConsultaRecomendacionesDTO()));
+        assertThrows(ConflictoException.class, () -> bo.abrirParaTi(1,ConsultaRecomendacionesDTO.porDefecto()));
     }
     @Test void vistasNoPermitenMasVendidosNiExponenSql() throws Exception {
         assertThrows(ValidacionException.class, () -> bo.abrirPopulares(new ConsultaRecomendacionesDTO(OrdenLibro.MAS_VENDIDOS,1,12)));

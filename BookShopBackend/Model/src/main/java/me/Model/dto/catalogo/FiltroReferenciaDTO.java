@@ -8,7 +8,7 @@ public record FiltroReferenciaDTO(
         int pagina,
         int tamanioPagina
 ) {
-    public FiltroReferenciaDTO() {
-        this(null, true, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 12);
+    public static FiltroReferenciaDTO porDefecto() {
+        return new FiltroReferenciaDTO(null, true, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 12);
     }
 }

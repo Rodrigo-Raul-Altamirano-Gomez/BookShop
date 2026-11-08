@@ -103,7 +103,7 @@ public class SeguimientoBOImpl implements SeguimientoBO {
     public ResultadoPaginadoDTO<TarjetaReferenciaDTO> listar(int idActor, ConsultaSeguimientosDTO consulta)
             throws NegocioException {
         autorizacion.usuarioActivo(idActor);
-        if (consulta == null) consulta = new ConsultaSeguimientosDTO();
+        if (consulta == null) consulta = ConsultaSeguimientosDTO.porDefecto();
         if (consulta.tipo() == null) throw new ValidacionException("tipo", "Selecciona una pestaña de seguimientos.");
         if (consulta.orden() == null) throw new ValidacionException("orden", "Selecciona un orden para los seguimientos.");
         Validaciones.pagina(consulta.pagina(), consulta.tamanioPagina());

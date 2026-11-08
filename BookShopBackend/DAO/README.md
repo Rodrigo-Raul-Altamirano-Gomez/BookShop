@@ -156,7 +156,7 @@ migración y no se ejecutó sobre la base del proyecto. Una base ya creada debe
 adaptarse al esquema antes de utilizar estos DAO. `registers.sql` conserva sus
 datos antiguos y no debe usarse con este DDL sin adaptarlos primero.
 
-Desde BookShopBackend, con Maven y un JDK 21 o posterior:
+Desde BookShopBackend, con Maven y un JDK 25 o posterior:
 
 ```powershell
 mvn -pl DAO -am clean test

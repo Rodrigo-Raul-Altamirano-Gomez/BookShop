@@ -166,7 +166,7 @@ public class CategoriaBOImpl implements CategoriaBO {
     }
 
     private FiltroReferenciaDTO validarFiltro(int idActor, FiltroReferenciaDTO filtro) throws NegocioException {
-        if (filtro == null) filtro = new FiltroReferenciaDTO();
+        if (filtro == null) filtro = FiltroReferenciaDTO.porDefecto();
         if (idActor != 0) autorizacion.usuarioActivo(idActor);
         if (!filtro.soloActivos()) autorizacion.administrador(idActor);
         Validaciones.pagina(filtro.pagina(), filtro.tamanioPagina());

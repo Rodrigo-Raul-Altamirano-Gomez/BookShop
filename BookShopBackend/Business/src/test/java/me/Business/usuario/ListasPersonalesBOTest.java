@@ -151,9 +151,9 @@ class ListasPersonalesBOTest {
         assertThrows(AccesoDenegadoException.class, () -> guardadosBO.guardar(0, 7, true));
         verifyNoInteractions(libros, guardados);
         actor.setActivo(false);
-        assertThrows(CuentaInactivaException.class, () -> guardadosBO.listar(1, true, new FiltroLibroDTO()));
+        assertThrows(CuentaInactivaException.class, () -> guardadosBO.listar(1, true, FiltroLibroDTO.porDefecto()));
         assertThrows(CuentaInactivaException.class,
-                () -> seguimientosBO.listar(1, new ConsultaSeguimientosDTO()));
+                () -> seguimientosBO.listar(1, ConsultaSeguimientosDTO.porDefecto()));
         verifyNoInteractions(libros, guardados, seguimientos);
     }
 }

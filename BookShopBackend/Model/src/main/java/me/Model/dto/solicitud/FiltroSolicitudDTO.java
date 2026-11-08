@@ -16,7 +16,7 @@ public record FiltroSolicitudDTO(
         estados = estados == null ? List.of() : List.copyOf(estados);
     }
 
-    public FiltroSolicitudDTO() {
-        this(TipoSolicitud.DEVOLUCION, List.of(), 1, 10);
+    public static FiltroSolicitudDTO porDefecto() {
+        return new FiltroSolicitudDTO(TipoSolicitud.DEVOLUCION, List.of(), 1, 10);
     }
 }

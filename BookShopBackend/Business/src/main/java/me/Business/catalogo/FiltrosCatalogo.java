@@ -13,7 +13,7 @@ public final class FiltrosCatalogo {
     private FiltrosCatalogo() { }
 
     public static FiltroLibroDTO validar(FiltroLibroDTO filtro) throws ValidacionException {
-        if (filtro == null) filtro = new FiltroLibroDTO();
+        if (filtro == null) filtro = FiltroLibroDTO.porDefecto();
         Validaciones.pagina(filtro.pagina(), filtro.tamanioPagina());
         if (filtro.orden() == null || filtro.orden() == OrdenLibro.RECOMENDADOS_PRIMERO)
             throw new ValidacionException("orden", "Seleccione un orden de catalogo.");

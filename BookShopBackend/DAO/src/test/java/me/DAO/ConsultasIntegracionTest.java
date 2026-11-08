@@ -228,7 +228,7 @@ class ConsultasIntegracionTest {
         var items = dao.obtenerItemsDTO(pedido.getId());
         assertEquals(0, new BigDecimal("50").compareTo(items.getFirst().precioOriginal()));
         assertEquals(0, new BigDecimal("30").compareTo(items.getFirst().precioUnitario()));
-        assertEquals(1, dao.listarPorUsuario(1, new FiltroPedidoDTO()).items().getFirst().portadas().size());
+        assertEquals(1, dao.listarPorUsuario(1, FiltroPedidoDTO.porDefecto()).items().getFirst().portadas().size());
     }
 
     @Test
@@ -274,10 +274,10 @@ class ConsultasIntegracionTest {
         resena.setUsuarioCreacion("ana@test");
         ResenaDAOImpl dao = new ResenaDAOImpl();
         dao.insertar(resena);
-        var publica = dao.listar(libro.getId(), 0, 1, new ConsultaResenasDTO()).items().getFirst();
+        var publica = dao.listar(libro.getId(), 0, 1, ConsultaResenasDTO.porDefecto()).items().getFirst();
         assertNotNull(publica.imagenUsuario());
         assertNull(publica.portadaLibro());
-        var propia = dao.listar(0, 1, 1, new ConsultaResenasDTO()).items().getFirst();
+        var propia = dao.listar(0, 1, 1, ConsultaResenasDTO.porDefecto()).items().getFirst();
         assertNull(propia.imagenUsuario());
         assertNotNull(propia.portadaLibro());
         TransactionContext.getConnection();
@@ -305,7 +305,7 @@ class ConsultasIntegracionTest {
         dao.insertar(solicitud);
         TransactionContext.commit();
         TransactionContext.close();
-        assertEquals(1, dao.listar(1, new FiltroSolicitudDTO()).totalResultados());
+        assertEquals(1, dao.listar(1, FiltroSolicitudDTO.porDefecto()).totalResultados());
         TransactionContext.getConnection();
         assertTrue(dao.resolver(solicitud.getId(), EstadoSolicitud.RECHAZADA,
                 LocalDateTime.now(), "admin"));
@@ -410,7 +410,7 @@ class ConsultasIntegracionTest {
         guardados.guardar(1, libro.getId(), true, "ana@test");
         assertTrue(guardados.retirar(1, libro.getId(), false, "ana@test"));
         guardados.guardar(1, libro.getId(), false, "ana@test");
-        var favoritos = new LibroDAOImpl().buscarGuardados(1, true, new FiltroLibroDTO(), FECHA);
+        var favoritos = new LibroDAOImpl().buscarGuardados(1, true, FiltroLibroDTO.porDefecto(), FECHA);
         assertEquals(1, favoritos.totalResultados());
         SeguimientoDAOImpl seguidos = new SeguimientoDAOImpl();
         seguidos.guardar(1, TipoSeguimiento.AUTOR, 1, "ana@test");
@@ -703,7 +703,7 @@ class ConsultasIntegracionTest {
         TransactionContext.commit();
         TransactionContext.close();
 
-        assertEquals(1, solicitudes.listar(1, new FiltroSolicitudDTO()).totalResultados());
+        assertEquals(1, solicitudes.listar(1, FiltroSolicitudDTO.porDefecto()).totalResultados());
         assertEquals(EstadoSolicitud.PENDIENTE, solicitudes.leer(primera.getId()).getEstado());
         assertNull(solicitudes.leer(primera.getId()).getFechaResolucion());
         assertEquals(1, pedidos.leer(pedido.getId()).getNumeroIntentos());

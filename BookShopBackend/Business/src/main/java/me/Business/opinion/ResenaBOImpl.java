@@ -196,7 +196,7 @@ public class ResenaBOImpl implements ResenaBO {
     }
 
     private ConsultaResenasDTO validarConsulta(ConsultaResenasDTO consulta) throws ValidacionException {
-        if (consulta == null) consulta = new ConsultaResenasDTO();
+        if (consulta == null) consulta = ConsultaResenasDTO.porDefecto();
         Validaciones.pagina(consulta.pagina(), consulta.tamanioPagina());
         if (consulta.orden() == null) throw new ValidacionException("orden", "Seleccione un orden de resenas.");
         return consulta;

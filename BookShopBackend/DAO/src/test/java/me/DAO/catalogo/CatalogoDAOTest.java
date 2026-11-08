@@ -190,7 +190,7 @@ class CatalogoDAOTest {
     void activosTodosYBorradoLogicoSonDistintos() throws Exception {
         libros.cambiarVetoDirecto(1, true, "admin");
         libros.eliminar(2, "admin");
-        assertEquals(List.of(3), ids(libros.buscar(new FiltroLibroDTO(), FECHA)));
+        assertEquals(List.of(3), ids(libros.buscar(FiltroLibroDTO.porDefecto(), FECHA)));
         var todos = libros.buscar(filtro(OrdenLibro.TITULO_ASCENDENTE, false, 1, 12), FECHA);
         assertEquals(List.of(1, 3), ids(todos));
         assertFalse(todos.items().getFirst().activo());
@@ -218,12 +218,12 @@ class CatalogoDAOTest {
         guardar(1, 1, false);
         guardar(1, 3, false);
         guardar(2, 2, true);
-        assertEquals(List.of(1), ids(libros.buscarGuardados(1, true, new FiltroLibroDTO(), FECHA)));
-        assertEquals(List.of(1, 3), ids(libros.buscarGuardados(1, false, new FiltroLibroDTO(), FECHA)));
-        assertEquals(List.of(2), ids(libros.buscarGuardados(2, true, new FiltroLibroDTO(), FECHA)));
+        assertEquals(List.of(1), ids(libros.buscarGuardados(1, true, FiltroLibroDTO.porDefecto(), FECHA)));
+        assertEquals(List.of(1, 3), ids(libros.buscarGuardados(1, false, FiltroLibroDTO.porDefecto(), FECHA)));
+        assertEquals(List.of(2), ids(libros.buscarGuardados(2, true, FiltroLibroDTO.porDefecto(), FECHA)));
         assertEquals(List.of(3), ids(libros.buscarGuardados(1, false, conTitulo("Gamma"), FECHA)));
         assertThrows(IllegalArgumentException.class,
-                () -> libros.buscarGuardados(0, true, new FiltroLibroDTO(), FECHA));
+                () -> libros.buscarGuardados(0, true, FiltroLibroDTO.porDefecto(), FECHA));
     }
 
     @Test
@@ -394,7 +394,7 @@ class CatalogoDAOTest {
         assertFalse(libros.leer(1).isEliminado());
         assertFalse(libros.leer(1).isActivo());
         assertEquals(1, libros.leer(1).getNumeroVetos());
-        assertEquals(List.of(2), ids(libros.buscar(new FiltroLibroDTO(), FECHA)));
+        assertEquals(List.of(2), ids(libros.buscar(FiltroLibroDTO.porDefecto(), FECHA)));
     }
 
     @Test
@@ -406,7 +406,7 @@ class CatalogoDAOTest {
         assertEquals(0, nuevo.getId());
         TransactionContext.rollback();
         TransactionContext.close();
-        assertEquals(3, libros.buscar(new FiltroLibroDTO(), FECHA).totalResultados());
+        assertEquals(3, libros.buscar(FiltroLibroDTO.porDefecto(), FECHA).totalResultados());
     }
 
     @Test
@@ -791,7 +791,7 @@ class CatalogoDAOTest {
     @Test
     void operacionesIndependientesNoAbrenUnContextoDeTransaccion() throws Exception {
         try (MockedStatic<TransactionContext> contexto = mockStatic(TransactionContext.class)) {
-            libros.buscar(new FiltroLibroDTO(), FECHA);
+            libros.buscar(FiltroLibroDTO.porDefecto(), FECHA);
             libros.obtenerDetalle(1, 1, FECHA);
             libros.obtenerGestion(1);
             libros.obtenerTarjeta(1, FECHA);
@@ -817,8 +817,8 @@ class CatalogoDAOTest {
             Editorial editorial = editoriales.leer(1);
             editorial.setUsuarioActualizacion("admin");
             editoriales.modificar(editorial);
-            autores.buscar(new FiltroReferenciaDTO());
-            categorias.buscarOpciones(new FiltroReferenciaDTO());
+            autores.buscar(FiltroReferenciaDTO.porDefecto());
+            categorias.buscarOpciones(FiltroReferenciaDTO.porDefecto());
             editoriales.obtenerDetalle(1, 1);
             autores.cambiarImagen(1, null, "admin");
             categorias.cambiarImagen(1, null, "admin");
@@ -882,8 +882,8 @@ class CatalogoDAOTest {
         assertTrue(consultas.stream().anyMatch(consulta -> mockingDetails(consulta).getInvocations()
                 .stream().anyMatch(inv -> inv.getMethod().getName().equals("setNull")
                         && inv.getArgument(0).equals(12) && inv.getArgument(1).equals(Types.INTEGER))));
-        libros.buscar(new FiltroLibroDTO(), FECHA);
-        autores.buscar(new FiltroReferenciaDTO());
+        libros.buscar(FiltroLibroDTO.porDefecto(), FECHA);
+        autores.buscar(FiltroReferenciaDTO.porDefecto());
         for (PreparedStatement consulta : consultas) {
             assertTrue(consulta.isClosed());
             assertFalse(mockingDetails(consulta).getInvocations().stream()
@@ -982,7 +982,7 @@ class CatalogoDAOTest {
         editoriales.cambiarActivo(1, false, "admin");
         TransactionContext.commit();
         TransactionContext.close();
-        var activos = new FiltroReferenciaDTO();
+        var activos = FiltroReferenciaDTO.porDefecto();
         var todos = new FiltroReferenciaDTO(null, false, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 12);
         assertEquals(1, autores.buscar(activos).totalResultados());
         assertEquals(1, categorias.buscar(activos).totalResultados());

@@ -235,7 +235,7 @@ public class SolicitudBOImpl implements SolicitudBO {
     }
 
     private ResultadoPaginadoDTO<ResumenSolicitudDTO> listar(int propietario, FiltroSolicitudDTO filtro) throws NegocioException {
-        if (filtro == null) filtro = new FiltroSolicitudDTO();
+        if (filtro == null) filtro = FiltroSolicitudDTO.porDefecto();
         if (filtro.tipo() == null) throw new ValidacionException("tipo", "Selecciona la pestana de solicitudes.");
         Validaciones.pagina(filtro.pagina(), filtro.tamanioPagina());
         try { return solicitudes.listar(propietario, filtro); }

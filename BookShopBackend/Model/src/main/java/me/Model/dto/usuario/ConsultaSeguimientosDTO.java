@@ -10,7 +10,7 @@ public record ConsultaSeguimientosDTO(
         int pagina,
         int tamanioPagina
 ) {
-    public ConsultaSeguimientosDTO() {
-        this(TipoSeguimiento.AUTOR, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 12);
+    public static ConsultaSeguimientosDTO porDefecto() {
+        return new ConsultaSeguimientosDTO(TipoSeguimiento.AUTOR, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 12);
     }
 }

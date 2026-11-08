@@ -7,7 +7,7 @@ public record ConsultaResenasDTO(
         int pagina,
         int tamanioPagina
 ) {
-    public ConsultaResenasDTO() {
-        this(OrdenResena.MAS_RECIENTES, 1, 10);
+    public static ConsultaResenasDTO porDefecto() {
+        return new ConsultaResenasDTO(OrdenResena.MAS_RECIENTES, 1, 10);
     }
 }

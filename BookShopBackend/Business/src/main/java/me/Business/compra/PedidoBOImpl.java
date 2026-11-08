@@ -335,7 +335,7 @@ public class PedidoBOImpl implements PedidoBO {
     @Override
     public ResultadoPaginadoDTO<TarjetaPedidoDTO> listar(int idActor, FiltroPedidoDTO filtro) throws NegocioException {
         autorizacion.usuarioActivo(idActor);
-        if (filtro == null) filtro = new FiltroPedidoDTO();
+        if (filtro == null) filtro = FiltroPedidoDTO.porDefecto();
         Validaciones.pagina(filtro.pagina(), filtro.tamanioPagina());
         if (filtro.estados().contains(EstadoPedido.EN_ESPERA)) throw new ValidacionException("estados", "En espera no pertenece al historial.");
         try { return pedidos.listarPorUsuario(idActor, filtro); }

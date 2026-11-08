@@ -155,7 +155,7 @@ public class PedidoDAOImpl implements PedidoDAO {
 
     @Override
     public ResultadoPaginadoDTO<TarjetaPedidoDTO> listarPorUsuario(int idUsuario, FiltroPedidoDTO filtro) throws SQLException {
-        if (filtro == null) filtro = new FiltroPedidoDTO();
+        if (filtro == null) filtro = FiltroPedidoDTO.porDefecto();
         if (filtro.pagina() < 1 || filtro.tamanioPagina() < 1) throw new IllegalArgumentException("Pagina y tamanio deben ser positivos.");
         if (filtro.estados().contains(EstadoPedido.EN_ESPERA)) throw new IllegalArgumentException("En espera no forma parte del historial.");
         String condiciones = " WHERE id_usuario = ? AND NOT eliminado";

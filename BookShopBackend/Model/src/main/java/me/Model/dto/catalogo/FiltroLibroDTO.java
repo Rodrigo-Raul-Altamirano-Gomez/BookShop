@@ -26,8 +26,8 @@ public record FiltroLibroDTO(
         idiomas = idiomas == null ? List.of() : List.copyOf(idiomas);
     }
 
-    public FiltroLibroDTO() {
-        this(null, List.of(), List.of(), List.of(), List.of(), null, null, true, false,
+    public static FiltroLibroDTO porDefecto() {
+        return new FiltroLibroDTO(null, List.of(), List.of(), List.of(), List.of(), null, null, true, false,
                 OrdenLibro.MAS_RECIENTES, 1, 12);
     }
 }

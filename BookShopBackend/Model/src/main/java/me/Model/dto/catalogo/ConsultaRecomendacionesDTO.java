@@ -7,7 +7,7 @@ public record ConsultaRecomendacionesDTO(
         int pagina,
         int tamanioPagina
 ) {
-    public ConsultaRecomendacionesDTO() {
-        this(OrdenLibro.RECOMENDADOS_PRIMERO, 1, 12);
+    public static ConsultaRecomendacionesDTO porDefecto() {
+        return new ConsultaRecomendacionesDTO(OrdenLibro.RECOMENDADOS_PRIMERO, 1, 12);
     }
 }
