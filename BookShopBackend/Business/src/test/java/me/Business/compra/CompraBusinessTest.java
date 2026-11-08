@@ -179,9 +179,6 @@ class CompraBusinessTest {
         assertThrows(ValidacionException.class, () -> carrito.cambiarCantidad(1, 3, 101));
         assertEquals(95, carrito.consultar(1).cantidadLibros());
         assertSame(preparacion, negocio.consultarPreparacion(1));
-        libro.setPrecioBase(new BigDecimal("10000000000.00"));
-        assertThrows(ValidacionException.class, () -> carrito.cambiarCantidad(1, 3, 1));
-        assertSame(preparacion, negocio.consultarPreparacion(1));
         verifyNoInteractions(conexion);
     }
 

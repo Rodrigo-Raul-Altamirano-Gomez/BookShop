@@ -10,64 +10,65 @@ import me.Business.usuario.UsuarioBO;
 import me.Model.dto.usuario.AccesoUsuarioDTO;
 
 public final class Sesion {
-    private static final String ACTOR = "bookshop.actor";
-    private static final String INICIO = "bookshop.inicio";
+    private static final String ID_USUARIO = "bookshop.actor";
+    private static final String INICIO_SESION = "bookshop.inicio";
 
     private Sesion() { }
 
-    public static int actor(HttpServletRequest request) {
-        HttpSession sesion = request.getSession(false);
+    public static int obtenerIdUsuario(HttpServletRequest peticion) {
+        HttpSession sesion = peticion.getSession(false);
         if (sesion == null) return 0;
         try {
-            Object id = sesion.getAttribute(ACTOR);
-            return id instanceof Integer valor && valor > 0 ? valor : 0;
+            Integer idUsuario = (Integer) sesion.getAttribute(ID_USUARIO);
+            return idUsuario == null ? 0 : idUsuario;
         } catch (IllegalStateException e) {
             // Otra petición pudo cerrar la sesión mientras se consultaba.
             return 0;
         }
     }
 
-    public static int exigir(HttpServletRequest request) {
-        int id = actor(request);
-        if (id == 0) throw new NotAuthorizedException("Se requiere iniciar sesión.", "Sesion");
-        return id;
+    public static int exigirIdUsuario(HttpServletRequest peticion) {
+        int idUsuario = obtenerIdUsuario(peticion);
+        if (idUsuario <= 0) throw new NotAuthorizedException("Se requiere iniciar sesión.", "Sesion");
+        return idUsuario;
     }
 
-    public static void abrir(HttpServletRequest request, AccesoUsuarioDTO acceso) {
+    public static void iniciar(HttpServletRequest peticion, AccesoUsuarioDTO acceso) {
         if (acceso.requiereReactivacion()) return;
-        HttpSession sesion = request.getSession(true);
-        request.changeSessionId();
-        sesion.setAttribute(INICIO, Instant.now());
-        sesion.setAttribute(ACTOR, acceso.id());
+        HttpSession sesion = peticion.getSession(true);
+        peticion.changeSessionId();
+        sesion.setAttribute(INICIO_SESION, Instant.now());
+        sesion.setAttribute(ID_USUARIO, acceso.id());
     }
 
-    public static void registrarTiempo(HttpServletRequest request, UsuarioBO usuarios) throws NegocioException {
-        HttpSession sesion = request.getSession(false);
+    public static void registrarTiempoDeUso(HttpServletRequest peticion, UsuarioBO usuarioBO) throws NegocioException {
+        HttpSession sesion = peticion.getSession(false);
         if (sesion == null) throw new NotAuthorizedException("Se requiere iniciar sesión.", "Sesion");
         synchronized (sesion) {
-            Object id;
-            Object comienzo;
+            Integer idUsuario;
+            Instant inicioSesion;
             try {
-                id = sesion.getAttribute(ACTOR);
-                comienzo = sesion.getAttribute(INICIO);
+                idUsuario = (Integer) sesion.getAttribute(ID_USUARIO);
+                inicioSesion = (Instant) sesion.getAttribute(INICIO_SESION);
             } catch (IllegalStateException e) {
                 throw new NotAuthorizedException("La sesión ya está cerrada.", "Sesion");
             }
-            if (!(id instanceof Integer actor) || actor <= 0 || !(comienzo instanceof Instant inicio)) {
+            if (idUsuario == null || inicioSesion == null) {
                 throw new NotAuthorizedException("Se requiere iniciar sesión.", "Sesion");
             }
-            Instant ahora = Instant.now();
-            usuarios.cerrarSesion(actor, Duration.between(inicio, ahora));
+            Instant finSesion = Instant.now();
+            Duration tiempoDeUso = Duration.between(inicioSesion, finSesion);
+            usuarioBO.cerrarSesion(idUsuario, tiempoDeUso);
             try {
-                sesion.setAttribute(INICIO, ahora);
+                sesion.setAttribute(INICIO_SESION, finSesion);
             } catch (IllegalStateException e) {
                 // El tiempo ya se guardó; otra petición cerró la sesión entretanto.
             }
         }
     }
 
-    public static void invalidar(HttpServletRequest request) {
-        HttpSession sesion = request.getSession(false);
+    public static void cerrar(HttpServletRequest peticion) {
+        HttpSession sesion = peticion.getSession(false);
         if (sesion == null) return;
         try {
             sesion.invalidate();

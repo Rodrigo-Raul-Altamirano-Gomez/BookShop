@@ -8,7 +8,7 @@ import me.Model.entities.compra.DireccionEnvio;
 
 public interface DireccionEnvioDAO extends CrudDAO<DireccionEnvio> {
     DireccionEnvio leerParaActualizar(int id) throws SQLException;
-    ResultadoPaginadoDTO<DireccionEnvioDTO> listarPorUsuario(int idUsuario, int pagina, int tamano)
+    ResultadoPaginadoDTO<DireccionEnvioDTO> listarPorUsuario(int idUsuario, int pagina, int tamanioPagina)
             throws SQLException;
     boolean establecerPredeterminado(int idUsuario, int idDireccion, String usuario) throws SQLException;
     boolean quitarPredeterminado(int idDireccion, String usuario) throws SQLException;

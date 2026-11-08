@@ -22,10 +22,17 @@ un framework de servicios, CRUD genérico ni ejecutor de operaciones.
 | recomendacion | Recomendacion y las cuatro lógicas de cálculo |
 | documentos | Reporte y Comprobante: preparación de datos |
 
-Son 20 interfaces con sus 20 implementaciones. Los auxiliares generales
-`Validaciones`, `Autorizacion` y `ProteccionDatos` están en `me.Business`.
+Son 20 interfaces con sus 20 implementaciones. Las dependencias de persistencia
+se nombran por su tipo, por ejemplo `libroDAO` y `usuarioDAO`. Las comprobaciones
+de entrada se leen en las operaciones o en formularios compartidos por alta y edición.
+`Imagenes`, `Autorizacion` y `ProteccionDatos` están en `me.Business`.
 `exceptions` reúne las excepciones que se manejan desde la siguiente capa.
 Los auxiliares propios de un dominio permanecen junto a sus BO.
+
+Los métodos muestran las lecturas y cambios principales en orden. Se conservan
+auxiliares para trabajos completos que se reutilizan, como calcular el resumen
+de compra o validar un formulario extenso, y se evitan auxiliares para una sola
+lectura, asignación o comprobación. DAO recibe los datos ya revisados por Business.
 
 ## Uso de los contratos
 

@@ -26,29 +26,29 @@ public class PedidoRS {
     @Inject
     private Servicios servicios;
     @Context
-    private HttpServletRequest request;
+    private HttpServletRequest peticion;
 
     @POST
     @Path("preparacion")
     public PreparacionCompraDTO preparar() throws NegocioException {
-        return servicios.pedido().preparar(Sesion.exigir(request));
+        return servicios.getPedidoBO().preparar(Sesion.exigirIdUsuario(peticion));
     }
 
     @GET
     @Path("preparacion")
     public PreparacionCompraDTO consultarPreparacion() throws NegocioException {
-        return servicios.pedido().consultarPreparacion(Sesion.exigir(request));
+        return servicios.getPedidoBO().consultarPreparacion(Sesion.exigirIdUsuario(peticion));
     }
 
     @PUT
     @Path("preparacion")
     public PreparacionCompraDTO seleccionar(SeleccionCompraDTO seleccion) throws NegocioException {
-        return servicios.pedido().seleccionar(Sesion.exigir(request), seleccion);
+        return servicios.getPedidoBO().seleccionar(Sesion.exigirIdUsuario(peticion), seleccion);
     }
 
     @POST
     @Path("confirmacion")
     public DetallePedidoDTO pagar() throws NegocioException {
-        return servicios.pedido().pagar(Sesion.exigir(request));
+        return servicios.getPedidoBO().pagar(Sesion.exigirIdUsuario(peticion));
     }
 }

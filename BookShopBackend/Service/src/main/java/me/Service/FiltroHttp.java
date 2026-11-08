@@ -15,17 +15,17 @@ public class FiltroHttp implements Filter {
     @Override
     public void doFilter(ServletRequest entrada, ServletResponse salida, FilterChain cadena)
             throws IOException, ServletException {
-        HttpServletRequest request = (HttpServletRequest) entrada;
-        HttpServletResponse response = (HttpServletResponse) salida;
-        response.setHeader("Cache-Control", "no-store");
-        response.setHeader("X-Content-Type-Options", "nosniff");
+        HttpServletRequest peticion = (HttpServletRequest) entrada;
+        HttpServletResponse respuesta = (HttpServletResponse) salida;
+        respuesta.setHeader("Cache-Control", "no-store");
+        respuesta.setHeader("X-Content-Type-Options", "nosniff");
         // La cabecera no es una credencial. Impide envíos cruzados simples con cookies.
-        String metodo = request.getMethod();
+        String metodo = peticion.getMethod();
         if (!metodo.equals("GET") && !metodo.equals("HEAD") && !metodo.equals("OPTIONS")
-                && !"web".equals(request.getHeader("X-BookShop-Cliente"))) {
-            response.setStatus(403);
-            response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"codigo\":\"SOLICITUD_NO_PERMITIDA\","
+                && !"web".equals(peticion.getHeader("X-BookShop-Cliente"))) {
+            respuesta.setStatus(403);
+            respuesta.setContentType("application/json;charset=UTF-8");
+            respuesta.getWriter().write("{\"codigo\":\"SOLICITUD_NO_PERMITIDA\","
                     + "\"mensaje\":\"Falta la cabecera X-BookShop-Cliente.\",\"campo\":null}");
             return;
         }

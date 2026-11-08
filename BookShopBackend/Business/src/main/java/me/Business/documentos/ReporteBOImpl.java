@@ -18,17 +18,17 @@ import me.Model.dto.catalogo.ReporteVentasLibrosDTO;
 import me.Model.dto.usuario.ReporteUsuariosDTO;
 
 public class ReporteBOImpl implements ReporteBO {
-    private final LibroDAO libros;
-    private final UsuarioDAO usuarios;
+    private final LibroDAO libroDAO;
+    private final UsuarioDAO usuarioDAO;
     private final Autorizacion autorizacion;
     private final Clock reloj;
     public ReporteBOImpl() {
         this(new LibroDAOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")));
     }
-    public ReporteBOImpl(LibroDAO libros, UsuarioDAO usuarios, Clock reloj) {
-        this.libros = libros;
-        this.usuarios = usuarios;
-        this.autorizacion = new Autorizacion(usuarios);
+    public ReporteBOImpl(LibroDAO libroDAO, UsuarioDAO usuarioDAO, Clock reloj) {
+        this.libroDAO = libroDAO;
+        this.usuarioDAO = usuarioDAO;
+        this.autorizacion = new Autorizacion(usuarioDAO);
         this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
     }
     @Override
@@ -37,27 +37,29 @@ public class ReporteBOImpl implements ReporteBO {
         if (consulta == null || consulta.fechaInicio() == null || consulta.fechaFin() == null)
             throw new ValidacionException("periodo", "Selecciona el inicio y fin del período.");
         if (consulta.fechaFin().isBefore(consulta.fechaInicio()) || consulta.fechaInicio().getYear() < 1000
-                || consulta.fechaFin().getYear() > 9998)
+            || consulta.fechaFin().getYear() > 9998)
             throw new ValidacionException("periodo", "El período no es válido.");
-        maximo(consulta.cantidadMaxima());
+        if (consulta.cantidadMaxima() != null && consulta.cantidadMaxima() < 1)
+            throw new ValidacionException("cantidadMaxima", "La cantidad maxima debe ser positiva o quedar vacia.");
         try {
             return new ReporteVentasLibrosDTO(consulta.fechaInicio(), consulta.fechaFin(),
-                    LocalDateTime.now(reloj), consulta.cantidadMaxima(), libros.listarVentasLibros(consulta));
-        } catch (SQLException e) { throw new PersistenciaException("No se pudieron preparar los datos de ventas.", e); }
+                LocalDateTime.now(reloj), consulta.cantidadMaxima(), libroDAO.listarVentasLibros(consulta));
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudieron preparar los datos de ventas.", e);
+        }
     }
     @Override
     public ReporteUsuariosDTO prepararUsuarios(int idActor, YearMonth mes, Integer cantidadMaxima) throws NegocioException {
         autorizacion.administrador(idActor);
         if (mes == null || mes.getYear() < 1000 || mes.getYear() > 9998)
             throw new ValidacionException("mes", "Selecciona un mes y año válidos.");
-        maximo(cantidadMaxima);
+        if (cantidadMaxima != null && cantidadMaxima < 1)
+            throw new ValidacionException("cantidadMaxima", "La cantidad maxima debe ser positiva o quedar vacia.");
         try {
             return new ReporteUsuariosDTO(mes, LocalDateTime.now(reloj), cantidadMaxima,
-                    usuarios.listarActividadUsuarios(mes.atDay(1), mes.atEndOfMonth(), cantidadMaxima));
-        } catch (SQLException e) { throw new PersistenciaException("No se pudieron preparar los datos de actividad.", e); }
-    }
-    private void maximo(Integer maximo) throws ValidacionException {
-        if (maximo != null && maximo < 1)
-            throw new ValidacionException("cantidadMaxima", "La cantidad máxima debe ser positiva o quedar vacía.");
+                usuarioDAO.listarActividadUsuarios(mes.atDay(1), mes.atEndOfMonth(), cantidadMaxima));
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudieron preparar los datos de actividad.", e);
+        }
     }
 }

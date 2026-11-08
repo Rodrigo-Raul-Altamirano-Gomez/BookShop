@@ -7,4 +7,3 @@ import me.Model.dto.ConfiguracionDTO;
 public interface ProveedorConfiguracion {
     ConfiguracionDTO obtener() throws NegocioException;
 }
-

@@ -34,22 +34,22 @@ public class UsuarioDAOImpl implements UsuarioDAO {
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         if (usuario.getFechaCreacion() == null) usuario.setFechaCreacion(LocalDateTime.now());
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setString(1, usuario.getEmail());
-            statement.setString(2, usuario.getContrasenia());
-            statement.setString(3, usuario.getNombre());
-            statement.setBytes(4, usuario.getImagen());
-            statement.setString(5, usuario.getTipoImagen());
-            statement.setTimestamp(6, Timestamp.valueOf(usuario.getFechaNacimiento()));
-            statement.setBoolean(7, usuario.isActivo());
-            statement.setString(8, usuario.getRol().name());
-            statement.setLong(9, usuario.getTiempoTotal().getSeconds());
-            statement.setInt(10, usuario.getCantidadPedidosEntregados());
-            statement.setBoolean(11, usuario.isEliminado());
-            statement.setString(12, usuario.getUsuarioCreacion());
-            statement.setTimestamp(13, Timestamp.valueOf(usuario.getFechaCreacion()));
-            statement.executeUpdate();
-            try (ResultSet claves = statement.getGeneratedKeys()) {
+             PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            sentencia.setString(1, usuario.getEmail());
+            sentencia.setString(2, usuario.getContrasenia());
+            sentencia.setString(3, usuario.getNombre());
+            sentencia.setBytes(4, usuario.getImagen());
+            sentencia.setString(5, usuario.getTipoImagen());
+            sentencia.setTimestamp(6, Timestamp.valueOf(usuario.getFechaNacimiento()));
+            sentencia.setBoolean(7, usuario.isActivo());
+            sentencia.setString(8, usuario.getRol().name());
+            sentencia.setLong(9, usuario.getTiempoTotal().getSeconds());
+            sentencia.setInt(10, usuario.getCantidadPedidosEntregados());
+            sentencia.setBoolean(11, usuario.isEliminado());
+            sentencia.setString(12, usuario.getUsuarioCreacion());
+            sentencia.setTimestamp(13, Timestamp.valueOf(usuario.getFechaCreacion()));
+            sentencia.executeUpdate();
+            try (ResultSet claves = sentencia.getGeneratedKeys()) {
                 if (!claves.next()) throw new SQLException("No se genero el identificador del usuario.");
                 usuario.setId(claves.getInt(1));
             }
@@ -63,13 +63,13 @@ public class UsuarioDAOImpl implements UsuarioDAO {
                 + "fecha_actualizacion = ? WHERE id = ? AND NOT eliminado";
         LocalDateTime fecha = LocalDateTime.now();
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setString(1, usuario.getNombre());
-            statement.setTimestamp(2, Timestamp.valueOf(usuario.getFechaNacimiento()));
-            statement.setString(3, usuario.getUsuarioActualizacion());
-            statement.setTimestamp(4, Timestamp.valueOf(fecha));
-            statement.setInt(5, usuario.getId());
-            if (statement.executeUpdate() != 1) throw new SQLException("El usuario no puede modificarse.");
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setString(1, usuario.getNombre());
+            sentencia.setTimestamp(2, Timestamp.valueOf(usuario.getFechaNacimiento()));
+            sentencia.setString(3, usuario.getUsuarioActualizacion());
+            sentencia.setTimestamp(4, Timestamp.valueOf(fecha));
+            sentencia.setInt(5, usuario.getId());
+            if (sentencia.executeUpdate() != 1) throw new SQLException("El usuario no puede modificarse.");
             usuario.setFechaActualizacion(fecha);
         }
     }
@@ -78,9 +78,9 @@ public class UsuarioDAOImpl implements UsuarioDAO {
     public Usuario leer(int id) throws SQLException {
         String sql = "SELECT * FROM USUARIO WHERE id = ?";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setInt(1, id);
-            try (ResultSet resultado = statement.executeQuery()) {
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setInt(1, id);
+            try (ResultSet resultado = sentencia.executeQuery()) {
                 return resultado.next() ? mapearUsuario(resultado) : null;
             }
         }
@@ -90,9 +90,9 @@ public class UsuarioDAOImpl implements UsuarioDAO {
     public Usuario leerParaActualizar(int id) throws SQLException {
         String sql = "SELECT * FROM USUARIO WHERE id = ? FOR UPDATE";
         Connection conexion = TransactionContext.getConnection();
-        try (PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setInt(1, id);
-            try (ResultSet resultado = statement.executeQuery()) {
+        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setInt(1, id);
+            try (ResultSet resultado = sentencia.executeQuery()) {
                 return resultado.next() ? mapearUsuario(resultado) : null;
             }
         }
@@ -124,10 +124,10 @@ public class UsuarioDAOImpl implements UsuarioDAO {
         String sql = "UPDATE USUARIO SET eliminado = TRUE, activo = FALSE, usuario_actualizacion = ?, "
                 + "fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ? AND NOT eliminado";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setString(1, usuario);
-            statement.setInt(2, id);
-            return statement.executeUpdate() == 1;
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setString(1, usuario);
+            sentencia.setInt(2, id);
+            return sentencia.executeUpdate() == 1;
         }
     }
 
@@ -136,9 +136,9 @@ public class UsuarioDAOImpl implements UsuarioDAO {
         // Se incluyen desactivados para permitir reactivacion tras verificar la contrasenia en Business.
         String sql = "SELECT * FROM USUARIO WHERE email = ? AND NOT eliminado";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setString(1, email);
-            try (ResultSet resultado = statement.executeQuery()) {
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setString(1, email);
+            try (ResultSet resultado = sentencia.executeQuery()) {
                 return resultado.next() ? mapearUsuario(resultado) : null;
             }
         }
@@ -149,9 +149,9 @@ public class UsuarioDAOImpl implements UsuarioDAO {
         String sql = "SELECT id, nombre, email, imagen, tipo_imagen, fecha_nacimiento "
                 + "FROM USUARIO WHERE id = ? AND NOT eliminado";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setInt(1, id);
-            try (ResultSet resultado = statement.executeQuery()) {
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setInt(1, id);
+            try (ResultSet resultado = sentencia.executeQuery()) {
                 if (!resultado.next()) return null;
                 byte[] contenido = resultado.getBytes("imagen");
                 ImagenDTO imagen = contenido == null ? null
@@ -169,12 +169,12 @@ public class UsuarioDAOImpl implements UsuarioDAO {
         String sql = "UPDATE USUARIO SET imagen = ?, tipo_imagen = ?, usuario_actualizacion = ?, "
                 + "fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ? AND activo AND NOT eliminado";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setBytes(1, imagen == null ? null : imagen.contenido());
-            statement.setString(2, imagen == null ? null : imagen.tipoMime());
-            statement.setString(3, usuario);
-            statement.setInt(4, id);
-            return statement.executeUpdate() == 1;
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setBytes(1, imagen == null ? null : imagen.contenido());
+            sentencia.setString(2, imagen == null ? null : imagen.tipoMime());
+            sentencia.setString(3, usuario);
+            sentencia.setInt(4, id);
+            return sentencia.executeUpdate() == 1;
         }
     }
 
@@ -183,12 +183,12 @@ public class UsuarioDAOImpl implements UsuarioDAO {
         String sql = "UPDATE USUARIO SET activo = ?, usuario_actualizacion = ?, "
                 + "fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ? AND NOT eliminado AND activo <> ?";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setBoolean(1, activo);
-            statement.setString(2, usuario);
-            statement.setInt(3, id);
-            statement.setBoolean(4, activo);
-            return statement.executeUpdate() == 1;
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setBoolean(1, activo);
+            sentencia.setString(2, usuario);
+            sentencia.setInt(3, id);
+            sentencia.setBoolean(4, activo);
+            return sentencia.executeUpdate() == 1;
         }
     }
 
@@ -197,26 +197,25 @@ public class UsuarioDAOImpl implements UsuarioDAO {
         String sql = "UPDATE USUARIO SET contrasenia = ?, usuario_actualizacion = ?, "
                 + "fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ? AND activo AND NOT eliminado";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setString(1, hash);
-            statement.setString(2, usuario);
-            statement.setInt(3, id);
-            return statement.executeUpdate() == 1;
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setString(1, hash);
+            sentencia.setString(2, usuario);
+            sentencia.setInt(3, id);
+            return sentencia.executeUpdate() == 1;
         }
     }
 
     @Override
     public void actualizarTiempoTotal(int id, Duration tiempo, String usuario) throws SQLException {
-        if (tiempo == null || tiempo.isNegative()) throw new IllegalArgumentException("El tiempo no puede ser negativo.");
         if (tiempo.isZero()) return;
         String sql = "UPDATE USUARIO SET tiempo_total = tiempo_total + ?, usuario_actualizacion = ?, "
                 + "fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ? AND NOT eliminado";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setLong(1, tiempo.getSeconds());
-            statement.setString(2, usuario);
-            statement.setInt(3, id);
-            if (statement.executeUpdate() != 1) throw new SQLException("El usuario no puede acumular tiempo.");
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setLong(1, tiempo.getSeconds());
+            sentencia.setString(2, usuario);
+            sentencia.setInt(3, id);
+            if (sentencia.executeUpdate() != 1) throw new SQLException("El usuario no puede acumular tiempo.");
         }
     }
 
@@ -227,19 +226,16 @@ public class UsuarioDAOImpl implements UsuarioDAO {
                 + "usuario_actualizacion = ?, fecha_actualizacion = CURRENT_TIMESTAMP "
                 + "WHERE id = ? AND NOT eliminado AND cantidad_pedidos_entregados < 2147483647";
         Connection conexion = TransactionContext.getConnection();
-        try (PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setString(1, usuario);
-            statement.setInt(2, id);
-            return statement.executeUpdate() == 1;
+        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setString(1, usuario);
+            sentencia.setInt(2, id);
+            return sentencia.executeUpdate() == 1;
         }
     }
 
     @Override
     public List<ResumenActividadUsuarioDTO> listarActividadUsuarios(LocalDate inicio, LocalDate fin, Integer maximo)
             throws SQLException {
-        if (inicio == null || fin == null || fin.isBefore(inicio) || (maximo != null && maximo < 1)) {
-            throw new IllegalArgumentException("Periodo o cantidad maxima invalidos.");
-        }
         String sql = "SELECT u.id, u.nombre, u.email, u.activo, u.tiempo_total, "
                 + "COALESCE(g.total_gastado, 0) AS total_gastado FROM USUARIO u LEFT JOIN "
                 + "(SELECT id_usuario, SUM(total) AS total_gastado FROM PEDIDO "
@@ -250,11 +246,11 @@ public class UsuarioDAOImpl implements UsuarioDAO {
         List<ResumenActividadUsuarioDTO> actividad = new ArrayList<>();
         List<Integer> idsUsuarios = new ArrayList<>();
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setTimestamp(1, Timestamp.valueOf(inicio.atStartOfDay()));
-            statement.setTimestamp(2, Timestamp.valueOf(fin.plusDays(1).atStartOfDay()));
-            if (maximo != null) statement.setInt(3, maximo);
-            try (ResultSet resultado = statement.executeQuery()) {
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setTimestamp(1, Timestamp.valueOf(inicio.atStartOfDay()));
+            sentencia.setTimestamp(2, Timestamp.valueOf(fin.plusDays(1).atStartOfDay()));
+            if (maximo != null) sentencia.setInt(3, maximo);
+            try (ResultSet resultado = sentencia.executeQuery()) {
                 while (resultado.next()) {
                     int id = resultado.getInt("id");
                     idsUsuarios.add(id);

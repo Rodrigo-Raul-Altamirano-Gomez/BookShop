@@ -25,19 +25,19 @@ public class DireccionEnvioDAOImpl implements DireccionEnvioDAO {
         if (direccion.getFechaCreacion() == null) direccion.setFechaCreacion(LocalDateTime.now());
         // El alta y la eleccion opcional de predeterminada se confirman juntas en Business.
         Connection conexion = TransactionContext.getConnection();
-        try (PreparedStatement statement = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setInt(1, direccion.getUsuario().getId());
-            statement.setString(2, direccion.getAlias());
-            statement.setString(3, direccion.getCalle());
-            statement.setString(4, direccion.getDistrito());
-            statement.setString(5, direccion.getCiudad());
-            statement.setString(6, direccion.getReferencia());
-            statement.setBoolean(7, direccion.isActivo());
-            statement.setBoolean(8, direccion.isEliminado());
-            statement.setString(9, direccion.getUsuarioCreacion());
-            statement.setTimestamp(10, Timestamp.valueOf(direccion.getFechaCreacion()));
-            statement.executeUpdate();
-            try (ResultSet claves = statement.getGeneratedKeys()) {
+        try (PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            sentencia.setInt(1, direccion.getUsuario().getId());
+            sentencia.setString(2, direccion.getAlias());
+            sentencia.setString(3, direccion.getCalle());
+            sentencia.setString(4, direccion.getDistrito());
+            sentencia.setString(5, direccion.getCiudad());
+            sentencia.setString(6, direccion.getReferencia());
+            sentencia.setBoolean(7, direccion.isActivo());
+            sentencia.setBoolean(8, direccion.isEliminado());
+            sentencia.setString(9, direccion.getUsuarioCreacion());
+            sentencia.setTimestamp(10, Timestamp.valueOf(direccion.getFechaCreacion()));
+            sentencia.executeUpdate();
+            try (ResultSet claves = sentencia.getGeneratedKeys()) {
                 if (!claves.next()) throw new SQLException("No se genero el identificador de la direccion.");
                 direccion.setId(claves.getInt(1));
             }
@@ -53,18 +53,18 @@ public class DireccionEnvioDAOImpl implements DireccionEnvioDAO {
                 + "usuario_actualizacion = ?, fecha_actualizacion = ? WHERE id = ? AND NOT eliminado";
         LocalDateTime fecha = LocalDateTime.now();
         Connection conexion = TransactionContext.getConnection();
-        try (PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setString(1, direccion.getAlias());
-            statement.setString(2, direccion.getCalle());
-            statement.setString(3, direccion.getDistrito());
-            statement.setString(4, direccion.getCiudad());
-            statement.setString(5, direccion.getReferencia());
-            statement.setBoolean(6, direccion.isActivo());
-            statement.setBoolean(7, direccion.isActivo());
-            statement.setString(8, direccion.getUsuarioActualizacion());
-            statement.setTimestamp(9, Timestamp.valueOf(fecha));
-            statement.setInt(10, direccion.getId());
-            if (statement.executeUpdate() != 1) throw new SQLException("La direccion no puede modificarse.");
+        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setString(1, direccion.getAlias());
+            sentencia.setString(2, direccion.getCalle());
+            sentencia.setString(3, direccion.getDistrito());
+            sentencia.setString(4, direccion.getCiudad());
+            sentencia.setString(5, direccion.getReferencia());
+            sentencia.setBoolean(6, direccion.isActivo());
+            sentencia.setBoolean(7, direccion.isActivo());
+            sentencia.setString(8, direccion.getUsuarioActualizacion());
+            sentencia.setTimestamp(9, Timestamp.valueOf(fecha));
+            sentencia.setInt(10, direccion.getId());
+            if (sentencia.executeUpdate() != 1) throw new SQLException("La direccion no puede modificarse.");
             direccion.setFechaActualizacion(fecha);
         }
     }
@@ -73,9 +73,9 @@ public class DireccionEnvioDAOImpl implements DireccionEnvioDAO {
     public DireccionEnvio leer(int id) throws SQLException {
         String sql = "SELECT * FROM DIRECCION_ENVIO WHERE id = ?";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setInt(1, id);
-            try (ResultSet resultado = statement.executeQuery()) {
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setInt(1, id);
+            try (ResultSet resultado = sentencia.executeQuery()) {
                 return resultado.next() ? mapearDireccion(resultado) : null;
             }
         }
@@ -85,9 +85,9 @@ public class DireccionEnvioDAOImpl implements DireccionEnvioDAO {
     public DireccionEnvio leerParaActualizar(int id) throws SQLException {
         String sql = "SELECT * FROM DIRECCION_ENVIO WHERE id = ? FOR UPDATE";
         Connection conexion = TransactionContext.getConnection();
-        try (PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setInt(1, id);
-            try (ResultSet resultado = statement.executeQuery()) {
+        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setInt(1, id);
+            try (ResultSet resultado = sentencia.executeQuery()) {
                 return resultado.next() ? mapearDireccion(resultado) : null;
             }
         }
@@ -99,10 +99,10 @@ public class DireccionEnvioDAOImpl implements DireccionEnvioDAO {
                 + "usuario_actualizacion = ?, fecha_actualizacion = CURRENT_TIMESTAMP "
                 + "WHERE id = ? AND NOT eliminado";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setString(1, usuario);
-            statement.setInt(2, id);
-            return statement.executeUpdate() == 1;
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setString(1, usuario);
+            sentencia.setInt(2, id);
+            return sentencia.executeUpdate() == 1;
         }
     }
 
@@ -128,27 +128,26 @@ public class DireccionEnvioDAOImpl implements DireccionEnvioDAO {
     }
 
     @Override
-    public ResultadoPaginadoDTO<DireccionEnvioDTO> listarPorUsuario(int idUsuario, int pagina, int tamano)
+    public ResultadoPaginadoDTO<DireccionEnvioDTO> listarPorUsuario(int idUsuario, int pagina, int tamanioPagina)
             throws SQLException {
-        if (pagina < 1 || tamano < 1) throw new IllegalArgumentException("Pagina y tamano deben ser positivos.");
         String condiciones = " FROM DIRECCION_ENVIO WHERE id_usuario = ? AND activo AND NOT eliminado";
         List<DireccionEnvioDTO> direcciones = new ArrayList<>();
         long total;
         try (Connection conexion = DBManager.getConnection()) {
-            try (PreparedStatement statement = conexion.prepareStatement("SELECT COUNT(*)" + condiciones)) {
-                statement.setInt(1, idUsuario);
-                try (ResultSet resultado = statement.executeQuery()) {
+            try (PreparedStatement sentencia = conexion.prepareStatement("SELECT COUNT(*)" + condiciones)) {
+                sentencia.setInt(1, idUsuario);
+                try (ResultSet resultado = sentencia.executeQuery()) {
                     resultado.next();
                     total = resultado.getLong(1);
                 }
             }
             String sql = "SELECT id, alias, calle, distrito, ciudad, referencia, predeterminada" + condiciones
                     + " ORDER BY predeterminada DESC, fecha_creacion DESC, id DESC LIMIT ? OFFSET ?";
-            try (PreparedStatement statement = conexion.prepareStatement(sql)) {
-                statement.setInt(1, idUsuario);
-                statement.setInt(2, tamano);
-                statement.setLong(3, (long) (pagina - 1) * tamano);
-                try (ResultSet resultado = statement.executeQuery()) {
+            try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+                sentencia.setInt(1, idUsuario);
+                sentencia.setInt(2, tamanioPagina);
+                sentencia.setLong(3, (long) (pagina - 1) * tamanioPagina);
+                try (ResultSet resultado = sentencia.executeQuery()) {
                     while (resultado.next()) {
                         direcciones.add(new DireccionEnvioDTO(resultado.getInt("id"), resultado.getString("alias"),
                                 resultado.getString("calle"), resultado.getString("distrito"),
@@ -158,43 +157,43 @@ public class DireccionEnvioDAOImpl implements DireccionEnvioDAO {
                 }
             }
         }
-        return new ResultadoPaginadoDTO<>(direcciones, total, pagina, tamano);
+        return new ResultadoPaginadoDTO<>(direcciones, total, pagina, tamanioPagina);
     }
 
     @Override
     public boolean establecerPredeterminado(int idUsuario, int idDireccion, String usuario) throws SQLException {
         Connection conexion = TransactionContext.getConnection();
         String bloquearPropietario = "SELECT id FROM USUARIO WHERE id = ? AND activo AND NOT eliminado FOR UPDATE";
-        try (PreparedStatement statement = conexion.prepareStatement(bloquearPropietario)) {
-            statement.setInt(1, idUsuario);
-            try (ResultSet resultado = statement.executeQuery()) {
+        try (PreparedStatement sentencia = conexion.prepareStatement(bloquearPropietario)) {
+            sentencia.setInt(1, idUsuario);
+            try (ResultSet resultado = sentencia.executeQuery()) {
                 if (!resultado.next()) return false;
             }
         }
         String candidato = "SELECT id FROM DIRECCION_ENVIO WHERE id = ? AND id_usuario = ? "
                 + "AND activo AND NOT eliminado FOR UPDATE";
-        try (PreparedStatement statement = conexion.prepareStatement(candidato)) {
-            statement.setInt(1, idDireccion);
-            statement.setInt(2, idUsuario);
-            try (ResultSet resultado = statement.executeQuery()) {
+        try (PreparedStatement sentencia = conexion.prepareStatement(candidato)) {
+            sentencia.setInt(1, idDireccion);
+            sentencia.setInt(2, idUsuario);
+            try (ResultSet resultado = sentencia.executeQuery()) {
                 if (!resultado.next()) return false;
             }
         }
         // La verificacion se completa antes de retirar la direccion anterior.
         String retirar = "UPDATE DIRECCION_ENVIO SET predeterminada = FALSE, usuario_actualizacion = ?, "
                 + "fecha_actualizacion = CURRENT_TIMESTAMP WHERE id_usuario = ? AND predeterminada";
-        try (PreparedStatement statement = conexion.prepareStatement(retirar)) {
-            statement.setString(1, usuario);
-            statement.setInt(2, idUsuario);
-            statement.executeUpdate();
+        try (PreparedStatement sentencia = conexion.prepareStatement(retirar)) {
+            sentencia.setString(1, usuario);
+            sentencia.setInt(2, idUsuario);
+            sentencia.executeUpdate();
         }
         String elegir = "UPDATE DIRECCION_ENVIO SET predeterminada = TRUE, usuario_actualizacion = ?, "
                 + "fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ? AND id_usuario = ? AND activo AND NOT eliminado";
-        try (PreparedStatement statement = conexion.prepareStatement(elegir)) {
-            statement.setString(1, usuario);
-            statement.setInt(2, idDireccion);
-            statement.setInt(3, idUsuario);
-            return statement.executeUpdate() == 1;
+        try (PreparedStatement sentencia = conexion.prepareStatement(elegir)) {
+            sentencia.setString(1, usuario);
+            sentencia.setInt(2, idDireccion);
+            sentencia.setInt(3, idUsuario);
+            return sentencia.executeUpdate() == 1;
         }
     }
 
@@ -203,10 +202,10 @@ public class DireccionEnvioDAOImpl implements DireccionEnvioDAO {
         String sql = "UPDATE DIRECCION_ENVIO SET predeterminada = FALSE, usuario_actualizacion = ?, "
                 + "fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ? AND predeterminada AND NOT eliminado";
         Connection conexion = TransactionContext.getConnection();
-        try (PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setString(1, usuario);
-            statement.setInt(2, idDireccion);
-            return statement.executeUpdate() == 1;
+        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setString(1, usuario);
+            sentencia.setInt(2, idDireccion);
+            return sentencia.executeUpdate() == 1;
         }
     }
 }

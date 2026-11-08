@@ -19,15 +19,15 @@ public class LibroGuardadoDAOImpl implements LibroGuardadoDAO {
                 + "usuario_creacion, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?)";
         if (guardado.getFechaCreacion() == null) guardado.setFechaCreacion(LocalDateTime.now());
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setInt(1, guardado.getUsuario().getId());
-            statement.setInt(2, guardado.getLibro().getId());
-            statement.setBoolean(3, guardado.isFavorito());
-            statement.setBoolean(4, guardado.isEliminado());
-            statement.setString(5, guardado.getUsuarioCreacion());
-            statement.setTimestamp(6, Timestamp.valueOf(guardado.getFechaCreacion()));
-            statement.executeUpdate();
-            try (ResultSet claves = statement.getGeneratedKeys()) {
+             PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            sentencia.setInt(1, guardado.getUsuario().getId());
+            sentencia.setInt(2, guardado.getLibro().getId());
+            sentencia.setBoolean(3, guardado.isFavorito());
+            sentencia.setBoolean(4, guardado.isEliminado());
+            sentencia.setString(5, guardado.getUsuarioCreacion());
+            sentencia.setTimestamp(6, Timestamp.valueOf(guardado.getFechaCreacion()));
+            sentencia.executeUpdate();
+            try (ResultSet claves = sentencia.getGeneratedKeys()) {
                 if (!claves.next()) throw new SQLException("No se genero el identificador del libro guardado.");
                 guardado.setId(claves.getInt(1));
             }
@@ -38,9 +38,9 @@ public class LibroGuardadoDAOImpl implements LibroGuardadoDAO {
     public LibroGuardado leer(int id) throws SQLException {
         String sql = "SELECT * FROM LIBRO_GUARDADO WHERE id = ?";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setInt(1, id);
-            try (ResultSet resultado = statement.executeQuery()) {
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setInt(1, id);
+            try (ResultSet resultado = sentencia.executeQuery()) {
                 if (!resultado.next()) return null;
                 LibroGuardado guardado = new LibroGuardado();
                 guardado.setId(resultado.getInt("id"));
@@ -66,10 +66,10 @@ public class LibroGuardadoDAOImpl implements LibroGuardadoDAO {
         String sql = "UPDATE LIBRO_GUARDADO SET eliminado = TRUE, usuario_actualizacion = ?, "
                 + "fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ? AND NOT eliminado";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setString(1, usuario);
-            statement.setInt(2, id);
-            return statement.executeUpdate() == 1;
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setString(1, usuario);
+            sentencia.setInt(2, id);
+            return sentencia.executeUpdate() == 1;
         }
     }
 
@@ -82,13 +82,13 @@ public class LibroGuardadoDAOImpl implements LibroGuardadoDAO {
                 + "fecha_actualizacion = CASE WHEN eliminado THEN CURRENT_TIMESTAMP ELSE fecha_actualizacion END, "
                 + "eliminado = FALSE";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setInt(1, idUsuario);
-            statement.setInt(2, idLibro);
-            statement.setBoolean(3, favorito);
-            statement.setString(4, usuario);
-            statement.setString(5, usuario);
-            statement.executeUpdate();
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setInt(1, idUsuario);
+            sentencia.setInt(2, idLibro);
+            sentencia.setBoolean(3, favorito);
+            sentencia.setString(4, usuario);
+            sentencia.setString(5, usuario);
+            sentencia.executeUpdate();
         }
     }
 
@@ -98,12 +98,12 @@ public class LibroGuardadoDAOImpl implements LibroGuardadoDAO {
                 + "fecha_actualizacion = CURRENT_TIMESTAMP WHERE id_usuario = ? AND id_libro = ? "
                 + "AND favorito = ? AND NOT eliminado";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setString(1, usuario);
-            statement.setInt(2, idUsuario);
-            statement.setInt(3, idLibro);
-            statement.setBoolean(4, favorito);
-            return statement.executeUpdate() == 1;
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setString(1, usuario);
+            sentencia.setInt(2, idUsuario);
+            sentencia.setInt(3, idLibro);
+            sentencia.setBoolean(4, favorito);
+            return sentencia.executeUpdate() == 1;
         }
     }
 }

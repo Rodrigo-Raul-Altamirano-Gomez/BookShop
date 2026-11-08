@@ -21,8 +21,10 @@ final class FiltradoColaborativo {
     }
     static Map<Integer, Double> puntuar(int idUsuario, List<VentaLibroDTO> ventas) {
         Map<Integer, Set<Integer>> porUsuario = new HashMap<>();
-        for (VentaLibroDTO venta : ventas)
-            porUsuario.computeIfAbsent(venta.idUsuario(), id -> new HashSet<>()).add(venta.idLibro());
+        for (VentaLibroDTO venta : ventas) {
+            if (!porUsuario.containsKey(venta.idUsuario())) porUsuario.put(venta.idUsuario(), new HashSet<>());
+            porUsuario.get(venta.idUsuario()).add(venta.idLibro());
+        }
         Set<Integer> propios = porUsuario.getOrDefault(idUsuario, Set.of());
         Map<Integer, Double> puntos = new HashMap<>();
         for (Map.Entry<Integer, Set<Integer>> entrada : porUsuario.entrySet()) {
@@ -34,7 +36,7 @@ final class FiltradoColaborativo {
             if (comunes.isEmpty()) continue;
             double jaccard = (double) comunes.size() / union.size();
             for (int candidato : entrada.getValue())
-                if (!propios.contains(candidato)) puntos.merge(candidato, jaccard, Double::sum);
+                if (!propios.contains(candidato)) puntos.put(candidato, puntos.getOrDefault(candidato, 0.0) + jaccard);
         }
         return puntos;
     }

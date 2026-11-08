@@ -15,23 +15,23 @@ import me.Model.dto.compra.ComprobanteCompraDTO;
 import me.Model.dto.usuario.TarjetaUsuarioDTO;
 
 public class ComprobanteBOImpl implements ComprobanteBO {
-    private final PedidoBO pedidos;
+    private final PedidoBO pedidoBO;
     private final Autorizacion autorizacion;
     private final Clock reloj;
     public ComprobanteBOImpl() {
         this(new PedidoBOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")));
     }
-    public ComprobanteBOImpl(PedidoBO pedidos, UsuarioDAO usuarios, Clock reloj) {
-        this.pedidos = pedidos;
+    public ComprobanteBOImpl(PedidoBO pedidoBO, UsuarioDAO usuarios, Clock reloj) {
+        this.pedidoBO = pedidoBO;
         this.autorizacion = new Autorizacion(usuarios);
         this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
     }
     @Override
     public ComprobanteCompraDTO preparar(int idActor, int idPedido) throws NegocioException {
         Usuario comprador = autorizacion.usuarioActivo(idActor);
-        DetallePedidoDTO pedido = pedidos.consultar(idActor, idPedido);
+        DetallePedidoDTO pedido = pedidoBO.consultar(idActor, idPedido);
         return new ComprobanteCompraDTO(pedido,
-                new TarjetaUsuarioDTO(comprador.getId(), comprador.getNombre(), comprador.getEmail(), null),
-                LocalDateTime.now(reloj));
+            new TarjetaUsuarioDTO(comprador.getId(), comprador.getNombre(), comprador.getEmail(), null),
+            LocalDateTime.now(reloj));
     }
 }

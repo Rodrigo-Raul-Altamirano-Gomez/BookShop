@@ -12,7 +12,6 @@ import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.RecursoNoEncontradoException;
 import me.Business.exceptions.ValidacionException;
 import me.Business.Autorizacion;
-import me.Business.Validaciones;
 import me.DAO.catalogo.DescuentoDAO;
 import me.DAO.catalogo.DescuentoDAOImpl;
 import me.DAO.catalogo.LibroDAO;
@@ -28,8 +27,8 @@ import me.Model.entities.catalogo.Libro;
 import me.Model.entities.usuario.Usuario;
 
 public class DescuentoBOImpl implements DescuentoBO {
-    private final DescuentoDAO descuentos;
-    private final LibroDAO libros;
+    private final DescuentoDAO descuentoDAO;
+    private final LibroDAO libroDAO;
     private final Autorizacion autorizacion;
     private final Clock reloj;
 
@@ -37,9 +36,9 @@ public class DescuentoBOImpl implements DescuentoBO {
         this(new DescuentoDAOImpl(), new LibroDAOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")));
     }
 
-    public DescuentoBOImpl(DescuentoDAO descuentos, LibroDAO libros, UsuarioDAO usuarios, Clock reloj) {
-        this.descuentos = descuentos;
-        this.libros = libros;
+    public DescuentoBOImpl(DescuentoDAO descuentoDAO, LibroDAO libroDAO, UsuarioDAO usuarios, Clock reloj) {
+        this.descuentoDAO = descuentoDAO;
+        this.libroDAO = libroDAO;
         this.autorizacion = new Autorizacion(usuarios);
         this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
     }
@@ -52,7 +51,7 @@ public class DescuentoBOImpl implements DescuentoBO {
         if (datos.eliminar() && datos.id() == 0) return 0;
         if (!datos.eliminar()) validarDatos(datos);
         try {
-            Libro libro = libros.leerParaActualizar(idLibro);
+            Libro libro = libroDAO.leerParaActualizar(idLibro);
             if (libro == null || libro.isEliminado()) throw new RecursoNoEncontradoException("El libro no esta disponible.");
             Descuento descuento;
             if (datos.id() == 0) {
@@ -61,25 +60,25 @@ public class DescuentoBOImpl implements DescuentoBO {
                 descuento.setUsuarioCreacion(actor.getEmail());
                 descuento.setFechaCreacion(LocalDateTime.now(reloj));
             } else {
-                descuento = descuentos.leerParaActualizar(datos.id());
+                descuento = descuentoDAO.leerParaActualizar(datos.id());
                 if (descuento == null || descuento.isEliminado()) throw new RecursoNoEncontradoException("El descuento no esta disponible.");
                 if (descuento.getLibro().getId() != idLibro) throw new AccesoDenegadoException("El descuento pertenece a otro libro.");
             }
             if (datos.eliminar()) {
-                if (!descuentos.eliminar(datos.id(), actor.getEmail())) throw new ConflictoException("El descuento cambio; vuelva a consultarlo.");
+                if (!descuentoDAO.eliminar(datos.id(), actor.getEmail())) throw new ConflictoException("El descuento cambio; vuelva a consultarlo.");
             } else {
-                if (descuentos.haySuperposicion(idLibro, datos.id(), datos.fechaInicio(), datos.fechaFin()))
+                if (descuentoDAO.haySuperposicion(idLibro, datos.id(), datos.fechaInicio(), datos.fechaFin()))
                     throw new ValidacionException("fechaInicio", "La vigencia se superpone con otro descuento del libro.");
                 descuento.setPorcentaje(datos.porcentaje().setScale(2));
                 descuento.setFechaInicio(datos.fechaInicio());
                 descuento.setFechaFin(datos.fechaFin());
                 LocalDateTime ahora = LocalDateTime.now(reloj);
                 descuento.setActivo(!ahora.isBefore(datos.fechaInicio()) && !ahora.isAfter(datos.fechaFin()));
-                if (datos.id() == 0) descuentos.insertar(descuento);
+                if (datos.id() == 0) descuentoDAO.insertar(descuento);
                 else {
                     descuento.setUsuarioActualizacion(actor.getEmail());
                     descuento.setFechaActualizacion(ahora);
-                    descuentos.modificar(descuento);
+                    descuentoDAO.modificar(descuento);
                 }
             }
             TransactionContext.commit();
@@ -87,20 +86,28 @@ public class DescuentoBOImpl implements DescuentoBO {
         } catch (SQLException e) {
             TransactionContext.rollback();
             throw new PersistenciaException("No se pudo guardar el descuento.", e);
-        } catch (NegocioException e) { TransactionContext.rollback(); throw e; }
-        finally { TransactionContext.close(); }
+        } catch (NegocioException e) {
+            TransactionContext.rollback();
+            throw e;
+        }
+        finally {
+            TransactionContext.close();
+        }
     }
 
     @Override
     public ResultadoPaginadoDTO<DescuentoDTO> listarPorLibro(int idActor, int idLibro, int pagina, int tamanio)
             throws NegocioException {
         autorizacion.administrador(idActor);
-        Validaciones.pagina(pagina, tamanio);
+        if (pagina < 1 || tamanio < 1)
+            throw new ValidacionException("pagina", "La página y su tamaño deben ser positivos.");
         try {
-            Libro libro = libros.leer(idLibro);
+            Libro libro = libroDAO.leer(idLibro);
             if (libro == null || libro.isEliminado()) throw new RecursoNoEncontradoException("El libro no esta disponible.");
-            return descuentos.listarPorLibro(idLibro, LocalDateTime.now(reloj), pagina, tamanio);
-        } catch (SQLException e) { throw new PersistenciaException("No se pudieron consultar los descuentos.", e); }
+            return descuentoDAO.listarPorLibro(idLibro, LocalDateTime.now(reloj), pagina, tamanio);
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudieron consultar los descuentos.", e);
+        }
     }
 
     private void validarDatos(DatosDescuentoDTO datos) throws ValidacionException {

@@ -30,21 +30,21 @@ public class ResenaDAOImpl implements ResenaDAO {
                     usuario_creacion, fecha_creacion, activo, eliminado, cantidad_votos_utiles)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
-        try (PreparedStatement statement = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setInt(1, resena.getPuntuacion());
-            statement.setString(2, resena.getComentario());
-            statement.setTimestamp(3, Timestamp.valueOf(resena.getFecha()));
-            statement.setInt(4, resena.getLibro().getId());
-            statement.setInt(5, resena.getUsuario().getId());
-            statement.setString(6, resena.getUsuarioCreacion());
-            statement.setTimestamp(7, Timestamp.valueOf(resena.getFechaCreacion()));
-            statement.setBoolean(8, resena.isActivo());
-            statement.setBoolean(9, resena.isEliminado());
-            statement.setInt(10, resena.getCantidadVotosUtiles());
-            statement.executeUpdate();
-            try (ResultSet rs = statement.getGeneratedKeys()) {
-                if (!rs.next()) throw new SQLException("No se genero el identificador de la resena.");
-                resena.setId(rs.getInt(1));
+        try (PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            sentencia.setInt(1, resena.getPuntuacion());
+            sentencia.setString(2, resena.getComentario());
+            sentencia.setTimestamp(3, Timestamp.valueOf(resena.getFecha()));
+            sentencia.setInt(4, resena.getLibro().getId());
+            sentencia.setInt(5, resena.getUsuario().getId());
+            sentencia.setString(6, resena.getUsuarioCreacion());
+            sentencia.setTimestamp(7, Timestamp.valueOf(resena.getFechaCreacion()));
+            sentencia.setBoolean(8, resena.isActivo());
+            sentencia.setBoolean(9, resena.isEliminado());
+            sentencia.setInt(10, resena.getCantidadVotosUtiles());
+            sentencia.executeUpdate();
+            try (ResultSet resultado = sentencia.getGeneratedKeys()) {
+                if (!resultado.next()) throw new SQLException("No se genero el identificador de la resena.");
+                resena.setId(resultado.getInt(1));
             }
         }
     }
@@ -56,13 +56,13 @@ public class ResenaDAOImpl implements ResenaDAO {
                 UPDATE RESENA SET puntuacion = ?, comentario = ?, usuario_actualizacion = ?,
                     fecha_actualizacion = ? WHERE id = ? AND activo AND NOT eliminado
                 """;
-        try (Connection conexion = DBManager.getConnection(); PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setInt(1, resena.getPuntuacion());
-            statement.setString(2, resena.getComentario());
-            statement.setString(3, resena.getUsuarioActualizacion());
-            statement.setTimestamp(4, Timestamp.valueOf(resena.getFechaActualizacion() == null ? LocalDateTime.now() : resena.getFechaActualizacion()));
-            statement.setInt(5, resena.getId());
-            if (statement.executeUpdate() != 1) throw new SQLException("La resena no puede modificarse.");
+        try (Connection conexion = DBManager.getConnection(); PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setInt(1, resena.getPuntuacion());
+            sentencia.setString(2, resena.getComentario());
+            sentencia.setString(3, resena.getUsuarioActualizacion());
+            sentencia.setTimestamp(4, Timestamp.valueOf(resena.getFechaActualizacion() == null ? LocalDateTime.now() : resena.getFechaActualizacion()));
+            sentencia.setInt(5, resena.getId());
+            if (sentencia.executeUpdate() != 1) throw new SQLException("La resena no puede modificarse.");
         }
     }
 
@@ -77,9 +77,9 @@ public class ResenaDAOImpl implements ResenaDAO {
     }
 
     private Resena leerRegistro(Connection conexion, int id, boolean bloquear) throws SQLException {
-        try (PreparedStatement statement = conexion.prepareStatement("SELECT * FROM RESENA WHERE id = ?" + (bloquear ? " FOR UPDATE" : ""))) {
-            statement.setInt(1, id);
-            try (ResultSet rs = statement.executeQuery()) { return rs.next() ? mapearResena(rs) : null; }
+        try (PreparedStatement sentencia = conexion.prepareStatement("SELECT * FROM RESENA WHERE id = ?" + (bloquear ? " FOR UPDATE" : ""))) {
+            sentencia.setInt(1, id);
+            try (ResultSet resultado = sentencia.executeQuery()) { return resultado.next() ? mapearResena(resultado) : null; }
         }
     }
 
@@ -87,39 +87,38 @@ public class ResenaDAOImpl implements ResenaDAO {
     public boolean eliminar(int id, String actor) throws SQLException {
         String sql = "UPDATE RESENA SET eliminado = TRUE, activo = FALSE, usuario_actualizacion = ?, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ? AND NOT eliminado";
         Connection conexion = TransactionContext.getConnection();
-        try (PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setString(1, actor);
-            statement.setInt(2, id);
-            return statement.executeUpdate() == 1;
+        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setString(1, actor);
+            sentencia.setInt(2, id);
+            return sentencia.executeUpdate() == 1;
         }
     }
 
-    private Resena mapearResena(ResultSet rs) throws SQLException {
+    private Resena mapearResena(ResultSet resultado) throws SQLException {
         Resena resena = new Resena();
-        resena.setId(rs.getInt("id"));
+        resena.setId(resultado.getInt("id"));
         Libro libro = new Libro();
-        libro.setId(rs.getInt("id_libro"));
+        libro.setId(resultado.getInt("id_libro"));
         resena.setLibro(libro);
         Usuario usuario = new Usuario();
-        usuario.setId(rs.getInt("id_usuario"));
+        usuario.setId(resultado.getInt("id_usuario"));
         resena.setUsuario(usuario);
-        resena.setPuntuacion(rs.getInt("puntuacion"));
-        resena.setComentario(rs.getString("comentario"));
-        resena.setFecha(rs.getObject("fecha", LocalDateTime.class));
-        resena.setActivo(rs.getBoolean("activo"));
-        resena.setEliminado(rs.getBoolean("eliminado"));
-        resena.setCantidadVotosUtiles(rs.getInt("cantidad_votos_utiles"));
-        resena.setUsuarioCreacion(rs.getString("usuario_creacion"));
-        resena.setFechaCreacion(rs.getObject("fecha_creacion", LocalDateTime.class));
-        resena.setUsuarioActualizacion(rs.getString("usuario_actualizacion"));
-        resena.setFechaActualizacion(rs.getObject("fecha_actualizacion", LocalDateTime.class));
+        resena.setPuntuacion(resultado.getInt("puntuacion"));
+        resena.setComentario(resultado.getString("comentario"));
+        resena.setFecha(resultado.getObject("fecha", LocalDateTime.class));
+        resena.setActivo(resultado.getBoolean("activo"));
+        resena.setEliminado(resultado.getBoolean("eliminado"));
+        resena.setCantidadVotosUtiles(resultado.getInt("cantidad_votos_utiles"));
+        resena.setUsuarioCreacion(resultado.getString("usuario_creacion"));
+        resena.setFechaCreacion(resultado.getObject("fecha_creacion", LocalDateTime.class));
+        resena.setUsuarioActualizacion(resultado.getString("usuario_actualizacion"));
+        resena.setFechaActualizacion(resultado.getObject("fecha_actualizacion", LocalDateTime.class));
         return resena;
     }
 
     @Override
     public ResultadoPaginadoDTO<ResenaDTO> listar(int idLibro, int idUsuario, int idUsuarioActual, ConsultaResenasDTO consulta) throws SQLException {
         if (consulta == null) consulta = ConsultaResenasDTO.porDefecto();
-        if (consulta.pagina() < 1 || consulta.tamanioPagina() < 1) throw new IllegalArgumentException("Pagina y tamanio deben ser positivos.");
         // Cero/cero representa Todas las reseñas; Business autoriza ese ámbito.
         String condiciones = " WHERE NOT r.eliminado";
         if (idLibro > 0) condiciones += " AND r.id_libro = ? AND r.activo";
@@ -143,23 +142,23 @@ public class ResenaDAOImpl implements ResenaDAO {
         List<ResenaDTO> items = new ArrayList<>();
         long total;
         try (Connection conexion = DBManager.getConnection()) {
-            try (PreparedStatement statement = conexion.prepareStatement("SELECT COUNT(*) FROM RESENA r" + condiciones)) {
+            try (PreparedStatement sentencia = conexion.prepareStatement("SELECT COUNT(*) FROM RESENA r" + condiciones)) {
                 int parametro = 1;
-                if (idLibro > 0) statement.setInt(parametro++, idLibro);
-                if (idUsuario > 0) statement.setInt(parametro, idUsuario);
-                try (ResultSet rs = statement.executeQuery()) {
-                    rs.next();
-                    total = rs.getLong(1);
+                if (idLibro > 0) sentencia.setInt(parametro++, idLibro);
+                if (idUsuario > 0) sentencia.setInt(parametro, idUsuario);
+                try (ResultSet resultado = sentencia.executeQuery()) {
+                    resultado.next();
+                    total = resultado.getLong(1);
                 }
             }
-            try (PreparedStatement statement = conexion.prepareStatement(sql)) {
+            try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
                 int parametro = 1;
-                statement.setInt(parametro++, idLibro > 0 && idUsuario == 0 ? idUsuarioActual : 0);
-                if (idLibro > 0) statement.setInt(parametro++, idLibro);
-                if (idUsuario > 0) statement.setInt(parametro++, idUsuario);
-                statement.setInt(parametro++, consulta.tamanioPagina());
-                statement.setLong(parametro, (long) (consulta.pagina() - 1) * consulta.tamanioPagina());
-                try (ResultSet rs = statement.executeQuery()) { while (rs.next()) items.add(mapearResenaDTO(rs)); }
+                sentencia.setInt(parametro++, idLibro > 0 && idUsuario == 0 ? idUsuarioActual : 0);
+                if (idLibro > 0) sentencia.setInt(parametro++, idLibro);
+                if (idUsuario > 0) sentencia.setInt(parametro++, idUsuario);
+                sentencia.setInt(parametro++, consulta.tamanioPagina());
+                sentencia.setLong(parametro, (long) (consulta.pagina() - 1) * consulta.tamanioPagina());
+                try (ResultSet resultado = sentencia.executeQuery()) { while (resultado.next()) items.add(mapearResenaDTO(resultado)); }
             }
         }
         return new ResultadoPaginadoDTO<>(items, total, consulta.pagina(), consulta.tamanioPagina());
@@ -170,29 +169,29 @@ public class ResenaDAOImpl implements ResenaDAO {
         String imagenes = incluirImagenes ? "l.portada, l.tipo_portada, u.imagen, u.tipo_imagen" : "NULL AS portada, NULL AS tipo_portada, NULL AS imagen, NULL AS tipo_imagen";
         String sql = "SELECT r.*, l.titulo, u.nombre, " + imagenes + ", FALSE AS voto_propio"
                 + " FROM RESENA r JOIN LIBRO l ON l.id = r.id_libro JOIN USUARIO u ON u.id = r.id_usuario WHERE r.id = ?";
-        try (Connection conexion = DBManager.getConnection(); PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setInt(1, id);
-            try (ResultSet rs = statement.executeQuery()) { return rs.next() ? mapearResenaDTO(rs) : null; }
+        try (Connection conexion = DBManager.getConnection(); PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setInt(1, id);
+            try (ResultSet resultado = sentencia.executeQuery()) { return resultado.next() ? mapearResenaDTO(resultado) : null; }
         }
     }
 
-    private ResenaDTO mapearResenaDTO(ResultSet rs) throws SQLException {
-        byte[] portada = rs.getBytes("portada");
-        byte[] imagen = rs.getBytes("imagen");
-        return new ResenaDTO(rs.getInt("id"), rs.getInt("id_libro"), rs.getString("titulo"),
-                portada == null ? null : new ImagenDTO(portada, rs.getString("tipo_portada")),
-                rs.getString("nombre"), imagen == null ? null : new ImagenDTO(imagen, rs.getString("tipo_imagen")),
-                rs.getInt("puntuacion"), rs.getString("comentario"), rs.getObject("fecha", LocalDateTime.class),
-                rs.getInt("cantidad_votos_utiles"), rs.getBoolean("voto_propio"), rs.getBoolean("activo") && !rs.getBoolean("eliminado"));
+    private ResenaDTO mapearResenaDTO(ResultSet resultado) throws SQLException {
+        byte[] portada = resultado.getBytes("portada");
+        byte[] imagen = resultado.getBytes("imagen");
+        return new ResenaDTO(resultado.getInt("id"), resultado.getInt("id_libro"), resultado.getString("titulo"),
+                portada == null ? null : new ImagenDTO(portada, resultado.getString("tipo_portada")),
+                resultado.getString("nombre"), imagen == null ? null : new ImagenDTO(imagen, resultado.getString("tipo_imagen")),
+                resultado.getInt("puntuacion"), resultado.getString("comentario"), resultado.getObject("fecha", LocalDateTime.class),
+                resultado.getInt("cantidad_votos_utiles"), resultado.getBoolean("voto_propio"), resultado.getBoolean("activo") && !resultado.getBoolean("eliminado"));
     }
 
     @Override
     public boolean existePublicada(int idUsuario, int idLibro) throws SQLException {
         String sql = "SELECT 1 FROM RESENA WHERE id_usuario = ? AND id_libro = ? AND activo AND NOT eliminado";
-        try (Connection conexion = DBManager.getConnection(); PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setInt(1, idUsuario);
-            statement.setInt(2, idLibro);
-            try (ResultSet rs = statement.executeQuery()) { return rs.next(); }
+        try (Connection conexion = DBManager.getConnection(); PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setInt(1, idUsuario);
+            sentencia.setInt(2, idLibro);
+            try (ResultSet resultado = sentencia.executeQuery()) { return resultado.next(); }
         }
     }
 
@@ -206,11 +205,11 @@ public class ResenaDAOImpl implements ResenaDAO {
                     SUM(CASE WHEN puntuacion = 5 THEN 1 ELSE 0 END) AS cinco
                 FROM RESENA WHERE id_libro = ? AND activo AND NOT eliminado
                 """;
-        try (Connection conexion = DBManager.getConnection(); PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setInt(1, idLibro);
-            try (ResultSet rs = statement.executeQuery()) {
-                rs.next();
-                return new ValoracionLibroDTO(idLibro, rs.getLong("una"), rs.getLong("dos"), rs.getLong("tres"), rs.getLong("cuatro"), rs.getLong("cinco"));
+        try (Connection conexion = DBManager.getConnection(); PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setInt(1, idLibro);
+            try (ResultSet resultado = sentencia.executeQuery()) {
+                resultado.next();
+                return new ValoracionLibroDTO(idLibro, resultado.getLong("una"), resultado.getLong("dos"), resultado.getLong("tres"), resultado.getLong("cuatro"), resultado.getLong("cinco"));
             }
         }
     }
@@ -226,10 +225,9 @@ public class ResenaDAOImpl implements ResenaDAO {
                 FROM RESENA WHERE activo AND NOT eliminado GROUP BY id_libro ORDER BY id_libro
                 """;
         List<ValoracionLibroDTO> items = new ArrayList<>();
-        try (Connection conexion = DBManager.getConnection(); PreparedStatement statement = conexion.prepareStatement(sql); ResultSet rs = statement.executeQuery()) {
-            while (rs.next()) items.add(new ValoracionLibroDTO(rs.getInt("id_libro"), rs.getLong("una"), rs.getLong("dos"), rs.getLong("tres"), rs.getLong("cuatro"), rs.getLong("cinco")));
+        try (Connection conexion = DBManager.getConnection(); PreparedStatement sentencia = conexion.prepareStatement(sql); ResultSet resultado = sentencia.executeQuery()) {
+            while (resultado.next()) items.add(new ValoracionLibroDTO(resultado.getInt("id_libro"), resultado.getLong("una"), resultado.getLong("dos"), resultado.getLong("tres"), resultado.getLong("cuatro"), resultado.getLong("cinco")));
         }
         return items;
     }
 }
-

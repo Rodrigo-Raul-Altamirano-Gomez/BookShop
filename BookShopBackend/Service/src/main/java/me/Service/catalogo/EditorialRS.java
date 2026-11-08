@@ -27,24 +27,24 @@ public class EditorialRS {
     @Inject
     private Servicios servicios;
     @Context
-    private HttpServletRequest request;
+    private HttpServletRequest peticion;
 
     @POST
     @Path("busqueda")
     public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscar(FiltroReferenciaDTO filtro) throws NegocioException {
-        return servicios.editorial().buscar(Sesion.actor(request), filtro);
+        return servicios.getEditorialBO().buscar(Sesion.obtenerIdUsuario(peticion), filtro);
     }
 
     @POST
     @Path("opciones")
     public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscarOpciones(
             FiltroReferenciaDTO filtro) throws NegocioException {
-        return servicios.editorial().buscarOpciones(Sesion.actor(request), filtro);
+        return servicios.getEditorialBO().buscarOpciones(Sesion.obtenerIdUsuario(peticion), filtro);
     }
 
     @GET
     @Path("{id}")
     public DetalleReferenciaDTO obtenerDetalle(@PathParam("id") int id) throws NegocioException {
-        return servicios.editorial().obtenerDetalle(Sesion.actor(request), id);
+        return servicios.getEditorialBO().obtenerDetalle(Sesion.obtenerIdUsuario(peticion), id);
     }
 }

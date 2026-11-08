@@ -35,92 +35,92 @@ import me.DBManager.DBManager;
 // Conserva los BO con estado durante la vida de la aplicación.
 @ApplicationScoped
 public class Servicios {
-    private final UsuarioBO usuario;
-    private final AutorBO autor;
-    private final CategoriaBO categoria;
-    private final EditorialBO editorial;
-    private final LibroBO libro;
-    private final DireccionEnvioBO direccionEnvio;
-    private final MetodoPagoBO metodoPago;
-    private final LibroGuardadoBO libroGuardado;
-    private final SeguimientoBO seguimiento;
-    private final CarritoBO carrito;
-    private final CuponBO cupon;
-    private final PedidoBO pedido;
-    private final ResenaBO resena;
-    private final RecomendacionBO recomendacion;
+    private final UsuarioBO usuarioBO;
+    private final AutorBO autorBO;
+    private final CategoriaBO categoriaBO;
+    private final EditorialBO editorialBO;
+    private final LibroBO libroBO;
+    private final DireccionEnvioBO direccionEnvioBO;
+    private final MetodoPagoBO metodoPagoBO;
+    private final LibroGuardadoBO libroGuardadoBO;
+    private final SeguimientoBO seguimientoBO;
+    private final CarritoBO carritoBO;
+    private final CuponBO cuponBO;
+    private final PedidoBO pedidoBO;
+    private final ResenaBO resenaBO;
+    private final RecomendacionBO recomendacionBO;
 
     public Servicios() {
-        usuario = new UsuarioBOImpl();
-        autor = new AutorBOImpl();
-        categoria = new CategoriaBOImpl();
-        editorial = new EditorialBOImpl();
-        libro = new LibroBOImpl();
-        direccionEnvio = new DireccionEnvioBOImpl();
-        metodoPago = new MetodoPagoBOImpl();
-        libroGuardado = new LibroGuardadoBOImpl();
-        seguimiento = new SeguimientoBOImpl();
-        carrito = new CarritoBOImpl();
-        cupon = new CuponBOImpl();
-        pedido = new PedidoBOImpl();
-        resena = new ResenaBOImpl();
-        recomendacion = new RecomendacionBOImpl();
+        usuarioBO = new UsuarioBOImpl();
+        autorBO = new AutorBOImpl();
+        categoriaBO = new CategoriaBOImpl();
+        editorialBO = new EditorialBOImpl();
+        libroBO = new LibroBOImpl();
+        direccionEnvioBO = new DireccionEnvioBOImpl();
+        metodoPagoBO = new MetodoPagoBOImpl();
+        libroGuardadoBO = new LibroGuardadoBOImpl();
+        seguimientoBO = new SeguimientoBOImpl();
+        carritoBO = new CarritoBOImpl();
+        cuponBO = new CuponBOImpl();
+        pedidoBO = new PedidoBOImpl();
+        resenaBO = new ResenaBOImpl();
+        recomendacionBO = new RecomendacionBOImpl();
     }
 
-    public UsuarioBO usuario() {
-        return usuario;
+    public UsuarioBO getUsuarioBO() {
+        return usuarioBO;
     }
 
-    public AutorBO autor() {
-        return autor;
+    public AutorBO getAutorBO() {
+        return autorBO;
     }
 
-    public CategoriaBO categoria() {
-        return categoria;
+    public CategoriaBO getCategoriaBO() {
+        return categoriaBO;
     }
 
-    public EditorialBO editorial() {
-        return editorial;
+    public EditorialBO getEditorialBO() {
+        return editorialBO;
     }
 
-    public LibroBO libro() {
-        return libro;
+    public LibroBO getLibroBO() {
+        return libroBO;
     }
 
-    public DireccionEnvioBO direccionEnvio() {
-        return direccionEnvio;
+    public DireccionEnvioBO getDireccionEnvioBO() {
+        return direccionEnvioBO;
     }
 
-    public MetodoPagoBO metodoPago() {
-        return metodoPago;
+    public MetodoPagoBO getMetodoPagoBO() {
+        return metodoPagoBO;
     }
 
-    public LibroGuardadoBO libroGuardado() {
-        return libroGuardado;
+    public LibroGuardadoBO getLibroGuardadoBO() {
+        return libroGuardadoBO;
     }
 
-    public SeguimientoBO seguimiento() {
-        return seguimiento;
+    public SeguimientoBO getSeguimientoBO() {
+        return seguimientoBO;
     }
 
-    public CarritoBO carrito() {
-        return carrito;
+    public CarritoBO getCarritoBO() {
+        return carritoBO;
     }
 
-    public CuponBO cupon() {
-        return cupon;
+    public CuponBO getCuponBO() {
+        return cuponBO;
     }
 
-    public PedidoBO pedido() {
-        return pedido;
+    public PedidoBO getPedidoBO() {
+        return pedidoBO;
     }
 
-    public ResenaBO resena() {
-        return resena;
+    public ResenaBO getResenaBO() {
+        return resenaBO;
     }
 
-    public RecomendacionBO recomendacion() {
-        return recomendacion;
+    public RecomendacionBO getRecomendacionBO() {
+        return recomendacionBO;
     }
 
     @PreDestroy

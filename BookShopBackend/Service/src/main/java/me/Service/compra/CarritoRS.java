@@ -26,11 +26,11 @@ public class CarritoRS {
     @Inject
     private Servicios servicios;
     @Context
-    private HttpServletRequest request;
+    private HttpServletRequest peticion;
 
     @GET
     public ResumenCompraDTO consultar() throws NegocioException {
-        return servicios.carrito().consultar(Sesion.exigir(request));
+        return servicios.getCarritoBO().consultar(Sesion.exigirIdUsuario(peticion));
     }
 
     @POST
@@ -38,9 +38,9 @@ public class CarritoRS {
     public ResumenCompraDTO agregar(
             @PathParam("idLibro") int idLibro,
             @QueryParam("cantidad") Integer cantidad) throws NegocioException {
-        int actor = Sesion.exigir(request);
+        int idUsuario = Sesion.exigirIdUsuario(peticion);
         if (cantidad == null) throw new ValidacionException("cantidad", "Indica la cantidad.");
-        return servicios.carrito().agregar(actor, idLibro, cantidad);
+        return servicios.getCarritoBO().agregar(idUsuario, idLibro, cantidad);
     }
 
     @PUT
@@ -48,19 +48,19 @@ public class CarritoRS {
     public ResumenCompraDTO cambiarCantidad(
             @PathParam("idLibro") int idLibro,
             @QueryParam("cantidad") Integer cantidad) throws NegocioException {
-        int actor = Sesion.exigir(request);
+        int idUsuario = Sesion.exigirIdUsuario(peticion);
         if (cantidad == null) throw new ValidacionException("cantidad", "Indica la cantidad.");
-        return servicios.carrito().cambiarCantidad(actor, idLibro, cantidad);
+        return servicios.getCarritoBO().cambiarCantidad(idUsuario, idLibro, cantidad);
     }
 
     @DELETE
     @Path("libros/{idLibro}")
     public ResumenCompraDTO retirar(@PathParam("idLibro") int idLibro) throws NegocioException {
-        return servicios.carrito().retirar(Sesion.exigir(request), idLibro);
+        return servicios.getCarritoBO().retirar(Sesion.exigirIdUsuario(peticion), idLibro);
     }
 
     @DELETE
     public ResumenCompraDTO vaciar() throws NegocioException {
-        return servicios.carrito().vaciar(Sesion.exigir(request));
+        return servicios.getCarritoBO().vaciar(Sesion.exigirIdUsuario(peticion));
     }
 }

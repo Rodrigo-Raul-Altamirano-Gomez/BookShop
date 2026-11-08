@@ -31,28 +31,28 @@ public class MetodoPagoDAOImpl implements MetodoPagoDAO {
         if (metodo.getFechaCreacion() == null) metodo.setFechaCreacion(LocalDateTime.now());
         // Comparar numeros, insertar y elegir predeterminado deben poder compartir el contexto.
         Connection conexion = TransactionContext.getConnection();
-        try (PreparedStatement statement = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setInt(1, metodo.getUsuario().getId());
-            statement.setString(2, metodo.getTitular());
-            statement.setString(3, metodo.getProveedor());
-            statement.setString(4, metodo.getAlias());
-            statement.setBoolean(5, metodo.isActivo());
-            statement.setString(6, tipo);
+        try (PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            sentencia.setInt(1, metodo.getUsuario().getId());
+            sentencia.setString(2, metodo.getTitular());
+            sentencia.setString(3, metodo.getProveedor());
+            sentencia.setString(4, metodo.getAlias());
+            sentencia.setBoolean(5, metodo.isActivo());
+            sentencia.setString(6, tipo);
             if (metodo instanceof TarjetaBancaria tarjeta) {
-                statement.setString(7, tarjeta.getNumeroTarjetaCifrado());
-                statement.setString(8, null);
-                statement.setString(9, tarjeta.getTipoTarjeta().name());
+                sentencia.setString(7, tarjeta.getNumeroTarjetaCifrado());
+                sentencia.setString(8, null);
+                sentencia.setString(9, tarjeta.getTipoTarjeta().name());
             } else {
                 BilleteraDigital billetera = (BilleteraDigital) metodo;
-                statement.setString(7, null);
-                statement.setString(8, billetera.getNumeroTelefonoCifrado());
-                statement.setString(9, null);
+                sentencia.setString(7, null);
+                sentencia.setString(8, billetera.getNumeroTelefonoCifrado());
+                sentencia.setString(9, null);
             }
-            statement.setDate(10, Date.valueOf(metodo.getFechaVencimiento()));
-            statement.setString(11, metodo.getUsuarioCreacion());
-            statement.setTimestamp(12, Timestamp.valueOf(metodo.getFechaCreacion()));
-            statement.executeUpdate();
-            try (ResultSet claves = statement.getGeneratedKeys()) {
+            sentencia.setDate(10, Date.valueOf(metodo.getFechaVencimiento()));
+            sentencia.setString(11, metodo.getUsuarioCreacion());
+            sentencia.setTimestamp(12, Timestamp.valueOf(metodo.getFechaCreacion()));
+            sentencia.executeUpdate();
+            try (ResultSet claves = sentencia.getGeneratedKeys()) {
                 if (!claves.next()) throw new SQLException("No se genero el identificador del metodo de pago.");
                 metodo.setId(claves.getInt(1));
             }
@@ -70,15 +70,15 @@ public class MetodoPagoDAOImpl implements MetodoPagoDAO {
                 + "WHERE id = ? AND id_usuario = ? AND tipo_metodo = ? AND NOT eliminado";
         LocalDateTime fecha = LocalDateTime.now();
         Connection conexion = TransactionContext.getConnection();
-        try (PreparedStatement statement = conexion.prepareStatement(sql)) {
-            asignarDatosEdicion(statement, metodo);
-            statement.setBoolean(9, metodo.isActivo());
-            statement.setString(10, metodo.getUsuarioActualizacion());
-            statement.setTimestamp(11, Timestamp.valueOf(fecha));
-            statement.setInt(12, metodo.getId());
-            statement.setInt(13, metodo.getUsuario().getId());
-            statement.setString(14, tipoMetodo(metodo));
-            if (statement.executeUpdate() != 1) throw new SQLException("El metodo de pago no puede modificarse.");
+        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            asignarDatosEdicion(sentencia, metodo);
+            sentencia.setBoolean(9, metodo.isActivo());
+            sentencia.setString(10, metodo.getUsuarioActualizacion());
+            sentencia.setTimestamp(11, Timestamp.valueOf(fecha));
+            sentencia.setInt(12, metodo.getId());
+            sentencia.setInt(13, metodo.getUsuario().getId());
+            sentencia.setString(14, tipoMetodo(metodo));
+            if (sentencia.executeUpdate() != 1) throw new SQLException("El metodo de pago no puede modificarse.");
             metodo.setFechaActualizacion(fecha);
         }
     }
@@ -92,14 +92,14 @@ public class MetodoPagoDAOImpl implements MetodoPagoDAO {
                 + "WHERE id = ? AND id_usuario = ? AND tipo_metodo = ? AND eliminado";
         LocalDateTime fecha = LocalDateTime.now();
         Connection conexion = TransactionContext.getConnection();
-        try (PreparedStatement statement = conexion.prepareStatement(sql)) {
-            asignarDatosEdicion(statement, metodo);
-            statement.setString(9, metodo.getUsuarioActualizacion());
-            statement.setTimestamp(10, Timestamp.valueOf(fecha));
-            statement.setInt(11, metodo.getId());
-            statement.setInt(12, metodo.getUsuario().getId());
-            statement.setString(13, tipoMetodo(metodo));
-            if (statement.executeUpdate() != 1) return false;
+        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            asignarDatosEdicion(sentencia, metodo);
+            sentencia.setString(9, metodo.getUsuarioActualizacion());
+            sentencia.setTimestamp(10, Timestamp.valueOf(fecha));
+            sentencia.setInt(11, metodo.getId());
+            sentencia.setInt(12, metodo.getUsuario().getId());
+            sentencia.setString(13, tipoMetodo(metodo));
+            if (sentencia.executeUpdate() != 1) return false;
             metodo.setEliminado(false);
             metodo.setPredeterminado(false);
             metodo.setFechaActualizacion(fecha);
@@ -108,23 +108,22 @@ public class MetodoPagoDAOImpl implements MetodoPagoDAO {
     }
 
     // Editar y recuperar guardan los mismos datos, conservando propietario y subtipo.
-    private void asignarDatosEdicion(PreparedStatement statement, MetodoPago metodo) throws SQLException {
-        tipoMetodo(metodo);
-        statement.setString(1, metodo.getTitular());
-        statement.setString(2, metodo.getProveedor());
-        statement.setString(3, metodo.getAlias());
+    private void asignarDatosEdicion(PreparedStatement sentencia, MetodoPago metodo) throws SQLException {
+        sentencia.setString(1, metodo.getTitular());
+        sentencia.setString(2, metodo.getProveedor());
+        sentencia.setString(3, metodo.getAlias());
         if (metodo instanceof TarjetaBancaria tarjeta) {
-            statement.setString(4, tarjeta.getNumeroTarjetaCifrado());
-            statement.setString(5, null);
-            statement.setString(6, tarjeta.getTipoTarjeta().name());
+            sentencia.setString(4, tarjeta.getNumeroTarjetaCifrado());
+            sentencia.setString(5, null);
+            sentencia.setString(6, tarjeta.getTipoTarjeta().name());
         } else {
             BilleteraDigital billetera = (BilleteraDigital) metodo;
-            statement.setString(4, null);
-            statement.setString(5, billetera.getNumeroTelefonoCifrado());
-            statement.setString(6, null);
+            sentencia.setString(4, null);
+            sentencia.setString(5, billetera.getNumeroTelefonoCifrado());
+            sentencia.setString(6, null);
         }
-        statement.setDate(7, Date.valueOf(metodo.getFechaVencimiento()));
-        statement.setBoolean(8, metodo.isActivo());
+        sentencia.setDate(7, Date.valueOf(metodo.getFechaVencimiento()));
+        sentencia.setBoolean(8, metodo.isActivo());
     }
 
     private String tipoMetodo(MetodoPago metodo) throws SQLException {
@@ -137,9 +136,9 @@ public class MetodoPagoDAOImpl implements MetodoPagoDAO {
     public MetodoPago leer(int id) throws SQLException {
         String sql = "SELECT * FROM METODO_PAGO WHERE id = ?";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setInt(1, id);
-            try (ResultSet resultado = statement.executeQuery()) {
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setInt(1, id);
+            try (ResultSet resultado = sentencia.executeQuery()) {
                 return resultado.next() ? mapearMetodo(resultado) : null;
             }
         }
@@ -149,9 +148,9 @@ public class MetodoPagoDAOImpl implements MetodoPagoDAO {
     public MetodoPago leerParaActualizar(int id) throws SQLException {
         String sql = "SELECT * FROM METODO_PAGO WHERE id = ? FOR UPDATE";
         Connection conexion = TransactionContext.getConnection();
-        try (PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setInt(1, id);
-            try (ResultSet resultado = statement.executeQuery()) {
+        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setInt(1, id);
+            try (ResultSet resultado = sentencia.executeQuery()) {
                 return resultado.next() ? mapearMetodo(resultado) : null;
             }
         }
@@ -196,40 +195,39 @@ public class MetodoPagoDAOImpl implements MetodoPagoDAO {
                 + "usuario_actualizacion = ?, fecha_actualizacion = CURRENT_TIMESTAMP "
                 + "WHERE id = ? AND NOT eliminado";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setString(1, usuario);
-            statement.setInt(2, id);
-            return statement.executeUpdate() == 1;
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setString(1, usuario);
+            sentencia.setInt(2, id);
+            return sentencia.executeUpdate() == 1;
         }
     }
 
     @Override
-    public ResultadoPaginadoDTO<MetodoPago> listarPorUsuario(int idUsuario, int pagina, int tamano)
+    public ResultadoPaginadoDTO<MetodoPago> listarPorUsuario(int idUsuario, int pagina, int tamanioPagina)
             throws SQLException {
-        if (pagina < 1 || tamano < 1) throw new IllegalArgumentException("Pagina y tamano deben ser positivos.");
         String condiciones = " FROM METODO_PAGO WHERE id_usuario = ? AND NOT eliminado";
         List<MetodoPago> metodos = new ArrayList<>();
         long total;
         try (Connection conexion = DBManager.getConnection()) {
-            try (PreparedStatement statement = conexion.prepareStatement("SELECT COUNT(*)" + condiciones)) {
-                statement.setInt(1, idUsuario);
-                try (ResultSet resultado = statement.executeQuery()) {
+            try (PreparedStatement sentencia = conexion.prepareStatement("SELECT COUNT(*)" + condiciones)) {
+                sentencia.setInt(1, idUsuario);
+                try (ResultSet resultado = sentencia.executeQuery()) {
                     resultado.next();
                     total = resultado.getLong(1);
                 }
             }
             String sql = "SELECT *" + condiciones
                     + " ORDER BY predeterminado DESC, fecha_creacion DESC, id DESC LIMIT ? OFFSET ?";
-            try (PreparedStatement statement = conexion.prepareStatement(sql)) {
-                statement.setInt(1, idUsuario);
-                statement.setInt(2, tamano);
-                statement.setLong(3, (long) (pagina - 1) * tamano);
-                try (ResultSet resultado = statement.executeQuery()) {
+            try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+                sentencia.setInt(1, idUsuario);
+                sentencia.setInt(2, tamanioPagina);
+                sentencia.setLong(3, (long) (pagina - 1) * tamanioPagina);
+                try (ResultSet resultado = sentencia.executeQuery()) {
                     while (resultado.next()) metodos.add(mapearMetodo(resultado));
                 }
             }
         }
-        return new ResultadoPaginadoDTO<>(metodos, total, pagina, tamano);
+        return new ResultadoPaginadoDTO<>(metodos, total, pagina, tamanioPagina);
     }
 
     @Override
@@ -238,9 +236,9 @@ public class MetodoPagoDAOImpl implements MetodoPagoDAO {
         String sql = "SELECT * FROM METODO_PAGO WHERE tipo_metodo = ? ORDER BY id FOR UPDATE";
         List<MetodoPago> metodos = new ArrayList<>();
         Connection conexion = TransactionContext.getConnection();
-        try (PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setString(1, esTarjeta ? "TARJETA_BANCARIA" : "BILLETERA_DIGITAL");
-            try (ResultSet resultado = statement.executeQuery()) {
+        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setString(1, esTarjeta ? "TARJETA_BANCARIA" : "BILLETERA_DIGITAL");
+            try (ResultSet resultado = sentencia.executeQuery()) {
                 while (resultado.next()) metodos.add(mapearMetodo(resultado));
             }
         }
@@ -253,10 +251,10 @@ public class MetodoPagoDAOImpl implements MetodoPagoDAO {
                 + "usuario_actualizacion = ?, fecha_actualizacion = CURRENT_TIMESTAMP "
                 + "WHERE activo AND NOT eliminado AND fecha_vencimiento < ?";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setString(1, usuario);
-            statement.setDate(2, Date.valueOf(fecha));
-            statement.executeUpdate();
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setString(1, usuario);
+            sentencia.setDate(2, Date.valueOf(fecha));
+            sentencia.executeUpdate();
         }
     }
 
@@ -265,38 +263,38 @@ public class MetodoPagoDAOImpl implements MetodoPagoDAO {
             throws SQLException {
         Connection conexion = TransactionContext.getConnection();
         String bloquearPropietario = "SELECT id FROM USUARIO WHERE id = ? AND activo AND NOT eliminado FOR UPDATE";
-        try (PreparedStatement statement = conexion.prepareStatement(bloquearPropietario)) {
-            statement.setInt(1, idUsuario);
-            try (ResultSet resultado = statement.executeQuery()) {
+        try (PreparedStatement sentencia = conexion.prepareStatement(bloquearPropietario)) {
+            sentencia.setInt(1, idUsuario);
+            try (ResultSet resultado = sentencia.executeQuery()) {
                 if (!resultado.next()) return false;
             }
         }
         String candidato = "SELECT id FROM METODO_PAGO WHERE id = ? AND id_usuario = ? "
                 + "AND activo AND NOT eliminado AND fecha_vencimiento >= ? FOR UPDATE";
-        try (PreparedStatement statement = conexion.prepareStatement(candidato)) {
-            statement.setInt(1, idMetodo);
-            statement.setInt(2, idUsuario);
-            statement.setDate(3, Date.valueOf(fecha));
-            try (ResultSet resultado = statement.executeQuery()) {
+        try (PreparedStatement sentencia = conexion.prepareStatement(candidato)) {
+            sentencia.setInt(1, idMetodo);
+            sentencia.setInt(2, idUsuario);
+            sentencia.setDate(3, Date.valueOf(fecha));
+            try (ResultSet resultado = sentencia.executeQuery()) {
                 if (!resultado.next()) return false;
             }
         }
         String retirar = "UPDATE METODO_PAGO SET predeterminado = FALSE, usuario_actualizacion = ?, "
                 + "fecha_actualizacion = CURRENT_TIMESTAMP WHERE id_usuario = ? AND predeterminado";
-        try (PreparedStatement statement = conexion.prepareStatement(retirar)) {
-            statement.setString(1, usuario);
-            statement.setInt(2, idUsuario);
-            statement.executeUpdate();
+        try (PreparedStatement sentencia = conexion.prepareStatement(retirar)) {
+            sentencia.setString(1, usuario);
+            sentencia.setInt(2, idUsuario);
+            sentencia.executeUpdate();
         }
         String elegir = "UPDATE METODO_PAGO SET predeterminado = TRUE, usuario_actualizacion = ?, "
                 + "fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ? AND id_usuario = ? "
                 + "AND activo AND NOT eliminado AND fecha_vencimiento >= ?";
-        try (PreparedStatement statement = conexion.prepareStatement(elegir)) {
-            statement.setString(1, usuario);
-            statement.setInt(2, idMetodo);
-            statement.setInt(3, idUsuario);
-            statement.setDate(4, Date.valueOf(fecha));
-            return statement.executeUpdate() == 1;
+        try (PreparedStatement sentencia = conexion.prepareStatement(elegir)) {
+            sentencia.setString(1, usuario);
+            sentencia.setInt(2, idMetodo);
+            sentencia.setInt(3, idUsuario);
+            sentencia.setDate(4, Date.valueOf(fecha));
+            return sentencia.executeUpdate() == 1;
         }
     }
 
@@ -305,10 +303,10 @@ public class MetodoPagoDAOImpl implements MetodoPagoDAO {
         String sql = "UPDATE METODO_PAGO SET predeterminado = FALSE, usuario_actualizacion = ?, "
                 + "fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ? AND predeterminado AND NOT eliminado";
         Connection conexion = TransactionContext.getConnection();
-        try (PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setString(1, usuario);
-            statement.setInt(2, idMetodo);
-            return statement.executeUpdate() == 1;
+        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setString(1, usuario);
+            sentencia.setInt(2, idMetodo);
+            return sentencia.executeUpdate() == 1;
         }
     }
 }

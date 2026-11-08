@@ -23,7 +23,7 @@ class SesionTest {
         when(request.getSession(false)).thenReturn(sesion);
         when(sesion.getAttribute("bookshop.actor")).thenThrow(new IllegalStateException());
 
-        assertEquals(0, Sesion.actor(request));
+        assertEquals(0, Sesion.obtenerIdUsuario(request));
     }
 
     @Test
@@ -33,7 +33,7 @@ class SesionTest {
         when(request.getSession(false)).thenReturn(sesion);
         when(sesion.getAttribute("bookshop.actor")).thenThrow(new IllegalStateException());
 
-        NotAuthorizedException error = assertThrows(NotAuthorizedException.class, () -> Sesion.exigir(request));
+        NotAuthorizedException error = assertThrows(NotAuthorizedException.class, () -> Sesion.exigirIdUsuario(request));
         assertEquals(401, error.getResponse().getStatus());
     }
 
@@ -44,7 +44,7 @@ class SesionTest {
         when(request.getSession(false)).thenReturn(null);
 
         NotAuthorizedException error = assertThrows(NotAuthorizedException.class,
-                () -> Sesion.registrarTiempo(request, usuarios));
+                () -> Sesion.registrarTiempoDeUso(request, usuarios));
         assertEquals(401, error.getResponse().getStatus());
         verifyNoInteractions(usuarios);
     }
@@ -58,7 +58,7 @@ class SesionTest {
         when(sesion.getAttribute("bookshop.actor")).thenThrow(new IllegalStateException());
 
         NotAuthorizedException error = assertThrows(NotAuthorizedException.class,
-                () -> Sesion.registrarTiempo(request, usuarios));
+                () -> Sesion.registrarTiempoDeUso(request, usuarios));
         assertEquals(401, error.getResponse().getStatus());
         verifyNoInteractions(usuarios);
     }
@@ -73,7 +73,7 @@ class SesionTest {
         when(sesion.getAttribute("bookshop.inicio")).thenThrow(new IllegalStateException());
 
         NotAuthorizedException error = assertThrows(NotAuthorizedException.class,
-                () -> Sesion.registrarTiempo(request, usuarios));
+                () -> Sesion.registrarTiempoDeUso(request, usuarios));
         assertEquals(401, error.getResponse().getStatus());
         verifyNoInteractions(usuarios);
     }
@@ -83,7 +83,7 @@ class SesionTest {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getSession(false)).thenReturn(null);
 
-        assertDoesNotThrow(() -> Sesion.invalidar(request));
+        assertDoesNotThrow(() -> Sesion.cerrar(request));
     }
 
     @Test
@@ -93,7 +93,7 @@ class SesionTest {
         when(request.getSession(false)).thenReturn(sesion);
         doThrow(new IllegalStateException()).when(sesion).invalidate();
 
-        assertDoesNotThrow(() -> Sesion.invalidar(request));
+        assertDoesNotThrow(() -> Sesion.cerrar(request));
     }
 
     @Test
@@ -102,7 +102,7 @@ class SesionTest {
         HttpSession sesion = mock(HttpSession.class);
         when(request.getSession(false)).thenReturn(sesion);
 
-        Sesion.invalidar(request);
+        Sesion.cerrar(request);
 
         verify(sesion).invalidate();
     }

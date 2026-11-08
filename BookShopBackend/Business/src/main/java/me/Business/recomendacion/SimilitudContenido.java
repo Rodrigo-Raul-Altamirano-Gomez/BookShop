@@ -41,7 +41,7 @@ final class SimilitudContenido {
     }
     private static Set<String> palabras(String texto) {
         String limpio = Normalizer.normalize(texto.toLowerCase(Locale.ROOT), Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "");
+            .replaceAll("\\p{M}", "");
         Set<String> palabras = new HashSet<>(Arrays.asList(limpio.split("[^\\p{L}\\p{N}]+")));
         palabras.removeIf(p -> p.length() < 3);
         return palabras;

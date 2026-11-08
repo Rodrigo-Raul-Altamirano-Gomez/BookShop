@@ -23,12 +23,12 @@ public class CuponRS {
     @Inject
     private Servicios servicios;
     @Context
-    private HttpServletRequest request;
+    private HttpServletRequest peticion;
 
     @GET
     public ResultadoPaginadoDTO<CuponDTO> listar(
             @DefaultValue("1") @QueryParam("pagina") int pagina,
             @DefaultValue("10") @QueryParam("tamanioPagina") int tamanioPagina) throws NegocioException {
-        return servicios.cupon().listar(Sesion.exigir(request), pagina, tamanioPagina);
+        return servicios.getCuponBO().listar(Sesion.exigirIdUsuario(peticion), pagina, tamanioPagina);
     }
 }

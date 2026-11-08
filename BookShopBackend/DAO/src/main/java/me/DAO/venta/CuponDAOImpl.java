@@ -22,21 +22,21 @@ public class CuponDAOImpl implements CuponDAO {
                 """;
         // La emisión participa en la transacción de la primera entrega.
         Connection conexion = TransactionContext.getConnection();
-        try (PreparedStatement statement = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setInt(1, cupon.getUsuario().getId());
-            statement.setBigDecimal(2, cupon.getPorcentaje());
-            statement.setBigDecimal(3, cupon.getMontoMinimo());
-            statement.setTimestamp(4, Timestamp.valueOf(cupon.getFechaInicio()));
-            statement.setTimestamp(5, Timestamp.valueOf(cupon.getFechaFin()));
-            statement.setBoolean(6, cupon.isActivo());
-            statement.setBoolean(7, cupon.isConsumido());
-            statement.setBoolean(8, cupon.isEliminado());
-            statement.setString(9, cupon.getUsuarioCreacion());
-            statement.setTimestamp(10, Timestamp.valueOf(cupon.getFechaCreacion()));
-            statement.executeUpdate();
-            try (ResultSet rs = statement.getGeneratedKeys()) {
-                if (!rs.next()) throw new SQLException("No se genero el identificador del cupon.");
-                cupon.setId(rs.getInt(1));
+        try (PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            sentencia.setInt(1, cupon.getUsuario().getId());
+            sentencia.setBigDecimal(2, cupon.getPorcentaje());
+            sentencia.setBigDecimal(3, cupon.getMontoMinimo());
+            sentencia.setTimestamp(4, Timestamp.valueOf(cupon.getFechaInicio()));
+            sentencia.setTimestamp(5, Timestamp.valueOf(cupon.getFechaFin()));
+            sentencia.setBoolean(6, cupon.isActivo());
+            sentencia.setBoolean(7, cupon.isConsumido());
+            sentencia.setBoolean(8, cupon.isEliminado());
+            sentencia.setString(9, cupon.getUsuarioCreacion());
+            sentencia.setTimestamp(10, Timestamp.valueOf(cupon.getFechaCreacion()));
+            sentencia.executeUpdate();
+            try (ResultSet resultado = sentencia.getGeneratedKeys()) {
+                if (!resultado.next()) throw new SQLException("No se genero el identificador del cupon.");
+                cupon.setId(resultado.getInt(1));
             }
         }
     }
@@ -55,56 +55,54 @@ public class CuponDAOImpl implements CuponDAO {
 
     private Cupon leerRegistro(Connection conexion, int id, boolean bloquear) throws SQLException {
         String sql = "SELECT * FROM CUPON WHERE id = ?" + (bloquear ? " FOR UPDATE" : "");
-        try (PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setInt(1, id);
-            try (ResultSet rs = statement.executeQuery()) {
-                return rs.next() ? mapearCupon(rs) : null;
+        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setInt(1, id);
+            try (ResultSet resultado = sentencia.executeQuery()) {
+                return resultado.next() ? mapearCupon(resultado) : null;
             }
         }
     }
 
-    private Cupon mapearCupon(ResultSet rs) throws SQLException {
+    private Cupon mapearCupon(ResultSet resultado) throws SQLException {
         Cupon cupon = new Cupon();
-        cupon.setId(rs.getInt("id"));
+        cupon.setId(resultado.getInt("id"));
         Usuario usuario = new Usuario();
-        usuario.setId(rs.getInt("id_usuario"));
+        usuario.setId(resultado.getInt("id_usuario"));
         cupon.setUsuario(usuario);
-        cupon.setPorcentaje(rs.getBigDecimal("porcentaje"));
-        cupon.setMontoMinimo(rs.getBigDecimal("monto_minimo"));
-        cupon.setFechaInicio(rs.getObject("fecha_inicio", LocalDateTime.class));
-        cupon.setFechaFin(rs.getObject("fecha_fin", LocalDateTime.class));
-        cupon.setActivo(rs.getBoolean("activo"));
-        cupon.setConsumido(rs.getBoolean("consumido"));
-        cupon.setEliminado(rs.getBoolean("eliminado"));
-        cupon.setUsuarioCreacion(rs.getString("usuario_creacion"));
-        cupon.setFechaCreacion(rs.getObject("fecha_creacion", LocalDateTime.class));
-        cupon.setUsuarioActualizacion(rs.getString("usuario_actualizacion"));
-        cupon.setFechaActualizacion(rs.getObject("fecha_actualizacion", LocalDateTime.class));
+        cupon.setPorcentaje(resultado.getBigDecimal("porcentaje"));
+        cupon.setMontoMinimo(resultado.getBigDecimal("monto_minimo"));
+        cupon.setFechaInicio(resultado.getObject("fecha_inicio", LocalDateTime.class));
+        cupon.setFechaFin(resultado.getObject("fecha_fin", LocalDateTime.class));
+        cupon.setActivo(resultado.getBoolean("activo"));
+        cupon.setConsumido(resultado.getBoolean("consumido"));
+        cupon.setEliminado(resultado.getBoolean("eliminado"));
+        cupon.setUsuarioCreacion(resultado.getString("usuario_creacion"));
+        cupon.setFechaCreacion(resultado.getObject("fecha_creacion", LocalDateTime.class));
+        cupon.setUsuarioActualizacion(resultado.getString("usuario_actualizacion"));
+        cupon.setFechaActualizacion(resultado.getObject("fecha_actualizacion", LocalDateTime.class));
         return cupon;
     }
 
     @Override
-    public ResultadoPaginadoDTO<CuponDTO> listarPorUsuario(int idUsuario, LocalDateTime fecha, int pagina, int tamanio) throws SQLException {
-        if (pagina < 1 || tamanio < 1) throw new IllegalArgumentException("Pagina y tamanio deben ser positivos.");
-        if (fecha == null) throw new IllegalArgumentException("La fecha de consulta es obligatoria.");
+    public ResultadoPaginadoDTO<CuponDTO> listarPorUsuario(int idUsuario, LocalDateTime fecha, int pagina, int tamanioPagina) throws SQLException {
         String sql = "SELECT * FROM CUPON WHERE id_usuario = ? AND NOT eliminado ORDER BY fecha_creacion DESC, id DESC LIMIT ? OFFSET ?";
         List<CuponDTO> items = new ArrayList<>();
         long total;
         try (Connection conexion = DBManager.getConnection()) {
-            try (PreparedStatement statement = conexion.prepareStatement("SELECT COUNT(*) FROM CUPON WHERE id_usuario = ? AND NOT eliminado")) {
-                statement.setInt(1, idUsuario);
-                try (ResultSet rs = statement.executeQuery()) {
-                    rs.next();
-                    total = rs.getLong(1);
+            try (PreparedStatement sentencia = conexion.prepareStatement("SELECT COUNT(*) FROM CUPON WHERE id_usuario = ? AND NOT eliminado")) {
+                sentencia.setInt(1, idUsuario);
+                try (ResultSet resultado = sentencia.executeQuery()) {
+                    resultado.next();
+                    total = resultado.getLong(1);
                 }
             }
-            try (PreparedStatement statement = conexion.prepareStatement(sql)) {
-                statement.setInt(1, idUsuario);
-                statement.setInt(2, tamanio);
-                statement.setLong(3, (long) (pagina - 1) * tamanio);
-                try (ResultSet rs = statement.executeQuery()) {
-                    while (rs.next()) {
-                        Cupon cupon = mapearCupon(rs);
+            try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+                sentencia.setInt(1, idUsuario);
+                sentencia.setInt(2, tamanioPagina);
+                sentencia.setLong(3, (long) (pagina - 1) * tamanioPagina);
+                try (ResultSet resultado = sentencia.executeQuery()) {
+                    while (resultado.next()) {
+                        Cupon cupon = mapearCupon(resultado);
                         EstadoCupon estado = cupon.isConsumido() ? EstadoCupon.UTILIZADO :
                                 (!cupon.isActivo() || fecha.isBefore(cupon.getFechaInicio()) || fecha.isAfter(cupon.getFechaFin()))
                                         ? EstadoCupon.VENCIDO : EstadoCupon.DISPONIBLE;
@@ -113,7 +111,7 @@ public class CuponDAOImpl implements CuponDAO {
                 }
             }
         }
-        return new ResultadoPaginadoDTO<>(items, total, pagina, tamanio);
+        return new ResultadoPaginadoDTO<>(items, total, pagina, tamanioPagina);
     }
 
     @Override
@@ -123,11 +121,11 @@ public class CuponDAOImpl implements CuponDAO {
                     usuario_actualizacion = ?, fecha_actualizacion = CURRENT_TIMESTAMP
                 WHERE NOT eliminado AND activo <> (? BETWEEN fecha_inicio AND fecha_fin)
                 """;
-        try (Connection conexion = DBManager.getConnection(); PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setTimestamp(1, Timestamp.valueOf(fecha));
-            statement.setString(2, actor);
-            statement.setTimestamp(3, Timestamp.valueOf(fecha));
-            statement.executeUpdate();
+        try (Connection conexion = DBManager.getConnection(); PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setTimestamp(1, Timestamp.valueOf(fecha));
+            sentencia.setString(2, actor);
+            sentencia.setTimestamp(3, Timestamp.valueOf(fecha));
+            sentencia.executeUpdate();
         }
     }
 
@@ -139,12 +137,12 @@ public class CuponDAOImpl implements CuponDAO {
                     AND ? BETWEEN fecha_inicio AND fecha_fin
                 """;
         Connection conexion = TransactionContext.getConnection();
-        try (PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setString(1, actor);
-            statement.setInt(2, id);
-            statement.setInt(3, idUsuario);
-            statement.setTimestamp(4, Timestamp.valueOf(fecha));
-            return statement.executeUpdate() == 1;
+        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setString(1, actor);
+            sentencia.setInt(2, id);
+            sentencia.setInt(3, idUsuario);
+            sentencia.setTimestamp(4, Timestamp.valueOf(fecha));
+            return sentencia.executeUpdate() == 1;
         }
     }
 
@@ -158,11 +156,11 @@ public class CuponDAOImpl implements CuponDAO {
                         AND p.estado IN ('EN_ALMACEN', 'EN_CAMINO', 'ENTREGADO'))
                 """;
         Connection conexion = TransactionContext.getConnection();
-        try (PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setString(1, actor);
-            statement.setInt(2, id);
-            statement.setTimestamp(3, Timestamp.valueOf(fecha));
-            return statement.executeUpdate() == 1;
+        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setString(1, actor);
+            sentencia.setInt(2, id);
+            sentencia.setTimestamp(3, Timestamp.valueOf(fecha));
+            return sentencia.executeUpdate() == 1;
         }
     }
 }

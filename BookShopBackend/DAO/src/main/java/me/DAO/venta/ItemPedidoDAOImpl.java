@@ -21,21 +21,21 @@ public class ItemPedidoDAOImpl implements ItemPedidoDAO {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
         Connection conexion = TransactionContext.getConnection();
-        try (PreparedStatement statement = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setInt(1, idPedido);
-            statement.setInt(2, item.getLibro().getId());
-            statement.setInt(3, item.getCantidad());
-            statement.setBigDecimal(4, item.getPrecioBase());
-            statement.setBigDecimal(5, item.getPrecioUnitario());
-            statement.setBigDecimal(6, item.getPorcentajeDescuento());
-            statement.setBigDecimal(7, item.getSubTotal());
-            statement.setString(8, item.getUsuarioCreacion());
-            statement.setTimestamp(9, Timestamp.valueOf(item.getFechaCreacion()));
-            statement.setBoolean(10, item.isEliminado());
-            statement.executeUpdate();
-            try (ResultSet rs = statement.getGeneratedKeys()) {
-                if (!rs.next()) throw new SQLException("No se genero el identificador del item.");
-                item.setId(rs.getInt(1));
+        try (PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            sentencia.setInt(1, idPedido);
+            sentencia.setInt(2, item.getLibro().getId());
+            sentencia.setInt(3, item.getCantidad());
+            sentencia.setBigDecimal(4, item.getPrecioBase());
+            sentencia.setBigDecimal(5, item.getPrecioUnitario());
+            sentencia.setBigDecimal(6, item.getPorcentajeDescuento());
+            sentencia.setBigDecimal(7, item.getSubTotal());
+            sentencia.setString(8, item.getUsuarioCreacion());
+            sentencia.setTimestamp(9, Timestamp.valueOf(item.getFechaCreacion()));
+            sentencia.setBoolean(10, item.isEliminado());
+            sentencia.executeUpdate();
+            try (ResultSet resultado = sentencia.getGeneratedKeys()) {
+                if (!resultado.next()) throw new SQLException("No se genero el identificador del item.");
+                item.setId(resultado.getInt(1));
             }
         }
     }
@@ -53,25 +53,25 @@ public class ItemPedidoDAOImpl implements ItemPedidoDAO {
     private List<Item> listar(Connection conexion, int idPedido, boolean bloquear) throws SQLException {
         String sql = "SELECT * FROM ITEM_PEDIDO WHERE id_pedido = ? AND NOT eliminado ORDER BY id" + (bloquear ? " FOR UPDATE" : "");
         List<Item> items = new ArrayList<>();
-        try (PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setInt(1, idPedido);
-            try (ResultSet rs = statement.executeQuery()) {
-                while (rs.next()) {
+        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setInt(1, idPedido);
+            try (ResultSet resultado = sentencia.executeQuery()) {
+                while (resultado.next()) {
                     Item item = new Item();
-                    item.setId(rs.getInt("id"));
+                    item.setId(resultado.getInt("id"));
                     Libro libro = new Libro();
-                    libro.setId(rs.getInt("id_libro"));
+                    libro.setId(resultado.getInt("id_libro"));
                     item.setLibro(libro);
-                    item.setCantidad(rs.getInt("cantidad"));
-                    item.setPrecioBase(rs.getBigDecimal("precio_base"));
-                    item.setPrecioUnitario(rs.getBigDecimal("precio_unitario"));
-                    item.setPorcentajeDescuento(rs.getBigDecimal("porcentaje_descuento"));
-                    item.setSubTotal(rs.getBigDecimal("sub_total"));
-                    item.setEliminado(rs.getBoolean("eliminado"));
-                    item.setUsuarioCreacion(rs.getString("usuario_creacion"));
-                    item.setFechaCreacion(rs.getObject("fecha_creacion", LocalDateTime.class));
-                    item.setUsuarioActualizacion(rs.getString("usuario_actualizacion"));
-                    item.setFechaActualizacion(rs.getObject("fecha_actualizacion", LocalDateTime.class));
+                    item.setCantidad(resultado.getInt("cantidad"));
+                    item.setPrecioBase(resultado.getBigDecimal("precio_base"));
+                    item.setPrecioUnitario(resultado.getBigDecimal("precio_unitario"));
+                    item.setPorcentajeDescuento(resultado.getBigDecimal("porcentaje_descuento"));
+                    item.setSubTotal(resultado.getBigDecimal("sub_total"));
+                    item.setEliminado(resultado.getBoolean("eliminado"));
+                    item.setUsuarioCreacion(resultado.getString("usuario_creacion"));
+                    item.setFechaCreacion(resultado.getObject("fecha_creacion", LocalDateTime.class));
+                    item.setUsuarioActualizacion(resultado.getString("usuario_actualizacion"));
+                    item.setFechaActualizacion(resultado.getObject("fecha_actualizacion", LocalDateTime.class));
                     items.add(item);
                 }
             }
@@ -87,20 +87,19 @@ public class ItemPedidoDAOImpl implements ItemPedidoDAO {
                 WHERE i.id_pedido = ? AND NOT i.eliminado ORDER BY i.id
                 """;
         List<ItemDTO> items = new ArrayList<>();
-        try (Connection conexion = DBManager.getConnection(); PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setInt(1, idPedido);
-            try (ResultSet rs = statement.executeQuery()) {
-                while (rs.next()) {
-                    byte[] portada = rs.getBytes("portada");
-                    BigDecimal original = rs.getBigDecimal("precio_base");
-                    BigDecimal unitario = rs.getBigDecimal("precio_unitario");
-                    items.add(new ItemDTO(rs.getInt("id_libro"), rs.getString("titulo"),
-                            portada == null ? new ImagenDTO(null, null) : new ImagenDTO(portada, rs.getString("tipo_portada")),
-                            rs.getInt("cantidad"), original, unitario, rs.getBigDecimal("porcentaje_descuento"), rs.getBigDecimal("sub_total"), null, null));
+        try (Connection conexion = DBManager.getConnection(); PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setInt(1, idPedido);
+            try (ResultSet resultado = sentencia.executeQuery()) {
+                while (resultado.next()) {
+                    byte[] portada = resultado.getBytes("portada");
+                    BigDecimal original = resultado.getBigDecimal("precio_base");
+                    BigDecimal unitario = resultado.getBigDecimal("precio_unitario");
+                    items.add(new ItemDTO(resultado.getInt("id_libro"), resultado.getString("titulo"),
+                            portada == null ? new ImagenDTO(null, null) : new ImagenDTO(portada, resultado.getString("tipo_portada")),
+                            resultado.getInt("cantidad"), original, unitario, resultado.getBigDecimal("porcentaje_descuento"), resultado.getBigDecimal("sub_total"), null, null));
                 }
             }
         }
         return items;
     }
 }
-

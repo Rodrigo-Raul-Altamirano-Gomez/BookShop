@@ -5,12 +5,4 @@ public record ImagenDTO(
         byte[] contenido,
         String tipoMime
 ) {
-    public ImagenDTO {
-        contenido = contenido == null ? null : contenido.clone();
-    }
-
-    @Override
-    public byte[] contenido() {
-        return contenido == null ? null : contenido.clone();
-    }
 }

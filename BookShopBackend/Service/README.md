@@ -8,6 +8,11 @@ Los recursos delegan en Business. No acceden a los DAO ni calculan reglas, preci
 permisos o probabilidades. La consulta de reseñas y valoración pertenece al
 detalle de RF09; no se exponen publicación, votos ni reportes de RF10.
 
+Cada llamada identifica la operación BO con nombres explícitos, como
+`servicios.getLibroBO().buscar(...)`. La sesión proporciona el usuario mediante
+`Sesion.obtenerIdUsuario` para consultas públicas y `Sesion.exigirIdUsuario` para
+operaciones privadas. Los RS conservan los mismos contratos HTTP y DTO de entrada.
+
 ## Organización
 
 Los paquetes siguen los dominios de Business. Las clases REST usan el sufijo RS:

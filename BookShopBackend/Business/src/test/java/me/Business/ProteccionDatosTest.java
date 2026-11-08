@@ -7,7 +7,7 @@ import javax.imageio.ImageIO;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 import me.Business.exceptions.*;
-import me.Business.Validaciones;
+import me.Business.Imagenes;
 import me.Model.dto.ImagenDTO;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -64,10 +64,10 @@ class ProteccionDatosTest {
     @Test void imagenExigeContenidoRealMimeYLimite() throws Exception {
         ByteArrayOutputStream datos = new ByteArrayOutputStream();
         ImageIO.write(new BufferedImage(2, 2, BufferedImage.TYPE_INT_RGB), "png", datos);
-        assertDoesNotThrow(() -> Validaciones.imagen(new ImagenDTO(datos.toByteArray(), "image/png")));
-        assertThrows(ValidacionException.class, () -> Validaciones.imagen(new ImagenDTO(datos.toByteArray(), "image/jpeg")));
-        assertThrows(ValidacionException.class, () -> Validaciones.imagen(new ImagenDTO(new byte[]{1,2,3}, "image/png")));
-        assertThrows(ValidacionException.class, () -> Validaciones.imagen(new ImagenDTO(new byte[5*1024*1024+1], "image/png")));
-        assertDoesNotThrow(() -> Validaciones.imagen(null));
+        assertDoesNotThrow(() -> Imagenes.validar(new ImagenDTO(datos.toByteArray(), "image/png")));
+        assertThrows(ValidacionException.class, () -> Imagenes.validar(new ImagenDTO(datos.toByteArray(), "image/jpeg")));
+        assertThrows(ValidacionException.class, () -> Imagenes.validar(new ImagenDTO(new byte[]{1,2,3}, "image/png")));
+        assertThrows(ValidacionException.class, () -> Imagenes.validar(new ImagenDTO(new byte[5*1024*1024+1], "image/png")));
+        assertDoesNotThrow(() -> Imagenes.validar(null));
     }
 }

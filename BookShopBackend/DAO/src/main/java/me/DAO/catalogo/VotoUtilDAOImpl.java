@@ -8,43 +8,43 @@ public class VotoUtilDAOImpl implements VotoUtilDAO {
     public boolean cambiarVoto(int idUsuario, int idResena, boolean marcar, String actor) throws SQLException {
         // La reseña serializa cambios del contador y recuperaciones de la relación.
         Connection conexion = TransactionContext.getConnection();
-        try (PreparedStatement statement = conexion.prepareStatement("SELECT id FROM RESENA WHERE id = ? AND activo AND NOT eliminado FOR UPDATE")) {
-            statement.setInt(1, idResena);
-            try (ResultSet rs = statement.executeQuery()) { if (!rs.next()) return false; }
+        try (PreparedStatement sentencia = conexion.prepareStatement("SELECT id FROM RESENA WHERE id = ? AND activo AND NOT eliminado FOR UPDATE")) {
+            sentencia.setInt(1, idResena);
+            try (ResultSet resultado = sentencia.executeQuery()) { if (!resultado.next()) return false; }
         }
         int idVoto = 0;
         boolean marcado = false;
-        try (PreparedStatement statement = conexion.prepareStatement("SELECT id, eliminado FROM VOTO_UTIL WHERE id_usuario = ? AND id_resena = ? FOR UPDATE")) {
-            statement.setInt(1, idUsuario);
-            statement.setInt(2, idResena);
-            try (ResultSet rs = statement.executeQuery()) {
-                if (rs.next()) {
-                    idVoto = rs.getInt("id");
-                    marcado = !rs.getBoolean("eliminado");
+        try (PreparedStatement sentencia = conexion.prepareStatement("SELECT id, eliminado FROM VOTO_UTIL WHERE id_usuario = ? AND id_resena = ? FOR UPDATE")) {
+            sentencia.setInt(1, idUsuario);
+            sentencia.setInt(2, idResena);
+            try (ResultSet resultado = sentencia.executeQuery()) {
+                if (resultado.next()) {
+                    idVoto = resultado.getInt("id");
+                    marcado = !resultado.getBoolean("eliminado");
                 }
             }
         }
         if (marcado == marcar) return false;
         if (idVoto == 0) {
-            try (PreparedStatement statement = conexion.prepareStatement("INSERT INTO VOTO_UTIL (id_usuario, id_resena, usuario_creacion) VALUES (?, ?, ?)")) {
-                statement.setInt(1, idUsuario);
-                statement.setInt(2, idResena);
-                statement.setString(3, actor);
-                if (statement.executeUpdate() != 1) throw new SQLException("No se pudo registrar el voto.");
+            try (PreparedStatement sentencia = conexion.prepareStatement("INSERT INTO VOTO_UTIL (id_usuario, id_resena, usuario_creacion) VALUES (?, ?, ?)")) {
+                sentencia.setInt(1, idUsuario);
+                sentencia.setInt(2, idResena);
+                sentencia.setString(3, actor);
+                if (sentencia.executeUpdate() != 1) throw new SQLException("No se pudo registrar el voto.");
             }
         } else {
-            try (PreparedStatement statement = conexion.prepareStatement("UPDATE VOTO_UTIL SET eliminado = ?, usuario_actualizacion = ?, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ?")) {
-                statement.setBoolean(1, !marcar);
-                statement.setString(2, actor);
-                statement.setInt(3, idVoto);
-                if (statement.executeUpdate() != 1) throw new SQLException("No se pudo actualizar el voto.");
+            try (PreparedStatement sentencia = conexion.prepareStatement("UPDATE VOTO_UTIL SET eliminado = ?, usuario_actualizacion = ?, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ?")) {
+                sentencia.setBoolean(1, !marcar);
+                sentencia.setString(2, actor);
+                sentencia.setInt(3, idVoto);
+                if (sentencia.executeUpdate() != 1) throw new SQLException("No se pudo actualizar el voto.");
             }
         }
-        try (PreparedStatement statement = conexion.prepareStatement("UPDATE RESENA SET cantidad_votos_utiles = cantidad_votos_utiles + ?, usuario_actualizacion = ?, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ?")) {
-            statement.setInt(1, marcar ? 1 : -1);
-            statement.setString(2, actor);
-            statement.setInt(3, idResena);
-            if (statement.executeUpdate() != 1) throw new SQLException("No se pudo actualizar el contador de votos.");
+        try (PreparedStatement sentencia = conexion.prepareStatement("UPDATE RESENA SET cantidad_votos_utiles = cantidad_votos_utiles + ?, usuario_actualizacion = ?, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ?")) {
+            sentencia.setInt(1, marcar ? 1 : -1);
+            sentencia.setString(2, actor);
+            sentencia.setInt(3, idResena);
+            if (sentencia.executeUpdate() != 1) throw new SQLException("No se pudo actualizar el contador de votos.");
         }
         return true;
     }

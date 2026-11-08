@@ -45,15 +45,15 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
                 + ", eliminado, usuario_creacion, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?)";
         if (seguimiento.getFechaCreacion() == null) seguimiento.setFechaCreacion(LocalDateTime.now());
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setString(1, tipo.name());
-            statement.setInt(2, seguimiento.getUsuario().getId());
-            statement.setInt(3, idReferencia);
-            statement.setBoolean(4, seguimiento.isEliminado());
-            statement.setString(5, seguimiento.getUsuarioCreacion());
-            statement.setTimestamp(6, Timestamp.valueOf(seguimiento.getFechaCreacion()));
-            statement.executeUpdate();
-            try (ResultSet claves = statement.getGeneratedKeys()) {
+             PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            sentencia.setString(1, tipo.name());
+            sentencia.setInt(2, seguimiento.getUsuario().getId());
+            sentencia.setInt(3, idReferencia);
+            sentencia.setBoolean(4, seguimiento.isEliminado());
+            sentencia.setString(5, seguimiento.getUsuarioCreacion());
+            sentencia.setTimestamp(6, Timestamp.valueOf(seguimiento.getFechaCreacion()));
+            sentencia.executeUpdate();
+            try (ResultSet claves = sentencia.getGeneratedKeys()) {
                 if (!claves.next()) throw new SQLException("No se genero el identificador del seguimiento.");
                 seguimiento.setId(claves.getInt(1));
             }
@@ -64,9 +64,9 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
     public Seguimiento leer(int id) throws SQLException {
         String sql = "SELECT * FROM SEGUIMIENTO WHERE id = ?";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setInt(1, id);
-            try (ResultSet resultado = statement.executeQuery()) {
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setInt(1, id);
+            try (ResultSet resultado = sentencia.executeQuery()) {
                 if (!resultado.next()) return null;
                 Seguimiento seguimiento;
                 switch (TipoSeguimiento.valueOf(resultado.getString("tipo_seguimiento"))) {
@@ -112,10 +112,10 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
         String sql = "UPDATE SEGUIMIENTO SET eliminado = TRUE, usuario_actualizacion = ?, "
                 + "fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ? AND NOT eliminado";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setString(1, usuario);
-            statement.setInt(2, id);
-            return statement.executeUpdate() == 1;
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setString(1, usuario);
+            sentencia.setInt(2, id);
+            return sentencia.executeUpdate() == 1;
         }
     }
 
@@ -127,13 +127,13 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
                 + "fecha_actualizacion = CASE WHEN eliminado THEN CURRENT_TIMESTAMP ELSE fecha_actualizacion END, "
                 + "eliminado = FALSE";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setString(1, tipo.name());
-            statement.setInt(2, idUsuario);
-            statement.setInt(3, idReferencia);
-            statement.setString(4, usuario);
-            statement.setString(5, usuario);
-            statement.executeUpdate();
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setString(1, tipo.name());
+            sentencia.setInt(2, idUsuario);
+            sentencia.setInt(3, idReferencia);
+            sentencia.setString(4, usuario);
+            sentencia.setString(5, usuario);
+            sentencia.executeUpdate();
         }
     }
 
@@ -143,20 +143,19 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
                 + "fecha_actualizacion = CURRENT_TIMESTAMP WHERE tipo_seguimiento = ? "
                 + "AND id_usuario = ? AND " + columnaReferencia(tipo) + " = ? AND NOT eliminado";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setString(1, usuario);
-            statement.setString(2, tipo.name());
-            statement.setInt(3, idUsuario);
-            statement.setInt(4, idReferencia);
-            return statement.executeUpdate() == 1;
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setString(1, usuario);
+            sentencia.setString(2, tipo.name());
+            sentencia.setInt(3, idUsuario);
+            sentencia.setInt(4, idReferencia);
+            return sentencia.executeUpdate() == 1;
         }
     }
 
     @Override
     public ResultadoPaginadoDTO<TarjetaReferenciaDTO> listarPorUsuario(int idUsuario, TipoSeguimiento tipo,
-                                                                     OrdenReferencia orden, int pagina, int tamano)
+                                                                     OrdenReferencia orden, int pagina, int tamanioPagina)
             throws SQLException {
-        if (pagina < 1 || tamano < 1) throw new IllegalArgumentException("Pagina y tamano deben ser positivos.");
         String condiciones = " FROM SEGUIMIENTO s JOIN " + tipo.name() + " r ON r.id = s."
                 + columnaReferencia(tipo) + " WHERE s.tipo_seguimiento = ? AND s.id_usuario = ? "
                 + "AND NOT s.eliminado AND r.activo AND NOT r.eliminado";
@@ -165,22 +164,22 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
         List<TarjetaReferenciaDTO> tarjetas = new ArrayList<>();
         long total;
         try (Connection conexion = DBManager.getConnection()) {
-            try (PreparedStatement statement = conexion.prepareStatement("SELECT COUNT(*)" + condiciones)) {
-                statement.setString(1, tipo.name());
-                statement.setInt(2, idUsuario);
-                try (ResultSet resultado = statement.executeQuery()) {
+            try (PreparedStatement sentencia = conexion.prepareStatement("SELECT COUNT(*)" + condiciones)) {
+                sentencia.setString(1, tipo.name());
+                sentencia.setInt(2, idUsuario);
+                try (ResultSet resultado = sentencia.executeQuery()) {
                     resultado.next();
                     total = resultado.getLong(1);
                 }
             }
             String sql = "SELECT r.id, r.nombre, r.imagen, r.tipo_imagen" + condiciones
                     + " ORDER BY " + ordenSQL + " LIMIT ? OFFSET ?";
-            try (PreparedStatement statement = conexion.prepareStatement(sql)) {
-                statement.setString(1, tipo.name());
-                statement.setInt(2, idUsuario);
-                statement.setInt(3, tamano);
-                statement.setLong(4, (long) (pagina - 1) * tamano);
-                try (ResultSet resultado = statement.executeQuery()) {
+            try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+                sentencia.setString(1, tipo.name());
+                sentencia.setInt(2, idUsuario);
+                sentencia.setInt(3, tamanioPagina);
+                sentencia.setLong(4, (long) (pagina - 1) * tamanioPagina);
+                try (ResultSet resultado = sentencia.executeQuery()) {
                     while (resultado.next()) {
                         byte[] contenido = resultado.getBytes("imagen");
                         ImagenDTO imagen = contenido == null ? null
@@ -191,7 +190,7 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
                 }
             }
         }
-        return new ResultadoPaginadoDTO<>(tarjetas, total, pagina, tamano);
+        return new ResultadoPaginadoDTO<>(tarjetas, total, pagina, tamanioPagina);
     }
 
     private String columnaReferencia(TipoSeguimiento tipo) {

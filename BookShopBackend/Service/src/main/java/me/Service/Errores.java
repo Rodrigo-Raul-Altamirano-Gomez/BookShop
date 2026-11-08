@@ -2,6 +2,7 @@ package me.Service;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.List;
 import jakarta.json.bind.JsonbException;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
@@ -73,11 +74,14 @@ public class Errores implements ExceptionMapper<Exception> {
                 .entity(new ErrorRespuesta(codigo, mensaje, campo));
         if (error instanceof WebApplicationException web) {
             // Conserva cabeceras de protocolo, por ejemplo Allow y WWW-Authenticate.
-            web.getResponse().getHeaders().forEach((nombre, valores) -> {
+            for (String nombre : web.getResponse().getHeaders().keySet()) {
                 if (!nombre.equalsIgnoreCase("Content-Type") && !nombre.equalsIgnoreCase("Content-Length")) {
-                    valores.forEach(valor -> respuesta.header(nombre, valor));
+                    List<Object> valores = web.getResponse().getHeaders().get(nombre);
+                    for (Object valor : valores) {
+                        respuesta.header(nombre, valor);
+                    }
                 }
-            });
+            }
         }
         return respuesta.build();
     }

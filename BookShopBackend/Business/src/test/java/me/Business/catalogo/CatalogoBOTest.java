@@ -172,7 +172,7 @@ class CatalogoBOTest {
         assertThrows(ValidacionException.class, () -> bo.cambiarPrecio(1, 1, new BigDecimal("1.001")));
         assertThrows(ValidacionException.class, () -> bo.cambiarStock(1, 1, -1));
         DatosLibroDTO invalidos = new DatosLibroDTO("Titulo", "Idioma", "Sinopsis", "Proveedor", "ISBN", 2026, 100,
-                Double.NaN, null, null, null, null);
+                -1.0, null, null, null, null);
         assertThrows(ValidacionException.class, () -> bo.registrar(1, registro(invalidos)));
         DatosLibroDTO tomo = new DatosLibroDTO("Titulo", "Idioma", "Sinopsis", "Proveedor", "ISBN", 2026, 100,
                 null, null, null, null, 1);

@@ -2,10 +2,8 @@ package me.Business.catalogo;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import me.Business.exceptions.ValidacionException;
-import me.Business.Validaciones;
 import me.Model.dto.catalogo.FiltroLibroDTO;
 import me.Model.dto.catalogo.OrdenLibro;
 
@@ -14,28 +12,46 @@ public final class FiltrosCatalogo {
 
     public static FiltroLibroDTO validar(FiltroLibroDTO filtro) throws ValidacionException {
         if (filtro == null) filtro = FiltroLibroDTO.porDefecto();
-        Validaciones.pagina(filtro.pagina(), filtro.tamanioPagina());
+        if (filtro.pagina() < 1 || filtro.tamanioPagina() < 1)
+            throw new ValidacionException("pagina", "La página y su tamaño deben ser positivos.");
         if (filtro.orden() == null || filtro.orden() == OrdenLibro.RECOMENDADOS_PRIMERO)
             throw new ValidacionException("orden", "Seleccione un orden de catalogo.");
-        List<Integer> categorias = ids(filtro.idsCategorias(), "categorias");
-        List<Integer> autores = ids(filtro.idsAutores(), "autores");
-        List<Integer> editoriales = ids(filtro.idsEditoriales(), "editoriales");
+        List<Integer> categorias = new ArrayList<>();
+        for (Integer categoria : filtro.idsCategorias()) {
+            if (categoria == null || categoria < 1)
+                throw new ValidacionException("categorias", "Seleccione referencias válidas.");
+            if (!categorias.contains(categoria)) categorias.add(categoria);
+        }
+        List<Integer> autores = new ArrayList<>();
+        for (Integer autor : filtro.idsAutores()) {
+            if (autor == null || autor < 1)
+                throw new ValidacionException("autores", "Seleccione referencias válidas.");
+            if (!autores.contains(autor)) autores.add(autor);
+        }
+        List<Integer> editoriales = new ArrayList<>();
+        for (Integer editorial : filtro.idsEditoriales()) {
+            if (editorial == null || editorial < 1)
+                throw new ValidacionException("editoriales", "Seleccione referencias válidas.");
+            if (!editoriales.contains(editorial)) editoriales.add(editorial);
+        }
         List<String> idiomas = new ArrayList<>();
-        for (String idioma : filtro.idiomas()) idiomas.add(Validaciones.texto(idioma, "idiomas", 100));
+        for (String idioma : filtro.idiomas()) {
+            if (idioma == null || idioma.isBlank() || idioma.length() > 100)
+                throw new ValidacionException("idiomas", "Seleccione idiomas válidos.");
+            if (!idiomas.contains(idioma.strip())) idiomas.add(idioma.strip());
+        }
         if (filtro.precioMinimo() != null) importe(filtro.precioMinimo(), "precioMinimo", true);
         if (filtro.precioMaximo() != null) importe(filtro.precioMaximo(), "precioMaximo", true);
         if (filtro.precioMinimo() != null && filtro.precioMaximo() != null
                 && filtro.precioMinimo().compareTo(filtro.precioMaximo()) > 0)
             throw new ValidacionException("precioMaximo", "El precio maximo no puede ser menor que el minimo.");
-        return new FiltroLibroDTO(Validaciones.opcional(filtro.titulo(), "titulo", 255), categorias, autores,
-                editoriales, new ArrayList<>(new LinkedHashSet<>(idiomas)), filtro.precioMinimo(), filtro.precioMaximo(),
+        String titulo = filtro.titulo() == null ? null : filtro.titulo().strip();
+        if (titulo != null && titulo.isEmpty()) titulo = null;
+        if (titulo != null && titulo.length() > 255)
+            throw new ValidacionException("titulo", "El máximo es 255 caracteres.");
+        return new FiltroLibroDTO(titulo, categorias, autores,
+                editoriales, idiomas, filtro.precioMinimo(), filtro.precioMaximo(),
                 filtro.soloActivos(), filtro.soloNuevos(), filtro.orden(), filtro.pagina(), filtro.tamanioPagina());
-    }
-
-    private static List<Integer> ids(List<Integer> ids, String campo) throws ValidacionException {
-        for (Integer id : ids) if (id == null || id < 1)
-            throw new ValidacionException(campo, "Seleccione referencias validas.");
-        return new ArrayList<>(new LinkedHashSet<>(ids));
     }
 
     public static BigDecimal importe(BigDecimal importe, String campo, boolean permitirCero) throws ValidacionException {
@@ -45,4 +61,3 @@ public final class FiltrosCatalogo {
         return importe.setScale(2);
     }
 }
-

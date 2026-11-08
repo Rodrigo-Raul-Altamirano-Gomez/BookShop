@@ -1,14 +1,12 @@
 package me.Business.usuario;
 
 import java.sql.SQLException;
-import java.util.Objects;
 import me.Business.exceptions.ConflictoException;
 import me.Business.exceptions.NegocioException;
 import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.RecursoNoEncontradoException;
 import me.Business.exceptions.ValidacionException;
 import me.Business.Autorizacion;
-import me.Business.Validaciones;
 import me.DAO.catalogo.AutorDAO;
 import me.DAO.catalogo.AutorDAOImpl;
 import me.DAO.catalogo.CategoriaDAO;
@@ -29,10 +27,10 @@ import me.Model.entities.catalogo.Editorial;
 import me.Model.entities.usuario.Usuario;
 
 public class SeguimientoBOImpl implements SeguimientoBO {
-    private final SeguimientoDAO seguimientos;
-    private final AutorDAO autores;
-    private final CategoriaDAO categorias;
-    private final EditorialDAO editoriales;
+    private final SeguimientoDAO seguimientoDAO;
+    private final AutorDAO autorDAO;
+    private final CategoriaDAO categoriaDAO;
+    private final EditorialDAO editorialDAO;
     private final Autorizacion autorizacion;
 
     public SeguimientoBOImpl() {
@@ -40,13 +38,13 @@ public class SeguimientoBOImpl implements SeguimientoBO {
                 new UsuarioDAOImpl());
     }
 
-    public SeguimientoBOImpl(SeguimientoDAO seguimientos, AutorDAO autores, CategoriaDAO categorias,
-                             EditorialDAO editoriales, UsuarioDAO usuarios) {
-        this.seguimientos = Objects.requireNonNull(seguimientos);
-        this.autores = Objects.requireNonNull(autores);
-        this.categorias = Objects.requireNonNull(categorias);
-        this.editoriales = Objects.requireNonNull(editoriales);
-        this.autorizacion = new Autorizacion(Objects.requireNonNull(usuarios));
+    public SeguimientoBOImpl(SeguimientoDAO seguimientoDAO, AutorDAO autorDAO, CategoriaDAO categoriaDAO,
+                             EditorialDAO editorialDAO, UsuarioDAO usuarios) {
+        this.seguimientoDAO = seguimientoDAO;
+        this.autorDAO = autorDAO;
+        this.categoriaDAO = categoriaDAO;
+        this.editorialDAO = editorialDAO;
+        this.autorizacion = new Autorizacion(usuarios);
     }
 
     @Override
@@ -57,13 +55,13 @@ public class SeguimientoBOImpl implements SeguimientoBO {
             boolean disponible;
             switch (tipo) {
                 case AUTOR: {
-                    Autor autor = autores.leer(idReferencia);
+                    Autor autor = autorDAO.leer(idReferencia);
                     if (autor == null || autor.isEliminado()) throw new RecursoNoEncontradoException("El autor no existe.");
                     disponible = autor.estaDisponible();
                     break;
                 }
                 case CATEGORIA: {
-                    Categoria categoria = categorias.leer(idReferencia);
+                    Categoria categoria = categoriaDAO.leer(idReferencia);
                     if (categoria == null || categoria.isEliminado()) {
                         throw new RecursoNoEncontradoException("La categoria no existe.");
                     }
@@ -71,7 +69,7 @@ public class SeguimientoBOImpl implements SeguimientoBO {
                     break;
                 }
                 case EDITORIAL: {
-                    Editorial editorial = editoriales.leer(idReferencia);
+                    Editorial editorial = editorialDAO.leer(idReferencia);
                     if (editorial == null || editorial.isEliminado()) {
                         throw new RecursoNoEncontradoException("La editorial no existe.");
                     }
@@ -82,7 +80,7 @@ public class SeguimientoBOImpl implements SeguimientoBO {
                     throw new ValidacionException("tipo", "Selecciona un tipo de seguimiento valido.");
             }
             if (!disponible) throw new ConflictoException("La referencia no esta disponible para seguirla.");
-            seguimientos.guardar(idActor, tipo, idReferencia, actor.getEmail());
+            seguimientoDAO.guardar(idActor, tipo, idReferencia, actor.getEmail());
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo guardar el seguimiento.", e);
         }
@@ -93,7 +91,7 @@ public class SeguimientoBOImpl implements SeguimientoBO {
         Usuario actor = autorizacion.usuarioActivo(idActor);
         validarReferencia(tipo, idReferencia);
         try {
-            return seguimientos.retirar(idActor, tipo, idReferencia, actor.getEmail());
+            return seguimientoDAO.retirar(idActor, tipo, idReferencia, actor.getEmail());
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo retirar el seguimiento.", e);
         }
@@ -106,9 +104,10 @@ public class SeguimientoBOImpl implements SeguimientoBO {
         if (consulta == null) consulta = ConsultaSeguimientosDTO.porDefecto();
         if (consulta.tipo() == null) throw new ValidacionException("tipo", "Selecciona una pestaña de seguimientos.");
         if (consulta.orden() == null) throw new ValidacionException("orden", "Selecciona un orden para los seguimientos.");
-        Validaciones.pagina(consulta.pagina(), consulta.tamanioPagina());
+        if (consulta.pagina() < 1 || consulta.tamanioPagina() < 1)
+            throw new ValidacionException("pagina", "La página y su tamaño deben ser positivos.");
         try {
-            return seguimientos.listarPorUsuario(idActor, consulta.tipo(), consulta.orden(),
+            return seguimientoDAO.listarPorUsuario(idActor, consulta.tipo(), consulta.orden(),
                     consulta.pagina(), consulta.tamanioPagina());
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudieron consultar los seguimientos.", e);

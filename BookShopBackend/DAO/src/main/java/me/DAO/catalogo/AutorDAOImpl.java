@@ -63,7 +63,7 @@ public class AutorDAOImpl implements AutorDAO {
              PreparedStatement sentencia = conexion.prepareStatement("SELECT * FROM AUTOR WHERE id=?")) {
             sentencia.setInt(1, id);
             try (ResultSet resultado = sentencia.executeQuery()) {
-                return resultado.next() ? mapear(resultado) : null;
+                return resultado.next() ? mapearAutor(resultado) : null;
             }
         }
     }
@@ -74,7 +74,7 @@ public class AutorDAOImpl implements AutorDAO {
         try (PreparedStatement sentencia = conexion.prepareStatement("SELECT * FROM AUTOR WHERE id=? FOR UPDATE")) {
             sentencia.setInt(1, id);
             try (ResultSet resultado = sentencia.executeQuery()) {
-                return resultado.next() ? mapear(resultado) : null;
+                return resultado.next() ? mapearAutor(resultado) : null;
             }
         }
     }
@@ -134,9 +134,6 @@ public class AutorDAOImpl implements AutorDAO {
     }
 
     private ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscar(FiltroReferenciaDTO filtro, boolean conImagen) throws SQLException {
-        if (filtro == null || filtro.pagina() < 1 || filtro.tamanioPagina() < 1 || filtro.orden() == null) {
-            throw new IllegalArgumentException("Filtro, orden y paginacion validos son obligatorios.");
-        }
         String nombre = filtro.nombre() == null ? "" : filtro.nombre().trim();
         String condiciones = " WHERE eliminado=FALSE" + (filtro.soloActivos() ? " AND activo=TRUE" : "")
                 + (nombre.isEmpty() ? "" : " AND LOWER(nombre) LIKE LOWER(?) ESCAPE '!'");
@@ -192,10 +189,6 @@ public class AutorDAOImpl implements AutorDAO {
     @Override
     public Map<Integer, TarjetaReferenciaDTO> obtenerMasCompradas(List<Integer> idsUsuarios, LocalDate inicio, LocalDate fin)
             throws SQLException {
-        if (idsUsuarios == null || inicio == null || fin == null || fin.isBefore(inicio)
-                || idsUsuarios.stream().anyMatch(id -> id == null || id < 1)) {
-            throw new IllegalArgumentException("Usuarios y periodo validos son obligatorios.");
-        }
         Map<Integer, TarjetaReferenciaDTO> referencias = new LinkedHashMap<>();
         if (idsUsuarios.isEmpty()) return referencias;
         String marcadores = String.join(",", java.util.Collections.nCopies(idsUsuarios.size(), "?"));
@@ -221,7 +214,7 @@ public class AutorDAOImpl implements AutorDAO {
         return referencias;
     }
 
-    private Autor mapear(ResultSet resultado) throws SQLException {
+    private Autor mapearAutor(ResultSet resultado) throws SQLException {
         Autor autor = new Autor();
         autor.setId(resultado.getInt("id"));
         autor.setNombre(resultado.getString("nombre"));

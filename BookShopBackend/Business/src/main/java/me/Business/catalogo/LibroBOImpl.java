@@ -1,7 +1,6 @@
 package me.Business.catalogo;
 
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -13,7 +12,7 @@ import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.RecursoNoEncontradoException;
 import me.Business.exceptions.ValidacionException;
 import me.Business.Autorizacion;
-import me.Business.Validaciones;
+import me.Business.Imagenes;
 import me.DAO.catalogo.AutorDAO;
 import me.DAO.catalogo.AutorDAOImpl;
 import me.DAO.catalogo.CategoriaDAO;
@@ -40,10 +39,10 @@ import me.Model.entities.catalogo.Libro;
 import me.Model.entities.usuario.Usuario;
 
 public class LibroBOImpl implements LibroBO {
-    private final LibroDAO libros;
-    private final AutorDAO autores;
-    private final CategoriaDAO categorias;
-    private final EditorialDAO editoriales;
+    private final LibroDAO libroDAO;
+    private final AutorDAO autorDAO;
+    private final CategoriaDAO categoriaDAO;
+    private final EditorialDAO editorialDAO;
     private final Autorizacion autorizacion;
     private final Clock reloj;
 
@@ -52,12 +51,12 @@ public class LibroBOImpl implements LibroBO {
                 new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")));
     }
 
-    public LibroBOImpl(LibroDAO libros, AutorDAO autores, CategoriaDAO categorias, EditorialDAO editoriales,
+    public LibroBOImpl(LibroDAO libroDAO, AutorDAO autorDAO, CategoriaDAO categoriaDAO, EditorialDAO editorialDAO,
                        UsuarioDAO usuarios, Clock reloj) {
-        this.libros = libros;
-        this.autores = autores;
-        this.categorias = categorias;
-        this.editoriales = editoriales;
+        this.libroDAO = libroDAO;
+        this.autorDAO = autorDAO;
+        this.categoriaDAO = categoriaDAO;
+        this.editorialDAO = editorialDAO;
         this.autorizacion = new Autorizacion(usuarios);
         this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
     }
@@ -66,22 +65,33 @@ public class LibroBOImpl implements LibroBO {
     public int registrar(int idActor, RegistroLibroDTO registro) throws NegocioException {
         Usuario actor = autorizacion.administrador(idActor);
         if (registro == null) throw new ValidacionException("registro", "Complete los datos del libro.");
-        DatosLibroDTO datos = validarDatos(registro.datos());
+        DatosLibroDTO datos = validarFormulario(registro.datos());
         BigDecimal precio = FiltrosCatalogo.importe(registro.precioBase(), "precioBase", false);
         if (registro.stockInicial() < 0) throw new ValidacionException("stockInicial", "El stock no puede ser negativo.");
         if (registro.idAutor() < 1 || registro.idCategoria() < 1 || registro.idEditorial() < 1)
             throw new ValidacionException("referencias", "Seleccione autor, categoria y editorial.");
-        Validaciones.imagen(registro.portada());
+        Imagenes.validar(registro.portada());
         try {
-            if (libros.existeIsbn(datos.isbn(), 0)) throw new ValidacionException("isbn", "El ISBN ya esta registrado.");
-            Autor autor = autores.leerParaActualizar(registro.idAutor());
-            Categoria categoria = categorias.leerParaActualizar(registro.idCategoria());
-            Editorial editorial = editoriales.leerParaActualizar(registro.idEditorial());
+            if (libroDAO.existeIsbn(datos.isbn(), 0)) throw new ValidacionException("isbn", "El ISBN ya esta registrado.");
+            Autor autor = autorDAO.leerParaActualizar(registro.idAutor());
+            Categoria categoria = categoriaDAO.leerParaActualizar(registro.idCategoria());
+            Editorial editorial = editorialDAO.leerParaActualizar(registro.idEditorial());
             if (autor == null || !autor.estaDisponible() || categoria == null || !categoria.estaDisponible()
                     || editorial == null || !editorial.estaDisponible())
                 throw new ConflictoException("Las referencias seleccionadas ya no estan disponibles.");
             Libro libro = new Libro();
-            asignarDatos(libro, datos);
+            libro.setTitulo(datos.titulo());
+            libro.setIdioma(datos.idioma());
+            libro.setSinopsis(datos.sinopsis());
+            libro.setProveedor(datos.proveedor());
+            libro.setIsbn(datos.isbn());
+            libro.setAnioEdicion(datos.anioEdicion());
+            libro.setNumeroPaginas(datos.numeroPaginas());
+            libro.setPeso(datos.peso());
+            libro.setAlto(datos.alto());
+            libro.setAncho(datos.ancho());
+            libro.setSaga(datos.saga());
+            libro.setNumeroTomo(datos.numeroTomo());
             libro.setAutor(autor);
             libro.setCategoria(categoria);
             libro.setEditorial(editorial);
@@ -93,31 +103,45 @@ public class LibroBOImpl implements LibroBO {
             }
             libro.setUsuarioCreacion(actor.getEmail());
             libro.setFechaCreacion(LocalDateTime.now(reloj));
-            libros.insertar(libro);
+            libroDAO.insertar(libro);
             TransactionContext.commit();
             return libro.getId();
         } catch (SQLException e) {
             TransactionContext.rollback();
-            if ("23505".equals(e.getSQLState()) || e.getErrorCode() == 1062)
-                throw new ConflictoException("Otro registro ya utiliza ese ISBN.");
             throw new PersistenciaException("No se pudo registrar el libro.", e);
-        } catch (NegocioException e) { TransactionContext.rollback(); throw e; }
-        finally { TransactionContext.close(); }
+        } catch (NegocioException e) {
+            TransactionContext.rollback();
+            throw e;
+        }
+        finally {
+            TransactionContext.close();
+        }
     }
 
     @Override
     public void modificar(int idActor, int id, DatosLibroDTO datos) throws NegocioException {
         Usuario actor = autorizacion.administrador(idActor);
-        DatosLibroDTO validos = validarDatos(datos);
+        DatosLibroDTO validos = validarFormulario(datos);
         try {
-            Libro libro = existente(id);
-            if (libros.existeIsbn(validos.isbn(), id)) throw new ValidacionException("isbn", "El ISBN ya esta registrado.");
-            asignarDatos(libro, validos);
+            Libro libro = libroDAO.leer(id);
+            if (libro == null || libro.isEliminado())
+                throw new RecursoNoEncontradoException("El libro no está disponible.");
+            if (libroDAO.existeIsbn(validos.isbn(), id)) throw new ValidacionException("isbn", "El ISBN ya esta registrado.");
+            libro.setTitulo(validos.titulo());
+            libro.setIdioma(validos.idioma());
+            libro.setSinopsis(validos.sinopsis());
+            libro.setProveedor(validos.proveedor());
+            libro.setIsbn(validos.isbn());
+            libro.setAnioEdicion(validos.anioEdicion());
+            libro.setNumeroPaginas(validos.numeroPaginas());
+            libro.setPeso(validos.peso());
+            libro.setAlto(validos.alto());
+            libro.setAncho(validos.ancho());
+            libro.setSaga(validos.saga());
+            libro.setNumeroTomo(validos.numeroTomo());
             libro.setUsuarioActualizacion(actor.getEmail());
-            libros.modificar(libro);
+            libroDAO.modificar(libro);
         } catch (SQLException e) {
-            if ("23505".equals(e.getSQLState()) || e.getErrorCode() == 1062)
-                throw new ConflictoException("Otro registro ya utiliza ese ISBN.");
             throw new PersistenciaException("No se pudieron modificar los datos del libro.", e);
         }
     }
@@ -127,9 +151,13 @@ public class LibroBOImpl implements LibroBO {
         Usuario actor = autorizacion.administrador(idActor);
         BigDecimal valido = FiltrosCatalogo.importe(precio, "precioBase", false);
         try {
-            existente(id);
-            if (!libros.cambiarPrecio(id, valido, actor.getEmail())) throw new ConflictoException("El libro cambio; vuelva a consultarlo.");
-        } catch (SQLException e) { throw new PersistenciaException("No se pudo cambiar el precio.", e); }
+            Libro libro = libroDAO.leer(id);
+            if (libro == null || libro.isEliminado())
+                throw new RecursoNoEncontradoException("El libro no está disponible.");
+            if (!libroDAO.cambiarPrecio(id, valido, actor.getEmail())) throw new ConflictoException("El libro cambio; vuelva a consultarlo.");
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo cambiar el precio.", e);
+        }
     }
 
     @Override
@@ -137,112 +165,154 @@ public class LibroBOImpl implements LibroBO {
         Usuario actor = autorizacion.administrador(idActor);
         if (stock < 0) throw new ValidacionException("stock", "El stock no puede ser negativo.");
         try {
-            existente(id);
-            if (!libros.cambiarStock(id, stock, actor.getEmail())) throw new ConflictoException("El libro cambio; vuelva a consultarlo.");
-        } catch (SQLException e) { throw new PersistenciaException("No se pudo cambiar el stock.", e); }
+            Libro libro = libroDAO.leer(id);
+            if (libro == null || libro.isEliminado())
+                throw new RecursoNoEncontradoException("El libro no está disponible.");
+            if (!libroDAO.cambiarStock(id, stock, actor.getEmail())) throw new ConflictoException("El libro cambio; vuelva a consultarlo.");
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo cambiar el stock.", e);
+        }
     }
 
     @Override
     public void cambiarImagen(int idActor, int id, ImagenDTO imagen) throws NegocioException {
         Usuario actor = autorizacion.administrador(idActor);
-        Validaciones.imagen(imagen);
+        Imagenes.validar(imagen);
         try {
-            existente(id);
-            if (!libros.cambiarImagen(id, imagen, actor.getEmail())) throw new ConflictoException("El libro cambio; vuelva a consultarlo.");
-        } catch (SQLException e) { throw new PersistenciaException("No se pudo cambiar la portada.", e); }
+            Libro libro = libroDAO.leer(id);
+            if (libro == null || libro.isEliminado())
+                throw new RecursoNoEncontradoException("El libro no está disponible.");
+            if (!libroDAO.cambiarImagen(id, imagen, actor.getEmail())) throw new ConflictoException("El libro cambio; vuelva a consultarlo.");
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo cambiar la portada.", e);
+        }
     }
 
     @Override
     public void cambiarActivo(int idActor, int id, boolean activo) throws NegocioException {
         Usuario actor = autorizacion.administrador(idActor);
         try {
-            Libro libro = existente(id);
+            Libro libro = libroDAO.leer(id);
+            if (libro == null || libro.isEliminado())
+                throw new RecursoNoEncontradoException("El libro no está disponible.");
             int vetosReferencias = libro.getNumeroVetos() - (libro.isVetadoDirectamente() ? 1 : 0);
             if (activo && vetosReferencias > 0) throw new ConflictoException("Primero active las referencias vetadas del libro.");
             if (libro.isVetadoDirectamente() == !activo) return;
-            if (!libros.cambiarVetoDirecto(id, !activo, actor.getEmail()))
+            if (!libroDAO.cambiarVetoDirecto(id, !activo, actor.getEmail()))
                 throw new ConflictoException("El libro cambio; vuelva a consultarlo.");
-            if (activo && !existente(id).isActivo()) throw new ConflictoException("Una referencia fue vetada; el libro permanece inactivo.");
-        } catch (SQLException e) { throw new PersistenciaException("No se pudo cambiar el estado del libro.", e); }
+            if (activo) {
+                Libro actualizado = libroDAO.leer(id);
+                if (actualizado == null || !actualizado.isActivo())
+                    throw new ConflictoException("Una referencia fue vetada; el libro permanece inactivo.");
+            }
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo cambiar el estado del libro.", e);
+        }
     }
 
     @Override
     public void eliminar(int idActor, int id) throws NegocioException {
         Usuario actor = autorizacion.administrador(idActor);
         try {
-            existente(id);
-            if (!libros.eliminar(id, actor.getEmail())) throw new ConflictoException("El libro cambio; vuelva a consultarlo.");
-        } catch (SQLException e) { throw new PersistenciaException("No se pudo eliminar el libro.", e); }
+            Libro libro = libroDAO.leer(id);
+            if (libro == null || libro.isEliminado())
+                throw new RecursoNoEncontradoException("El libro no está disponible.");
+            if (!libroDAO.eliminar(id, actor.getEmail())) throw new ConflictoException("El libro cambio; vuelva a consultarlo.");
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo eliminar el libro.", e);
+        }
     }
 
     @Override
     public ResultadoPaginadoDTO<TarjetaLibroDTO> buscar(int idActor, FiltroLibroDTO filtro) throws NegocioException {
         FiltroLibroDTO valido = filtroPermitido(idActor, filtro);
-        try { return libros.buscar(valido, LocalDateTime.now(reloj)); }
-        catch (SQLException e) { throw new PersistenciaException("No se pudo consultar el catalogo.", e); }
+        try {
+            return libroDAO.buscar(valido, LocalDateTime.now(reloj));
+        }
+        catch (SQLException e) {
+            throw new PersistenciaException("No se pudo consultar el catalogo.", e);
+        }
     }
 
     @Override
     public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorAutor(int idActor, int id, FiltroLibroDTO filtro) throws NegocioException {
         FiltroLibroDTO valido = filtroPermitido(idActor, filtro);
         try {
-            Autor autor = autores.leer(id);
+            Autor autor = autorDAO.leer(id);
             if (autor == null || autor.isEliminado()) throw new RecursoNoEncontradoException("El autor no esta disponible.");
             if (!autor.isActivo()) autorizacion.administrador(idActor);
-            return libros.buscarPorAutor(id, valido, LocalDateTime.now(reloj));
-        } catch (SQLException e) { throw new PersistenciaException("No se pudieron consultar los libros del autor.", e); }
+            return libroDAO.buscarPorAutor(id, valido, LocalDateTime.now(reloj));
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudieron consultar los libros del autor.", e);
+        }
     }
 
     @Override
     public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorCategoria(int idActor, int id, FiltroLibroDTO filtro) throws NegocioException {
         FiltroLibroDTO valido = filtroPermitido(idActor, filtro);
         try {
-            Categoria categoria = categorias.leer(id);
+            Categoria categoria = categoriaDAO.leer(id);
             if (categoria == null || categoria.isEliminado()) throw new RecursoNoEncontradoException("La categoria no esta disponible.");
             if (!categoria.isActivo()) autorizacion.administrador(idActor);
-            return libros.buscarPorCategoria(id, valido, LocalDateTime.now(reloj));
-        } catch (SQLException e) { throw new PersistenciaException("No se pudieron consultar los libros de la categoria.", e); }
+            return libroDAO.buscarPorCategoria(id, valido, LocalDateTime.now(reloj));
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudieron consultar los libros de la categoria.", e);
+        }
     }
 
     @Override
     public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorEditorial(int idActor, int id, FiltroLibroDTO filtro) throws NegocioException {
         FiltroLibroDTO valido = filtroPermitido(idActor, filtro);
         try {
-            Editorial editorial = editoriales.leer(id);
+            Editorial editorial = editorialDAO.leer(id);
             if (editorial == null || editorial.isEliminado()) throw new RecursoNoEncontradoException("La editorial no esta disponible.");
             if (!editorial.isActivo()) autorizacion.administrador(idActor);
-            return libros.buscarPorEditorial(id, valido, LocalDateTime.now(reloj));
-        } catch (SQLException e) { throw new PersistenciaException("No se pudieron consultar los libros de la editorial.", e); }
+            return libroDAO.buscarPorEditorial(id, valido, LocalDateTime.now(reloj));
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudieron consultar los libros de la editorial.", e);
+        }
     }
 
     @Override
     public ResultadoPaginadoDTO<String> buscarIdiomas(int idActor, String nombre, int pagina, int tamanio) throws NegocioException {
         if (idActor != 0) autorizacion.usuarioActivo(idActor);
-        Validaciones.pagina(pagina, tamanio);
-        String valido = Validaciones.opcional(nombre, "idioma", 100);
-        try { return libros.buscarIdiomas(valido, true, pagina, tamanio); }
-        catch (SQLException e) { throw new PersistenciaException("No se pudieron consultar los idiomas.", e); }
+        if (pagina < 1 || tamanio < 1)
+            throw new ValidacionException("pagina", "La página y su tamaño deben ser positivos.");
+        String valido = nombre == null ? null : nombre.strip();
+        if (valido != null && valido.isEmpty()) valido = null;
+        if (valido != null && valido.length() > 100)
+            throw new ValidacionException("idioma", "El máximo es 100 caracteres.");
+        try {
+            return libroDAO.buscarIdiomas(valido, true, pagina, tamanio);
+        }
+        catch (SQLException e) {
+            throw new PersistenciaException("No se pudieron consultar los idiomas.", e);
+        }
     }
 
     @Override
     public DetalleLibroDTO obtenerDetalle(int idActor, int id) throws NegocioException {
         if (idActor != 0) autorizacion.usuarioActivo(idActor);
         try {
-            DetalleLibroDTO detalle = libros.obtenerDetalle(id, idActor, LocalDateTime.now(reloj));
+            DetalleLibroDTO detalle = libroDAO.obtenerDetalle(id, idActor, LocalDateTime.now(reloj));
             if (detalle == null) throw new RecursoNoEncontradoException("El libro no esta disponible.");
             if (!detalle.libro().activo()) autorizacion.administrador(idActor);
             return detalle;
-        } catch (SQLException e) { throw new PersistenciaException("No se pudo consultar el libro.", e); }
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo consultar el libro.", e);
+        }
     }
 
     @Override
     public GestionLibroDTO obtenerGestion(int idActor, int id) throws NegocioException {
         autorizacion.administrador(idActor);
         try {
-            GestionLibroDTO gestion = libros.obtenerGestion(id);
+            GestionLibroDTO gestion = libroDAO.obtenerGestion(id);
             if (gestion == null) throw new RecursoNoEncontradoException("El libro no esta disponible.");
             return gestion;
-        } catch (SQLException e) { throw new PersistenciaException("No se pudo consultar la gestion del libro.", e); }
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo consultar la gestion del libro.", e);
+        }
     }
 
     @Override
@@ -259,51 +329,47 @@ public class LibroBOImpl implements LibroBO {
         return valido;
     }
 
-    private Libro existente(int id) throws SQLException, NegocioException {
-        Libro libro = libros.leer(id);
-        if (libro == null || libro.isEliminado()) throw new RecursoNoEncontradoException("El libro no esta disponible.");
-        return libro;
-    }
-
-    private DatosLibroDTO validarDatos(DatosLibroDTO datos) throws ValidacionException {
+    private DatosLibroDTO validarFormulario(DatosLibroDTO datos) throws ValidacionException {
         if (datos == null) throw new ValidacionException("datos", "Complete los datos del libro.");
-        String sinopsis = Validaciones.texto(datos.sinopsis(), "sinopsis", 65535);
-        if (sinopsis.getBytes(StandardCharsets.UTF_8).length > 65535)
-            throw new ValidacionException("sinopsis", "La sinopsis es demasiado extensa.");
+        String sinopsis = datos.sinopsis() == null ? "" : datos.sinopsis().strip();
+        if (sinopsis.isEmpty()) throw new ValidacionException("sinopsis", "Este campo es obligatorio.");
+        if (sinopsis.length() > 65535)
+            throw new ValidacionException("sinopsis", "El máximo es 65535 caracteres.");
         if (datos.anioEdicion() < 1 || datos.anioEdicion() > 9999)
             throw new ValidacionException("anioEdicion", "Ingrese un anio entre 1 y 9999.");
         if (datos.numeroPaginas() < 1) throw new ValidacionException("numeroPaginas", "El numero de paginas debe ser positivo.");
-        medida(datos.peso(), "peso", 3, "9999999.999");
-        medida(datos.alto(), "alto", 2, "99999999.99");
-        medida(datos.ancho(), "ancho", 2, "99999999.99");
-        String saga = Validaciones.opcional(datos.saga(), "saga", 150);
+        if (datos.peso() != null && datos.peso() <= 0)
+            throw new ValidacionException("peso", "El peso debe ser positivo.");
+        if (datos.alto() != null && datos.alto() <= 0)
+            throw new ValidacionException("alto", "El alto debe ser positivo.");
+        if (datos.ancho() != null && datos.ancho() <= 0)
+            throw new ValidacionException("ancho", "El ancho debe ser positivo.");
+        String saga = datos.saga() == null ? null : datos.saga().strip();
+        if (saga != null && saga.isEmpty()) saga = null;
+        if (saga != null && saga.length() > 150)
+            throw new ValidacionException("saga", "El máximo es 150 caracteres.");
         if (datos.numeroTomo() != null && (datos.numeroTomo() < 1 || saga == null))
             throw new ValidacionException("numeroTomo", "El tomo debe ser positivo y pertenecer a una saga.");
-        return new DatosLibroDTO(Validaciones.texto(datos.titulo(), "titulo", 255),
-                Validaciones.texto(datos.idioma(), "idioma", 100), sinopsis,
-                Validaciones.texto(datos.proveedor(), "proveedor", 150), Validaciones.texto(datos.isbn(), "isbn", 20),
+        String titulo = datos.titulo() == null ? "" : datos.titulo().strip();
+        if (titulo.isEmpty()) throw new ValidacionException("titulo", "Este campo es obligatorio.");
+        if (titulo.length() > 255)
+            throw new ValidacionException("titulo", "El máximo es 255 caracteres.");
+        String idioma = datos.idioma() == null ? "" : datos.idioma().strip();
+        if (idioma.isEmpty()) throw new ValidacionException("idioma", "Este campo es obligatorio.");
+        if (idioma.length() > 100)
+            throw new ValidacionException("idioma", "El máximo es 100 caracteres.");
+        String proveedor = datos.proveedor() == null ? "" : datos.proveedor().strip();
+        if (proveedor.isEmpty()) throw new ValidacionException("proveedor", "Este campo es obligatorio.");
+        if (proveedor.length() > 150)
+            throw new ValidacionException("proveedor", "El máximo es 150 caracteres.");
+        String isbn = datos.isbn() == null ? "" : datos.isbn().strip();
+        if (isbn.isEmpty()) throw new ValidacionException("isbn", "Este campo es obligatorio.");
+        if (isbn.length() > 20)
+            throw new ValidacionException("isbn", "El máximo es 20 caracteres.");
+        return new DatosLibroDTO(titulo,
+                idioma, sinopsis,
+                proveedor, isbn,
                 datos.anioEdicion(), datos.numeroPaginas(), datos.peso(), datos.alto(), datos.ancho(), saga, datos.numeroTomo());
     }
 
-    private void medida(Double valor, String campo, int decimales, String maximo) throws ValidacionException {
-        if (valor != null && (!Double.isFinite(valor) || valor <= 0
-                || BigDecimal.valueOf(valor).compareTo(new BigDecimal(maximo)) > 0
-                || BigDecimal.valueOf(valor).stripTrailingZeros().scale() > decimales))
-            throw new ValidacionException(campo, "Ingrese una medida positiva con precision valida.");
-    }
-
-    private void asignarDatos(Libro libro, DatosLibroDTO datos) {
-        libro.setTitulo(datos.titulo());
-        libro.setIdioma(datos.idioma());
-        libro.setSinopsis(datos.sinopsis());
-        libro.setProveedor(datos.proveedor());
-        libro.setIsbn(datos.isbn());
-        libro.setAnioEdicion(datos.anioEdicion());
-        libro.setNumeroPaginas(datos.numeroPaginas());
-        libro.setPeso(datos.peso());
-        libro.setAlto(datos.alto());
-        libro.setAncho(datos.ancho());
-        libro.setSaga(datos.saga());
-        libro.setNumeroTomo(datos.numeroTomo());
-    }
 }

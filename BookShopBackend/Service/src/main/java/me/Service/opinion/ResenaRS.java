@@ -27,19 +27,19 @@ public class ResenaRS {
     @Inject
     private Servicios servicios;
     @Context
-    private HttpServletRequest request;
+    private HttpServletRequest peticion;
 
     @POST
     @Path("libro/{idLibro}/busqueda")
     public ResultadoPaginadoDTO<ResenaDTO> listarPorLibro(
             @PathParam("idLibro") int idLibro,
             ConsultaResenasDTO consulta) throws NegocioException {
-        return servicios.resena().listarPorLibro(Sesion.actor(request), idLibro, consulta);
+        return servicios.getResenaBO().listarPorLibro(Sesion.obtenerIdUsuario(peticion), idLibro, consulta);
     }
 
     @GET
     @Path("libro/{idLibro}/valoracion")
     public ValoracionLibroDTO obtenerValoracion(@PathParam("idLibro") int idLibro) throws NegocioException {
-        return servicios.resena().obtenerValoracion(Sesion.actor(request), idLibro);
+        return servicios.getResenaBO().obtenerValoracion(Sesion.obtenerIdUsuario(peticion), idLibro);
     }
 }

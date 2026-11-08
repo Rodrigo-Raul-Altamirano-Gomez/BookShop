@@ -30,12 +30,12 @@ public class LibroRS {
     @Inject
     private Servicios servicios;
     @Context
-    private HttpServletRequest request;
+    private HttpServletRequest peticion;
 
     @POST
     @Path("busqueda")
     public ResultadoPaginadoDTO<TarjetaLibroDTO> buscar(FiltroLibroDTO filtro) throws NegocioException {
-        return servicios.libro().buscar(Sesion.actor(request), filtro);
+        return servicios.getLibroBO().buscar(Sesion.obtenerIdUsuario(peticion), filtro);
     }
 
     @POST
@@ -43,7 +43,7 @@ public class LibroRS {
     public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorAutor(
             @PathParam("idAutor") int idAutor,
             FiltroLibroDTO filtro) throws NegocioException {
-        return servicios.libro().buscarPorAutor(Sesion.actor(request), idAutor, filtro);
+        return servicios.getLibroBO().buscarPorAutor(Sesion.obtenerIdUsuario(peticion), idAutor, filtro);
     }
 
     @POST
@@ -51,7 +51,7 @@ public class LibroRS {
     public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorCategoria(
             @PathParam("idCategoria") int idCategoria,
             FiltroLibroDTO filtro) throws NegocioException {
-        return servicios.libro().buscarPorCategoria(Sesion.actor(request), idCategoria, filtro);
+        return servicios.getLibroBO().buscarPorCategoria(Sesion.obtenerIdUsuario(peticion), idCategoria, filtro);
     }
 
     @POST
@@ -59,7 +59,7 @@ public class LibroRS {
     public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorEditorial(
             @PathParam("idEditorial") int idEditorial,
             FiltroLibroDTO filtro) throws NegocioException {
-        return servicios.libro().buscarPorEditorial(Sesion.actor(request), idEditorial, filtro);
+        return servicios.getLibroBO().buscarPorEditorial(Sesion.obtenerIdUsuario(peticion), idEditorial, filtro);
     }
 
     @GET
@@ -68,13 +68,13 @@ public class LibroRS {
             @QueryParam("nombre") String nombre,
             @DefaultValue("1") @QueryParam("pagina") int pagina,
             @DefaultValue("12") @QueryParam("tamanioPagina") int tamanioPagina) throws NegocioException {
-        return servicios.libro().buscarIdiomas(Sesion.actor(request), nombre, pagina, tamanioPagina);
+        return servicios.getLibroBO().buscarIdiomas(Sesion.obtenerIdUsuario(peticion), nombre, pagina, tamanioPagina);
     }
 
     @GET
     @Path("{idLibro}")
     public DetalleLibroDTO obtenerDetalle(@PathParam("idLibro") int idLibro) throws NegocioException {
-        return servicios.libro().obtenerDetalle(Sesion.actor(request), idLibro);
+        return servicios.getLibroBO().obtenerDetalle(Sesion.obtenerIdUsuario(peticion), idLibro);
     }
 
     @GET
@@ -82,6 +82,6 @@ public class LibroRS {
     public List<DetalleLibroDTO> comparar(
             @QueryParam("primerLibro") int primerLibro,
             @QueryParam("segundoLibro") int segundoLibro) throws NegocioException {
-        return servicios.libro().comparar(Sesion.actor(request), primerLibro, segundoLibro);
+        return servicios.getLibroBO().comparar(Sesion.obtenerIdUsuario(peticion), primerLibro, segundoLibro);
     }
 }

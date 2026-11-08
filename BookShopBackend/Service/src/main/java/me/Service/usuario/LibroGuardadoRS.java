@@ -29,14 +29,14 @@ public class LibroGuardadoRS {
     @Inject
     private Servicios servicios;
     @Context
-    private HttpServletRequest request;
+    private HttpServletRequest peticion;
 
     @PUT
     @Path("{idLibro}")
     public void guardar(
             @PathParam("idLibro") int idLibro,
             @QueryParam("favorito") String favorito) throws NegocioException {
-        servicios.libroGuardado().guardar(Sesion.exigir(request), idLibro, leerFavorito(favorito));
+        servicios.getLibroGuardadoBO().guardar(Sesion.exigirIdUsuario(peticion), idLibro, leerFavorito(favorito));
     }
 
     @DELETE
@@ -44,7 +44,7 @@ public class LibroGuardadoRS {
     public boolean retirar(
             @PathParam("idLibro") int idLibro,
             @QueryParam("favorito") String favorito) throws NegocioException {
-        return servicios.libroGuardado().retirar(Sesion.exigir(request), idLibro, leerFavorito(favorito));
+        return servicios.getLibroGuardadoBO().retirar(Sesion.exigirIdUsuario(peticion), idLibro, leerFavorito(favorito));
     }
 
     @POST
@@ -52,7 +52,7 @@ public class LibroGuardadoRS {
     public ResultadoPaginadoDTO<TarjetaLibroDTO> listar(
             @QueryParam("favorito") String favorito,
             FiltroLibroDTO filtro) throws NegocioException {
-        return servicios.libroGuardado().listar(Sesion.exigir(request), leerFavorito(favorito), filtro);
+        return servicios.getLibroGuardadoBO().listar(Sesion.exigirIdUsuario(peticion), leerFavorito(favorito), filtro);
     }
 
     private boolean leerFavorito(String favorito) throws ValidacionException {

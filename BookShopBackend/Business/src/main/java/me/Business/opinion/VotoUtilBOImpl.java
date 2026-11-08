@@ -19,17 +19,17 @@ import me.Model.entities.opinion.Resena;
 import me.Model.entities.usuario.Usuario;
 
 public class VotoUtilBOImpl implements VotoUtilBO {
-    private final VotoUtilDAO votos;
-    private final ResenaDAO resenas;
-    private final LibroDAO libros;
+    private final VotoUtilDAO votoUtilDAO;
+    private final ResenaDAO resenaDAO;
+    private final LibroDAO libroDAO;
     private final Autorizacion autorizacion;
 
     public VotoUtilBOImpl() { this(new VotoUtilDAOImpl(), new ResenaDAOImpl(), new LibroDAOImpl(), new UsuarioDAOImpl()); }
 
-    public VotoUtilBOImpl(VotoUtilDAO votos, ResenaDAO resenas, LibroDAO libros, UsuarioDAO usuarios) {
-        this.votos = votos;
-        this.resenas = resenas;
-        this.libros = libros;
+    public VotoUtilBOImpl(VotoUtilDAO votoUtilDAO, ResenaDAO resenaDAO, LibroDAO libroDAO, UsuarioDAO usuarios) {
+        this.votoUtilDAO = votoUtilDAO;
+        this.resenaDAO = resenaDAO;
+        this.libroDAO = libroDAO;
         this.autorizacion = new Autorizacion(usuarios);
     }
 
@@ -37,19 +37,24 @@ public class VotoUtilBOImpl implements VotoUtilBO {
     public boolean cambiarVoto(int idActor, int idResena, boolean marcar) throws NegocioException {
         Usuario actor = autorizacion.usuarioActivo(idActor);
         try {
-            Resena resena = resenas.leerParaActualizar(idResena);
+            Resena resena = resenaDAO.leerParaActualizar(idResena);
             if (resena == null || resena.isEliminado() || !resena.isActivo())
                 throw new RecursoNoEncontradoException("La resena no esta publicada.");
-            Libro libro = libros.leer(resena.getLibro().getId());
+            Libro libro = libroDAO.leer(resena.getLibro().getId());
             if (libro == null || !libro.isActivo()) throw new RecursoNoEncontradoException("El libro no esta disponible.");
             // Las referencias no prohiben votar la resena propia; la relacion impide duplicados.
-            boolean cambio = votos.cambiarVoto(idActor, idResena, marcar, actor.getEmail());
+            boolean cambio = votoUtilDAO.cambiarVoto(idActor, idResena, marcar, actor.getEmail());
             TransactionContext.commit();
             return cambio;
         } catch (SQLException e) {
             TransactionContext.rollback();
             throw new PersistenciaException("No se pudo guardar el voto util.", e);
-        } catch (NegocioException e) { TransactionContext.rollback(); throw e; }
-        finally { TransactionContext.close(); }
+        } catch (NegocioException e) {
+            TransactionContext.rollback();
+            throw e;
+        }
+        finally {
+            TransactionContext.close();
+        }
     }
 }

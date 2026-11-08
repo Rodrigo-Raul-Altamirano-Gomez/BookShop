@@ -20,7 +20,6 @@ import me.Model.entities.catalogo.Libro;
 public class DescuentoDAOImpl implements DescuentoDAO {
     @Override
     public void insertar(Descuento descuento) throws SQLException {
-        validar(descuento);
         Connection conexion = TransactionContext.getConnection();
         if (haySuperposicion(descuento.getLibro().getId(), 0, descuento.getFechaInicio(), descuento.getFechaFin())) {
             throw new SQLException("El descuento se superpone con otro del libro.");
@@ -45,7 +44,6 @@ public class DescuentoDAOImpl implements DescuentoDAO {
 
     @Override
     public void modificar(Descuento descuento) throws SQLException {
-        validar(descuento);
         Connection conexion = TransactionContext.getConnection();
         int idLibro;
         // La referencia persistida manda; editar datos nunca cambia el libro asociado.
@@ -78,7 +76,7 @@ public class DescuentoDAOImpl implements DescuentoDAO {
              PreparedStatement sentencia = conexion.prepareStatement("SELECT * FROM DESCUENTO WHERE id=?")) {
             sentencia.setInt(1, id);
             try (ResultSet resultado = sentencia.executeQuery()) {
-                return resultado.next() ? mapear(resultado) : null;
+                return resultado.next() ? mapearDescuento(resultado) : null;
             }
         }
     }
@@ -89,7 +87,7 @@ public class DescuentoDAOImpl implements DescuentoDAO {
         try (PreparedStatement sentencia = conexion.prepareStatement("SELECT * FROM DESCUENTO WHERE id=? FOR UPDATE")) {
             sentencia.setInt(1, id);
             try (ResultSet resultado = sentencia.executeQuery()) {
-                return resultado.next() ? mapear(resultado) : null;
+                return resultado.next() ? mapearDescuento(resultado) : null;
             }
         }
     }
@@ -109,9 +107,6 @@ public class DescuentoDAOImpl implements DescuentoDAO {
     @Override
     public ResultadoPaginadoDTO<DescuentoDTO> listarPorLibro(int idLibro, LocalDateTime fecha, int pagina, int tamanioPagina)
             throws SQLException {
-        if (idLibro < 1 || fecha == null || pagina < 1 || tamanioPagina < 1) {
-            throw new IllegalArgumentException("Libro, fecha y paginacion validos son obligatorios.");
-        }
         List<DescuentoDTO> items = new ArrayList<>();
         long total;
         try (Connection conexion = DBManager.getConnection()) {
@@ -145,7 +140,6 @@ public class DescuentoDAOImpl implements DescuentoDAO {
 
     @Override
     public Descuento obtenerVigente(int idLibro, LocalDateTime fecha) throws SQLException {
-        if (idLibro < 1 || fecha == null) throw new IllegalArgumentException("Libro y fecha validos son obligatorios.");
         String sql = "SELECT * FROM DESCUENTO WHERE id_libro=? AND eliminado=FALSE"
                 + " AND fecha_inicio<=? AND fecha_fin>=? ORDER BY fecha_inicio DESC,id DESC LIMIT 1";
         try (Connection conexion = DBManager.getConnection();
@@ -155,7 +149,7 @@ public class DescuentoDAOImpl implements DescuentoDAO {
             sentencia.setTimestamp(3, Timestamp.valueOf(fecha));
             try (ResultSet resultado = sentencia.executeQuery()) {
                 if (!resultado.next()) return null;
-                Descuento descuento = mapear(resultado);
+                Descuento descuento = mapearDescuento(resultado);
                 descuento.setActivo(true);
                 return descuento;
             }
@@ -164,7 +158,6 @@ public class DescuentoDAOImpl implements DescuentoDAO {
 
     @Override
     public void actualizarVigencias(LocalDateTime fecha, String usuario) throws SQLException {
-        if (fecha == null) throw new IllegalArgumentException("La fecha es obligatoria.");
         String sql = "UPDATE DESCUENTO SET activo=(fecha_inicio<=? AND fecha_fin>=?),usuario_actualizacion=?,"
                 + " fecha_actualizacion=CURRENT_TIMESTAMP WHERE eliminado=FALSE AND activo<>(fecha_inicio<=? AND fecha_fin>=?)";
         try (Connection conexion = DBManager.getConnection();
@@ -180,9 +173,6 @@ public class DescuentoDAOImpl implements DescuentoDAO {
 
     @Override
     public boolean haySuperposicion(int idLibro, int idExcluir, LocalDateTime inicio, LocalDateTime fin) throws SQLException {
-        if (idLibro < 1 || idExcluir < 0 || inicio == null || fin == null || !fin.isAfter(inicio)) {
-            throw new IllegalArgumentException("Libro e intervalo validos son obligatorios.");
-        }
         Connection conexion = TransactionContext.getConnection();
         bloquearLibro(conexion, idLibro);
         // El bloqueo tambien consulta datos actuales si la transaccion ya tenia una lectura previa.
@@ -208,17 +198,7 @@ public class DescuentoDAOImpl implements DescuentoDAO {
         }
     }
 
-    private void validar(Descuento descuento) {
-        if (descuento == null || descuento.getLibro() == null || descuento.getLibro().getId() < 1
-                || descuento.getPorcentaje() == null || descuento.getPorcentaje().signum() <= 0
-                || descuento.getPorcentaje().compareTo(java.math.BigDecimal.valueOf(100)) > 0
-                || descuento.getFechaInicio() == null || descuento.getFechaFin() == null
-                || !descuento.getFechaFin().isAfter(descuento.getFechaInicio())) {
-            throw new IllegalArgumentException("Descuento y vigencia validos son obligatorios.");
-        }
-    }
-
-    private Descuento mapear(ResultSet resultado) throws SQLException {
+    private Descuento mapearDescuento(ResultSet resultado) throws SQLException {
         Descuento descuento = new Descuento();
         descuento.setId(resultado.getInt("id"));
         Libro libro = new Libro();

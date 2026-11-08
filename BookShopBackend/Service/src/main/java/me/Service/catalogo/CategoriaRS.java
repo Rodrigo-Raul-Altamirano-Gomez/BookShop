@@ -27,24 +27,24 @@ public class CategoriaRS {
     @Inject
     private Servicios servicios;
     @Context
-    private HttpServletRequest request;
+    private HttpServletRequest peticion;
 
     @POST
     @Path("busqueda")
     public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscar(FiltroReferenciaDTO filtro) throws NegocioException {
-        return servicios.categoria().buscar(Sesion.actor(request), filtro);
+        return servicios.getCategoriaBO().buscar(Sesion.obtenerIdUsuario(peticion), filtro);
     }
 
     @POST
     @Path("opciones")
     public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscarOpciones(
             FiltroReferenciaDTO filtro) throws NegocioException {
-        return servicios.categoria().buscarOpciones(Sesion.actor(request), filtro);
+        return servicios.getCategoriaBO().buscarOpciones(Sesion.obtenerIdUsuario(peticion), filtro);
     }
 
     @GET
     @Path("{id}")
     public DetalleReferenciaDTO obtenerDetalle(@PathParam("id") int id) throws NegocioException {
-        return servicios.categoria().obtenerDetalle(Sesion.actor(request), id);
+        return servicios.getCategoriaBO().obtenerDetalle(Sesion.obtenerIdUsuario(peticion), id);
     }
 }

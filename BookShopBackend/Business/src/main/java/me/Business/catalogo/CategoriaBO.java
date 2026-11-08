@@ -19,5 +19,3 @@ public interface CategoriaBO {
     ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscarOpciones(int idActor, FiltroReferenciaDTO filtro) throws NegocioException;
     DetalleReferenciaDTO obtenerDetalle(int idActor, int id) throws NegocioException;
 }
-
-

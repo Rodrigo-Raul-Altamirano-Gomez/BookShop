@@ -61,8 +61,12 @@ public final class ProteccionDatos {
     private static byte[] derivar(String clave, byte[] sal, int iteraciones) throws GeneralSecurityException {
         // PBKDF2 combina la contraseña con una sal distinta y repite el cálculo para dificultar ataques.
         PBEKeySpec datos = new PBEKeySpec(clave.toCharArray(), sal, iteraciones, 256);
-        try { return SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(datos).getEncoded(); }
-        finally { datos.clearPassword(); }
+        try {
+            return SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(datos).getEncoded();
+        }
+        finally {
+            datos.clearPassword();
+        }
     }
 
     public static String cifrar(String numero) throws NegocioException {
@@ -110,8 +114,12 @@ public final class ProteccionDatos {
                 Files.createDirectories(ruta.getParent());
                 byte[] nueva = new byte[32];
                 AZAR.nextBytes(nueva);
-                try { Files.write(ruta, nueva, StandardOpenOption.CREATE_NEW); }
-                catch (FileAlreadyExistsException e) { /* Otro proceso ya creó la clave. */ }
+                try {
+                    Files.write(ruta, nueva, StandardOpenOption.CREATE_NEW);
+                }
+                catch (FileAlreadyExistsException e) {
+                    /* Otro proceso ya creó la clave. */
+                }
             }
             byte[] datos = Files.readAllBytes(ruta);
             if (datos.length != 32)

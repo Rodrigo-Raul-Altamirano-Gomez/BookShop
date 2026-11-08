@@ -33,16 +33,16 @@ public class UsuarioRS {
     @Inject
     private Servicios servicios;
     @Context
-    private HttpServletRequest request;
+    private HttpServletRequest peticion;
 
-    public record Clave(String contraseniaActual) { }
+    public record DesactivacionCuenta(String contraseniaActual) { }
 
     @POST
     @Path("registro")
     public AccesoUsuarioDTO registrar(RegistroUsuarioDTO datos) throws NegocioException {
         comprobarSinSesion();
-        AccesoUsuarioDTO acceso = servicios.usuario().registrar(datos);
-        Sesion.abrir(request, acceso);
+        AccesoUsuarioDTO acceso = servicios.getUsuarioBO().registrar(datos);
+        Sesion.iniciar(peticion, acceso);
         return acceso;
     }
 
@@ -50,8 +50,8 @@ public class UsuarioRS {
     @Path("sesion")
     public AccesoUsuarioDTO iniciarSesion(CredencialesDTO datos) throws NegocioException {
         comprobarSinSesion();
-        AccesoUsuarioDTO acceso = servicios.usuario().iniciarSesion(datos);
-        Sesion.abrir(request, acceso);
+        AccesoUsuarioDTO acceso = servicios.getUsuarioBO().iniciarSesion(datos);
+        Sesion.iniciar(peticion, acceso);
         return acceso;
     }
 
@@ -59,57 +59,57 @@ public class UsuarioRS {
     @Path("reactivacion")
     public AccesoUsuarioDTO reactivar(CredencialesDTO datos) throws NegocioException {
         comprobarSinSesion();
-        AccesoUsuarioDTO acceso = servicios.usuario().reactivar(datos);
-        Sesion.abrir(request, acceso);
+        AccesoUsuarioDTO acceso = servicios.getUsuarioBO().reactivar(datos);
+        Sesion.iniciar(peticion, acceso);
         return acceso;
     }
 
     @GET
     public PerfilUsuarioDTO perfil() throws NegocioException {
-        return servicios.usuario().obtenerPerfil(Sesion.exigir(request));
+        return servicios.getUsuarioBO().obtenerPerfil(Sesion.exigirIdUsuario(peticion));
     }
 
     @PUT
     public PerfilUsuarioDTO modificar(DatosPerfilDTO datos) throws NegocioException {
-        return servicios.usuario().modificarPerfil(Sesion.exigir(request), datos);
+        return servicios.getUsuarioBO().modificarPerfil(Sesion.exigirIdUsuario(peticion), datos);
     }
 
     @PUT
     @Path("imagen")
     public PerfilUsuarioDTO imagen(ImagenDTO datos) throws NegocioException {
-        return servicios.usuario().cambiarImagen(Sesion.exigir(request), datos);
+        return servicios.getUsuarioBO().cambiarImagen(Sesion.exigirIdUsuario(peticion), datos);
     }
 
     @PUT
     @Path("contrasenia")
     public void contrasenia(CambioContraseniaDTO datos) throws NegocioException {
-        servicios.usuario().cambiarContrasenia(Sesion.exigir(request), datos);
+        servicios.getUsuarioBO().cambiarContrasenia(Sesion.exigirIdUsuario(peticion), datos);
     }
 
     @DELETE
     @Path("sesion")
     public void cerrarSesion() throws NegocioException {
         try {
-            Sesion.registrarTiempo(request, servicios.usuario());
+            Sesion.registrarTiempoDeUso(peticion, servicios.getUsuarioBO());
         } finally {
-            Sesion.invalidar(request);
+            Sesion.cerrar(peticion);
         }
     }
 
     @POST
     @Path("desactivacion")
-    public void desactivar(Clave datos) throws NegocioException {
-        int actor = Sesion.exigir(request);
+    public void desactivar(DesactivacionCuenta datos) throws NegocioException {
+        int idUsuario = Sesion.exigirIdUsuario(peticion);
         if (datos == null) throw new BadRequestException("Falta la contraseña actual.");
         // Verifica antes de contabilizar el tiempo; desactivar vuelve a comprobar la contraseña.
-        PerfilUsuarioDTO perfil = servicios.usuario().obtenerPerfil(actor);
-        servicios.usuario().iniciarSesion(new CredencialesDTO(perfil.usuario().email(), datos.contraseniaActual()));
-        Sesion.registrarTiempo(request, servicios.usuario());
-        servicios.usuario().desactivar(actor, datos.contraseniaActual());
-        Sesion.invalidar(request);
+        PerfilUsuarioDTO perfil = servicios.getUsuarioBO().obtenerPerfil(idUsuario);
+        servicios.getUsuarioBO().iniciarSesion(new CredencialesDTO(perfil.usuario().email(), datos.contraseniaActual()));
+        Sesion.registrarTiempoDeUso(peticion, servicios.getUsuarioBO());
+        servicios.getUsuarioBO().desactivar(idUsuario, datos.contraseniaActual());
+        Sesion.cerrar(peticion);
     }
 
     private void comprobarSinSesion() {
-        if (Sesion.actor(request) != 0) throw new ClientErrorException("Cierra la sesión actual primero.", 409);
+        if (Sesion.obtenerIdUsuario(peticion) != 0) throw new ClientErrorException("Cierra la sesión actual primero.", 409);
     }
 }

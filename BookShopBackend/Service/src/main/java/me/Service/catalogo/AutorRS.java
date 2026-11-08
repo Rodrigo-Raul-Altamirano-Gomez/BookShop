@@ -27,24 +27,24 @@ public class AutorRS {
     @Inject
     private Servicios servicios;
     @Context
-    private HttpServletRequest request;
+    private HttpServletRequest peticion;
 
     @POST
     @Path("busqueda")
     public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscar(FiltroReferenciaDTO filtro) throws NegocioException {
-        return servicios.autor().buscar(Sesion.actor(request), filtro);
+        return servicios.getAutorBO().buscar(Sesion.obtenerIdUsuario(peticion), filtro);
     }
 
     @POST
     @Path("opciones")
     public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscarOpciones(
             FiltroReferenciaDTO filtro) throws NegocioException {
-        return servicios.autor().buscarOpciones(Sesion.actor(request), filtro);
+        return servicios.getAutorBO().buscarOpciones(Sesion.obtenerIdUsuario(peticion), filtro);
     }
 
     @GET
     @Path("{id}")
     public DetalleReferenciaDTO obtenerDetalle(@PathParam("id") int id) throws NegocioException {
-        return servicios.autor().obtenerDetalle(Sesion.actor(request), id);
+        return servicios.getAutorBO().obtenerDetalle(Sesion.obtenerIdUsuario(peticion), id);
     }
 }

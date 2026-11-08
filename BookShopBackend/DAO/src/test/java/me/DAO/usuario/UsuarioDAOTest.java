@@ -333,8 +333,6 @@ class UsuarioDAOTest {
         dao.actualizarTiempoTotal(1, Duration.ofSeconds(75), "ana@test");
         dao.actualizarTiempoTotal(1, Duration.ofSeconds(15), "ana@test");
         assertEquals(Duration.ofSeconds(90), dao.leer(1).getTiempoTotal());
-        assertThrows(IllegalArgumentException.class,
-                () -> dao.actualizarTiempoTotal(1, Duration.ofSeconds(-1), "ana@test"));
         assertTrue(dao.cambiarActivo(1, false, "ana@test"));
         assertFalse(dao.cambiarActivo(1, false, "ana@test"));
         assertFalse(dao.cambiarContrasenia(1, "rechazado", "ana@test"));

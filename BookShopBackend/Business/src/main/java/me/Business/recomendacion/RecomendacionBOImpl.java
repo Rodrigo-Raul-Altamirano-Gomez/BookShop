@@ -20,7 +20,6 @@ import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.RecursoNoEncontradoException;
 import me.Business.exceptions.ValidacionException;
 import me.Business.Autorizacion;
-import me.Business.Validaciones;
 import me.DAO.catalogo.LibroDAO;
 import me.DAO.catalogo.LibroDAOImpl;
 import me.DAO.catalogo.ResenaDAO;
@@ -38,23 +37,23 @@ import me.Model.dto.opinion.ValoracionLibroDTO;
 import me.Model.entities.catalogo.Libro;
 
 public class RecomendacionBOImpl implements RecomendacionBO {
-    private final LibroDAO libros;
-    private final PedidoDAO pedidos;
-    private final ResenaDAO resenas;
+    private final LibroDAO libroDAO;
+    private final PedidoDAO pedidoDAO;
+    private final ResenaDAO resenaDAO;
     private final Autorizacion autorizacion;
     private final Clock reloj;
-    private final Map<String, Conjunto> consultas = new ConcurrentHashMap<>();
+    private final Map<String, ConsultaGuardada> consultas = new ConcurrentHashMap<>();
 
     public RecomendacionBOImpl() {
         this(new LibroDAOImpl(), new PedidoDAOImpl(), new ResenaDAOImpl(), new UsuarioDAOImpl(),
-                Clock.system(ZoneId.of("America/Lima")));
+            Clock.system(ZoneId.of("America/Lima")));
     }
-    public RecomendacionBOImpl(LibroDAO libros, PedidoDAO pedidos, ResenaDAO resenas,
-            UsuarioDAO usuarios, Clock reloj) {
-        this.libros = libros;
-        this.pedidos = pedidos;
-        this.resenas = resenas;
-        this.autorizacion = new Autorizacion(usuarios);
+    public RecomendacionBOImpl(LibroDAO libroDAO, PedidoDAO pedidoDAO, ResenaDAO resenaDAO,
+        UsuarioDAO usuarioDAO, Clock reloj) {
+        this.libroDAO = libroDAO;
+        this.pedidoDAO = pedidoDAO;
+        this.resenaDAO = resenaDAO;
+        this.autorizacion = new Autorizacion(usuarioDAO);
         this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
     }
 
@@ -62,27 +61,39 @@ public class RecomendacionBOImpl implements RecomendacionBO {
     public List<TarjetaLibroDTO> similares(int idLibro) throws NegocioException {
         if (idLibro < 1) throw new ValidacionException("idLibro", "Selecciona un libro.");
         try {
-            Datos datos = cargar();
-            Libro origen = datos.libros.stream().filter(l -> l.getId() == idLibro).findFirst().orElse(null);
+            DatosRecomendacion datos = cargar();
+            Libro origen = null;
+            for (Libro candidato : datos.libros) {
+                if (candidato.getId() == idLibro) {
+                    origen = candidato;
+                    break;
+                }
+            }
             if (origen == null) throw new RecursoNoEncontradoException("El libro no está disponible.");
             Map<Integer, Double> puntos = SimilitudContenido.puntuar(origen, datos.libros);
             List<Integer> ids = ordenarPuntos(datos.libros, puntos, Set.of(idLibro));
-            return libros.listarTarjetasPorIds(ids.subList(0, Math.min(8, ids.size())), datos.ahora);
-        } catch (SQLException e) { throw new PersistenciaException("No se pudieron consultar los libros similares.", e); }
+            return libroDAO.listarTarjetasPorIds(ids.subList(0, Math.min(8, ids.size())), datos.ahora);
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudieron consultar los libros similares.", e);
+        }
     }
 
     @Override
     public List<TarjetaLibroDTO> complementarios(List<Integer> idsCarrito) throws NegocioException {
-        if (idsCarrito == null || idsCarrito.stream().anyMatch(id -> id == null || id < 1))
-            throw new ValidacionException("carrito", "Los libros del carrito no son válidos.");
+        if (idsCarrito == null) throw new ValidacionException("carrito", "Indica los libros del carrito.");
+        for (Integer id : idsCarrito) {
+            if (id == null || id < 1) throw new ValidacionException("carrito", "Los libros del carrito no son validos.");
+        }
         if (idsCarrito.isEmpty()) return List.of();
         Set<Integer> carrito = new HashSet<>(idsCarrito);
         try {
-            Datos datos = cargar();
+            DatosRecomendacion datos = cargar();
             Map<Integer, Double> puntos = AsociacionCompras.puntuar(carrito, datos.ventas);
             List<Integer> ids = conRespaldo(datos, puntos, carrito);
-            return libros.listarTarjetasPorIds(ids.subList(0, Math.min(8, ids.size())), datos.ahora);
-        } catch (SQLException e) { throw new PersistenciaException("No se pudieron consultar los libros complementarios.", e); }
+            return libroDAO.listarTarjetasPorIds(ids.subList(0, Math.min(8, ids.size())), datos.ahora);
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudieron consultar los libros complementarios.", e);
+        }
     }
 
     @Override
@@ -91,17 +102,21 @@ public class RecomendacionBOImpl implements RecomendacionBO {
         autorizacion.usuarioActivo(idActor);
         try {
             return FiltradoColaborativo.pedidosUsuario(idActor, ventasValidas()).size() >= 3;
-        } catch (SQLException e) { throw new PersistenciaException("No se pudo comprobar el historial de recomendaciones.", e); }
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo comprobar el historial de recomendaciones.", e);
+        }
     }
 
     @Override
     public RecomendacionesDTO abrirPopulares(ConsultaRecomendacionesDTO consulta) throws NegocioException {
         validarConsulta(consulta);
         try {
-            Datos datos = cargar();
+            DatosRecomendacion datos = cargar();
             Map<Integer, Double> puntos = Popularidad.puntuar(datos.libros, datos.ventas, datos.valoraciones, datos.ahora);
             return abrir(0, ordenarPuntos(datos.libros, puntos, Set.of()), consulta);
-        } catch (SQLException e) { throw new PersistenciaException("No se pudo consultar el ranking de popularidad.", e); }
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo consultar el ranking de popularidad.", e);
+        }
     }
 
     @Override
@@ -109,18 +124,20 @@ public class RecomendacionBOImpl implements RecomendacionBO {
         autorizacion.usuarioActivo(idActor);
         validarConsulta(consulta);
         try {
-            Datos datos = cargar();
+            DatosRecomendacion datos = cargar();
             if (FiltradoColaborativo.pedidosUsuario(idActor, datos.ventas).size() < 3)
                 throw new ConflictoException("Para ti requiere al menos tres pedidos confirmados válidos.");
             Set<Integer> comprados = FiltradoColaborativo.librosUsuario(idActor, datos.ventas);
             return abrir(idActor, conRespaldo(datos,
-                    FiltradoColaborativo.puntuar(idActor, datos.ventas), comprados), consulta);
-        } catch (SQLException e) { throw new PersistenciaException("No se pudieron preparar tus recomendaciones.", e); }
+                FiltradoColaborativo.puntuar(idActor, datos.ventas), comprados), consulta);
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudieron preparar tus recomendaciones.", e);
+        }
     }
 
     private RecomendacionesDTO abrir(int propietario, List<Integer> ids,
-            ConsultaRecomendacionesDTO consulta) throws NegocioException, SQLException {
-        Conjunto conjunto = new Conjunto(propietario, List.copyOf(ids));
+        ConsultaRecomendacionesDTO consulta) throws NegocioException, SQLException {
+        ConsultaGuardada conjunto = new ConsultaGuardada(propietario, List.copyOf(ids));
         String id = UUID.randomUUID().toString();
         ResultadoPaginadoDTO<TarjetaLibroDTO> pagina = pagina(conjunto, consulta);
         consultas.put(id, conjunto);
@@ -129,11 +146,15 @@ public class RecomendacionBOImpl implements RecomendacionBO {
 
     @Override
     public ResultadoPaginadoDTO<TarjetaLibroDTO> consultar(int idActor, String idConsulta,
-            ConsultaRecomendacionesDTO consulta) throws NegocioException {
+        ConsultaRecomendacionesDTO consulta) throws NegocioException {
         validarConsulta(consulta);
-        Conjunto conjunto = obtener(idActor, idConsulta);
-        try { return pagina(conjunto, consulta); }
-        catch (SQLException e) { throw new PersistenciaException("No se pudo consultar la página de recomendaciones.", e); }
+        ConsultaGuardada conjunto = obtener(idActor, idConsulta);
+        try {
+            return pagina(conjunto, consulta);
+        }
+        catch (SQLException e) {
+            throw new PersistenciaException("No se pudo consultar la página de recomendaciones.", e);
+        }
     }
 
     @Override
@@ -142,26 +163,28 @@ public class RecomendacionBOImpl implements RecomendacionBO {
         consultas.remove(idConsulta);
     }
 
-    private Conjunto obtener(int idActor, String idConsulta) throws NegocioException {
+    private ConsultaGuardada obtener(int idActor, String idConsulta) throws NegocioException {
         if (idConsulta == null || idConsulta.isBlank())
             throw new ValidacionException("idConsulta", "Falta la consulta de recomendaciones.");
-        Conjunto conjunto = consultas.get(idConsulta);
+        ConsultaGuardada conjunto = consultas.get(idConsulta);
         if (conjunto == null) throw new RecursoNoEncontradoException("Vuelve a abrir las recomendaciones.");
         if (conjunto.propietario != 0) autorizacion.propietario(idActor, conjunto.propietario);
         return conjunto;
     }
 
-    private ResultadoPaginadoDTO<TarjetaLibroDTO> pagina(Conjunto conjunto,
-            ConsultaRecomendacionesDTO consulta) throws SQLException {
+    private ResultadoPaginadoDTO<TarjetaLibroDTO> pagina(ConsultaGuardada conjunto,
+        ConsultaRecomendacionesDTO consulta) throws SQLException {
         LocalDateTime fecha = LocalDateTime.now(reloj);
         Map<Integer, TarjetaLibroDTO> precios = new HashMap<>();
-        for (TarjetaLibroDTO tarjeta : libros.listarTarjetasSinImagenPorIds(conjunto.ids, fecha))
+        for (TarjetaLibroDTO tarjeta : libroDAO.listarTarjetasSinImagenPorIds(conjunto.ids, fecha))
             precios.put(tarjeta.id(), tarjeta);
         Map<Integer, Libro> atributos = new HashMap<>();
-        for (Libro libro : libros.listarParaRecomendaciones()) atributos.put(libro.getId(), libro);
-        // Refresca atributos del conjunto original; no repite el algoritmo ni incorpora otros libros.
-        List<Integer> ids = new ArrayList<>(conjunto.ids.stream()
-                .filter(id -> precios.containsKey(id) && atributos.containsKey(id)).toList());
+        for (Libro libro : libroDAO.listarParaRecomendaciones()) atributos.put(libro.getId(), libro);
+        // Refresca atributos del conjunto original; no repite el algoritmo ni incorpora otros libroDAO.
+        List<Integer> ids = new ArrayList<>();
+        for (Integer id : conjunto.ids) {
+            if (precios.containsKey(id) && atributos.containsKey(id)) ids.add(id);
+        }
         Comparator<Integer> orden = switch (consulta.orden()) {
             case MAS_RECIENTES -> Comparator.comparing((Integer id) -> atributos.get(id).getFechaCreacion()).reversed();
             case PRECIO_ASCENDENTE -> Comparator.comparing((Integer id) -> precios.get(id).precioConDescuento());
@@ -177,11 +200,11 @@ public class RecomendacionBOImpl implements RecomendacionBO {
         if (orden != null) ids.sort(orden);
         int inicio = (int) Math.min(ids.size(), (long) (consulta.pagina() - 1) * consulta.tamanioPagina());
         int fin = (int) Math.min(ids.size(), (long) inicio + consulta.tamanioPagina());
-        List<TarjetaLibroDTO> tarjetas = libros.listarTarjetasPorIds(ids.subList(inicio, fin), fecha);
+        List<TarjetaLibroDTO> tarjetas = libroDAO.listarTarjetasPorIds(ids.subList(inicio, fin), fecha);
         return new ResultadoPaginadoDTO<>(tarjetas, ids.size(), consulta.pagina(), consulta.tamanioPagina());
     }
 
-    private List<Integer> conRespaldo(Datos datos, Map<Integer, Double> puntos, Set<Integer> excluir) {
+    private List<Integer> conRespaldo(DatosRecomendacion datos, Map<Integer, Double> puntos, Set<Integer> excluir) {
         List<Integer> ids = ordenarPuntos(datos.libros, puntos, excluir);
         Map<Integer, Double> populares = Popularidad.puntuar(datos.libros, datos.ventas, datos.valoraciones, datos.ahora);
         Set<Integer> yaIncluidos = new HashSet<>(excluir);
@@ -198,15 +221,18 @@ public class RecomendacionBOImpl implements RecomendacionBO {
         return ids;
     }
 
-    private Datos cargar() throws SQLException {
-        return new Datos(libros.listarParaRecomendaciones(), ventasValidas(), resenas.listarValoraciones(), LocalDateTime.now(reloj));
+    private DatosRecomendacion cargar() throws SQLException {
+        return new DatosRecomendacion(libroDAO.listarParaRecomendaciones(), ventasValidas(), resenaDAO.listarValoraciones(), LocalDateTime.now(reloj));
     }
 
     private List<VentaLibroDTO> ventasValidas() throws SQLException {
         LocalDateTime ahora = LocalDateTime.now(reloj);
         // DAO excluye cancelados/devueltos. El conjunto completo conserva la elegibilidad de Para ti.
-        return pedidos.listarDetalleVentas(LocalDate.of(1000, 1, 1)).stream()
-                .filter(v -> !v.fechaPago().isAfter(ahora)).toList();
+        List<VentaLibroDTO> ventas = new ArrayList<>();
+        for (VentaLibroDTO venta : pedidoDAO.listarDetalleVentas(LocalDate.of(1000, 1, 1))) {
+            if (!venta.fechaPago().isAfter(ahora)) ventas.add(venta);
+        }
+        return ventas;
     }
 
     private void validarConsulta(ConsultaRecomendacionesDTO consulta) throws ValidacionException {
@@ -214,10 +240,11 @@ public class RecomendacionBOImpl implements RecomendacionBO {
             throw new ValidacionException("consulta", "Selecciona un orden de recomendaciones.");
         if (consulta.orden() == OrdenLibro.MAS_VENDIDOS)
             throw new ValidacionException("orden", "Más vendidos corresponde al catálogo.");
-        Validaciones.pagina(consulta.pagina(), consulta.tamanioPagina());
+        if (consulta.pagina() < 1 || consulta.tamanioPagina() < 1)
+            throw new ValidacionException("pagina", "La pagina y su tamaño deben ser positivos.");
     }
 
-    private record Datos(List<Libro> libros, List<VentaLibroDTO> ventas,
-            List<ValoracionLibroDTO> valoraciones, LocalDateTime ahora) { }
-    private record Conjunto(int propietario, List<Integer> ids) { }
+    private record DatosRecomendacion(List<Libro> libros, List<VentaLibroDTO> ventas,
+        List<ValoracionLibroDTO> valoraciones, LocalDateTime ahora) { }
+    private record ConsultaGuardada(int propietario, List<Integer> ids) { }
 }

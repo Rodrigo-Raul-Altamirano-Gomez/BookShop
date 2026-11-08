@@ -61,15 +61,15 @@ class ServicioHttpTest {
     @BeforeEach
     void iniciar() throws Exception {
         servicios = mock(Servicios.class);
-        when(servicios.usuario()).thenReturn(mock(UsuarioBO.class));
-        when(servicios.libro()).thenReturn(mock(LibroBO.class));
-        when(servicios.carrito()).thenReturn(mock(CarritoBO.class));
-        when(servicios.pedido()).thenReturn(mock(PedidoBO.class));
-        when(servicios.cupon()).thenReturn(mock(CuponBO.class));
-        when(servicios.libroGuardado()).thenReturn(mock(LibroGuardadoBO.class));
-        when(servicios.direccionEnvio()).thenReturn(mock(DireccionEnvioBO.class));
-        when(servicios.metodoPago()).thenReturn(mock(MetodoPagoBO.class));
-        when(servicios.seguimiento()).thenReturn(mock(SeguimientoBO.class));
+        when(servicios.getUsuarioBO()).thenReturn(mock(UsuarioBO.class));
+        when(servicios.getLibroBO()).thenReturn(mock(LibroBO.class));
+        when(servicios.getCarritoBO()).thenReturn(mock(CarritoBO.class));
+        when(servicios.getPedidoBO()).thenReturn(mock(PedidoBO.class));
+        when(servicios.getCuponBO()).thenReturn(mock(CuponBO.class));
+        when(servicios.getLibroGuardadoBO()).thenReturn(mock(LibroGuardadoBO.class));
+        when(servicios.getDireccionEnvioBO()).thenReturn(mock(DireccionEnvioBO.class));
+        when(servicios.getMetodoPagoBO()).thenReturn(mock(MetodoPagoBO.class));
+        when(servicios.getSeguimientoBO()).thenReturn(mock(SeguimientoBO.class));
         request = mock(HttpServletRequest.class);
         sesion = mock(HttpSession.class);
         atributos = new HashMap<>();
@@ -116,22 +116,22 @@ class ServicioHttpTest {
     void operacionPrivadaSinSesionNoLlamaBusiness() {
         try (Response respuesta = http.target("carrito").request().get()) {
             assertEquals(401, respuesta.getStatus());
-            verifyNoInteractions(servicios.carrito());
+            verifyNoInteractions(servicios.getCarritoBO());
         }
     }
 
     @Test
     void catalogoPublicoUsaVisitanteYRespetaFiltro() throws Exception {
-        when(servicios.libro().buscar(eq(0), any())).thenReturn(new ResultadoPaginadoDTO<>(List.of(), 0, 1, 12));
+        when(servicios.getLibroBO().buscar(eq(0), any())).thenReturn(new ResultadoPaginadoDTO<>(List.of(), 0, 1, 12));
         try (Response respuesta = http.target("libros/busqueda").request().post(Entity.json(FiltroLibroDTO.porDefecto()))) {
             assertEquals(200, respuesta.getStatus());
-            verify(servicios.libro()).buscar(eq(0), argThat(f -> f.pagina() == 1 && f.soloActivos()));
+            verify(servicios.getLibroBO()).buscar(eq(0), argThat(f -> f.pagina() == 1 && f.soloActivos()));
         }
     }
 
     @Test
     void loginCreaSesionYRenuevaIdentificador() throws Exception {
-        when(servicios.usuario().iniciarSesion(any())).thenReturn(new AccesoUsuarioDTO(7, "Ana", Rol.CLIENTE, false));
+        when(servicios.getUsuarioBO().iniciarSesion(any())).thenReturn(new AccesoUsuarioDTO(7, "Ana", Rol.CLIENTE, false));
         try (Response respuesta = http.target("cuenta/sesion").request()
                 .post(Entity.json(new CredencialesDTO("ana@correo.pe", "clave123")))) {
             assertEquals(200, respuesta.getStatus());
@@ -142,7 +142,7 @@ class ServicioHttpTest {
 
     @Test
     void cuentaInactivaNoObtieneSesionPrivada() throws Exception {
-        when(servicios.usuario().iniciarSesion(any())).thenReturn(new AccesoUsuarioDTO(7, "Ana", Rol.CLIENTE, true));
+        when(servicios.getUsuarioBO().iniciarSesion(any())).thenReturn(new AccesoUsuarioDTO(7, "Ana", Rol.CLIENTE, true));
         try (Response respuesta = http.target("cuenta/sesion").request()
                 .post(Entity.json(new CredencialesDTO("ana@correo.pe", "clave123")))) {
             assertEquals(200, respuesta.getStatus());
@@ -158,14 +158,14 @@ class ServicioHttpTest {
         try (Response respuesta = http.target("pedidos/confirmacion").queryParam("idActor", 99)
                 .request().post(Entity.json(""))) {
             assertEquals(204, respuesta.getStatus());
-            verify(servicios.pedido()).pagar(7);
-            verify(servicios.pedido(), never()).pagar(99);
+            verify(servicios.getPedidoBO()).pagar(7);
+            verify(servicios.getPedidoBO(), never()).pagar(99);
         }
     }
 
     @Test
     void errorDeValidacionExponeCampoSinTraza() throws Exception {
-        when(servicios.libro().buscar(anyInt(), any())).thenThrow(new ValidacionException("pagina", "Página inválida."));
+        when(servicios.getLibroBO().buscar(anyInt(), any())).thenThrow(new ValidacionException("pagina", "Página inválida."));
         try (Response respuesta = http.target("libros/busqueda").request().post(Entity.json(FiltroLibroDTO.porDefecto()))) {
             assertEquals(400, respuesta.getStatus());
             String json = respuesta.readEntity(String.class);
@@ -176,7 +176,7 @@ class ServicioHttpTest {
 
     @Test
     void errorInternoNoExponeSqlNiCausa() throws Exception {
-        when(servicios.libro().buscar(anyInt(), any()))
+        when(servicios.getLibroBO().buscar(anyInt(), any()))
                 .thenThrow(new PersistenciaException("SELECT secreto", new IllegalStateException("clave privada")));
         try (Response respuesta = http.target("libros/busqueda").request().post(Entity.json(FiltroLibroDTO.porDefecto()))) {
             assertEquals(500, respuesta.getStatus());
@@ -190,18 +190,18 @@ class ServicioHttpTest {
     void jsonInvalidoSeRechazaSinInvocarNegocio() {
         try (Response respuesta = http.target("cuenta/sesion").request().post(Entity.json("{mal"))) {
             assertEquals(400, respuesta.getStatus());
-            verifyNoInteractions(servicios.usuario());
+            verifyNoInteractions(servicios.getUsuarioBO());
         }
     }
 
     @Test
     void registroRecibeFechaIso() throws Exception {
-        when(servicios.usuario().registrar(any())).thenReturn(new AccesoUsuarioDTO(7, "Ana", Rol.CLIENTE, false));
+        when(servicios.getUsuarioBO().registrar(any())).thenReturn(new AccesoUsuarioDTO(7, "Ana", Rol.CLIENTE, false));
         String json = "{\"nombre\":\"Ana\",\"email\":\"ana@correo.pe\",\"fechaNacimiento\":\"2000-02-29\","
                 + "\"contrasenia\":\"clave123\",\"confirmacionContrasenia\":\"clave123\",\"imagen\":null}";
         try (Response respuesta = http.target("cuenta/registro").request().post(Entity.json(json))) {
             assertEquals(200, respuesta.getStatus());
-            verify(servicios.usuario()).registrar(argThat(datos ->
+            verify(servicios.getUsuarioBO()).registrar(argThat(datos ->
                     datos.fechaNacimiento().equals(java.time.LocalDate.of(2000, 2, 29))));
         }
     }
@@ -213,8 +213,8 @@ class ServicioHttpTest {
         atributos.put("bookshop.inicio", java.time.Instant.now().minusSeconds(10));
         try (Response respuesta = http.target("cuenta/sesion").request().delete()) {
             assertEquals(204, respuesta.getStatus());
-            var orden = inOrder(servicios.usuario(), sesion);
-            orden.verify(servicios.usuario()).cerrarSesion(eq(7), argThat(tiempo -> tiempo.toSeconds() >= 10));
+            var orden = inOrder(servicios.getUsuarioBO(), sesion);
+            orden.verify(servicios.getUsuarioBO()).cerrarSesion(eq(7), argThat(tiempo -> tiempo.toSeconds() >= 10));
             orden.verify(sesion).invalidate();
         }
     }
@@ -226,7 +226,7 @@ class ServicioHttpTest {
         try (Response respuesta = http.target("cuenta/imagen").request()
                 .put(Entity.json("{\"contenido\":[1,2,3],\"tipoMime\":\"image/png\"}"))) {
             assertEquals(204, respuesta.getStatus());
-            verify(servicios.usuario()).cambiarImagen(eq(7), argThat(imagen ->
+            verify(servicios.getUsuarioBO()).cambiarImagen(eq(7), argThat(imagen ->
                     java.util.Arrays.equals(new byte[]{1, 2, 3}, imagen.contenido())
                             && "image/png".equals(imagen.tipoMime())));
         }
@@ -249,7 +249,7 @@ class ServicioHttpTest {
         atributos.put("bookshop.actor", 7);
         try (Response respuesta = http.target("carrito/libros/3").request().method(metodo)) {
             assertEquals(400, respuesta.getStatus());
-            verifyNoInteractions(servicios.carrito());
+            verifyNoInteractions(servicios.getCarritoBO());
         }
     }
 
@@ -260,7 +260,7 @@ class ServicioHttpTest {
         try (Response respuesta = http.target("carrito/libros/3").queryParam("cantidad", 0)
                 .request().method("PUT")) {
             assertEquals(204, respuesta.getStatus());
-            verify(servicios.carrito()).cambiarCantidad(7, 3, 0);
+            verify(servicios.getCarritoBO()).cambiarCantidad(7, 3, 0);
         }
     }
 
@@ -275,14 +275,14 @@ class ServicioHttpTest {
         for (String metodo : List.of("PUT", "DELETE")) {
             try (Response respuesta = destino.request().method(metodo)) {
                 assertEquals(400, respuesta.getStatus());
-                verifyNoInteractions(servicios.libroGuardado());
+                verifyNoInteractions(servicios.getLibroGuardadoBO());
             }
         }
         var busqueda = http.target("cuenta/libros-guardados/busqueda");
         if (favorito != null) busqueda = busqueda.queryParam("favorito", favorito);
         try (Response respuesta = busqueda.request().post(Entity.json(FiltroLibroDTO.porDefecto()))) {
             assertEquals(400, respuesta.getStatus());
-            verifyNoInteractions(servicios.libroGuardado());
+            verifyNoInteractions(servicios.getLibroGuardadoBO());
         }
     }
 
@@ -294,7 +294,7 @@ class ServicioHttpTest {
         try (Response respuesta = http.target("cuenta/libros-guardados/3").queryParam("favorito", favorito)
                 .request().method("PUT")) {
             assertEquals(204, respuesta.getStatus());
-            verify(servicios.libroGuardado()).guardar(7, 3, favorito);
+            verify(servicios.getLibroGuardadoBO()).guardar(7, 3, favorito);
         }
     }
 
@@ -329,8 +329,8 @@ class ServicioHttpTest {
                 assertEquals(204, respuesta.getStatus());
             }
         }
-        verify(servicios.libro()).buscarIdiomas(7, null, 2, 3);
-        verify(servicios.cupon()).listar(7, 2, 3);
+        verify(servicios.getLibroBO()).buscarIdiomas(7, null, 2, 3);
+        verify(servicios.getCuponBO()).listar(7, 2, 3);
     }
 
     @ParameterizedTest
@@ -339,7 +339,7 @@ class ServicioHttpTest {
         when(request.getSession(false)).thenReturn(sesion);
         atributos.put("bookshop.actor", 7);
         atributos.put("bookshop.inicio", java.time.Instant.now().minusSeconds(10));
-        UsuarioBO usuarios = servicios.usuario();
+        UsuarioBO usuarios = servicios.getUsuarioBO();
         if (cuentaInactiva) {
             doThrow(new CuentaInactivaException("Cuenta desactivada."))
                     .when(usuarios).cerrarSesion(eq(7), any());
@@ -357,7 +357,7 @@ class ServicioHttpTest {
     void paginaDeCatalogoConservaImportesYTotalDelConjunto() throws Exception {
         var libro = new TarjetaLibroDTO(3, "Libro", null, "Autor", new BigDecimal("19.99"),
                 new BigDecimal("16.99"), new BigDecimal("15.00"), true);
-        when(servicios.libro().buscar(eq(0), any()))
+        when(servicios.getLibroBO().buscar(eq(0), any()))
                 .thenReturn(new ResultadoPaginadoDTO<>(List.of(libro), 25, 2, 12));
         try (Response respuesta = http.target("libros/busqueda").request()
                 .post(Entity.json(FiltroLibroDTO.porDefecto()))) {
@@ -381,7 +381,7 @@ class ServicioHttpTest {
         var cabecera = new ResumenPedidoDTO(15, fecha, EstadoPedido.EN_ALMACEN, 2, new BigDecimal("35.68"));
         var detalle = new DetallePedidoDTO(cabecera, null, null, null, "TRANSACCION", "SEGUIMIENTO",
                 fecha.plusSeconds(90), null, null, true, false);
-        when(servicios.pedido().pagar(7)).thenReturn(detalle);
+        when(servicios.getPedidoBO().pagar(7)).thenReturn(detalle);
         try (Response respuesta = http.target("pedidos/confirmacion").request().method("POST")) {
             assertEquals(200, respuesta.getStatus());
             try (var lector = Json.createReader(new StringReader(respuesta.readEntity(String.class)))) {

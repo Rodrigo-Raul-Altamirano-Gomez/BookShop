@@ -11,13 +11,13 @@ import me.Model.entities.usuario.Usuario;
 
 // El id viene de la sesión autenticada del servidor, nunca de un selector del cliente.
 public class Autorizacion {
-    private final UsuarioDAO usuarios;
-    public Autorizacion(UsuarioDAO usuarios) { this.usuarios = usuarios; }
+    private final UsuarioDAO usuarioDAO;
+    public Autorizacion(UsuarioDAO usuarioDAO) { this.usuarioDAO = usuarioDAO; }
 
     public Usuario usuarioActivo(int idActor) throws NegocioException {
         if (idActor <= 0) throw new AccesoDenegadoException("Debes iniciar sesión.");
         try {
-            Usuario actor = usuarios.leer(idActor);
+            Usuario actor = usuarioDAO.leer(idActor);
             if (actor == null || actor.isEliminado())
                 throw new AccesoDenegadoException("La sesión no corresponde a una cuenta disponible.");
             if (!actor.isActivo()) throw new CuentaInactivaException("La cuenta está desactivada.");

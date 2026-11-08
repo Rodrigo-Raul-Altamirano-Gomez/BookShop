@@ -24,7 +24,7 @@ public class ConfiguracionBOImpl implements ConfiguracionBO {
 
     public ConfiguracionBOImpl() throws NegocioException {
         this(Path.of(System.getProperty("bookshop.config.file", "config/negocio.properties")),
-                new Autorizacion(new UsuarioDAOImpl()));
+            new Autorizacion(new UsuarioDAOImpl()));
     }
 
     public ConfiguracionBOImpl(Path archivo, Autorizacion autorizacion) throws NegocioException {
@@ -69,24 +69,28 @@ public class ConfiguracionBOImpl implements ConfiguracionBO {
             throw new ConfiguracionException("No se pudo guardar la configuración; se conserva la anterior.", e);
         } finally {
             if (temporal != null) {
-                try { Files.deleteIfExists(temporal); }
-                catch (IOException e) { /* La configuración vigente no depende del temporal. */ }
+                try {
+                    Files.deleteIfExists(temporal);
+                }
+                catch (IOException e) {
+                    /* La configuración vigente no depende del temporal. */
+                }
             }
         }
     }
 
     private ConfiguracionDTO cargar() throws NegocioException {
         if (!Files.exists(archivo)) return inicial();
-        Properties p = new Properties();
+        Properties valores = new Properties();
         try (Reader entrada = Files.newBufferedReader(archivo, StandardCharsets.UTF_8)) {
-            p.load(entrada);
-            return validar(new ConfiguracionDTO(new BigDecimal(p.getProperty("porcentajeEnvio")),
-                    Integer.parseInt(p.getProperty("plazoDiasDevolucion")),
-                    Integer.parseInt(p.getProperty("maximoIntentosDevolucion")),
-                    Integer.parseInt(p.getProperty("pedidosEntregadosPorCupon")),
-                    new BigDecimal(p.getProperty("porcentajeCupon")),
-                    new BigDecimal(p.getProperty("montoMinimoCupon")),
-                    Integer.parseInt(p.getProperty("vigenciaDiasCupon"))));
+            valores.load(entrada);
+            return validar(new ConfiguracionDTO(new BigDecimal(valores.getProperty("porcentajeEnvio")),
+                Integer.parseInt(valores.getProperty("plazoDiasDevolucion")),
+                Integer.parseInt(valores.getProperty("maximoIntentosDevolucion")),
+                Integer.parseInt(valores.getProperty("pedidosEntregadosPorCupon")),
+                new BigDecimal(valores.getProperty("porcentajeCupon")),
+                new BigDecimal(valores.getProperty("montoMinimoCupon")),
+                Integer.parseInt(valores.getProperty("vigenciaDiasCupon"))));
         } catch (IOException | IllegalArgumentException | NullPointerException | ValidacionException e) {
             throw new ConfiguracionException("El archivo de configuración no es válido; no se sobrescribió.", e);
         }
@@ -94,30 +98,34 @@ public class ConfiguracionBOImpl implements ConfiguracionBO {
 
     public static ConfiguracionDTO inicial() {
         return new ConfiguracionDTO(new BigDecimal("5.00"), 30, 3, 5,
-                new BigDecimal("10.00"), new BigDecimal("100.00"), 30);
+            new BigDecimal("10.00"), new BigDecimal("100.00"), 30);
     }
 
-    private static ConfiguracionDTO validar(ConfiguracionDTO d) throws ValidacionException {
-        if (d == null) throw new ValidacionException("configuracion", "Faltan los parámetros.");
-        porcentaje(d.porcentajeEnvio(), "porcentajeEnvio", true);
-        porcentaje(d.porcentajeCupon(), "porcentajeCupon", false);
-        if (d.plazoDiasDevolucion() < 1) throw new ValidacionException("plazoDiasDevolucion", "Debe ser positivo.");
-        if (d.maximoIntentosDevolucion() < 1) throw new ValidacionException("maximoIntentosDevolucion", "Debe ser positivo.");
-        if (d.pedidosEntregadosPorCupon() < 1) throw new ValidacionException("pedidosEntregadosPorCupon", "Debe ser positivo.");
-        if (d.vigenciaDiasCupon() < 1) throw new ValidacionException("vigenciaDiasCupon", "Debe ser positivo.");
-        if (d.montoMinimoCupon() == null || d.montoMinimoCupon().signum() < 0
-                || d.montoMinimoCupon().compareTo(new BigDecimal("999999999999.99")) > 0)
-            throw new ValidacionException("montoMinimoCupon", "El importe debe ser no negativo y caber en el esquema.");
-        return new ConfiguracionDTO(d.porcentajeEnvio().setScale(2, RoundingMode.HALF_UP),
-                d.plazoDiasDevolucion(), d.maximoIntentosDevolucion(), d.pedidosEntregadosPorCupon(),
-                d.porcentajeCupon().setScale(2, RoundingMode.HALF_UP),
-                d.montoMinimoCupon().setScale(2, RoundingMode.HALF_UP), d.vigenciaDiasCupon());
-    }
-
-    private static void porcentaje(BigDecimal valor, String campo, boolean permiteCero) throws ValidacionException {
-        if (valor == null || valor.compareTo(BigDecimal.ZERO) < (permiteCero ? 0 : 1)
-                || valor.compareTo(new BigDecimal("100")) > 0
-                || !permiteCero && valor.setScale(2, RoundingMode.HALF_UP).signum() == 0)
-            throw new ValidacionException(campo, "El porcentaje debe estar " + (permiteCero ? "entre 0" : "por encima de 0") + " y 100.");
+    private static ConfiguracionDTO validar(ConfiguracionDTO datos) throws ValidacionException {
+        if (datos == null) throw new ValidacionException("configuracion", "Faltan los parámetros.");
+        if (datos.porcentajeEnvio() == null || datos.porcentajeEnvio().signum() < 0
+            || datos.porcentajeEnvio().compareTo(new BigDecimal("100")) > 0) {
+            throw new ValidacionException("porcentajeEnvio", "El envío debe estar entre 0 y 100.");
+        }
+        if (datos.porcentajeCupon() == null || datos.porcentajeCupon().compareTo(new BigDecimal("100")) > 0) {
+            throw new ValidacionException("porcentajeCupon", "El porcentaje del cupón debe estar por encima de 0 y hasta 100.");
+        }
+        BigDecimal porcentajeCupon = datos.porcentajeCupon().setScale(2, RoundingMode.HALF_UP);
+        if (porcentajeCupon.signum() <= 0) {
+            throw new ValidacionException("porcentajeCupon", "El porcentaje del cupón debe ser positivo.");
+        }
+        if (datos.plazoDiasDevolucion() < 1)
+            throw new ValidacionException("plazoDiasDevolucion", "El plazo debe ser positivo.");
+        if (datos.maximoIntentosDevolucion() < 1)
+            throw new ValidacionException("maximoIntentosDevolucion", "El máximo de intentos debe ser positivo.");
+        if (datos.pedidosEntregadosPorCupon() < 1)
+            throw new ValidacionException("pedidosEntregadosPorCupon", "La cantidad de pedidos debe ser positiva.");
+        if (datos.vigenciaDiasCupon() < 1)
+            throw new ValidacionException("vigenciaDiasCupon", "La vigencia debe ser positiva.");
+        if (datos.montoMinimoCupon() == null || datos.montoMinimoCupon().signum() < 0)
+            throw new ValidacionException("montoMinimoCupon", "El monto mínimo no puede ser negativo.");
+        return new ConfiguracionDTO(datos.porcentajeEnvio().setScale(2, RoundingMode.HALF_UP),
+            datos.plazoDiasDevolucion(), datos.maximoIntentosDevolucion(), datos.pedidosEntregadosPorCupon(),
+            porcentajeCupon, datos.montoMinimoCupon().setScale(2, RoundingMode.HALF_UP), datos.vigenciaDiasCupon());
     }
 }

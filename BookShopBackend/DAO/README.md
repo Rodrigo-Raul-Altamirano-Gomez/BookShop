@@ -36,6 +36,12 @@ para conservar su historial y expresar las operaciones permitidas.
 
 ## Consultas y persistencia
 
+- Business comprueba los datos de entrada. Los DAO reciben esos datos ya validados
+  y se concentran en las consultas, sus parámetros y la lectura de resultados.
+  Se conservan las condiciones SQL de propietario, estado, stock y retiro lógico.
+- La búsqueda de libros reúne sus condiciones, parámetros y ejecución en
+  `consultarLibros`. Las páginas de autor, categoría y editorial fijan su referencia
+  en un filtro explícito, sin una secuencia de identificadores cero para los otros ámbitos.
 - Las entidades leídas contienen sus referencias por id. Pedido también recupera
   sus items; las consultas de pantallas construyen los DTO correspondientes.
 - Catálogo filtra y ordena antes de paginar, incluido el precio final redondeado.

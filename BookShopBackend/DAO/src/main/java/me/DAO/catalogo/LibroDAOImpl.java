@@ -41,18 +41,7 @@ public class LibroDAOImpl implements LibroDAO {
 
     @Override
     public void insertar(Libro libro) throws SQLException {
-        if (libro == null || libro.getAutor() == null || libro.getCategoria() == null || libro.getEditorial() == null) {
-            throw new IllegalArgumentException("El libro y sus referencias son obligatorios.");
-        }
         Connection conexion = TransactionContext.getConnection();
-        // Mantiene disponibles las referencias hasta que el coordinador confirme el alta.
-        Autor autor = new AutorDAOImpl().leerParaActualizar(libro.getAutor().getId());
-        Categoria categoria = new CategoriaDAOImpl().leerParaActualizar(libro.getCategoria().getId());
-        Editorial editorial = new EditorialDAOImpl().leerParaActualizar(libro.getEditorial().getId());
-        if (autor == null || !autor.estaDisponible() || categoria == null || !categoria.estaDisponible()
-                || editorial == null || !editorial.estaDisponible()) {
-            throw new SQLException("Las referencias del libro deben estar disponibles.");
-        }
         String sql = "INSERT INTO LIBRO (titulo,idioma,sinopsis,proveedor,isbn,anio_edicion,numero_paginas,"
                 + " peso,alto,ancho,saga,numero_tomo,id_autor,id_categoria,id_editorial,precio_base,stock_fisico,"
                 + " portada,tipo_portada,numero_vetos,vetado_directamente,usuario_creacion,fecha_creacion)"
@@ -100,11 +89,27 @@ public class LibroDAOImpl implements LibroDAO {
         sentencia.setString(5, libro.getIsbn());
         sentencia.setInt(6, libro.getAnioEdicion());
         sentencia.setInt(7, libro.getNumeroPaginas());
-        if (libro.getPeso() == null) sentencia.setNull(8, Types.DECIMAL); else sentencia.setDouble(8, libro.getPeso());
-        if (libro.getAlto() == null) sentencia.setNull(9, Types.DECIMAL); else sentencia.setDouble(9, libro.getAlto());
-        if (libro.getAncho() == null) sentencia.setNull(10, Types.DECIMAL); else sentencia.setDouble(10, libro.getAncho());
+        if (libro.getPeso() == null) {
+            sentencia.setNull(8, Types.DECIMAL);
+        } else {
+            sentencia.setDouble(8, libro.getPeso());
+        }
+        if (libro.getAlto() == null) {
+            sentencia.setNull(9, Types.DECIMAL);
+        } else {
+            sentencia.setDouble(9, libro.getAlto());
+        }
+        if (libro.getAncho() == null) {
+            sentencia.setNull(10, Types.DECIMAL);
+        } else {
+            sentencia.setDouble(10, libro.getAncho());
+        }
         sentencia.setString(11, libro.getSaga());
-        if (libro.getNumeroTomo() == null) sentencia.setNull(12, Types.INTEGER); else sentencia.setInt(12, libro.getNumeroTomo());
+        if (libro.getNumeroTomo() == null) {
+            sentencia.setNull(12, Types.INTEGER);
+        } else {
+            sentencia.setInt(12, libro.getNumeroTomo());
+        }
     }
 
     @Override
@@ -113,7 +118,7 @@ public class LibroDAOImpl implements LibroDAO {
              PreparedStatement sentencia = conexion.prepareStatement("SELECT * FROM LIBRO WHERE id=?")) {
             sentencia.setInt(1, id);
             try (ResultSet resultado = sentencia.executeQuery()) {
-                return resultado.next() ? mapear(resultado, true) : null;
+                return resultado.next() ? mapearLibro(resultado, true) : null;
             }
         }
     }
@@ -124,7 +129,7 @@ public class LibroDAOImpl implements LibroDAO {
         try (PreparedStatement sentencia = conexion.prepareStatement("SELECT * FROM LIBRO WHERE id=? FOR UPDATE")) {
             sentencia.setInt(1, id);
             try (ResultSet resultado = sentencia.executeQuery()) {
-                return resultado.next() ? mapear(resultado, true) : null;
+                return resultado.next() ? mapearLibro(resultado, true) : null;
             }
         }
     }
@@ -155,7 +160,6 @@ public class LibroDAOImpl implements LibroDAO {
 
     @Override
     public boolean cambiarPrecio(int id, BigDecimal precio, String usuario) throws SQLException {
-        if (precio == null || precio.signum() <= 0) throw new IllegalArgumentException("El precio debe ser positivo.");
         String sql = "UPDATE LIBRO SET precio_base=?,usuario_actualizacion=?,fecha_actualizacion=CURRENT_TIMESTAMP"
                 + " WHERE id=? AND eliminado=FALSE";
         try (Connection conexion = DBManager.getConnection(); PreparedStatement sentencia = conexion.prepareStatement(sql)) {
@@ -168,7 +172,6 @@ public class LibroDAOImpl implements LibroDAO {
 
     @Override
     public boolean cambiarStock(int id, int stock, String usuario) throws SQLException {
-        if (stock < 0) throw new IllegalArgumentException("El stock no puede ser negativo.");
         String sql = "UPDATE LIBRO SET stock_fisico=?,usuario_actualizacion=?,fecha_actualizacion=CURRENT_TIMESTAMP"
                 + " WHERE id=? AND eliminado=FALSE";
         try (Connection conexion = DBManager.getConnection(); PreparedStatement sentencia = conexion.prepareStatement(sql)) {
@@ -195,7 +198,6 @@ public class LibroDAOImpl implements LibroDAO {
 
     @Override
     public boolean descontarStock(int id, int cantidad, String usuario) throws SQLException {
-        if (cantidad < 1) throw new IllegalArgumentException("La cantidad debe ser positiva.");
         Connection conexion = TransactionContext.getConnection();
         String sql = "UPDATE LIBRO SET stock_fisico=stock_fisico-?,usuario_actualizacion=?,"
                 + " fecha_actualizacion=CURRENT_TIMESTAMP WHERE id=? AND activo=TRUE AND stock_fisico>=?";
@@ -210,7 +212,6 @@ public class LibroDAOImpl implements LibroDAO {
 
     @Override
     public boolean reponerStock(int id, int cantidad, String usuario) throws SQLException {
-        if (cantidad < 1) throw new IllegalArgumentException("La cantidad debe ser positiva.");
         Connection conexion = TransactionContext.getConnection();
         String sql = "UPDATE LIBRO SET stock_fisico=stock_fisico+?,usuario_actualizacion=?,"
                 + " fecha_actualizacion=CURRENT_TIMESTAMP WHERE id=? AND stock_fisico<=?";
@@ -254,120 +255,126 @@ public class LibroDAOImpl implements LibroDAO {
 
     @Override
     public ResultadoPaginadoDTO<TarjetaLibroDTO> buscar(FiltroLibroDTO filtro, LocalDateTime fecha) throws SQLException {
-        return buscar(filtro, fecha, 0, 0, 0, 0, false);
+        return consultarLibros(filtro, fecha, 0, false);
     }
 
     @Override
-    public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorAutor(int id, FiltroLibroDTO filtro, LocalDateTime fecha) throws SQLException {
-        if (id < 1) throw new IllegalArgumentException("El autor debe ser valido.");
-        return buscar(filtro, fecha, id, 0, 0, 0, false);
-    }
-
-    @Override
-    public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorCategoria(int id, FiltroLibroDTO filtro, LocalDateTime fecha) throws SQLException {
-        if (id < 1) throw new IllegalArgumentException("La categoria debe ser valida.");
-        return buscar(filtro, fecha, 0, id, 0, 0, false);
-    }
-
-    @Override
-    public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorEditorial(int id, FiltroLibroDTO filtro, LocalDateTime fecha) throws SQLException {
-        if (id < 1) throw new IllegalArgumentException("La editorial debe ser valida.");
-        return buscar(filtro, fecha, 0, 0, id, 0, false);
-    }
-
-    @Override
-    public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarGuardados(int idUsuario, boolean favorito, FiltroLibroDTO filtro,
+    public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorAutor(int idAutor, FiltroLibroDTO filtro,
             LocalDateTime fecha) throws SQLException {
-        if (idUsuario < 1) throw new IllegalArgumentException("El usuario debe ser valido.");
-        return buscar(filtro, fecha, 0, 0, 0, idUsuario, favorito);
+        FiltroLibroDTO filtroAutor = new FiltroLibroDTO(filtro.titulo(), filtro.idsCategorias(),
+                List.of(idAutor), filtro.idsEditoriales(), filtro.idiomas(), filtro.precioMinimo(),
+                filtro.precioMaximo(), filtro.soloActivos(), filtro.soloNuevos(), filtro.orden(),
+                filtro.pagina(), filtro.tamanioPagina());
+        return buscar(filtroAutor, fecha);
     }
 
-    private ResultadoPaginadoDTO<TarjetaLibroDTO> buscar(FiltroLibroDTO filtro, LocalDateTime fecha,
-            int idAutor, int idCategoria, int idEditorial, int idUsuario, boolean favorito) throws SQLException {
-        validarFiltro(filtro, fecha);
-        String base = baseTarjetas();
+    @Override
+    public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorCategoria(int idCategoria, FiltroLibroDTO filtro,
+            LocalDateTime fecha) throws SQLException {
+        FiltroLibroDTO filtroCategoria = new FiltroLibroDTO(filtro.titulo(), List.of(idCategoria),
+                filtro.idsAutores(), filtro.idsEditoriales(), filtro.idiomas(), filtro.precioMinimo(),
+                filtro.precioMaximo(), filtro.soloActivos(), filtro.soloNuevos(), filtro.orden(),
+                filtro.pagina(), filtro.tamanioPagina());
+        return buscar(filtroCategoria, fecha);
+    }
+
+    @Override
+    public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorEditorial(int idEditorial, FiltroLibroDTO filtro,
+            LocalDateTime fecha) throws SQLException {
+        FiltroLibroDTO filtroEditorial = new FiltroLibroDTO(filtro.titulo(), filtro.idsCategorias(),
+                filtro.idsAutores(), List.of(idEditorial), filtro.idiomas(), filtro.precioMinimo(),
+                filtro.precioMaximo(), filtro.soloActivos(), filtro.soloNuevos(), filtro.orden(),
+                filtro.pagina(), filtro.tamanioPagina());
+        return buscar(filtroEditorial, fecha);
+    }
+
+    @Override
+    public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarGuardados(int idUsuario, boolean favorito,
+            FiltroLibroDTO filtro, LocalDateTime fecha) throws SQLException {
+        return consultarLibros(filtro, fecha, idUsuario, favorito);
+    }
+
+    // El catálogo no limita por propietario; las listas personales sí reciben idUsuario.
+    private ResultadoPaginadoDTO<TarjetaLibroDTO> consultarLibros(FiltroLibroDTO filtro, LocalDateTime fecha,
+            int idUsuario, boolean favorito) throws SQLException {
+        String tablas = baseTarjetas();
         if (filtro.orden() == OrdenLibro.MAS_VENDIDOS) {
-            base += " LEFT JOIN (SELECT i.id_libro,SUM(i.cantidad) AS cantidad FROM ITEM_PEDIDO i"
+            tablas += " LEFT JOIN (SELECT i.id_libro,SUM(i.cantidad) AS cantidad FROM ITEM_PEDIDO i"
                     + " JOIN PEDIDO p ON p.id=i.id_pedido WHERE i.eliminado=FALSE AND p.eliminado=FALSE"
                     + " AND p.estado NOT IN ('CANCELADO','DEVUELTO') AND p.fecha_pago>=? AND p.fecha_pago<=?"
                     + " GROUP BY i.id_libro) v ON v.id_libro=l.id";
         }
-        String condiciones = condiciones(filtro, idAutor, idCategoria, idEditorial, idUsuario);
-        String sql = "SELECT " + COLUMNAS_TARJETA + base + condiciones + " ORDER BY " + orden(filtro.orden()) + " LIMIT ? OFFSET ?";
-        List<TarjetaLibroDTO> items = new ArrayList<>();
+        StringBuilder condiciones = new StringBuilder(" WHERE l.eliminado=FALSE");
+        if (filtro.soloActivos()) condiciones.append(" AND l.activo=TRUE");
+        if (filtro.titulo() != null && !filtro.titulo().isBlank())
+            condiciones.append(" AND LOWER(l.titulo) LIKE LOWER(?) ESCAPE '!'");
+        if (!filtro.idsAutores().isEmpty())
+            condiciones.append(" AND l.id_autor IN (").append(marcadores(filtro.idsAutores().size())).append(')');
+        if (!filtro.idsCategorias().isEmpty())
+            condiciones.append(" AND l.id_categoria IN (").append(marcadores(filtro.idsCategorias().size())).append(')');
+        if (!filtro.idsEditoriales().isEmpty())
+            condiciones.append(" AND l.id_editorial IN (").append(marcadores(filtro.idsEditoriales().size())).append(')');
+        if (!filtro.idiomas().isEmpty())
+            condiciones.append(" AND l.idioma IN (").append(marcadores(filtro.idiomas().size())).append(')');
+        if (filtro.precioMinimo() != null) condiciones.append(" AND ").append(PRECIO_FINAL).append(">=?");
+        if (filtro.precioMaximo() != null) condiciones.append(" AND ").append(PRECIO_FINAL).append("<=?");
+        if (filtro.soloNuevos()) condiciones.append(" AND l.fecha_creacion>=? AND l.fecha_creacion<=?");
+        if (idUsuario > 0)
+            condiciones.append(" AND EXISTS(SELECT 1 FROM LIBRO_GUARDADO g WHERE g.id_libro=l.id"
+                    + " AND g.id_usuario=? AND g.favorito=? AND g.eliminado=FALSE)");
+
+        String sqlContar = "SELECT COUNT(*)" + tablas + condiciones;
+        String sqlLibros = "SELECT " + COLUMNAS_TARJETA + tablas + condiciones
+                + " ORDER BY " + orden(filtro.orden()) + " LIMIT ? OFFSET ?";
+        List<TarjetaLibroDTO> libros = new ArrayList<>();
         long total;
-        try (Connection conexion = DBManager.getConnection()) {
-            try (PreparedStatement contar = conexion.prepareStatement("SELECT COUNT(*)" + base + condiciones)) {
-                parametrosFiltro(contar, filtro, fecha, idAutor, idCategoria, idEditorial, idUsuario, favorito);
-                try (ResultSet resultado = contar.executeQuery()) {
-                    resultado.next();
-                    total = resultado.getLong(1);
+        try (Connection conexion = DBManager.getConnection();
+             PreparedStatement contar = conexion.prepareStatement(sqlContar);
+             PreparedStatement consultar = conexion.prepareStatement(sqlLibros)) {
+            int parametro = 1;
+            // Las dos sentencias tienen las mismas condiciones y el mismo orden de parámetros.
+            for (PreparedStatement sentencia : List.of(contar, consultar)) {
+                parametro = 1;
+                sentencia.setTimestamp(parametro++, Timestamp.valueOf(fecha));
+                sentencia.setTimestamp(parametro++, Timestamp.valueOf(fecha));
+                if (filtro.orden() == OrdenLibro.MAS_VENDIDOS) {
+                    sentencia.setTimestamp(parametro++, Timestamp.valueOf(fecha.minusDays(30)));
+                    sentencia.setTimestamp(parametro++, Timestamp.valueOf(fecha));
+                }
+                if (filtro.titulo() != null && !filtro.titulo().isBlank())
+                    sentencia.setString(parametro++, patron(filtro.titulo().trim()));
+                for (Integer idAutor : filtro.idsAutores()) sentencia.setInt(parametro++, idAutor);
+                for (Integer idCategoria : filtro.idsCategorias()) sentencia.setInt(parametro++, idCategoria);
+                for (Integer idEditorial : filtro.idsEditoriales()) sentencia.setInt(parametro++, idEditorial);
+                for (String idioma : filtro.idiomas()) sentencia.setString(parametro++, idioma);
+                if (filtro.precioMinimo() != null) sentencia.setBigDecimal(parametro++, filtro.precioMinimo());
+                if (filtro.precioMaximo() != null) sentencia.setBigDecimal(parametro++, filtro.precioMaximo());
+                if (filtro.soloNuevos()) {
+                    sentencia.setTimestamp(parametro++, Timestamp.valueOf(fecha.minusDays(30)));
+                    sentencia.setTimestamp(parametro++, Timestamp.valueOf(fecha));
+                }
+                if (idUsuario > 0) {
+                    sentencia.setInt(parametro++, idUsuario);
+                    sentencia.setBoolean(parametro++, favorito);
                 }
             }
-            try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
-                int parametro = parametrosFiltro(sentencia, filtro, fecha, idAutor, idCategoria, idEditorial, idUsuario, favorito);
-                sentencia.setInt(parametro++, filtro.tamanioPagina());
-                sentencia.setLong(parametro, (long) (filtro.pagina() - 1) * filtro.tamanioPagina());
-                try (ResultSet resultado = sentencia.executeQuery()) {
-                    while (resultado.next()) items.add(mapearTarjeta(resultado));
-                }
+            try (ResultSet resultado = contar.executeQuery()) {
+                resultado.next();
+                total = resultado.getLong(1);
+            }
+            consultar.setInt(parametro++, filtro.tamanioPagina());
+            consultar.setLong(parametro, (long) (filtro.pagina() - 1) * filtro.tamanioPagina());
+            try (ResultSet resultado = consultar.executeQuery()) {
+                while (resultado.next()) libros.add(mapearTarjeta(resultado));
             }
         }
-        return new ResultadoPaginadoDTO<>(items, total, filtro.pagina(), filtro.tamanioPagina());
+        return new ResultadoPaginadoDTO<>(libros, total, filtro.pagina(), filtro.tamanioPagina());
     }
 
     private String baseTarjetas() {
         return " FROM LIBRO l JOIN AUTOR a ON a.id=l.id_autor"
                 + " LEFT JOIN (SELECT id_libro,MAX(porcentaje) AS porcentaje FROM DESCUENTO WHERE eliminado=FALSE"
                 + " AND fecha_inicio<=? AND fecha_fin>=? GROUP BY id_libro) d ON d.id_libro=l.id";
-    }
-
-    private String condiciones(FiltroLibroDTO filtro, int idAutor, int idCategoria, int idEditorial, int idUsuario) {
-        StringBuilder sql = new StringBuilder(" WHERE l.eliminado=FALSE");
-        if (filtro.soloActivos()) sql.append(" AND l.activo=TRUE");
-        if (filtro.titulo() != null && !filtro.titulo().isBlank()) sql.append(" AND LOWER(l.titulo) LIKE LOWER(?) ESCAPE '!'");
-        if (idAutor > 0) sql.append(" AND l.id_autor=?");
-        else if (!filtro.idsAutores().isEmpty()) sql.append(" AND l.id_autor IN (").append(marcadores(filtro.idsAutores().size())).append(')');
-        if (idCategoria > 0) sql.append(" AND l.id_categoria=?");
-        else if (!filtro.idsCategorias().isEmpty()) sql.append(" AND l.id_categoria IN (").append(marcadores(filtro.idsCategorias().size())).append(')');
-        if (idEditorial > 0) sql.append(" AND l.id_editorial=?");
-        else if (!filtro.idsEditoriales().isEmpty()) sql.append(" AND l.id_editorial IN (").append(marcadores(filtro.idsEditoriales().size())).append(')');
-        if (!filtro.idiomas().isEmpty()) sql.append(" AND l.idioma IN (").append(marcadores(filtro.idiomas().size())).append(')');
-        if (filtro.precioMinimo() != null) sql.append(" AND ").append(PRECIO_FINAL).append(">=?");
-        if (filtro.precioMaximo() != null) sql.append(" AND ").append(PRECIO_FINAL).append("<=?");
-        if (filtro.soloNuevos()) sql.append(" AND l.fecha_creacion>=? AND l.fecha_creacion<=?");
-        if (idUsuario > 0) sql.append(" AND EXISTS(SELECT 1 FROM LIBRO_GUARDADO g WHERE g.id_libro=l.id AND g.id_usuario=? AND g.favorito=? AND g.eliminado=FALSE)");
-        return sql.toString();
-    }
-
-    private int parametrosFiltro(PreparedStatement sentencia, FiltroLibroDTO filtro, LocalDateTime fecha,
-            int idAutor, int idCategoria, int idEditorial, int idUsuario, boolean favorito) throws SQLException {
-        int parametro = 1;
-        sentencia.setTimestamp(parametro++, Timestamp.valueOf(fecha));
-        sentencia.setTimestamp(parametro++, Timestamp.valueOf(fecha));
-        if (filtro.orden() == OrdenLibro.MAS_VENDIDOS) {
-            sentencia.setTimestamp(parametro++, Timestamp.valueOf(fecha.minusDays(30)));
-            sentencia.setTimestamp(parametro++, Timestamp.valueOf(fecha));
-        }
-        if (filtro.titulo() != null && !filtro.titulo().isBlank()) sentencia.setString(parametro++, patron(filtro.titulo().trim()));
-        if (idAutor > 0) sentencia.setInt(parametro++, idAutor);
-        else for (Integer id : filtro.idsAutores()) sentencia.setInt(parametro++, id);
-        if (idCategoria > 0) sentencia.setInt(parametro++, idCategoria);
-        else for (Integer id : filtro.idsCategorias()) sentencia.setInt(parametro++, id);
-        if (idEditorial > 0) sentencia.setInt(parametro++, idEditorial);
-        else for (Integer id : filtro.idsEditoriales()) sentencia.setInt(parametro++, id);
-        for (String idioma : filtro.idiomas()) sentencia.setString(parametro++, idioma);
-        if (filtro.precioMinimo() != null) sentencia.setBigDecimal(parametro++, filtro.precioMinimo());
-        if (filtro.precioMaximo() != null) sentencia.setBigDecimal(parametro++, filtro.precioMaximo());
-        if (filtro.soloNuevos()) {
-            sentencia.setTimestamp(parametro++, Timestamp.valueOf(fecha.minusDays(30)));
-            sentencia.setTimestamp(parametro++, Timestamp.valueOf(fecha));
-        }
-        if (idUsuario > 0) {
-            sentencia.setInt(parametro++, idUsuario);
-            sentencia.setBoolean(parametro++, favorito);
-        }
-        return parametro;
     }
 
     private String orden(OrdenLibro orden) {
@@ -385,24 +392,8 @@ public class LibroDAOImpl implements LibroDAO {
         };
     }
 
-    private void validarFiltro(FiltroLibroDTO filtro, LocalDateTime fecha) {
-        if (filtro == null || fecha == null || filtro.orden() == null || filtro.orden() == OrdenLibro.RECOMENDADOS_PRIMERO
-                || filtro.pagina() < 1 || filtro.tamanioPagina() < 1
-                || filtro.idsAutores().stream().anyMatch(id -> id == null || id < 1)
-                || filtro.idsCategorias().stream().anyMatch(id -> id == null || id < 1)
-                || filtro.idsEditoriales().stream().anyMatch(id -> id == null || id < 1)
-                || filtro.idiomas().stream().anyMatch(idioma -> idioma == null || idioma.isBlank())
-                || (filtro.precioMinimo() != null && filtro.precioMinimo().signum() < 0)
-                || (filtro.precioMaximo() != null && filtro.precioMaximo().signum() < 0)
-                || (filtro.precioMinimo() != null && filtro.precioMaximo() != null
-                    && filtro.precioMinimo().compareTo(filtro.precioMaximo()) > 0)) {
-            throw new IllegalArgumentException("Filtro, orden, precios y paginacion deben ser validos.");
-        }
-    }
-
     @Override
     public TarjetaLibroDTO obtenerTarjeta(int id, LocalDateTime fecha) throws SQLException {
-        if (fecha == null) throw new IllegalArgumentException("La fecha es obligatoria.");
         String sql = "SELECT " + COLUMNAS_TARJETA + baseTarjetas() + " WHERE l.id=?";
         try (Connection conexion = DBManager.getConnection(); PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setTimestamp(1, Timestamp.valueOf(fecha));
@@ -416,7 +407,6 @@ public class LibroDAOImpl implements LibroDAO {
 
     @Override
     public DetalleLibroDTO obtenerDetalle(int id, int idUsuario, LocalDateTime fecha) throws SQLException {
-        if (fecha == null || idUsuario < 0) throw new IllegalArgumentException("Fecha y usuario validos son obligatorios.");
         String sql = "SELECT " + COLUMNAS_TARJETA + ",l.id_autor,l.id_categoria,c.nombre AS nombre_categoria,"
                 + " l.id_editorial,e.nombre AS nombre_editorial,l.idioma,l.sinopsis,l.isbn,l.anio_edicion,"
                 + " l.numero_paginas,l.peso,l.alto,l.ancho,l.saga,l.numero_tomo,l.stock_fisico,"
@@ -491,7 +481,6 @@ public class LibroDAOImpl implements LibroDAO {
     @Override
     public ResultadoPaginadoDTO<String> buscarIdiomas(String nombre, boolean soloActivos, int pagina, int tamanioPagina)
             throws SQLException {
-        if (pagina < 1 || tamanioPagina < 1) throw new IllegalArgumentException("La paginacion debe ser positiva.");
         String texto = nombre == null ? "" : nombre.trim();
         String condiciones = " WHERE eliminado=FALSE" + (soloActivos ? " AND activo=TRUE" : "")
                 + (texto.isEmpty() ? "" : " AND LOWER(idioma) LIKE LOWER(?) ESCAPE '!'");
@@ -528,7 +517,7 @@ public class LibroDAOImpl implements LibroDAO {
         List<Libro> libros = new ArrayList<>();
         try (Connection conexion = DBManager.getConnection(); PreparedStatement sentencia = conexion.prepareStatement(sql);
              ResultSet resultado = sentencia.executeQuery()) {
-            while (resultado.next()) libros.add(mapear(resultado, false));
+            while (resultado.next()) libros.add(mapearLibro(resultado, false));
         }
         return libros;
     }
@@ -544,9 +533,6 @@ public class LibroDAOImpl implements LibroDAO {
     }
 
     private List<TarjetaLibroDTO> listarTarjetas(List<Integer> ids, LocalDateTime fecha, boolean conImagen) throws SQLException {
-        if (ids == null || fecha == null || ids.stream().anyMatch(id -> id == null || id < 1)) {
-            throw new IllegalArgumentException("Ids y fecha validos son obligatorios.");
-        }
         List<Integer> unicos = new ArrayList<>(new LinkedHashSet<>(ids));
         if (unicos.isEmpty()) return List.of();
         String columnas = conImagen ? COLUMNAS_TARJETA
@@ -573,11 +559,6 @@ public class LibroDAOImpl implements LibroDAO {
 
     @Override
     public List<ResumenVentasLibroDTO> listarVentasLibros(ConsultaReporteLibrosDTO consulta) throws SQLException {
-        if (consulta == null || consulta.fechaInicio() == null || consulta.fechaFin() == null
-                || consulta.fechaFin().isBefore(consulta.fechaInicio())
-                || (consulta.cantidadMaxima() != null && consulta.cantidadMaxima() < 1)) {
-            throw new IllegalArgumentException("Periodo y cantidad maxima deben ser validos.");
-        }
         String sql = "SELECT l.id,l.titulo,c.nombre AS categoria,a.nombre AS autor,e.nombre AS editorial,"
                 + " SUM(i.cantidad) AS cantidad,SUM(i.sub_total) AS importe FROM ITEM_PEDIDO i"
                 + " JOIN PEDIDO p ON p.id=i.id_pedido JOIN LIBRO l ON l.id=i.id_libro"
@@ -600,7 +581,7 @@ public class LibroDAOImpl implements LibroDAO {
         return ventas;
     }
 
-    private Libro mapear(ResultSet resultado, boolean conPortada) throws SQLException {
+    private Libro mapearLibro(ResultSet resultado, boolean conPortada) throws SQLException {
         Libro libro = new Libro();
         libro.setId(resultado.getInt("id"));
         libro.setTitulo(resultado.getString("titulo"));

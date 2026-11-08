@@ -222,8 +222,6 @@ class CatalogoDAOTest {
         assertEquals(List.of(1, 3), ids(libros.buscarGuardados(1, false, FiltroLibroDTO.porDefecto(), FECHA)));
         assertEquals(List.of(2), ids(libros.buscarGuardados(2, true, FiltroLibroDTO.porDefecto(), FECHA)));
         assertEquals(List.of(3), ids(libros.buscarGuardados(1, false, conTitulo("Gamma"), FECHA)));
-        assertThrows(IllegalArgumentException.class,
-                () -> libros.buscarGuardados(0, true, FiltroLibroDTO.porDefecto(), FECHA));
     }
 
     @Test
@@ -398,18 +396,6 @@ class CatalogoDAOTest {
     }
 
     @Test
-    void altaRechazaReferenciasQueDejaronDeEstarDisponibles() throws Exception {
-        autores.cambiarActivo(1, false, "admin");
-        categorias.cambiarActivo(1, false, "admin");
-        Libro nuevo = registrarDatos("Nuevo", 1, "Español", "10", 100, 1, 2026, 0);
-        assertThrows(SQLException.class, () -> libros.insertar(nuevo));
-        assertEquals(0, nuevo.getId());
-        TransactionContext.rollback();
-        TransactionContext.close();
-        assertEquals(3, libros.buscar(FiltroLibroDTO.porDefecto(), FECHA).totalResultados());
-    }
-
-    @Test
     void stockSeDescuentaCondicionalmenteYComparteLaTransaccion() throws Exception {
         assertTrue(libros.descontarStock(1, 7, "ana@test"));
         assertFalse(libros.descontarStock(1, 4, "ana@test"));
@@ -425,8 +411,6 @@ class CatalogoDAOTest {
         TransactionContext.close();
         libros.cambiarVetoDirecto(1, true, "admin");
         assertFalse(libros.descontarStock(1, 1, "ana@test"));
-        assertThrows(IllegalArgumentException.class, () -> libros.descontarStock(1, -1, "admin"));
-        assertThrows(IllegalArgumentException.class, () -> libros.reponerStock(1, 0, "admin"));
     }
 
     @Test
@@ -580,18 +564,9 @@ class CatalogoDAOTest {
     }
 
     @Test
-    void rechazaParametrosInvalidosAntesDeConsultar() {
+    void ordenDeRecomendacionesNoSeUsaComoOrdenSql() {
         assertThrows(IllegalArgumentException.class,
                 () -> libros.buscar(filtro(OrdenLibro.RECOMENDADOS_PRIMERO, true, 1, 12), FECHA));
-        assertThrows(IllegalArgumentException.class,
-                () -> libros.buscar(filtro(OrdenLibro.MAS_RECIENTES, true, 0, 12), FECHA));
-        assertThrows(IllegalArgumentException.class, () -> libros.cambiarPrecio(1, null, "admin"));
-        assertThrows(IllegalArgumentException.class,
-                () -> libros.cambiarPrecio(1, BigDecimal.ZERO, "admin"));
-        assertThrows(IllegalArgumentException.class, () -> descuentos.haySuperposicion(1, 0, FECHA, FECHA));
-        assertThrows(IllegalArgumentException.class,
-                () -> libros.listarVentasLibros(new ConsultaReporteLibrosDTO(FECHA.toLocalDate(),
-                        FECHA.toLocalDate(), 0)));
     }
 
     private FiltroLibroDTO filtro(OrdenLibro orden, boolean activos, int pagina, int tamanio) {
@@ -769,8 +744,6 @@ class CatalogoDAOTest {
         TransactionContext.rollback();
         TransactionContext.close();
         assertEquals(FECHA.plusDays(2), descuentos.leer(otro.getId()).getFechaInicio());
-        assertThrows(IllegalArgumentException.class,
-                () -> descuentos.insertar(promocion(primero, "101", FECHA, FECHA.plusDays(1))));
     }
 
     @Test

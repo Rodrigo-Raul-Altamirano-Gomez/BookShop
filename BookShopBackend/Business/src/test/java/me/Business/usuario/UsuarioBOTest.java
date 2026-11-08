@@ -98,14 +98,20 @@ class UsuarioBOTest {
     }
 
     @Test
-    void correoDuplicadoEnLecturaOCarreraProduceConflicto() throws Exception {
+    void correoDuplicadoSeCompruebaAntesDeGuardar() throws Exception {
         var datos = new RegistroUsuarioDTO("Ana", "ana@test", LocalDate.of(2000, 1, 1),
                 "ClaveNueva9", "ClaveNueva9", null);
         assertThrows(ConflictoException.class, () -> bo.registrar(datos));
         verify(usuarios, never()).insertar(any());
+    }
+
+    @Test
+    void errorAlInsertarUsuarioSeInformaComoPersistencia() throws Exception {
+        var datos = new RegistroUsuarioDTO("Ana", "ana@test", LocalDate.of(2000, 1, 1),
+                "ClaveNueva9", "ClaveNueva9", null);
         when(usuarios.obtenerPorEmail("ana@test")).thenReturn(null);
         doThrow(new SQLException("duplicado", "23505")).when(usuarios).insertar(any());
-        assertThrows(ConflictoException.class, () -> bo.registrar(datos));
+        assertThrows(PersistenciaException.class, () -> bo.registrar(datos));
     }
 
     @Test

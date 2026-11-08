@@ -10,4 +10,3 @@ public interface CarritoBO {
     ResumenCompraDTO retirar(int idActor, int idLibro) throws NegocioException;
     ResumenCompraDTO vaciar(int idActor) throws NegocioException;
 }
-

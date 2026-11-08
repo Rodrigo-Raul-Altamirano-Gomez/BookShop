@@ -25,12 +25,12 @@ public class RecomendacionRS {
     @GET
     @Path("similares/{idLibro}")
     public List<TarjetaLibroDTO> similares(@PathParam("idLibro") int idLibro) throws NegocioException {
-        return servicios.recomendacion().similares(idLibro);
+        return servicios.getRecomendacionBO().similares(idLibro);
     }
 
     @POST
     @Path("complementarios")
     public List<TarjetaLibroDTO> complementarios(List<Integer> idsCarrito) throws NegocioException {
-        return servicios.recomendacion().complementarios(idsCarrito);
+        return servicios.getRecomendacionBO().complementarios(idsCarrito);
     }
 }

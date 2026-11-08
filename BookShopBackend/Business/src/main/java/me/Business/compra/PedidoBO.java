@@ -18,4 +18,3 @@ public interface PedidoBO {
     DetallePedidoDTO actualizarSeguimiento(int idActor, int idPedido) throws NegocioException;
     DetallePedidoDTO cancelar(int idActor, int idPedido, String motivo) throws NegocioException;
 }
-
