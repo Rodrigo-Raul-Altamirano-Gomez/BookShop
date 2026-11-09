@@ -11,14 +11,14 @@
     <div class="page-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
         <div class="action-row d-flex flex-wrap align-items-center gap-2">
             <h1>Tu carrito</h1>
-            <span class="text-body-secondary">@Estado.CantidadCarrito ejemplares</span>
+            <span class="text-body-secondary">@Compras.CantidadCarrito ejemplares</span>
         </div>
-        @if (Estado.CantidadCarrito > 0)
+        @if (Compras.CantidadCarrito > 0)
         {
             <button class="btn btn-secondary" @onclick="Vaciar">Vaciar carrito</button>
         }
     </div>
-    @if (Estado.CantidadCarrito == 0)
+    @if (Compras.CantidadCarrito == 0)
     {
         <div class="empty-state card border-0 text-center align-items-center py-5">
             <Icono Nombre="cart" />
@@ -45,9 +45,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var line in Estado.Carrito.ToList())
+                                @foreach (var line in Compras.Carrito.ToList())
                                 {
-                                    var book = Estado.BuscarLibro(line.Key);
+                                    var book = Catalogo.Libros.FirstOrDefault(libro => libro.Id == line.Key);
                                     if (book is not null)
                                     {
                                         <tr>
@@ -63,10 +63,10 @@
                                                 <div class="line-price d-flex flex-column gap-1">
                                                     @if (book.Descuento > 0)
                                                     {
-                                                        <del>@EstadoDemostracion.Dinero(book.PrecioOriginal)</del>
+                                                        <del>@Presentacion.Dinero(book.PrecioOriginal)</del>
                                                         <span class="badge badge-bookshop">−@book.Descuento%</span>
                                                     }
-                                                    <strong>@EstadoDemostracion.Dinero(book.Precio)</strong>
+                                                    <strong>@Presentacion.Dinero(book.Precio)</strong>
                                                 </div>
                                             </td>
                                             <td>
@@ -84,7 +84,7 @@
                                                     </button>
                                                 </div>
                                             </td>
-                                            <td>@EstadoDemostracion.Dinero(book.Precio * line.Value)</td>
+                                            <td>@Presentacion.Dinero(book.Precio * line.Value)</td>
                                             <td>
                                                 <button
                                                     class="btn btn-outline-secondary icon-button"
@@ -108,23 +108,23 @@
                     <div class="summary-lines d-flex flex-column gap-2">
                         <div class="d-flex justify-content-between gap-3">
                             <span>Productos</span>
-                            <span>@EstadoDemostracion.Dinero(Productos)</span>
+                            <span>@Presentacion.Dinero(Productos)</span>
                         </div>
                         <div class="discount d-flex justify-content-between gap-3">
                             <span>Descuentos de libros</span>
-                            <span>− @EstadoDemostracion.Dinero(Productos - Subtotal)</span>
+                            <span>− @Presentacion.Dinero(Productos - Subtotal)</span>
                         </div>
                         <div class="d-flex justify-content-between gap-3">
                             <span>Subtotal</span>
-                            <span>@EstadoDemostracion.Dinero(Subtotal)</span>
+                            <span>@Presentacion.Dinero(Subtotal)</span>
                         </div>
                         <div class="d-flex justify-content-between gap-3">
                             <span>Envío</span>
-                            <span>@EstadoDemostracion.Dinero(EnvioEjemplo)</span>
+                            <span>@Presentacion.Dinero(CostoEnvio)</span>
                         </div>
                         <div class="total d-flex justify-content-between gap-3">
                             <span>Total</span>
-                            <span>@EstadoDemostracion.Dinero(Subtotal + EnvioEjemplo)</span>
+                            <span>@Presentacion.Dinero(Compras.Resumen?.Total ?? 0)</span>
                         </div>
                     </div>
                     <button class="btn btn-primary" @onclick="Continuar">

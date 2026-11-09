@@ -1,28 +1,42 @@
 using Microsoft.AspNetCore.Components;
-using Web.Demostracion;
+using Web.Servicios;
 using Web.Modelos;
 
 namespace Web.Componentes.Paginas;
 
 public partial class Inicio : IDisposable
 {
-    [Inject]
-    private EstadoDemostracion Estado { get; set; } = default!;
-    private IEnumerable<Referencia> Categorias => Estado.Referencias.Where(r => r.Tipo == "categorias" && r
-        .Activo).Take(6);
-    private IEnumerable<Referencia> Autores => Estado.Referencias.Where(r => r.Tipo == "autores" && r
-        .Activo).Take(6);
-    private IEnumerable<Referencia> Editoriales => Estado.Referencias.Where(r => r.Tipo == "editoriales"
-        && r.Activo).Take(6);
-    private IEnumerable<Libro> LibrosNuevos => Estado.Libros.Where(b => b.Activo).OrderByDescending(b => b
-        .Id).Take(8);
-    private IEnumerable<Libro> MasVendidos => Estado.Libros.Where(b => b.Activo).Take(8);
-    private IEnumerable<Libro> LibrosPopulares => Estado.Libros.Where(b => b.Activo).Skip(8).Concat(Estado
-        .Libros.Take(8)).Take(8);
-    private IEnumerable<Libro> LibrosPersonales => Estado.Libros.Where(b => b.Activo).Skip(4).Take(8);
+    [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
 
-    protected override void OnInitialized() => Estado.Cambiado += Actualizar;
+    [Microsoft.AspNetCore.Components.Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
+
+    [Inject]
+    private SesionUsuario Sesion { get; set; } = default!;
+    private IEnumerable<Referencia> Categorias => Catalogo.Referencias.Where(r => r.Tipo == "categorias" && r
+        .Activo).Take(6);
+    private IEnumerable<Referencia> Autores => Catalogo.Referencias.Where(r => r.Tipo == "autores" && r
+        .Activo).Take(6);
+    private IEnumerable<Referencia> Editoriales => Catalogo.Referencias.Where(r => r.Tipo == "editoriales"
+        && r.Activo).Take(6);
+    private List<Libro> LibrosNuevos = [], MasVendidos = [];
+    protected override async Task OnInitializedAsync()
+    {
+        Sesion.Cambiado += Actualizar;
+        await Catalogo.Inicializar();
+        try
+        {
+            var nuevos = await Api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>("libros/busqueda", CatalogoServicio.Filtro(tamanio: 8, nuevos: true));
+            LibrosNuevos = nuevos.Items.Select(Presentacion.Libro).ToList();
+            var vendidos = await Api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>("libros/busqueda", CatalogoServicio.Filtro(orden: "MAS_VENDIDOS", tamanio: 8));
+            MasVendidos = vendidos.Items.Select(Presentacion.Libro).ToList();
+            Sesion.Notificar();
+        }
+        catch (InvalidOperationException e)
+        {
+            Sesion.Avisar(e.Message);
+        }
+    }
     private void Actualizar() => InvokeAsync(StateHasChanged);
-    public void Dispose() => Estado.Cambiado -= Actualizar;
+    public void Dispose() => Sesion.Cambiado -= Actualizar;
 }
 

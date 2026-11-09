@@ -101,11 +101,12 @@ public partial class FormularioPago
         }
 
         if (digitos.Length > 0)
-            Borrador.NumeroEnmascarado = "•••• " + digitos[^Math.Min(4, digitos.Length)..];
+            Borrador.Numero = digitos;
         if (FechaVencimiento.HasValue && Borrador.Tipo == "Tarjeta")
             Borrador.Vencimiento = FechaVencimiento.Value;
         Guardando = true;
         await AlGuardar.InvokeAsync(Borrador);
+        Numero = "";
         Guardando = false;
     }
 }

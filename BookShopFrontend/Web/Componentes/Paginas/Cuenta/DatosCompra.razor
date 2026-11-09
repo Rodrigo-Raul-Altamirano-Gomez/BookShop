@@ -15,7 +15,7 @@
             Datos de compra
             <span>@Cantidad @EtiquetaCantidad</span>
         </h1>
-        @if (Estado.Usuario is not null && Pestana != "coupons")
+        @if (Sesion.Usuario is not null && Pestana != "coupons")
         {
             <button class="btn btn-primary" @onclick="Anadir">
                 <Icono Nombre="plus" />
@@ -23,13 +23,13 @@
             </button>
         }
     </div>
-    @if (Estado.Usuario is null)
+    @if (Sesion.Usuario is null)
     {
         <div class="empty-state card border-0 text-center align-items-center py-5">
             <Icono Nombre="card" />
             <h2>Todo listo para tu próxima compra</h2>
             <p class="mb-2">Inicia sesión para consultar tus direcciones, métodos y cupones.</p>
-            <button class="btn btn-primary" @onclick="Estado.MostrarAcceso">Iniciar sesión</button>
+            <button class="btn btn-primary" @onclick="Sesion.MostrarAcceso">Iniciar sesión</button>
         </div>
     }
     else

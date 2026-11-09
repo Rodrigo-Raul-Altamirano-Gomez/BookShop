@@ -1,18 +1,36 @@
 using Microsoft.AspNetCore.Components;
-using Web.Demostracion;
+using Web.Servicios;
 
 namespace Web.Componentes.Paginas.Cuenta;
-// Las pantallas personales escuchan el cambio de sesión de la demostración.
+// Las pantallas personales actualizan su contenido al cambiar la sesión.
 public class PaginaCuenta : ComponentBase, IDisposable
 {
     [Inject]
-    protected EstadoDemostracion Estado { get; set; } = default!;
+    protected SesionUsuario Sesion { get; set; } = default!;
 
     [Inject]
     protected NavigationManager Navegacion { get; set; } = default!;
 
-    protected override void OnInitialized() => Estado.Cambiado += Actualizar;
-    private void Actualizar() => _ = InvokeAsync(StateHasChanged);
-    public void Dispose() => Estado.Cambiado -= Actualizar;
+    protected override void OnInitialized() => Sesion.Cambiado += Actualizar;
+    private string? correoCargado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        correoCargado = Sesion.Usuario?.Correo;
+        await CargarDatos();
+    }
+
+    protected virtual Task CargarDatos() => Task.CompletedTask;
+
+    private void Actualizar() => _ = InvokeAsync(async () =>
+    {
+        if (correoCargado != Sesion.Usuario?.Correo)
+        {
+            correoCargado = Sesion.Usuario?.Correo;
+            await CargarDatos();
+        }
+        StateHasChanged();
+    });
+    public void Dispose() => Sesion.Cambiado -= Actualizar;
 }
 

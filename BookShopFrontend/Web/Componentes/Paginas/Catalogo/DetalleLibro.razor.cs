@@ -1,15 +1,22 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
-using Web.Demostracion;
+using Web.Servicios;
 using Web.Modelos;
 
 namespace Web.Componentes.Paginas.Catalogo;
 
 public partial class DetalleLibro : IDisposable
 {
+    [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
+
+    [Microsoft.AspNetCore.Components.Inject] protected CompraServicio Compras { get; set; } = default!;
+
+    [Microsoft.AspNetCore.Components.Inject] protected CuentaServicio Cuenta { get; set; } = default!;
+
+    [Microsoft.AspNetCore.Components.Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
+
     [Inject]
-    private EstadoDemostracion Estado { get; set; } = default!;
+    private SesionUsuario Sesion { get; set; } = default!;
 
     [Inject]
     private NavigationManager Navegacion { get; set; } = default!;
@@ -19,43 +26,94 @@ public partial class DetalleLibro : IDisposable
     {
         get; set;
     }
-    private Libro? Libro => Estado.BuscarLibro(Id);
+    private Libro? Libro => Catalogo.Libros.FirstOrDefault(libro => libro.Id == Id);
 
-    private int cantidad = 1, idAnterior, paginaResenas = 1, puntuacionResena;
-    private bool sinopsisCompleta, fichaExpandida, modalResena, modalReporte, cargandoImagen;
-    private string comentarioResena = "", motivoReporte = "", comentarioReporte = "", errorFormulario = "";
-    private Resena? resenaReportada;
-    private bool Deseado => Estado.Deseados.Contains(Id);
-    private bool Favorito => Estado.Favoritos.Contains(Id);
-    private List<Resena> Resenas => Estado.Resenas.Where(r => r.IdLibro == Id && r.Activo)
+    private int cantidad = 1, idAnterior, paginaResenas = 1;
+    private bool sinopsisCompleta, fichaExpandida;
+    private bool Deseado => Cuenta.Deseados.Contains(Id);
+    private bool Favorito => Cuenta.Favoritos.Contains(Id);
+    private List<Resena> Resenas => Catalogo.Resenas.Where(r => r.IdLibro == Id && r.Activo)
         .OrderByDescending(r => r.Fecha).ToList();
-    private double Promedio => Resenas.Count == 0 ? 0 : Resenas.Average(r => r.Puntuacion);
+    private double Promedio => totalResenas == 0 ? 0 : Enumerable.Range(1, 5).Sum(n => n * CantidadEstrellas(n)) / (double)totalResenas;
     private string EstiloPromedio => $"--relleno:{(Promedio * 20).ToString(CultureInfo.InvariantCulture)}%";
-    private IEnumerable<Resena> ResenasVisibles => Resenas.Skip((paginaResenas - 1) * 10).Take(10);
-    private int PaginasResenas => Math.Max(1, (Resenas.Count + 9) / 10);
-    private IEnumerable<Libro> LibrosSimilares => Estado.Libros.Where(b => b.Id != Id && b.Activo && b
-        .Categoria == Libro?.Categoria).Take(8);
+    private IEnumerable<Resena> ResenasVisibles => Resenas;
+    private int PaginasResenas => Math.Max(1, (int)((totalResenas + 9) / 10));
+    private List<Libro> LibrosSimilares = [];
+    private ValoracionLibroDTO? valoracion;
+    private DetalleLibroDTO? detalleLibro;
+    private long totalResenas;
 
-    private static readonly int[] Puntuaciones = [5, 4, 3, 2, 1], PuntuacionesAscendentes = [1, 2, 3, 4, 5];
+    private static readonly int[] Puntuaciones = [5, 4, 3, 2, 1];
     private static readonly CultureInfo CulturaEspanola = CultureInfo.GetCultureInfo("es-PE");
-    protected override void OnInitialized() => Estado.Cambiado += ActualizarVista;
-    protected override void OnParametersSet()
+    protected override void OnInitialized() => Sesion.Cambiado += ActualizarVista;
+    protected override async Task OnParametersSetAsync()
     {
         if (idAnterior == Id)
             return;
         idAnterior = Id;
         cantidad = paginaResenas = 1;
-        sinopsisCompleta = fichaExpandida = modalResena = modalReporte = false;
+        sinopsisCompleta = fichaExpandida = false;
+        try
+        {
+            var detalle = await Api.Get<DetalleLibroDTO>($"libros/{Id}");
+            detalleLibro = detalle;
+            Catalogo.Recordar(Presentacion.Libro(detalle));
+            valoracion = detalle.Valoracion;
+            if (detalle.Favorito)
+                Cuenta.Favoritos.Add(Id);
+            else
+                Cuenta.Favoritos.Remove(Id);
+            if (detalle.Deseado)
+                Cuenta.Deseados.Add(Id);
+            else
+                Cuenta.Deseados.Remove(Id);
+            LibrosSimilares = (await Api.Get<List<TarjetaLibroDTO>>($"recomendaciones/similares/{Id}")).Select(Presentacion.Libro).ToList();
+            await CargarResenas();
+            Sesion.Notificar();
+        }
+        catch (InvalidOperationException e)
+        {
+            Sesion.Avisar(e.Message);
+        }
     }
+    private async Task CargarResenas()
+    {
+        var datos = await Api.Post<ResultadoPaginadoDTO<ResenaDTO>>($"resenas/libro/{Id}/busqueda", new ConsultaResenasDTO
+        {
+            Orden = "MAS_RECIENTES",
+            Pagina = paginaResenas,
+            TamanioPagina = 10
+        });
+        totalResenas = datos.TotalResultados;
+        Catalogo.Resenas.RemoveAll(r => r.IdLibro == Id);
+        Catalogo.Resenas.AddRange(datos.Items.Select(d => new Resena
+        {
+            Id = d.Id,
+            IdLibro = d.IdLibro,
+            Usuario = d.NombreUsuario,
+            FotoUsuario = Presentacion.Imagen(d.ImagenUsuario, "/images/user-placeholder.svg"),
+            Fecha = d.Fecha,
+            Puntuacion = d.Puntuacion,
+            Comentario = d.Comentario,
+            Votos = d.CantidadVotosUtiles,
+            Activo = d.Activo
+        }));
+    }
+    private long CantidadEstrellas(int puntuacion) => puntuacion switch
+    {
+        1 => valoracion?.CantidadUnaEstrella ?? 0,
+        2 => valoracion?.CantidadDosEstrellas ?? 0,
+        3 => valoracion?.CantidadTresEstrellas ?? 0,
+        4 => valoracion?.CantidadCuatroEstrellas ?? 0,
+        _ => valoracion?.CantidadCincoEstrellas ?? 0
+    };
 
     private void ActualizarVista() => InvokeAsync(StateHasChanged);
-    public void Dispose() => Estado.Cambiado -= ActualizarVista;
-    private string RutaReferencia(string kind, string name) => ($"/referencias/" + $"{kind}/" + $"{Estado
-        .Referencias.FirstOrDefault(r => r.Tipo == kind && r.Nombre == name)?.Id ?? 0}");
+    public void Dispose() => Sesion.Cambiado -= ActualizarVista;
+    private string RutaReferencia(string kind, string name) => $"/referencias/{kind}/{(kind == "autores" ? detalleLibro?.IdAutor : kind == "categorias" ? detalleLibro?.IdCategoria : detalleLibro?.IdEditorial)}";
     private static string TextoEstrellas(int rating) => new string('★', rating) + new string('☆',
          5 - rating);
-    private int PorcentajePuntuacion(int rating) => Resenas.Count == 0 ? 0 : Resenas.Count(r => r
-        .Puntuacion == rating) * 100 / Resenas.Count;
+    private int PorcentajePuntuacion(int rating) => totalResenas == 0 ? 0 : (int)(CantidadEstrellas(rating) * 100 / totalResenas);
     private void Disminuir()
     {
         if (cantidad > 1)
@@ -65,183 +123,76 @@ public partial class DetalleLibro : IDisposable
     private void Aumentar() => cantidad++;
     private void AlternarSinopsis() => sinopsisCompleta = !sinopsisCompleta;
     private void AlternarFicha() => fichaExpandida = !fichaExpandida;
-    private void AgregarCarrito()
+    private async Task AgregarCarrito()
     {
-        Estado.Carrito[Id] = Estado.Carrito.GetValueOrDefault(Id) + cantidad;
-        Estado.Notificar();
-        Estado.Avisar($"{cantidad} {(cantidad == 1 ? "libro agregado" : "libros agregados")} al carrito");
+        if (!Sesion.RequerirAcceso())
+            return;
+        try
+        {
+            await Compras.AgregarLibro(Id, cantidad);
+            Sesion.Avisar("Libro agregado al carrito.");
+        }
+        catch (InvalidOperationException e) { Sesion.Avisar(e.Message); }
     }
 
-    private void AlternarDeseado()
+    private async Task AlternarDeseado()
     {
-        if (!Estado.RequerirAcceso())
-            return;
-        if (!Estado.Deseados.Add(Id))
-            Estado.Deseados.Remove(Id);
-        Estado.Avisar(Deseado ? "Libro añadido a deseados" : "Libro retirado de deseados");
-        Estado.Notificar();
+        try
+        {
+            await Cuenta.AlternarGuardado(Id, false);
+            Sesion.Notificar();
+        }
+        catch (InvalidOperationException e)
+        {
+            Sesion.Error = e.Message;
+            Sesion.Avisar(e.Message);
+        }
     }
 
-    private void AlternarFavorito()
+    private async Task AlternarFavorito()
     {
-        if (!Estado.RequerirAcceso())
-            return;
-        if (!Estado.Favoritos.Add(Id))
-            Estado.Favoritos.Remove(Id);
-        Estado.Avisar(Favorito ? "Libro añadido a favoritos" : "Libro retirado de favoritos");
-        Estado.Notificar();
+        try
+        {
+            await Cuenta.AlternarGuardado(Id, true);
+            Sesion.Notificar();
+        }
+        catch (InvalidOperationException e)
+        {
+            Sesion.Error = e.Message;
+            Sesion.Avisar(e.Message);
+        }
     }
 
     private void Comparar()
     {
-        if (Estado.IdComparacion == Id)
+        if (Sesion.IdComparacion == Id)
         {
-            Estado.Avisar("Selecciona otro libro para comparar");
+            Sesion.Avisar("Selecciona otro libro para comparar");
             return;
         }
 
-        if (Estado.IdComparacion is null)
+        if (Sesion.IdComparacion is null)
         {
-            Estado.IdComparacion = Id;
-            Estado.Notificar();
+            Sesion.IdComparacion = Id;
+            Sesion.Notificar();
             Navegacion.NavigateTo("/catalogo");
         }
         else
             Navegacion.NavigateTo($"/comparacion?con={Id}");
     }
 
-    private void Votar(Resena review)
+    private async Task CambiarPaginaResenas(int pagina)
     {
-        if (!Estado.RequerirAcceso())
-            return;
-        review.Votada = !review.Votada;
-        review.Votos += review.Votada ? 1 : -1;
-        Estado.Notificar();
-    }
-
-    private void AbrirResena()
-    {
-        if (!Estado.RequerirAcceso())
-            return;
-        if (Resenas.Any(r => r.Propia))
-        {
-            Estado.Avisar("Ya has publicado una reseña de este libro");
-            return;
-        }
-
-        puntuacionResena = 0;
-        comentarioResena = errorFormulario = "";
-        modalResena = true;
-    }
-
-    private void CerrarResena() => modalResena = false;
-    private void SeleccionarPuntuacion(int rating) => puntuacionResena = rating;
-    private void PublicarResena()
-    {
-        if (puntuacionResena == 0 || string.IsNullOrWhiteSpace(comentarioResena))
-        {
-            errorFormulario = "Selecciona una puntuación y escribe tu comentario";
-            return;
-        }
-
-        Estado.Resenas.Add(new Resena
-        {
-            Id = Estado.Resenas.Select(r => r.Id).DefaultIfEmpty(0).Max() + 1,
-            IdLibro = Id,
-            Usuario = Estado.Usuario!.Nombre,
-            FotoUsuario = Estado.Usuario.Imagen,
-            Fecha = new DateTime(2026, 10, 7, 12, 0, 0),
-            Puntuacion = puntuacionResena,
-            Comentario = comentarioResena.Trim(),
-            Propia = true
-        });
-        modalResena = false;
-        paginaResenas = 1;
-        Estado.Avisar("Reseña publicada en esta demostración");
-        Estado.Notificar();
-    }
-
-    private void AbrirReporte(Resena review)
-    {
-        if (!Estado.RequerirAcceso())
-            return;
-        if (Estado.Solicitudes.Any(r => r.Tipo == "Reportes" && r.IdReferencia == review.Id && r
-            .Estado == "Pendiente" && r.Usuario == Estado.Usuario!.Nombre))
-        {
-            Estado.Avisar("Ya tienes un reporte pendiente para esta reseña");
-            return;
-        }
-
-        resenaReportada = review;
-        motivoReporte = comentarioReporte = errorFormulario = "";
-        modalReporte = true;
-    }
-
-    private void CerrarReporte() => modalReporte = false;
-    private void EnviarReporte()
-    {
-        if (motivoReporte.Length == 0 || resenaReportada is null)
-        {
-            errorFormulario = "Selecciona un motivo";
-            return;
-        }
-
-        Estado.Solicitudes.Add(new Solicitud
-        {
-            Id = Estado.Solicitudes.Select(r => r.Id).DefaultIfEmpty(0).Max() + 1,
-            Tipo = "Reportes",
-            IdReferencia = resenaReportada.Id,
-            Usuario = Estado.Usuario!.Nombre,
-            FechaCreacion = new DateTime(2026, 10, 7, 12, 0, 0),
-            Motivo = motivoReporte,
-            Comentario = comentarioReporte.Trim(),
-            ComentarioOriginal = resenaReportada.Comentario,
-            PuntuacionOriginal = resenaReportada.Puntuacion
-        });
-        modalReporte = false;
-        Estado.Avisar("Reporte enviado en esta demostración");
-        Estado.Notificar();
-    }
-
-    private void CambiarPaginaResenas(int pagina) => paginaResenas = pagina;
-    private async Task CambiarImagen(InputFileChangeEventArgs args)
-    {
-        if (Libro is null || !Estado.EsAdministrador || cargandoImagen)
-            return;
-        var file = args.File;
-        if (file.Size > 5 * 1024 * 1024 || (file.ContentType != "image/png" && file
-            .ContentType != "image/jpeg"))
-        {
-            Estado.Avisar("Selecciona una imagen JPEG o PNG de hasta 5 MiB");
-            return;
-        }
-
-        cargandoImagen = true;
+        paginaResenas = pagina;
         try
         {
-            using var stream = new MemoryStream();
-            await file.OpenReadStream(5 * 1024 * 1024).CopyToAsync(stream);
-            Libro.Portada = $"data:{file.ContentType};base64,{Convert.ToBase64String(stream.ToArray())}";
-            Estado.Avisar("Portada actualizada en esta demostración");
-            Estado.Notificar();
+            await CargarResenas();
+            Sesion.Notificar();
         }
-        catch
+        catch (InvalidOperationException e)
         {
-            Estado.Avisar("No se pudo cargar la portada. Inténtalo de nuevo");
+            Sesion.Error = e.Message;
+            Sesion.Avisar(e.Message);
         }
-        finally
-        {
-            cargandoImagen = false;
-        }
-    }
-
-    private void QuitarImagen()
-    {
-        if (Libro is null || !Estado.EsAdministrador)
-            return;
-        Libro.Portada = "/images/book-placeholder.svg";
-        Estado.Avisar("Portada retirada");
-        Estado.Notificar();
     }
 }
-

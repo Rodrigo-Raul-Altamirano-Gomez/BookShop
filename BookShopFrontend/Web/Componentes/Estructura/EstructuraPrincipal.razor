@@ -24,9 +24,9 @@
         <a class="btn header-action d-flex flex-column align-items-center gap-1" href="/carrito">
             <span class="position-relative">
                 <Icono Nombre="cart" />
-                @if (Estado.CantidadCarrito > 0)
+                @if (Compras.CantidadCarrito > 0)
                 {
-                    <span class="badge rounded-pill cart-count">@Estado.CantidadCarrito</span>
+                    <span class="badge rounded-pill cart-count">@Compras.CantidadCarrito</span>
                 }
             </span>
             <span>Carrito</span>
@@ -37,7 +37,9 @@
         </button>
     </div>
 </header>
-<main id="main-content" class="site-main">@Body</main>
+<main id="main-content" class="site-main">@if (Catalogo.Cargando) { <p role="status" class="container py-3">Cargando catálogo…</p> }
+        @if (Sesion.Error is not null) { <div role="alert" class="container alert alert-danger">@Sesion.Error <button class="btn btn-secondary" @onclick="Catalogo.Inicializar">Reintentar</button></div> }
+        @if (Catalogo.Inicializado) { @Body }</main>
 <footer class="site-footer">
     <div class="container d-flex flex-wrap align-items-center gap-3 footer-inner">
         <a class="brand footer-brand d-flex align-items-center gap-2" href="/">
@@ -53,7 +55,7 @@
         </div>
     </div>
 </footer>
-@if (cuentaAbierta && Estado.Usuario is not null)
+@if (cuentaAbierta && Sesion.Usuario is not null)
 {
     <div class="offcanvas-backdrop fade show" @onclick="CerrarCuenta"></div>
         <aside
@@ -63,7 +65,7 @@
             aria-labelledby="account-title"
             @onclick:stopPropagation>
             <header class="offcanvas-header gap-3">
-                <h2 class="offcanvas-title" id="account-title">@Estado.Usuario.Nombre</h2>
+                <h2 class="offcanvas-title" id="account-title">@Sesion.Usuario.Nombre</h2>
                 <button class="btn icon-button modal-close" aria-label="Cerrar cuenta" @onclick="CerrarCuenta">
                     <Icono Nombre="close" />
                 </button>
@@ -77,16 +79,7 @@
                         <Icono Nombre="arrow" />
                     </button>
                 }
-                @if (Estado.EsAdministrador)
-                {
-                    <button
-                        class="btn d-flex align-items-center gap-3"
-                        @onclick='() => NavegarCuenta("/administracion")'>
-                        <Icono Nombre="settings" />
-                        Administración
-                        <Icono Nombre="arrow" />
-                    </button>
-                }
+
             </nav>
             <button class="btn logout d-flex align-items-center gap-3" @onclick="CerrarSesion">
                 <Icono Nombre="user" />
@@ -117,7 +110,7 @@
         </div>
     </Modal>
 }
-@if (Estado.IdComparacion is int compareId && Estado.BuscarLibro(compareId) is Libro compareBook)
+@if (Sesion.IdComparacion is int compareId && Catalogo.Libros.FirstOrDefault(libro => libro.Id == compareId) is Libro compareBook)
 {
     <div class="card comparison-dock d-flex flex-row align-items-center gap-3 p-3 shadow-sm">
         <a class="d-flex align-items-center gap-2" href="/libros/@compareId">

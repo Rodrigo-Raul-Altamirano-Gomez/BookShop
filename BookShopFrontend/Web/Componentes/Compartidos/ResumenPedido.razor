@@ -15,7 +15,7 @@
                     <tbody>
                         @foreach (var line in Pedido.Lineas)
                         {
-                            var book = Estado.BuscarLibro(line.IdLibro);
+                            var book = Catalogo.Libros.FirstOrDefault(libro => libro.Id == line.IdLibro);
                             <tr>
                                 <td>
                                     <div class="line-book d-flex align-items-center gap-3">
@@ -31,12 +31,12 @@
                                     <div class="line-price d-flex flex-column align-items-start">
                                         @if (line.Descuento > 0)
                                         {
-                                            <del>@EstadoDemostracion.Dinero(line.PrecioOriginal)</del>
+                                            <del>@Presentacion.Dinero(line.PrecioOriginal)</del>
                                         }
-                                        <strong>@EstadoDemostracion.Dinero(line.Precio)</strong>
+                                        <strong>@Presentacion.Dinero(line.Precio)</strong>
                                     </div>
                                 </td>
-                                <td>@EstadoDemostracion.Dinero(line.Precio * line.Cantidad)</td>
+                                <td>@Presentacion.Dinero(line.Precio * line.Cantidad)</td>
                             </tr>
                         }
                     </tbody>
@@ -70,28 +70,28 @@
             <div class="summary-lines d-grid gap-3">
                 <div class="d-flex justify-content-between gap-3">
                     <span>Productos</span>
-                    <span>@EstadoDemostracion.Dinero(Pedido.Productos)</span>
+                    <span>@Presentacion.Dinero(Pedido.Productos)</span>
                 </div>
                 <div class="discount d-flex justify-content-between gap-3">
                     <span>Descuentos de libros</span>
-                    <span>− @EstadoDemostracion.Dinero(Pedido.DescuentoLibro)</span>
+                    <span>− @Presentacion.Dinero(Pedido.DescuentoLibro)</span>
                 </div>
                 <div class="d-flex justify-content-between gap-3">
                     <span>Subtotal</span>
-                    <span>@EstadoDemostracion.Dinero(Pedido.Subtotal)</span>
+                    <span>@Presentacion.Dinero(Pedido.Subtotal)</span>
                 </div>
                 <hr />
                 <div class="discount d-flex justify-content-between gap-3">
                     <span>Cupón</span>
-                    <span>− @EstadoDemostracion.Dinero(Pedido.DescuentoCupon)</span>
+                    <span>− @Presentacion.Dinero(Pedido.DescuentoCupon)</span>
                 </div>
                 <div class="d-flex justify-content-between gap-3">
                     <span>Envío</span>
-                    <span>@EstadoDemostracion.Dinero(Pedido.Envio)</span>
+                    <span>@Presentacion.Dinero(Pedido.Envio)</span>
                 </div>
                 <div class="total d-flex justify-content-between gap-3">
                     <span>Total pagado</span>
-                    <span>@EstadoDemostracion.Dinero(Pedido.Total)</span>
+                    <span>@Presentacion.Dinero(Pedido.Total)</span>
                 </div>
             </div>
         </div>

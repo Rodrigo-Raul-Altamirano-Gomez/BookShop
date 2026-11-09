@@ -1,112 +1,72 @@
-# Interfaz de BookShop
+# Frontend de BookShop
 
-Implementación de escritorio en Blazor / .NET 10 y Bootstrap 5.3.8, limitada al proyecto **Web**.
-Demostración pública: [BookShop en Render](https://bookshop-demo.onrender.com).
-Basada en los cinco documentos de `../../docs`, sus referencias visuales y los
-campos de los DTO de Java. El texto del diseño prevalece sobre las variaciones
-de las imágenes.
+Aplicación Blazor Interactive Server (.NET 10). Consume los REST de Java desde
+el mismo proyecto Web. La interfaz mantiene sus pantallas, textos y estilos.
 
 ## Ejecutar
 
-Desde esta carpeta:
+Desplegar el backend y configurar `Backend:Url` en `appsettings.json`.
+La dirección local es `https://localhost:8181/bookshop/webresources/`.
+El certificado localhost de GlassFish debe ser de confianza en Windows.
+La validación HTTPS permanece habilitada.
 
 ```powershell
-dotnet run --project Web.csproj --launch-profile http
+dotnet run --project BookShopFrontend/Web --launch-profile http
 ```
 
-Abre `http://localhost:5188`. También está disponible el perfil `https` del proyecto.
+Abrir http://localhost:5188.
 
 ## Organización
 
-- `Componentes/Estructura`: marco común, búsqueda, panel de cuenta y avisos.
-- `Componentes/Compartidos`: tarjetas, iconos, paginación, modales, formularios,
-  gestión de libro/referencia y resumen de pedido.
-- `Componentes/Paginas`: Inicio, Catálogo, Cuenta, Compra y Administración.
-- `Modelos`: modelos de presentación utilizados por las pantallas.
-- `Demostracion`: ejemplos y estado temporal del circuito Blazor.
-- `wwwroot`: estilos, ilustraciones SVG locales y soporte de teclado para modales.
+- `Modelos/DTO`: clases normales, una por archivo, con propiedades y `JsonProperty`
+  para los nombres que utiliza la API Java. Newtonsoft.Json serializa y deserializa.
+- `Servicios/HttpClientUtils`: métodos Get, Post, Put y Delete; conexión, JSON,
+  cookie de sesión y mensaje de error. Las pantallas no manipulan JSON.
+- `Servicios/SesionUsuario`: identidad, avisos y selección de navegación.
+- `Servicios/CatalogoServicio`: referencias e idiomas usados en filtros y datos
+  compartidos de los libros visibles.
+- `Servicios/CuentaServicio`: direcciones, métodos de pago y listas personales.
+- `Servicios/CompraServicio`: carrito, preparación y confirmación mostrada.
+- `Modelos`: datos específicos de presentación y formularios. Se mantienen cuando
+  la pantalla combina o muestra de otra forma los campos del contrato REST.
+- `Servicios/Presentacion`: adaptación a esas pantallas e imágenes. No convierte
+  JSON, no valida compras ni calcula precios del negocio.
+- `Componentes`: marcado .razor, eventos .razor.cs y estilos .razor.css.
 
-Las páginas y componentes con interacción separan su marcado `.razor` del estado,
-eventos y operaciones de pantalla en `.razor.cs`. Los componentes que solo muestran
-texto no necesitan code-behind. El CSS compartido está en `wwwroot/app.css`; el CSS
-particular acompaña a su componente en `.razor.css`.
+Las llamadas sencillas se leen directamente en la pantalla: `Api.Get<T>(ruta)`.
+Las operaciones que actualizan datos compartidos tienen métodos explícitos,
+como `Compras.AgregarLibro(id, cantidad)` o `Cuenta.GuardarDireccion(datos)`.
+No hay un ejecutor genérico de operaciones ni un estado que concentre toda la aplicación.
 
-## Bootstrap
+El acceso carga el perfil y el carrito; las demás páginas consultan sus datos
+al utilizarlas. Los formularios muestran los mensajes que devuelve Java.
+Business mantiene las reglas, stock, descuentos, envío y pago simulado.
+Cada circuito conserva sus cookies; no se comparten entre usuarios. Una recarga
+completa crea otro circuito y requiere iniciar sesión nuevamente.
 
-Bootstrap es la base de todas las pantallas: contenedores, cuadrícula `row`/`col`,
-formularios, botones, tarjetas, tablas, pestañas, alertas, paginación y modales.
-El panel de cuenta utiliza `offcanvas` y los avisos utilizan `toast`.
+## Alcance
 
-El CSS oficial y su licencia MIT están incluidos en `wwwroot/vendor/bootstrap`,
-de modo que la interfaz no depende de una CDN ni requiere Node para ejecutarse.
-Se carga antes de `app.css` y de los estilos aislados. El CSS propio conserva los
-colores y la tipografía de BookShop, las imágenes y los detalles de cada pantalla.
+RF01, RF02, RF05, RF06, RF07, RF08, RF09, RF11, RF12, RF14, RF15 y RF16.
+Las rutas de funcionalidades que no pertenecen al entregable conservan su aviso
+de funcionalidad pendiente. Se retiraron sus componentes de demostración sin uso.
 
-Los eventos, la apertura de modales y los cambios de pestaña siguen en Blazor y
-sus archivos code-behind. No se carga el JavaScript de Bootstrap para evitar que
-dos sistemas controlen los mismos elementos. No se añadieron dependencias NuGet
-ni proyectos o capas adicionales. El código propio mantiene el límite de 115
-caracteres por línea; el CSS del proveedor se conserva sin modificar.
-
-## Recorridos
-
-Inicio, búsqueda por título, catálogo con filtros aplicados explícitamente, orden,
-paginación, listados y páginas de autores/categorías/editoriales; detalle de libro,
-ficha expandible, reseñas, comparación temporal y vistas de recomendaciones.
-
-Cuenta incluye acceso/registro/reactivación, perfil y formularios de seguridad,
-deseados/favoritos, seguimientos, reseñas, direcciones/métodos/cupones y solicitudes
-con consulta de referencias. Compra incluye carrito, selecciones navegables,
-confirmación, historial, seguimiento y formularios de cancelación/devolución.
-
-Administración incluye portal, listados y altas, edición e imágenes, gestión de
-precio/stock/descuentos, moderación, Todas las reseñas y modales de configuración
-y reportes. Reportes y comprobantes muestran vistas previas HTML; **no generan PDF**.
-
-## Datos y escenarios de ejemplo
-
-- Cliente: inicia sesión con cualquier correo válido y contraseña no vacía.
-- Administrador: un correo con dominio `@admin.bookshop`, por ejemplo
-  `demo@admin.bookshop`, con cualquier contraseña no vacía.
-- Reactivación: `inactiva@correo.pe`.
-- Error de acceso: `error@correo.pe`; muestra el error y vacía las credenciales.
-- En compra, el segundo cupón ilustra la selección rechazada y conserva la anterior.
-- El tercer método de pago ilustra un rechazo en el primer intento; volver a
-  intentarlo muestra la confirmación.
-- En pedidos, Actualizar seguimiento avanza una etapa de presentación por pulsación.
-
-Son escenarios fijos, sin autenticación, autorización ni validaciones reales.
-No utilices credenciales ni datos financieros reales. La información de ejemplo
-es ficticia. La selección de archivos solo produce una vista previa en memoria.
-
-Los cambios se conservan durante la navegación dentro de una pestaña; recargar o
-abrir otra pestaña inicia otros ejemplos. Filtros/orden/página del catálogo e historial
-se conservan al volver de sus detalles. Cancelar formularios descarta el borrador.
-
-## Límite de esta fase
-
-No hay llamadas HTTP al backend, acceso a MySQL, persistencia de datos de la tienda,
-hash/cifrado, reservas de stock, algoritmos reales, probabilidades de pago,
-elegibilidad de reseñas/devoluciones, transacciones ni generación de documentos.
-Los filtros y sumas sirven para mostrar la interfaz sobre ejemplos. Envío y cupón
-utilizan importes ilustrativos, no las fórmulas/configuración de Java.
-
-Web no depende de Data, Service ni Integration. Esos proyectos y el backend
-permanecen sin cambios de código. Las imágenes locales son ilustraciones de prueba,
-no portadas comerciales ni fotografías de autores.
-
-## Verificación
+## Comprobar
 
 ```powershell
-dotnet build Web.csproj --no-restore
+dotnet build BookShopFrontend/BookShopFrontend.slnx
+dotnet run --project BookShopFrontend/Pruebas
 ```
 
-La revisión de interacción se realiza en el navegador con datos de ejemplo;
-no equivale a verificar las reglas del backend ni una compra real.
+Las comprobaciones usan un servidor temporal y renderizan componentes reales.
+Cubren JSON, fechas, imágenes, cookies separadas, sesión vencida, paginación de
+idiomas, importes recibidos y contrato de compra.
 
-Comprobado en escritorio: búsqueda con Enter, aplicación y conservación de filtros,
-paginación, comparación, error/acceso correcto, cantidades del carrito, cancelación
-de formularios, alta de dirección, rechazo de cupón/pago y confirmación. También se
-comprobaron seguimiento, vista previa del comprobante, acceso administrativo,
-edición de stock, retirada de portada, configuración conservada al volver y resolución
-de una solicitud. La compilación terminó con cero errores y cero advertencias.
+Con GlassFish y la base de desarrollo disponibles:
+
+```powershell
+dotnet run --project BookShopFrontend/Pruebas -- --real
+```
+
+Esta última prueba crea un usuario, dirección, tarjeta ficticia y pedido de prueba.
+Comprueba los servicios C# contra MySQL real y el reintento sin duplicar el pedido.
+Los datos de prueba permanecen en la base.

@@ -1,8 +1,12 @@
 using Web.Componentes;
-using Web.Demostracion;
+using Web.Servicios;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddScoped<EstadoDemostracion>();
+builder.Services.AddScoped<HttpClientUtils>();
+builder.Services.AddScoped<SesionUsuario>();
+builder.Services.AddScoped<CatalogoServicio>();
+builder.Services.AddScoped<CuentaServicio>();
+builder.Services.AddScoped<CompraServicio>();
 // Componentes interactivos y estado temporal de la interfaz.
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 var app = builder.Build();

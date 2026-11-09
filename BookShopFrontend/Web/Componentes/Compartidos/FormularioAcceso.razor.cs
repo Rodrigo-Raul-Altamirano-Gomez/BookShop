@@ -1,14 +1,17 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Web.Demostracion;
+using Web.Servicios;
 using Web.Modelos;
 
 namespace Web.Componentes.Compartidos;
 
 public partial class FormularioAcceso
 {
+    [Inject] private CompraServicio Compras { get; set; } = default!;
+    [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
+
     [Inject]
-    private EstadoDemostracion Estado { get; set; } = default!;
+    private SesionUsuario Sesion { get; set; } = default!;
 
     [Parameter]
     public EventCallback AlCerrar
@@ -16,7 +19,7 @@ public partial class FormularioAcceso
         get; set;
     }
 
-    private bool registro, mostrarContrasena, reactivacion;
+    private bool registro, mostrarContrasena, reactivacion, enviando;
     private string correo = "", contrasena = "", confirmacion = "", nombre = "", foto =
          "/images/user-placeholder.svg";
     private DateTime nacimiento = new(1998, 6, 12);
@@ -60,45 +63,45 @@ public partial class FormularioAcceso
 
     private async Task Enviar()
     {
-        // Este correo selecciona el ejemplo de error; no se verifican credenciales.
-        if (!registro && correo.Equals("error@correo.pe", StringComparison.OrdinalIgnoreCase))
-        {
-            error = "Correo o contraseña incorrectos.";
-            correo = contrasena = "";
+        if (enviando)
             return;
-        }
-
         if (registro && contrasena != confirmacion)
         {
             error = "Las contraseñas no coinciden.";
             return;
         }
-
-        if (!reactivacion && !registro && correo.Equals("inactiva@correo.pe", StringComparison
-            .OrdinalIgnoreCase))
+        enviando = true;
+        try
         {
-            reactivacion = true;
-            return;
+            var ruta = registro ? "cuenta/registro" : reactivacion ? "cuenta/reactivacion" : "cuenta/sesion";
+            object datos = registro
+                ? new RegistroUsuarioDTO
+                {
+                    Nombre = nombre.Trim(),
+                    Email = correo.Trim(),
+                    FechaNacimiento = DateOnly.FromDateTime(nacimiento),
+                    Contrasenia = contrasena,
+                    ConfirmacionContrasenia = confirmacion,
+                    Imagen = Presentacion.LeerImagen(foto)
+                }
+                : new CredencialesDTO
+                {
+                    Email = correo.Trim(),
+                    Contrasenia = contrasena
+                };
+            var acceso = await Api.Post<AccesoUsuarioDTO>(ruta, datos);
+            if (acceso.RequiereReactivacion)
+            {
+                reactivacion = true;
+                return;
+            }
+            Sesion.MostrarPerfil(await Api.Get<PerfilUsuarioDTO>("cuenta"), acceso.Rol == "ADMIN");
+            Compras.MostrarCarrito(await Api.Get<ResumenCompraDTO>("carrito"));
+            Sesion.Notificar();
+            await Cerrar();
         }
-
-        Estado.Usuario = new Perfil
-        {
-
-            Nombre = registro ? nombre.Trim() : "María López",
-
-            Correo = correo.Trim(),
-
-            Nacimiento = DateOnly.FromDateTime(nacimiento),
-
-            Imagen = foto,
-
-            EsAdministrador = correo.Trim().EndsWith("@admin.bookshop", StringComparison.OrdinalIgnoreCase)
-
-        };
-        Estado.Notificar();
-        Estado.Avisar(reactivacion ? "Cuenta reactivada." : registro ? "Tu cuenta está lista."
-            : "Bienvenida a BookShop.");
-        await Cerrar();
+        catch (InvalidOperationException e) { error = e.Message; }
+        finally { enviando = false; }
     }
 
     private Task Cerrar() => AlCerrar.InvokeAsync();

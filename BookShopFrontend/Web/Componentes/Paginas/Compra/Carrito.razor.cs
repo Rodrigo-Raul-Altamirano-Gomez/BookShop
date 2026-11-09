@@ -1,48 +1,81 @@
 using Microsoft.AspNetCore.Components;
-using Web.Demostracion;
+using Web.Servicios;
 using Web.Modelos;
 
 namespace Web.Componentes.Paginas.Compra;
 
 public partial class Carrito : IDisposable
 {
+    [Microsoft.AspNetCore.Components.Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
+
+    [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
+
+    [Microsoft.AspNetCore.Components.Inject] protected CompraServicio Compras { get; set; } = default!;
+
     [Inject]
-    private EstadoDemostracion Estado { get; set; } = default!;
+    private SesionUsuario Sesion { get; set; } = default!;
 
     [Inject]
     private NavigationManager Navegacion { get; set; } = default!;
 
-    private const decimal EnvioEjemplo = 7.99m;
-    private decimal Productos => Estado.Carrito.Sum(line => (Estado.BuscarLibro(line.Key)?
-        .PrecioOriginal ?? 0) * line.Value);
-    private decimal Subtotal => Estado.Carrito.Sum(line => (Estado.BuscarLibro(line.Key)?
-        .Precio ?? 0) * line.Value);
-    private IEnumerable<Libro> Complementarios => Estado.Libros.Where(b => !Estado.Carrito.ContainsKey(b
-        .Id)).Take(4);
+    private decimal CostoEnvio => Compras.Resumen?.CostoEnvio ?? 0;
+    private decimal Productos => Compras.Resumen?.SubtotalProductos ?? 0;
+    private decimal Subtotal => Productos - (Compras.Resumen?.DescuentoLibros ?? 0);
+    private List<Libro> Complementarios = [];
 
-    protected override void OnInitialized() => Estado.Cambiado += Actualizar;
-    private void Actualizar() => _ = InvokeAsync(StateHasChanged);
-    private void Cambiar(int id, int cantidad)
+    protected override async Task OnInitializedAsync()
     {
-        if (cantidad <= 0)
-            Estado.Carrito.Remove(id);
-        else
-            Estado.Carrito[id] = cantidad;
-        Estado.Notificar();
+        Sesion.Cambiado += Actualizar;
+        if (Sesion.Usuario is not null)
+            try
+            {
+                Compras.MostrarCarrito(await Api.Get<ResumenCompraDTO>("carrito"));
+                await CargarComplementarios();
+                Sesion.Notificar();
+            }
+            catch (InvalidOperationException e)
+            {
+                Sesion.Error = e.Message;
+                Sesion.Avisar(e.Message);
+            }
+    }
+    private async Task CargarComplementarios() => Complementarios = (await Api.Post<List<TarjetaLibroDTO>>("recomendaciones/complementarios", Compras.Carrito.Keys.ToList())).Select(Presentacion.Libro).ToList();
+    private void Actualizar() => _ = InvokeAsync(StateHasChanged);
+    private async Task Cambiar(int id, int cantidad)
+    {
+        try
+        {
+            await Compras.CambiarCantidad(id, cantidad);
+            await CargarComplementarios();
+            Sesion.Notificar();
+        }
+        catch (InvalidOperationException e)
+        {
+            Sesion.Avisar(e.Message);
+        }
     }
 
-    private void Vaciar()
+    private async Task Vaciar()
     {
-        Estado.Carrito.Clear();
-        Estado.Notificar();
+        try
+        {
+            await Compras.VaciarCarrito();
+            Complementarios.Clear();
+            Sesion.Notificar();
+        }
+        catch (InvalidOperationException e)
+        {
+            Sesion.Error = e.Message;
+            Sesion.Avisar(e.Message);
+        }
     }
 
     private void Continuar()
     {
-        if (Estado.RequerirAcceso())
+        if (Sesion.RequerirAcceso())
             Navegacion.NavigateTo("/compra");
     }
 
-    public void Dispose() => Estado.Cambiado -= Actualizar;
+    public void Dispose() => Sesion.Cambiado -= Actualizar;
 }
 

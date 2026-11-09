@@ -24,26 +24,7 @@
                     src="@Referencia.Imagen"
                     alt="@Referencia.Nombre"
                     />
-                @if (Estado.EsAdministrador)
-                {
-                    <div class="image-actions d-flex gap-2">
-                        <label class="btn btn-outline-secondary icon-button" title="Cambiar imagen">
-                            <Icono Nombre="edit" />
-                            <InputFile class="form-control"
-                                OnChange="CambiarImagen"
-                                disabled="@cargandoImagen"
-                                accept="image/png,image/jpeg"
-                                />
-                        </label>
-                        <button
-                            class="btn btn-outline-secondary icon-button"
-                            title="Quitar imagen"
-                            disabled="@cargandoImagen"
-                            @onclick="QuitarImagen">
-                            <Icono Nombre="trash" />
-                        </button>
-                    </div>
-                }
+
             </div>
             <div class="reference-copy col-12 col-md-6 d-flex flex-column p-4
                 align-items-start justify-content-center">
@@ -53,17 +34,13 @@
                     <Icono Nombre="follow" />
                     @(Seguimientos ? "Dejar de seguir" : $"Seguir {Singular}")
                 </button>
-                @if (Estado.EsAdministrador)
-                {
-                    <GestionReferencia Referencia="Referencia" />
-                }
+
             </div>
         </section>
         <ExploradorCatalogo
-            Libros="Libros"
             Titulo="@($"Libros de {Referencia.Nombre}")"
             TipoAmbito="@Tipo"
-            Administracion="Estado.EsAdministrador"
+            IdAmbito="Id"
             />
     }
 </div>

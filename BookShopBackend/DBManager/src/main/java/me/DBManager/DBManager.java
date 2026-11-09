@@ -34,6 +34,8 @@ public final class DBManager {
             String password = config.getString("db.password");
             String url = String.format("jdbc:mysql://%s:%s/%s", host, port, schema);
             HikariConfig configuracion = new HikariConfig();
+            configuracion.setDriverClassName("com.mysql.cj.jdbc.Driver");
+            configuracion.addDataSourceProperty("fallbackToSystemKeyStore", "false");
             configuracion.setPoolName("BookShop");
             configuracion.setJdbcUrl(url);
             configuracion.setUsername(user);

@@ -12,14 +12,14 @@
     <div class="page-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
         <h1>Resumen de compra</h1>
     </div>
-    @if (Estado.Usuario is null)
+    @if (Sesion.Usuario is null)
     {
         <div class="empty-state card border-0 text-center align-items-center py-5">
             <h2>Inicia sesión para continuar</h2>
-            <button class="btn btn-primary" @onclick="Estado.MostrarAcceso">Iniciar sesión</button>
+            <button class="btn btn-primary" @onclick="Sesion.MostrarAcceso">Iniciar sesión</button>
         </div>
     }
-    else if (Estado.CantidadCarrito == 0)
+    else if (Compras.CantidadCarrito == 0)
     {
         <div class="empty-state card border-0 text-center align-items-center py-5">
             <h2>Tu carrito está vacío</h2>
@@ -43,7 +43,7 @@
                                 Añadir dirección
                             </button>
                         </div>
-                        @if (Estado.Direcciones.Count == 0)
+                        @if (Cuenta.Direcciones.Count == 0)
                         {
                             <p class="text-body-secondary">Añade una dirección de envío.</p>
                         }
@@ -58,14 +58,14 @@
                                     ‹
                                 </button>
                                 <div class="selection-cards row row-cols-1 row-cols-xl-2 g-3 flex-grow-1">
-                                    @foreach (var address in Estado.Direcciones.Skip(indiceDireccion).Take(2))
+                                    @foreach (var address in Cuenta.Direcciones.Skip(indiceDireccion).Take(2))
                                     {
                                         <div class="col">
                                             <button
                                                 class="selection-card btn btn-outline-secondary w-100 h-100
                                                     d-flex gap-3 text-start
                                                     @(direccionId == address.Id ? "selected" : "")"
-                                                @onclick="() => direccionId = address.Id">
+                                                @onclick="() => Seleccionar(address.Id, metodoId, cuponId)">
                                                 <span class="radio-mark">
                                                 </span>
                                                 <div>
@@ -92,15 +92,15 @@
                                 <button
                                     class="btn btn-outline-secondary icon-button"
                                     aria-label="Más direcciones"
-                                    disabled="@(indiceDireccion + 2 >= Estado.Direcciones.Count)"
+                                    disabled="@(indiceDireccion + 2 >= Cuenta.Direcciones.Count)"
                                     @onclick="() => indiceDireccion++">
                                     ›
                                 </button>
                             </div>
                             <p class="carousel-position">
                                 @(indiceDireccion + 1) –
-                                @Math.Min(indiceDireccion + 2, Estado.Direcciones.Count) de
-                                @Estado.Direcciones.Count
+                                @Math.Min(indiceDireccion + 2, Cuenta.Direcciones.Count) de
+                                @Cuenta.Direcciones.Count
                             </p>
                         }
                     </section>
@@ -116,7 +116,7 @@
                                 Añadir método
                             </button>
                         </div>
-                        @if (Estado.Metodos.Count == 0)
+                        @if (Cuenta.Metodos.Count == 0)
                         {
                             <p class="text-body-secondary">Añade un método de pago.</p>
                         }
@@ -131,14 +131,14 @@
                                     ‹
                                 </button>
                                 <div class="selection-cards row row-cols-1 row-cols-xl-2 g-3 flex-grow-1">
-                                    @foreach (var method in Estado.Metodos.Skip(indiceMetodo).Take(2))
+                                    @foreach (var method in Cuenta.Metodos.Skip(indiceMetodo).Take(2))
                                     {
                                         <div class="col">
                                             <button
                                                 class="selection-card btn btn-outline-secondary w-100 h-100
                                                     d-flex gap-3 text-start
                                                     @(metodoId == method.Id ? "selected" : "")"
-                                                @onclick="() => metodoId = method.Id">
+                                                disabled="@(!method.Vigente || procesando)" @onclick="() => Seleccionar(direccionId, method.Id, cuponId)">
                                                 <span class="radio-mark">
                                                 </span>
                                                 <div>
@@ -173,14 +173,14 @@
                                 <button
                                     class="btn btn-outline-secondary icon-button"
                                     aria-label="Más métodos"
-                                    disabled="@(indiceMetodo + 2 >= Estado.Metodos.Count)"
+                                    disabled="@(indiceMetodo + 2 >= Cuenta.Metodos.Count)"
                                     @onclick="() => indiceMetodo++">
                                     ›
                                 </button>
                             </div>
                             <p class="carousel-position">
-                                @(indiceMetodo + 1) – @Math.Min(indiceMetodo + 2, Estado.Metodos.Count) de
-                                @Estado.Metodos.Count
+                                @(indiceMetodo + 1) – @Math.Min(indiceMetodo + 2, Cuenta.Metodos.Count) de
+                                @Cuenta.Metodos.Count
                             </p>
                         }
                     </section>
@@ -220,7 +220,7 @@
                                                 {
                                                     <h3>@coupon.Porcentaje% de descuento</h3>
                                                     <p>
-                                                        Mínimo @EstadoDemostracion.Dinero(coupon.Minimo)
+                                                        Mínimo @Presentacion.Dinero(coupon.Minimo)
                                                         <br />
                                                         Vence @coupon.Vencimiento.ToString("dd/MM/yyyy")
                                                     </p>
@@ -258,9 +258,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var line in Estado.Carrito)
+                                @foreach (var line in Compras.Carrito)
                                 {
-                                    var book = Estado.BuscarLibro(line.Key);
+                                    var book = Catalogo.Libros.FirstOrDefault(libro => libro.Id == line.Key);
                                     if (book is not null)
                                     {
                                         <tr>
@@ -275,12 +275,12 @@
                                                 <div class="line-price d-flex flex-column gap-1">
                                                     @if (book.Descuento > 0)
                                                     {
-                                                        <del>@EstadoDemostracion.Dinero(book.PrecioOriginal)</del>
+                                                        <del>@Presentacion.Dinero(book.PrecioOriginal)</del>
                                                     }
-                                                    @EstadoDemostracion.Dinero(book.Precio)
+                                                    @Presentacion.Dinero(book.Precio)
                                                 </div>
                                             </td>
-                                            <td>@EstadoDemostracion.Dinero(book.Precio * line.Value)</td>
+                                            <td>@Presentacion.Dinero(book.Precio * line.Value)</td>
                                         </tr>
                                     }
                                 }
@@ -290,28 +290,28 @@
                     <div class="summary-lines d-flex flex-column gap-2">
                         <div class="d-flex justify-content-between gap-3">
                             <span>Productos</span>
-                            <span>@EstadoDemostracion.Dinero(Productos)</span>
+                            <span>@Presentacion.Dinero(Productos)</span>
                         </div>
                         <div class="discount d-flex justify-content-between gap-3">
                             <span>Descuentos de libros</span>
-                            <span>− @EstadoDemostracion.Dinero(Productos - Subtotal)</span>
+                            <span>− @Presentacion.Dinero(Productos - Subtotal)</span>
                         </div>
                         <div class="d-flex justify-content-between gap-3">
                             <span>Subtotal</span>
-                            <span>@EstadoDemostracion.Dinero(Subtotal)</span>
+                            <span>@Presentacion.Dinero(Subtotal)</span>
                         </div>
                         <hr />
                         <div class="discount d-flex justify-content-between gap-3">
                             <span>Cupón</span>
-                            <span>− @EstadoDemostracion.Dinero(DescuentoEjemplo)</span>
+                            <span>− @Presentacion.Dinero(DescuentoCupon)</span>
                         </div>
                         <div class="d-flex justify-content-between gap-3">
                             <span>Envío</span>
-                            <span>@EstadoDemostracion.Dinero(EnvioEjemplo)</span>
+                            <span>@Presentacion.Dinero(CostoEnvio)</span>
                         </div>
                         <div class="total d-flex justify-content-between gap-3">
                             <span>Total a pagar</span>
-                            <span>@EstadoDemostracion.Dinero(Total)</span>
+                            <span>@Presentacion.Dinero(Total)</span>
                         </div>
                     </div>
                     @if (errorPago is not null)
@@ -320,7 +320,7 @@
                     }
                     <button
                         class="btn btn-primary"
-                        disabled="@(direccionId is null || metodoId is null || procesando)"
+                        disabled="@(Compras.Preparacion?.PuedePagar != true || procesando)"
                         @onclick="Confirmar">
                         @(procesando ? "Procesando…" : "Confirmar y pagar")
                     </button>

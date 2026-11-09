@@ -1,13 +1,15 @@
 using Microsoft.AspNetCore.Components;
-using Web.Demostracion;
+using Web.Servicios;
 using Web.Modelos;
 
 namespace Web.Componentes.Paginas.Catalogo;
 
 public partial class Referencias : IDisposable
 {
+    [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
+
     [Inject]
-    private EstadoDemostracion Estado { get; set; } = default!;
+    private SesionUsuario Sesion { get; set; } = default!;
 
     [Parameter]
     public string Tipo { get; set; } = "categorias";
@@ -16,19 +18,40 @@ public partial class Referencias : IDisposable
 
     private string orden = "nombre", tipoAnterior = "";
     private int pagina = 1;
-    private List<Referencia> Resultados => (orden == "reciente" ? Estado.Referencias.Where(r => r
-        .Tipo == Tipo && r.Activo).OrderByDescending(r => r.Id) : Estado.Referencias.Where(r => r
-            .Tipo == Tipo && r.Activo).OrderBy(r => r.Nombre)).ToList();
-    private int TotalPaginas => Math.Max(1, (Resultados.Count + 11) / 12);
-    private IEnumerable<Referencia> ReferenciasVisibles => Resultados.Skip((pagina - 1) * 12).Take(12);
+    private List<Referencia> Resultados = [];
+    private long totalResultados;
+    private int TotalPaginas => Math.Max(1, (int)((totalResultados + 11) / 12));
+    private IEnumerable<Referencia> ReferenciasVisibles => Resultados;
+    private async Task Consultar()
+    {
+        try
+        {
+            var datos = await Api.Post<ResultadoPaginadoDTO<TarjetaReferenciaDTO>>($"{Tipo}/busqueda",
+                new FiltroReferenciaDTO
+                {
+                    Nombre = "",
+                    SoloActivos = true,
+                    Orden = orden == "reciente" ? "MAS_RECIENTES" : "NOMBRE_ASCENDENTE",
+                    Pagina = pagina,
+                    TamanioPagina = 12
+                });
+            Resultados = datos.Items.Select(d => Presentacion.Referencia(d, Tipo)).ToList();
+            totalResultados = datos.TotalResultados;
 
-    protected override void OnParametersSet()
+        }
+        catch (InvalidOperationException e)
+        {
+            Sesion.Avisar(e.Message);
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
     {
         if (tipoAnterior != Tipo)
         {
             GuardarVista();
             tipoAnterior = Tipo;
-            if (Estado.EstadoVistas.TryGetValue($"referencias:{Tipo}", out var guardado)
+            if (Sesion.EstadoVistas.TryGetValue($"referencias:{Tipo}", out var guardado)
                 && guardado is VistaReferencias vista)
             {
                 orden = vista.Orden;
@@ -41,14 +64,14 @@ public partial class Referencias : IDisposable
             }
         }
 
-        pagina = Math.Min(pagina, TotalPaginas);
+        await Consultar();
     }
 
     private void GuardarVista()
     {
         if (tipoAnterior.Length == 0)
             return;
-        Estado.EstadoVistas[$"referencias:{tipoAnterior}"] = new VistaReferencias
+        Sesion.EstadoVistas[$"referencias:{tipoAnterior}"] = new VistaReferencias
         {
 
             Orden = orden,
@@ -65,7 +88,15 @@ public partial class Referencias : IDisposable
         public int Pagina { get; set; } = 1;
     }
 
-    private void CambiarOrden() => pagina = 1;
-    private void CambiarPagina(int value) => pagina = value;
+    private async Task CambiarOrden()
+    {
+        pagina = 1;
+        await Consultar();
+    }
+    private async Task CambiarPagina(int value)
+    {
+        pagina = value;
+        await Consultar();
+    }
 }
 

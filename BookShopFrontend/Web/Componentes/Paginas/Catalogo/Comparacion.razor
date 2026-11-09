@@ -53,10 +53,10 @@
                         @foreach (var book in ComparedBooks)
                         {
                             <td>
-                                <strong>@EstadoDemostracion.Dinero(book.Precio)</strong>
+                                <strong>@Presentacion.Dinero(book.Precio)</strong>
                                 @if (book.Descuento > 0)
                                 {
-                                    <del>@EstadoDemostracion.Dinero(book.PrecioOriginal)</del>
+                                    <del>@Presentacion.Dinero(book.PrecioOriginal)</del>
                                     <span class="badge badge-bookshop discount-badge">-@book.Descuento%</span>
                                 }
                             </td>

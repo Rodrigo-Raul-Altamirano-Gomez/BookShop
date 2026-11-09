@@ -15,7 +15,7 @@
             Mis seguimientos
             <span>@Referencias.Count @Tipo</span>
         </h1>
-        @if (Estado.Usuario is not null)
+        @if (Sesion.Usuario is not null)
         {
             <label class="sort-field form-label d-flex align-items-center gap-2">
                 Ordenar por:
@@ -26,13 +26,13 @@
             </label>
         }
     </div>
-    @if (Estado.Usuario is null)
+    @if (Sesion.Usuario is null)
     {
         <div class="empty-state card border-0 text-center align-items-center py-5">
             <Icono Nombre="follow" />
             <h2>Sigue lo que te inspira</h2>
             <p>Inicia sesión para consultar tus seguimientos.</p>
-            <button class="btn btn-primary" @onclick="Estado.MostrarAcceso">Iniciar sesión</button>
+            <button class="btn btn-primary" @onclick="Sesion.MostrarAcceso">Iniciar sesión</button>
         </div>
     }
     else

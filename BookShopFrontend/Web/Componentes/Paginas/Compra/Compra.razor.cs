@@ -1,155 +1,155 @@
 using Microsoft.AspNetCore.Components;
-using Web.Demostracion;
+using Web.Servicios;
 using Web.Modelos;
 
 namespace Web.Componentes.Paginas.Compra;
 
 public partial class Compra : IDisposable
 {
-    [Inject]
-    private EstadoDemostracion Estado { get; set; } = default!;
+    [Microsoft.AspNetCore.Components.Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
 
-    [Inject]
-    private NavigationManager Navegacion { get; set; } = default!;
+    [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
 
+    [Microsoft.AspNetCore.Components.Inject] protected CompraServicio Compras { get; set; } = default!;
+
+    [Microsoft.AspNetCore.Components.Inject] protected CuentaServicio Cuenta { get; set; } = default!;
+
+    [Inject] private SesionUsuario Sesion { get; set; } = default!;
+    [Inject] private NavigationManager Navegacion { get; set; } = default!;
     private int? direccionId, metodoId, cuponId;
     private int indiceDireccion, indiceMetodo, indiceCupon;
     private bool formularioDireccion, formularioMetodo, procesando;
-    private bool rechazoMostrado;
     private string? errorPago;
-    private const decimal EnvioEjemplo = 7.99m;
-    private decimal Productos => Estado.Carrito.Sum(line => (Estado.BuscarLibro(line.Key)?
-        .PrecioOriginal ?? 0) * line.Value);
-    private decimal Subtotal => Estado.Carrito.Sum(line => (Estado.BuscarLibro(line.Key)?
-        .Precio ?? 0) * line.Value);
-    // Importes ilustrativos: aquí no se reproducen las fórmulas ni condiciones del backend.
-    private decimal DescuentoEjemplo => cuponId is null ? 0 : 10m;
-    private decimal Total => Math.Max(0, Subtotal - DescuentoEjemplo + EnvioEjemplo);
-    private List<Cupon?> Cupones => new Cupon?[]
-    {
-        null
-    }.Concat(Estado.Cupones.Where(c => c.Estado == "Disponible")).ToList();
+    private ResumenCompraDTO? Resumen => Compras.Preparacion?.Resumen;
+    private decimal Productos => Resumen?.SubtotalProductos ?? 0;
+    private decimal Subtotal => Productos - (Resumen?.DescuentoLibros ?? 0);
+    private decimal DescuentoCupon => Resumen?.DescuentoCupon ?? 0;
+    private decimal CostoEnvio => Resumen?.CostoEnvio ?? 0;
+    private decimal Total => Resumen?.Total ?? 0;
+    private List<Cupon?> Cupones => new Cupon?[] { null }.Concat(Cuenta.Cupones.Where(c => c.Estado == "Disponible")).ToList();
     private IEnumerable<Cupon?> CuponesVisibles => Cupones.Skip(indiceCupon).Take(2);
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        direccionId = Estado.Direcciones.FirstOrDefault(a => a.Predeterminada)?.Id;
-        metodoId = Estado.Metodos.FirstOrDefault(m => m.Predeterminada)?.Id;
-        Estado.Cambiado += Actualizar;
+        Sesion.Cambiado += Actualizar;
+        if (Sesion.Usuario is null)
+            return;
+        try
+        {
+            await Cuenta.CargarDatosCompra();
+            MostrarPreparacion(await Api.Post<PreparacionCompraDTO>("pedidos/preparacion"));
+            Sesion.Notificar();
+        }
+        catch (InvalidOperationException e)
+        {
+            Sesion.Avisar(e.Message);
+        }
     }
 
+    private void MostrarPreparacion(PreparacionCompraDTO preparacion)
+    {
+        Compras.Preparacion = preparacion;
+        direccionId = preparacion.Seleccion.IdDireccionEnvio == 0 ? null : preparacion.Seleccion.IdDireccionEnvio;
+        metodoId = preparacion.Seleccion.IdMetodoPago == 0 ? null : preparacion.Seleccion.IdMetodoPago;
+        cuponId = preparacion.Seleccion.IdCupon == 0 ? null : preparacion.Seleccion.IdCupon;
+        Compras.MostrarCarrito(preparacion.Resumen);
+    }
     private void Actualizar() => _ = InvokeAsync(StateHasChanged);
     private void AbrirDireccion() => formularioDireccion = true;
     private void AbrirMetodo() => formularioMetodo = true;
     private void CerrarDireccion() => formularioDireccion = false;
     private void CerrarMetodo() => formularioMetodo = false;
-    private void GuardarDireccion(Direccion address)
+    private async Task GuardarDireccion(Direccion direccion)
     {
-        address.Id = Estado.Direcciones.Select(a => a.Id).DefaultIfEmpty().Max() + 1;
-        if (address.Predeterminada)
-            foreach (var item in Estado.Direcciones)
-                item.Predeterminada = false;
-        Estado.Direcciones.Add(address);
-        direccionId = address.Id;
-        indiceDireccion = Math.Max(0, Estado.Direcciones.Count - 2);
-        formularioDireccion = false;
-        Estado.Avisar("Dirección añadida.");
-    }
-
-    private void GuardarMetodo(MetodoPago method)
-    {
-        method.Id = Estado.Metodos.Select(m => m.Id).DefaultIfEmpty().Max() + 1;
-        if (method.Predeterminada)
-            foreach (var item in Estado.Metodos)
-                item.Predeterminada = false;
-        Estado.Metodos.Add(method);
-        metodoId = method.Id;
-        indiceMetodo = Math.Max(0, Estado.Metodos.Count - 2);
-        formularioMetodo = false;
-        Estado.Avisar("Método añadido.");
-    }
-
-    private void SeleccionarCupon(Cupon? coupon)
-    {
-        // El segundo cupón representa el estado visual de una selección rechazada.
-        if (coupon?.Id == 2)
+        try
         {
-            Estado.Avisar("Este cupón requiere una compra mínima de " + EstadoDemostracion.Dinero(coupon
-                .Minimo) + ".");
-            return;
+            await Cuenta.GuardarDireccion(direccion);
+            formularioDireccion = false;
+            Sesion.Notificar();
         }
-
-        cuponId = coupon?.Id;
+        catch (InvalidOperationException e)
+        {
+            Sesion.Error = e.Message;
+            Sesion.Avisar(e.Message);
+        }
     }
+    private async Task GuardarMetodo(MetodoPago metodo)
+    {
+        try
+        {
+            await Cuenta.GuardarMetodo(metodo);
+            formularioMetodo = false;
+            Sesion.Notificar();
+        }
+        catch (InvalidOperationException e)
+        {
+            Sesion.Error = e.Message;
+            Sesion.Avisar(e.Message);
+        }
+    }
+
+    private async Task Seleccionar(int? direccion, int? metodo, int? cupon)
+    {
+        if (procesando)
+            return;
+        procesando = true;
+        errorPago = null;
+        try
+        {
+            MostrarPreparacion(await Api.Put<PreparacionCompraDTO>("pedidos/preparacion",
+                new SeleccionCompraDTO
+                {
+                    IdDireccionEnvio = direccion ?? 0,
+                    IdMetodoPago = metodo ?? 0,
+                    IdCupon = cupon ?? 0
+                }));
+        }
+        catch (InvalidOperationException e) { errorPago = e.Message; }
+        finally { procesando = false; }
+    }
+    private Task SeleccionarCupon(Cupon? cupon) => Seleccionar(direccionId, metodoId, cupon?.Id);
 
     private async Task Confirmar()
     {
-        if (procesando || direccionId is null || metodoId is null)
+        if (procesando || Compras.Preparacion?.PuedePagar != true)
             return;
         procesando = true;
-        await Task.Delay(600);
-        // Un ejemplo fijo para revisar el rechazo sin implementar una simulación de negocio.
-        if (metodoId == 3 && !rechazoMostrado)
+        errorPago = null;
+        try
         {
-            rechazoMostrado = true;
-            procesando = false;
-            errorPago = "El pago fue rechazado. Puedes volver a intentarlo o elegir otro método.";
-            return;
-        }
-
-        var pedido = new Pedido
-        {
-
-            Id = Estado.Pedidos.Select(o => o.Id).DefaultIfEmpty().Max() + 1,
-
-            FechaPago = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-5)).DateTime,
-
-            EntregaEstimada = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-5)).DateTime.AddMinutes(5),
-
-            Estado = "En almacén",
-
-            Direccion = Estado.Direcciones.First(a => a.Id == direccionId),
-
-            Metodo = Estado.Metodos.First(m => m.Id == metodoId),
-
-            Productos = Productos,
-
-            DescuentoLibro = Productos - Subtotal,
-
-            Subtotal = Subtotal,
-
-            DescuentoCupon = DescuentoEjemplo,
-
-            Envio = EnvioEjemplo,
-
-            Total = Total,
-
-            Lineas = Estado.Carrito.Select(line =>
+            var detalle = await Api.Post<DetallePedidoDTO>("pedidos/confirmacion");
+            Compras.Pedidos.Insert(0, Presentacion.Pedido(detalle));
+            // El pedido ya fue confirmado; no se envía otra confirmación ni se altera su detalle.
+            Compras.MostrarCarrito(new ResumenCompraDTO
             {
-                var book = Estado.BuscarLibro(line.Key)!;
-                return new LineaPedido
+                Items = [],
+                SubtotalProductos = 0,
+                DescuentoLibros = 0,
+                IdCupon = 0,
+                PorcentajeCupon = 0,
+                DescuentoCupon = 0,
+                PorcentajeEnvio = 0,
+                CostoEnvio = 0,
+                Total = 0,
+                CantidadLibros = 0
+            });
+            Compras.Preparacion = null;
+            Navegacion.NavigateTo($"/confirmacion/{detalle.Pedido.Id}");
+        }
+        catch (InvalidOperationException e)
+        {
+            errorPago = e.Message;
+            // Si negocio actualizó los importes, mostrar la preparación vigente antes del reintento.
+            if (Sesion.Usuario is not null)
+            {
+                try
                 {
-
-                    IdLibro = line.Key,
-
-                    Cantidad = line.Value,
-
-                    PrecioOriginal = book.PrecioOriginal,
-
-                    Precio = book.Precio,
-
-                    Descuento = book.Descuento
-
-                };
-            }).ToList()
-
-        };
-        Estado.Pedidos.Insert(0, pedido);
-        Estado.Carrito.Clear();
-        Estado.Notificar();
-        Navegacion.NavigateTo($"/confirmacion/{pedido.Id}");
+                    MostrarPreparacion(await Api.Get<PreparacionCompraDTO>("pedidos/preparacion"));
+                }
+                catch (InvalidOperationException) { Compras.Preparacion = null; }
+            }
+        }
+        finally { procesando = false; }
     }
-
-    public void Dispose() => Estado.Cambiado -= Actualizar;
+    public void Dispose() => Sesion.Cambiado -= Actualizar;
 }
-

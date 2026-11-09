@@ -45,7 +45,7 @@ mvn -pl Service -am clean verify
 El resultado es `Service/target/bookshop.war`. Desplegar en un servidor Jakarta
 EE 11 compatible con Java 25, por ejemplo Payara 7. El servidor aporta Jakarta
 REST, CDI y Servlet; no se incluyen esas implementaciones dentro del WAR.
-La base de la API es `https://HOST:PUERTO/bookshop/api`.
+La base de la API es `https://HOST:PUERTO/bookshop/webresources`.
 
 Preparar MySQL con el esquema vigente y completar
 `DBManager/src/main/resources/db.properties` antes de empaquetar, según el README
@@ -98,7 +98,7 @@ Carrito y preparación comparten la memoria por actor que ya proporciona Busines
 
 ### Cuenta
 
-| Método | Ruta relativa a /api | Entrada o resultado |
+| Método | Ruta relativa a /webresources | Entrada o resultado |
 | --- | --- | --- |
 | POST | `/cuenta/registro` | RegistroUsuarioDTO → AccesoUsuarioDTO |
 | POST | `/cuenta/sesion` | CredencialesDTO → AccesoUsuarioDTO |
@@ -116,7 +116,7 @@ Los tipos de entrada y resultado corresponden al método Business indicado.
 Los cuerpos complejos se reciben directamente como el DTO del contrato, sin
 envoltorios adicionales.
 
-| Método | Ruta relativa a /api | Contrato Business | Acceso |
+| Método | Ruta relativa a /webresources | Contrato Business | Acceso |
 | --- | --- | --- | --- |
 | POST | `/autores/busqueda` | AutorBO.buscar | Público; Business comprueba el alcance |
 | POST | `/autores/opciones` | AutorBO.buscarOpciones | Público; Business comprueba el alcance |

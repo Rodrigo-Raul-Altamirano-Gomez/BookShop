@@ -1,8 +1,11 @@
-# Despliegue de la interfaz de demostración
+# Despliegue de la aplicación web
 
 Publicado en [BookShop](https://bookshop-demo.onrender.com), mediante un
 **Web Service de Render**, con runtime Docker y plan Free.
-Solo se publica Web; sus datos de ejemplo son temporales y no utiliza el backend.
+Esta versión consume el backend Java. Configurar `Backend__Url` con la URL HTTPS
+pública o accesible desde el servidor C#, terminada en `/bookshop/webresources/`.
+El backend debe estar desplegado y tener acceso a MySQL antes de usar la web.
+La publicación anterior de demostración no se actualiza al modificar este repositorio.
 
 Repositorio privado: [BookShop-Web](https://github.com/Rodrigo-Raul-Altamirano-Gomez/BookShop-Web).
 Servicio: [panel de Render](https://dashboard.render.com/web/srv-db3gso7avr4c739oakog).
@@ -25,6 +28,7 @@ Render necesita acceso a ese repositorio. Se puede crear un Blueprint usando
 | Docker Build Context | `.` |
 | Health Check Path | `/salud` |
 | Variable de entorno | `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` |
+| Backend REST | `Backend__Url=https://HOST/bookshop/webresources/` |
 
 ## Qué ejecuta
 

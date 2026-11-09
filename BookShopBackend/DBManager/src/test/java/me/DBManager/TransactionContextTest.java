@@ -210,9 +210,9 @@ public class TransactionContextTest {
         }
     }
 
-    private static class DriverPrueba implements Driver {
-        private volatile boolean rechazarConexion;
-        private volatile Properties ultimaConfiguracion;
+    public static class DriverPrueba implements Driver {
+        private static volatile boolean rechazarConexion;
+        private static volatile Properties ultimaConfiguracion;
 
         @Override
         public Connection connect(String url, Properties info) throws SQLException {

@@ -1,10 +1,28 @@
-using Web.Demostracion;
+using Web.Servicios;
 using Web.Modelos;
 
 namespace Web.Componentes.Paginas.Cuenta;
 
 public partial class DatosCompra
 {
+    [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
+
+    [Microsoft.AspNetCore.Components.Inject] protected CuentaServicio Cuenta { get; set; } = default!;
+
+    protected override async Task CargarDatos()
+    {
+        if (Sesion.Usuario is not null)
+            try
+            {
+                await Cuenta.CargarDatosCompra();
+                Sesion.Notificar();
+            }
+            catch (InvalidOperationException e)
+            {
+                Sesion.Error = e.Message;
+                Sesion.Avisar(e.Message);
+            }
+    }
     private string Pestana { get; set; } = "addresses";
     private string ModalAbierto { get; set; } = "";
     private Direccion? DireccionEnEdicion
@@ -18,19 +36,19 @@ public partial class DatosCompra
     private int Pagina { get; set; } = 1;
 
     private const int TamanoPagina = 10;
-    private int Cantidad => Estado.Usuario is null ? 0 : Pestana == "addresses" ? Estado.Direcciones.Count
-        : Pestana == "methods" ? Estado.Metodos.Count : Estado.Cupones.Count;
+    private int Cantidad => Sesion.Usuario is null ? 0 : Pestana == "addresses" ? Cuenta.Direcciones.Count
+        : Pestana == "methods" ? Cuenta.Metodos.Count : Cuenta.Cupones.Count;
     private string EtiquetaCantidad => Pestana == "addresses" ? "direcciones" : Pestana == "methods"
         ? "métodos" : "cupones";
     private int TotalPaginas => Math.Max(1, (int)Math.Ceiling(Cantidad / (double)TamanoPagina));
-    private IEnumerable<Direccion> DireccionesPagina => Estado.Direcciones.Skip((
+    private IEnumerable<Direccion> DireccionesPagina => Cuenta.Direcciones.Skip((
         Pagina - 1) * TamanoPagina).Take(TamanoPagina);
-    private IEnumerable<MetodoPago> MetodosPagina => Estado.Metodos.Skip((Pagina - 1) * TamanoPagina).Take(
+    private IEnumerable<MetodoPago> MetodosPagina => Cuenta.Metodos.Skip((Pagina - 1) * TamanoPagina).Take(
         TamanoPagina);
-    private IEnumerable<Cupon> CuponesPagina => Estado.Cupones.Skip((Pagina - 1) * TamanoPagina).Take(
+    private IEnumerable<Cupon> CuponesPagina => Cuenta.Cupones.Skip((Pagina - 1) * TamanoPagina).Take(
         TamanoPagina);
 
-    private static string Importe(decimal value) => EstadoDemostracion.Dinero(value);
+    private static string Importe(decimal value) => Presentacion.Dinero(value);
     private static string TituloMetodo(MetodoPago metodo) => metodo.Alias.Length > 0 ? metodo.Alias
         : metodo.Tipo;
     private static string ClaseCupon(Cupon cupon) => cupon.Estado == "Disponible" ? "success" : cupon
@@ -80,70 +98,95 @@ public partial class DatosCompra
         MetodoEnEdicion = null;
     }
 
-    private void GuardarDireccion(Direccion direccion)
+    private async Task GuardarDireccion(Direccion direccion)
     {
-        if (direccion.Predeterminada)
-            foreach (var elemento in Estado.Direcciones)
-                elemento.Predeterminada = false;
-        if (DireccionEnEdicion is null)
+        try
         {
-            direccion.Id = Estado.Direcciones.Select(elemento => elemento.Id).DefaultIfEmpty().Max() + 1;
-            Estado.Direcciones.Add(direccion);
+            await Cuenta.GuardarDireccion(direccion, DireccionEnEdicion?.Id ?? 0);
+            Cerrar();
+            Sesion.Notificar();
         }
-        else
-            Estado.Direcciones[Estado.Direcciones.IndexOf(DireccionEnEdicion)] = direccion;
-        Cerrar();
-        Estado.Notificar();
-        Estado.Avisar("Dirección guardada.");
-    }
-
-    private void GuardarMetodo(MetodoPago metodo)
-    {
-        if (metodo.Predeterminada)
-            foreach (var elemento in Estado.Metodos)
-                elemento.Predeterminada = false;
-        if (MetodoEnEdicion is null)
+        catch (InvalidOperationException e)
         {
-            metodo.Id = Estado.Metodos.Select(elemento => elemento.Id).DefaultIfEmpty().Max() + 1;
-            Estado.Metodos.Add(metodo);
+            Sesion.Avisar(e.Message);
         }
-        else
-            Estado.Metodos[Estado.Metodos.IndexOf(MetodoEnEdicion)] = metodo;
-        Cerrar();
-        Estado.Notificar();
-        Estado.Avisar("Método de pago guardado.");
     }
 
-    private void EliminarDireccion(Direccion direccion)
+    private async Task GuardarMetodo(MetodoPago metodo)
     {
-        Estado.Direcciones.Remove(direccion);
-        Pagina = Math.Min(Pagina, TotalPaginas);
-        Estado.Notificar();
-        Estado.Avisar("Dirección eliminada.");
+        try
+        {
+            await Cuenta.GuardarMetodo(metodo, MetodoEnEdicion?.Id ?? 0);
+            Cerrar();
+            Sesion.Notificar();
+        }
+        catch (InvalidOperationException e)
+        {
+            Sesion.Error = e.Message;
+            Sesion.Avisar(e.Message);
+        }
     }
 
-    private void EliminarMetodo(MetodoPago metodo)
+    private async Task EliminarDireccion(Direccion direccion)
     {
-        Estado.Metodos.Remove(metodo);
-        Pagina = Math.Min(Pagina, TotalPaginas);
-        Estado.Notificar();
-        Estado.Avisar("Método de pago eliminado.");
+        try
+        {
+            await Api.Delete($"cuenta/direcciones/{direccion.Id}");
+            await Cuenta.CargarDatosCompra();
+            Pagina = Math.Min(Pagina, TotalPaginas);
+            Sesion.Notificar();
+        }
+        catch (InvalidOperationException e)
+        {
+            Sesion.Error = e.Message;
+            Sesion.Avisar(e.Message);
+        }
     }
 
-    private void PredeterminarDireccion(Direccion direccion)
+    private async Task EliminarMetodo(MetodoPago metodo)
     {
-        foreach (var elemento in Estado.Direcciones)
-            elemento.Predeterminada = elemento == direccion;
-        Estado.Notificar();
-        Estado.Avisar("Dirección predeterminada actualizada.");
+        try
+        {
+            await Api.Delete($"cuenta/metodos/{metodo.Id}");
+            await Cuenta.CargarDatosCompra();
+            Pagina = Math.Min(Pagina, TotalPaginas);
+            Sesion.Notificar();
+        }
+        catch (InvalidOperationException e)
+        {
+            Sesion.Error = e.Message;
+            Sesion.Avisar(e.Message);
+        }
     }
 
-    private void PredeterminarMetodo(MetodoPago metodo)
+    private async Task PredeterminarDireccion(Direccion direccion)
     {
-        foreach (var elemento in Estado.Metodos)
-            elemento.Predeterminada = elemento == metodo;
-        Estado.Notificar();
-        Estado.Avisar("Método predeterminado actualizado.");
+        try
+        {
+            await Api.Put($"cuenta/direcciones/{direccion.Id}/predeterminada");
+            await Cuenta.CargarDatosCompra();
+            Sesion.Notificar();
+        }
+        catch (InvalidOperationException e)
+        {
+            Sesion.Error = e.Message;
+            Sesion.Avisar(e.Message);
+        }
+    }
+
+    private async Task PredeterminarMetodo(MetodoPago metodo)
+    {
+        try
+        {
+            await Api.Put($"cuenta/metodos/{metodo.Id}/predeterminado");
+            await Cuenta.CargarDatosCompra();
+            Sesion.Notificar();
+        }
+        catch (InvalidOperationException e)
+        {
+            Sesion.Error = e.Message;
+            Sesion.Avisar(e.Message);
+        }
     }
 }
 

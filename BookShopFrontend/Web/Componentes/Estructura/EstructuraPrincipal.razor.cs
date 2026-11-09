@@ -1,12 +1,18 @@
 using Microsoft.AspNetCore.Components;
-using Web.Demostracion;
+using Web.Servicios;
 
 namespace Web.Componentes.Estructura;
 
 public partial class EstructuraPrincipal : IDisposable
 {
+    [Microsoft.AspNetCore.Components.Inject] protected CompraServicio Compras { get; set; } = default!;
+
+    [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
+
+    [Microsoft.AspNetCore.Components.Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
+
     [Inject]
-    private EstadoDemostracion Estado { get; set; } = default!;
+    private SesionUsuario Sesion { get; set; } = default!;
 
     [Inject]
     private NavigationManager Navegacion { get; set; } = default!;
@@ -16,16 +22,16 @@ public partial class EstructuraPrincipal : IDisposable
     private string? aviso, informacion;
     private CancellationTokenSource? temporizadorAviso;
     private static readonly (string Etiqueta, string Icono, string Ruta)[] EnlacesCuenta = [("Mi perfil",
-         "user", "/mi-perfil"), ("Mis pedidos", "book", "/mis-pedidos"), ("Deseados y favoritos", "heart",
-              "/deseados"), ("Mis reseñas", "star", "/mis-resenas"), ("Mis seguimientos", "follow",
-                   "/mis-seguimientos"), ("Datos de compra", "card", "/datos-compra"), ("Mis solicitudes",
-                        "flag", "/mis-solicitudes")];
-    protected override void OnInitialized()
+         "user", "/mi-perfil"), ("Deseados y favoritos", "heart",
+              "/deseados"), ("Mis seguimientos", "follow",
+                   "/mis-seguimientos"), ("Datos de compra", "card", "/datos-compra")];
+    protected override async Task OnInitializedAsync()
     {
-        Estado.Cambiado += Actualizar;
-        Estado.AccesoSolicitado += AbrirAcceso;
-        Estado.AvisoSolicitado += MostrarAviso;
+        Sesion.Cambiado += Actualizar;
+        Sesion.AccesoSolicitado += AbrirAcceso;
+        Sesion.AvisoSolicitado += MostrarAviso;
         Navegacion.LocationChanged += CambioUbicacion;
+        await Catalogo.Inicializar();
     }
 
     private void Actualizar() => _ = InvokeAsync(StateHasChanged);
@@ -39,7 +45,7 @@ public partial class EstructuraPrincipal : IDisposable
     private void Buscar() => Navegacion.NavigateTo("/catalogo?q=" + Uri.EscapeDataString(textoBusqueda));
     private void AbrirCuenta()
     {
-        if (Estado.Usuario is null)
+        if (Sesion.Usuario is null)
             AbrirAcceso();
         else
             cuentaAbierta = true;
@@ -60,19 +66,29 @@ public partial class EstructuraPrincipal : IDisposable
         Navegacion.NavigateTo(ruta);
     }
 
-    private void CerrarSesion()
+    private async Task CerrarSesion()
     {
-        Estado.Usuario = null;
+        try
+        {
+            try
+            {
+                await Api.Delete("cuenta/sesion");
+            }
+            finally { Sesion.LimpiarCuenta(); }
+            Sesion.Notificar();
+        }
+        catch (InvalidOperationException e)
+        {
+            Sesion.Avisar(e.Message);
+        }
         cuentaAbierta = false;
-        Estado.Notificar();
         Navegacion.NavigateTo("/");
-        Estado.Avisar("Has cerrado sesión.");
     }
 
     private void QuitarComparacion()
     {
-        Estado.IdComparacion = null;
-        Estado.Notificar();
+        Sesion.IdComparacion = null;
+        Sesion.Notificar();
     }
 
     private void CerrarInformacion() => informacion = null;
@@ -80,10 +96,10 @@ public partial class EstructuraPrincipal : IDisposable
     {
         "Ayuda" => ("Encuentra tu próxima lectura desde el catálogo. Para consultar "
             + "pedidos y datos de compra, abre Cuenta en el encabezado."),
-        "Privacidad" => ("Esta versión utiliza datos de ejemplo. Los cambios de pantalla se "
-            + "mantienen durante la sesión y se restablecen al recargar."),
+        "Privacidad" => ("Los datos de tu cuenta se guardan en el backend. La sesión se "
+            + "cierra al salir o cuando vence por inactividad."),
         _ => ("BookShop es un proyecto académico de una tienda de libros. Las "
-            + "compras y solicitudes de esta versión son demostraciones visuales.")
+            + "compras utilizan un pago simulado para fines académicos.")
     };
 
     private async void MostrarAviso(string mensaje)
@@ -119,9 +135,9 @@ public partial class EstructuraPrincipal : IDisposable
 
     public void Dispose()
     {
-        Estado.Cambiado -= Actualizar;
-        Estado.AccesoSolicitado -= AbrirAcceso;
-        Estado.AvisoSolicitado -= MostrarAviso;
+        Sesion.Cambiado -= Actualizar;
+        Sesion.AccesoSolicitado -= AbrirAcceso;
+        Sesion.AvisoSolicitado -= MostrarAviso;
         Navegacion.LocationChanged -= CambioUbicacion;
         temporizadorAviso?.Cancel();
         temporizadorAviso?.Dispose();

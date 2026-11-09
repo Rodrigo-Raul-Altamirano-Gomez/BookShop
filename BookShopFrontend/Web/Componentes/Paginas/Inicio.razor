@@ -99,37 +99,4 @@
             }
         </div>
     </section>
-    <section class="home-section">
-        <div class="section-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
-            <h2>Más populares</h2>
-            <a href="/populares">
-                Ver más
-                <Icono Nombre="arrow" />
-            </a>
-        </div>
-        <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-4">
-            @foreach (var book in LibrosPopulares)
-            {
-                <TarjetaLibro Libro="book" />
-            }
-        </div>
-    </section>
-    @if (Estado.Usuario is not null)
-    {
-        <section class="home-section">
-            <div class="section-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
-                <h2>Para ti</h2>
-                <a href="/para-ti">
-                    Ver más
-                    <Icono Nombre="arrow" />
-                </a>
-            </div>
-            <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-4">
-                @foreach (var book in LibrosPersonales)
-                {
-                    <TarjetaLibro Libro="book" />
-                }
-            </div>
-        </section>
-    }
 </div>

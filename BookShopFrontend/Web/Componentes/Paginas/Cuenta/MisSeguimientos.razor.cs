@@ -4,6 +4,24 @@ namespace Web.Componentes.Paginas.Cuenta;
 
 public partial class MisSeguimientos
 {
+    [Microsoft.AspNetCore.Components.Inject] protected CuentaServicio Cuenta { get; set; } = default!;
+
+    [Microsoft.AspNetCore.Components.Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
+
+    protected override async Task CargarDatos()
+    {
+        if (Sesion.Usuario is not null)
+            try
+            {
+                await Cuenta.CargarSeguimientos();
+                Sesion.Notificar();
+            }
+            catch (InvalidOperationException e)
+            {
+                Sesion.Error = e.Message;
+                Sesion.Avisar(e.Message);
+            }
+    }
     private const string ClaveVista = "cuenta:mis-seguimientos";
     private string Tipo { get; set; } = "autores";
     private string Orden { get; set; } = "name";
@@ -16,12 +34,10 @@ public partial class MisSeguimientos
     {
         get
         {
-            if (Estado.Usuario is null)
+            if (Sesion.Usuario is null)
                 return [];
-            var referencias = Estado.Referencias.Where(referencia => referencia.Tipo == Tipo && Estado
-                .Seguimientos.Contains($"{referencia.Tipo}:{referencia.Id}"));
-            return (Orden == "recent" ? referencias.OrderByDescending(referencia => Estado
-                .OrdenSeguimientos.GetValueOrDefault($"{referencia.Tipo}:{referencia.Id}")) : referencias
+            var referencias = Catalogo.Referencias.Where(referencia => referencia.Tipo == Tipo && Cuenta.Seguimientos.Contains($"{referencia.Tipo}:{referencia.Id}"));
+            return (Orden == "recent" ? referencias.OrderByDescending(referencia => Cuenta.OrdenSeguimientos.GetValueOrDefault($"{referencia.Tipo}:{referencia.Id}")) : referencias
                     .OrderBy(referencia => referencia.Nombre)).ToList();
         }
     }
@@ -32,16 +48,16 @@ public partial class MisSeguimientos
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        if (Estado.EstadoVistas.TryGetValue(ClaveVista, out var guardado)
+        if (Sesion.EstadoVistas.TryGetValue(ClaveVista, out var guardado)
             && guardado is VistaSeguimientos vista)
         {
             Tipo = vista.Tipo;
             Orden = vista.Orden;
-            Pagina = Estado.Usuario is null ? vista.Pagina : Math.Min(vista.Pagina, TotalPaginas);
+            Pagina = Sesion.Usuario is null ? vista.Pagina : Math.Min(vista.Pagina, TotalPaginas);
         }
     }
 
-    private void GuardarVista() => Estado.EstadoVistas[ClaveVista] = new VistaSeguimientos
+    private void GuardarVista() => Sesion.EstadoVistas[ClaveVista] = new VistaSeguimientos
     {
 
         Tipo = Tipo,

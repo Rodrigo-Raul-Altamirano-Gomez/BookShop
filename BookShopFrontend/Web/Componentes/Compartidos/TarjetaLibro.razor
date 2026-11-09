@@ -18,9 +18,9 @@
         <div class="book-price d-flex flex-wrap align-items-center gap-2">
             @if (Libro.Descuento > 0)
             {
-                <del>@EstadoDemostracion.Dinero(Libro.PrecioOriginal)</del>
+                <del>@Presentacion.Dinero(Libro.PrecioOriginal)</del>
             }
-            <strong>@EstadoDemostracion.Dinero(Libro.Precio)</strong>
+            <strong>@Presentacion.Dinero(Libro.Precio)</strong>
         </div>
     </a>
 </div>

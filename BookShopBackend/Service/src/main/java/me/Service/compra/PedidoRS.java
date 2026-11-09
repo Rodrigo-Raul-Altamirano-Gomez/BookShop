@@ -19,7 +19,6 @@ import me.Service.Servicios;
 import me.Service.Sesion;
 
 @Path("pedidos")
-@Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
 public class PedidoRS {
@@ -42,6 +41,7 @@ public class PedidoRS {
 
     @PUT
     @Path("preparacion")
+    @Consumes(MediaType.APPLICATION_JSON)
     public PreparacionCompraDTO seleccionar(SeleccionCompraDTO seleccion) throws NegocioException {
         return servicios.getPedidoBO().seleccionar(Sesion.exigirIdUsuario(peticion), seleccion);
     }

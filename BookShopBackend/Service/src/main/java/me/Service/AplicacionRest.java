@@ -18,7 +18,7 @@ import me.Service.usuario.MetodoPagoRS;
 import me.Service.usuario.SeguimientoRS;
 import me.Service.usuario.UsuarioRS;
 
-@ApplicationPath("/api")
+@ApplicationPath("webresources")
 public class AplicacionRest extends Application {
     @Override
     public Set<Class<?>> getClasses() {

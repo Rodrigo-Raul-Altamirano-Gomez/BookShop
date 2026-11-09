@@ -4,6 +4,8 @@ namespace Web.Componentes.Paginas.Cuenta;
 
 public partial class MiPerfil
 {
+    [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
+
     private string ModalAbierto { get; set; } = "";
     private string Nombre { get; set; } = "";
     private DateOnly Nacimiento
@@ -29,10 +31,10 @@ public partial class MiPerfil
 
     private void EditarPerfil()
     {
-        if (Estado.Usuario is null)
+        if (Sesion.Usuario is null)
             return;
-        Nombre = Estado.Usuario.Nombre;
-        Nacimiento = Estado.Usuario.Nacimiento;
+        Nombre = Sesion.Usuario.Nombre;
+        Nacimiento = Sesion.Usuario.Nacimiento;
         MensajeError = "";
         ModalAbierto = "profile";
     }
@@ -60,45 +62,55 @@ public partial class MiPerfil
         MostrarContrasenas = false;
     }
 
-    private void GuardarPerfil()
+    private async Task GuardarPerfil()
     {
-        if (Estado.Usuario is null || string.IsNullOrWhiteSpace(Nombre))
-            return;
-        Estado.Usuario.Nombre = Nombre.Trim();
-        Estado.Usuario.Nacimiento = Nacimiento;
-        Cerrar();
-        Estado.Notificar();
-        Estado.Avisar("Datos personales actualizados.");
-    }
-
-    private void GuardarContrasena()
-    {
-        if (!ContrasenasCompletas)
-            return;
-        if (NuevaContrasena != ConfirmacionContrasena)
+        try
         {
-            MensajeError = "Las contraseñas nuevas no coinciden.";
-            return;
+            Sesion.MostrarPerfil(await Api.Put<PerfilUsuarioDTO>("cuenta", new DatosPerfilDTO
+            {
+                Nombre = Nombre.Trim(),
+                FechaNacimiento = Nacimiento
+            }));
+            Cerrar();
+            Sesion.Notificar();
         }
-
-        Cerrar();
-        Estado.Avisar("Contraseña actualizada.");
+        catch (InvalidOperationException e) { MensajeError = e.Message; }
     }
 
-    private void Desactivar()
+    private async Task GuardarContrasena()
     {
-        if (ContrasenaActual.Length == 0)
-            return;
-        Cerrar();
-        Estado.Usuario = null;
-        Estado.Notificar();
-        Estado.Avisar("Tu cuenta ha sido desactivada.");
-        Navegacion.NavigateTo("/");
+        try
+        {
+            await Api.Put("cuenta/contrasenia", new CambioContraseniaDTO
+            {
+                ContraseniaActual = ContrasenaActual,
+                ContraseniaNueva = NuevaContrasena,
+                ConfirmacionContrasenia = ConfirmacionContrasena
+            });
+            Cerrar();
+            Sesion.Avisar("Contraseña actualizada.");
+        }
+        catch (InvalidOperationException e) { MensajeError = e.Message; }
+    }
+
+    private async Task Desactivar()
+    {
+        try
+        {
+            await Api.Post("cuenta/desactivacion", new
+            {
+                contraseniaActual = ContrasenaActual
+            });
+            Sesion.LimpiarCuenta();
+            Cerrar();
+            Navegacion.NavigateTo("/");
+        }
+        catch (InvalidOperationException e) { MensajeError = e.Message; }
     }
 
     private async Task CargarFoto(InputFileChangeEventArgs argumentos)
     {
-        if (Estado.Usuario is null || CargandoImagen)
+        if (Sesion.Usuario is null || CargandoImagen)
             return;
         var archivo = argumentos.File;
         ErrorImagen = "";
@@ -114,10 +126,17 @@ public partial class MiPerfil
             using var flujo = archivo.OpenReadStream(5 * 1024 * 1024);
             using var memoria = new MemoryStream();
             await flujo.CopyToAsync(memoria);
-            Estado.Usuario.Imagen = $"data:{archivo.ContentType};base64,{Convert.ToBase64String(memoria
-                .ToArray())}";
-            Estado.Notificar();
-            Estado.Avisar("Foto de perfil actualizada.");
+            Sesion.MostrarPerfil(await Api.Put<PerfilUsuarioDTO>("cuenta/imagen", new ImagenDTO
+            {
+                Contenido = memoria.ToArray().Select(n => (int)unchecked((sbyte)n)).ToArray(),
+                TipoMime = archivo.ContentType
+            }));
+            Sesion.Notificar();
+            Sesion.Avisar("Foto de perfil actualizada.");
+        }
+        catch (InvalidOperationException e)
+        {
+            ErrorImagen = e.Message;
         }
         catch (IOException)
         {
@@ -129,14 +148,17 @@ public partial class MiPerfil
         }
     }
 
-    private void QuitarFoto()
+    private async Task QuitarFoto()
     {
-        if (Estado.Usuario is null || CargandoImagen)
-            return;
-        Estado.Usuario.Imagen = "/images/user-placeholder.svg";
-        ErrorImagen = "";
-        Estado.Notificar();
-        Estado.Avisar("Foto de perfil retirada.");
+        try
+        {
+            Sesion.MostrarPerfil(await Api.Put<PerfilUsuarioDTO>("cuenta/imagen"));
+            Sesion.Notificar();
+        }
+        catch (InvalidOperationException e)
+        {
+            Sesion.Avisar(e.Message);
+        }
     }
 }
 

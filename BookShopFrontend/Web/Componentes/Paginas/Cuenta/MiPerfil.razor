@@ -11,13 +11,13 @@
         </ol>
     </nav>
     <h1 class="page-heading d-flex flex-wrap align-items-center justify-content-between gap-3">Mi perfil</h1>
-    @if (Estado.Usuario is null)
+    @if (Sesion.Usuario is null)
     {
         <div class="empty-state card border-0 text-center align-items-center py-5">
             <Icono Nombre="user" />
             <h2 class="d-flex align-items-center gap-3">Tu cuenta, en un solo lugar</h2>
             <p>Inicia sesión para consultar tu perfil.</p>
-            <button class="btn btn-primary" @onclick="Estado.MostrarAcceso">Iniciar sesión</button>
+            <button class="btn btn-primary" @onclick="Sesion.MostrarAcceso">Iniciar sesión</button>
         </div>
     }
     else
@@ -36,8 +36,8 @@
                         </button>
                     </div>
                     <div class="profile-photo d-flex align-items-center flex-wrap gap-3 py-3">
-                        <img class="rounded-circle" src="@Estado.Usuario.Imagen"
-                            alt="Foto de perfil de @Estado.Usuario.Nombre" />
+                        <img class="rounded-circle" src="@Sesion.Usuario.Imagen"
+                            alt="Foto de perfil de @Sesion.Usuario.Nombre" />
                         <div class="photo-actions d-flex flex-wrap gap-2">
                             <label class="btn btn-secondary photo-picker position-relative overflow-hidden"
                                 aria-label="Cambiar foto de perfil">
@@ -65,15 +65,15 @@
                     <dl class="profile-data mb-0">
                         <div class="border-top py-3">
                             <dt class="mb-2">Nombre completo</dt>
-                            <dd class="mb-0">@Estado.Usuario.Nombre</dd>
+                            <dd class="mb-0">@Sesion.Usuario.Nombre</dd>
                         </div>
                         <div class="border-top py-3">
                             <dt class="mb-2">Correo electrónico</dt>
-                            <dd class="mb-0">@Estado.Usuario.Correo</dd>
+                            <dd class="mb-0">@Sesion.Usuario.Correo</dd>
                         </div>
                         <div class="border-top py-3">
                             <dt class="mb-2">Fecha de nacimiento</dt>
-                            <dd class="mb-0">@Estado.Usuario.Nacimiento.ToString("dd/MM/yyyy")</dd>
+                            <dd class="mb-0">@Sesion.Usuario.Nacimiento.ToString("dd/MM/yyyy")</dd>
                         </div>
                     </dl>
                 </section>

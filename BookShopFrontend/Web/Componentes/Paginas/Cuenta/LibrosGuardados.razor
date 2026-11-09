@@ -11,14 +11,14 @@
                 aria-current="page">Deseados y favoritos</li>
         </ol>
     </nav>
-    @if (Estado.Usuario is null)
+    @if (Sesion.Usuario is null)
     {
         <h1 class="page-heading">Deseados y favoritos</h1>
         <div class="empty-state card border-0 text-center align-items-center py-5">
             <Icono Nombre="heart" />
             <h2>Guarda tus próximas lecturas</h2>
             <p>Inicia sesión para consultar tus listas.</p>
-            <button class="btn btn-primary" @onclick="Estado.MostrarAcceso">Iniciar sesión</button>
+            <button class="btn btn-primary" @onclick="Sesion.MostrarAcceso">Iniciar sesión</button>
         </div>
     }
     else
@@ -39,6 +39,6 @@
                 Favoritos
             </button>
         </div>
-        <ExploradorCatalogo Libros="Libros" Titulo="Deseados y favoritos" />
+        <ExploradorCatalogo Titulo="Deseados y favoritos" Favoritos="PestanaFavoritos" />
     }
 </div>
