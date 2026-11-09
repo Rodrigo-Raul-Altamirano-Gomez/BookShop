@@ -133,8 +133,8 @@ public class ResenaDAOImpl implements ResenaDAO {
         };
         boolean mostrarPortada = idLibro == 0;
         boolean mostrarUsuario = idUsuario == 0;
-        String imagenes = (mostrarPortada ? "l.portada, l.tipo_portada" : "NULL AS portada, NULL AS tipo_portada")
-                + ", " + (mostrarUsuario ? "u.imagen, u.tipo_imagen" : "NULL AS imagen, NULL AS tipo_imagen");
+        String imagenes = (mostrarPortada ? "l.portada" : "NULL AS portada")
+                + ", " + (mostrarUsuario ? "u.imagen" : "NULL AS imagen");
         String sql = "SELECT r.*, l.titulo, u.nombre, " + imagenes
                 + ", EXISTS(SELECT 1 FROM VOTO_UTIL v WHERE v.id_resena = r.id AND v.id_usuario = ? AND NOT v.eliminado) AS voto_propio"
                 + " FROM RESENA r JOIN LIBRO l ON l.id = r.id_libro JOIN USUARIO u ON u.id = r.id_usuario"
@@ -166,7 +166,7 @@ public class ResenaDAOImpl implements ResenaDAO {
 
     @Override
     public ResenaDTO obtenerReferencia(int id, boolean incluirImagenes) throws SQLException {
-        String imagenes = incluirImagenes ? "l.portada, l.tipo_portada, u.imagen, u.tipo_imagen" : "NULL AS portada, NULL AS tipo_portada, NULL AS imagen, NULL AS tipo_imagen";
+        String imagenes = incluirImagenes ? "l.portada, u.imagen" : "NULL AS portada, NULL AS imagen";
         String sql = "SELECT r.*, l.titulo, u.nombre, " + imagenes + ", FALSE AS voto_propio"
                 + " FROM RESENA r JOIN LIBRO l ON l.id = r.id_libro JOIN USUARIO u ON u.id = r.id_usuario WHERE r.id = ?";
         try (Connection conexion = DBManager.getConnection(); PreparedStatement sentencia = conexion.prepareStatement(sql)) {
@@ -176,11 +176,11 @@ public class ResenaDAOImpl implements ResenaDAO {
     }
 
     private ResenaDTO mapearResenaDTO(ResultSet resultado) throws SQLException {
-        byte[] portada = resultado.getBytes("portada");
-        byte[] imagen = resultado.getBytes("imagen");
+        String portada = resultado.getString("portada");
+        String imagen = resultado.getString("imagen");
         return new ResenaDTO(resultado.getInt("id"), resultado.getInt("id_libro"), resultado.getString("titulo"),
-                portada == null ? null : new ImagenDTO(portada, resultado.getString("tipo_portada")),
-                resultado.getString("nombre"), imagen == null ? null : new ImagenDTO(imagen, resultado.getString("tipo_imagen")),
+                portada == null ? null : new ImagenDTO(portada),
+                resultado.getString("nombre"), imagen == null ? null : new ImagenDTO(imagen),
                 resultado.getInt("puntuacion"), resultado.getString("comentario"), resultado.getObject("fecha", LocalDateTime.class),
                 resultado.getInt("cantidad_votos_utiles"), resultado.getBoolean("voto_propio"), resultado.getBoolean("activo") && !resultado.getBoolean("eliminado"));
     }

@@ -18,7 +18,7 @@ public partial class MisSeguimientos
             }
             catch (InvalidOperationException e)
             {
-                Sesion.Error = e.Message;
+                ErrorCarga = e.Message;
                 Sesion.Avisar(e.Message);
             }
     }

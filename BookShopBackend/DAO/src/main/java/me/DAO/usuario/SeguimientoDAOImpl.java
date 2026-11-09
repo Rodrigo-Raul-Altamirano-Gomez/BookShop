@@ -172,7 +172,7 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
                     total = resultado.getLong(1);
                 }
             }
-            String sql = "SELECT r.id, r.nombre, r.imagen, r.tipo_imagen" + condiciones
+            String sql = "SELECT r.id, r.nombre, r.imagen" + condiciones
                     + " ORDER BY " + ordenSQL + " LIMIT ? OFFSET ?";
             try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
                 sentencia.setString(1, tipo.name());
@@ -181,9 +181,9 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
                 sentencia.setLong(4, (long) (pagina - 1) * tamanioPagina);
                 try (ResultSet resultado = sentencia.executeQuery()) {
                     while (resultado.next()) {
-                        byte[] contenido = resultado.getBytes("imagen");
+                        String contenido = resultado.getString("imagen");
                         ImagenDTO imagen = contenido == null ? null
-                                : new ImagenDTO(contenido, resultado.getString("tipo_imagen"));
+                                : new ImagenDTO(contenido);
                         tarjetas.add(new TarjetaReferenciaDTO(resultado.getInt("id"),
                                 resultado.getString("nombre"), imagen));
                     }

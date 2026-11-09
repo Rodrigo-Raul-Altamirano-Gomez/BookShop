@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
 using Web.Servicios;
 using Web.Modelos;
 
@@ -20,8 +19,8 @@ public partial class FormularioAcceso
     }
 
     private bool registro, mostrarContrasena, reactivacion, enviando;
-    private string correo = "", contrasena = "", confirmacion = "", nombre = "", foto =
-         "/images/user-placeholder.svg";
+    private string correo = "", contrasena = "", confirmacion = "", nombre = "", urlFoto = "";
+    private string foto => string.IsNullOrWhiteSpace(urlFoto) ? "/images/user-placeholder.svg" : urlFoto;
     private DateTime nacimiento = new(1998, 6, 12);
     private string? error;
     private void PestanaAcceso()
@@ -37,29 +36,7 @@ public partial class FormularioAcceso
     }
 
     private void AlternarContrasena() => mostrarContrasena = !mostrarContrasena;
-    private void QuitarFoto() => foto = "/images/user-placeholder.svg";
-    private async Task ElegirFoto(InputFileChangeEventArgs e)
-    {
-        var archivo = e.File;
-        if (archivo.Size > 5 * 1024 * 1024 || archivo.ContentType is not ("image/jpeg" or "image/png"))
-        {
-            error = "Elige una imagen JPEG o PNG de hasta 5 MiB.";
-            return;
-        }
-
-        try
-        {
-            await using var flujo = archivo.OpenReadStream(5 * 1024 * 1024);
-            using var memoria = new MemoryStream();
-            await flujo.CopyToAsync(memoria);
-            foto = $"data:{archivo.ContentType};base64,{Convert.ToBase64String(memoria.ToArray())}";
-            error = null;
-        }
-        catch (IOException)
-        {
-            error = "No se pudo cargar la imagen. Inténtalo otra vez.";
-        }
-    }
+    private void QuitarFoto() => urlFoto = "";
 
     private async Task Enviar()
     {
@@ -82,7 +59,7 @@ public partial class FormularioAcceso
                     FechaNacimiento = DateOnly.FromDateTime(nacimiento),
                     Contrasenia = contrasena,
                     ConfirmacionContrasenia = confirmacion,
-                    Imagen = Presentacion.LeerImagen(foto)
+                    Imagen = Presentacion.ImagenDesdeUrl(urlFoto)
                 }
                 : new CredencialesDTO
                 {

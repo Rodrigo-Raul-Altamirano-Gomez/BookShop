@@ -49,8 +49,7 @@ public class AutorBOImpl implements AutorBO {
         autor.setNombre(datos.nombre());
         autor.setBiografia(datos.introduccion());
         if (registro.imagen() != null) {
-            autor.setImagen(registro.imagen().contenido());
-            autor.setTipoImagen(registro.imagen().tipoMime());
+            autor.setImagen(registro.imagen().url());
         }
         autor.setUsuarioCreacion(actor.getEmail());
         autor.setFechaCreacion(LocalDateTime.now(reloj));

@@ -1,6 +1,7 @@
 @page "/mi-perfil"
 @inherits PaginaCuenta
 <PageTitle>Mi perfil · BookShop</PageTitle>
+<Cargando EnCurso="@CargandoDatos" Error="@ErrorCarga">
 <div class="container py-4">
     <nav aria-label="Ruta de navegación">
         <ol class="breadcrumb">
@@ -39,16 +40,13 @@
                         <img class="rounded-circle" src="@Sesion.Usuario.Imagen"
                             alt="Foto de perfil de @Sesion.Usuario.Nombre" />
                         <div class="photo-actions d-flex flex-wrap gap-2">
-                            <label class="btn btn-secondary photo-picker position-relative overflow-hidden"
-                                aria-label="Cambiar foto de perfil">
+                            <input class="form-control" type="url" @bind="urlFoto"
+                                placeholder="https://…/foto.jpg" aria-label="URL de la foto de perfil" />
+                            <button class="btn btn-secondary" @onclick="GuardarFoto"
+                                disabled="@(CargandoImagen || string.IsNullOrWhiteSpace(urlFoto))">
                                 <Icono Nombre="edit" />
-                                Cambiar foto
-                                <InputFile
-                                    OnChange="CargarFoto"
-                                    accept="image/jpeg,image/png"
-                                    disabled="@CargandoImagen"
-                                    />
-                            </label>
+                                Guardar foto
+                            </button>
                             <button class="btn btn-secondary" @onclick="QuitarFoto" disabled="@CargandoImagen">
                                 Quitar
                             </button>
@@ -215,3 +213,4 @@
         </form>
     </Modal>
 }
+</Cargando>

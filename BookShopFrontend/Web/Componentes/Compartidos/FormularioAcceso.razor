@@ -19,14 +19,8 @@
         {
             <div class="profile-photo-picker d-flex align-items-center gap-3 mb-3">
                 <img src="@foto" alt="Vista previa de la foto de perfil" />
-                <label class="btn btn-outline-secondary icon-button photo-input" title="Elegir foto">
-                    <Icono Nombre="edit" />
-                    <InputFile
-                        OnChange="ElegirFoto"
-                        accept="image/jpeg,image/png"
-                        aria-label="Elegir foto de perfil"
-                        />
-                </label>
+                <input class="form-control" type="url" @bind="urlFoto" @bind:event="oninput"
+                    placeholder="https://…/foto.jpg" aria-label="URL de la foto de perfil" />
                 <button
                     type="button"
                     class="btn btn-outline-secondary icon-button"

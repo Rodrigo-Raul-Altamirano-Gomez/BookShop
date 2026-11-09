@@ -98,8 +98,7 @@ public class LibroBOImpl implements LibroBO {
             libro.setPrecioBase(precio);
             libro.setStockFisico(registro.stockInicial());
             if (registro.portada() != null) {
-                libro.setPortada(registro.portada().contenido());
-                libro.setTipoPortada(registro.portada().tipoMime());
+                libro.setPortada(registro.portada().url());
             }
             libro.setUsuarioCreacion(actor.getEmail());
             libro.setFechaCreacion(LocalDateTime.now(reloj));

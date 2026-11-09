@@ -24,17 +24,16 @@ import me.Model.entities.catalogo.Categoria;
 public class CategoriaDAOImpl implements CategoriaDAO {
     @Override
     public void insertar(Categoria categoria) throws SQLException {
-        String sql = "INSERT INTO CATEGORIA (nombre,descripcion,imagen,tipo_imagen,activo,usuario_creacion,fecha_creacion)"
-                + " VALUES (?,?,?,?,?,?,?)";
+        String sql = "INSERT INTO CATEGORIA (nombre,descripcion,imagen,activo,usuario_creacion,fecha_creacion)"
+                + " VALUES (?,?,?,?,?,?)";
         try (Connection conexion = DBManager.getConnection();
              PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             sentencia.setString(1, categoria.getNombre());
             sentencia.setString(2, categoria.getDescripcion());
-            sentencia.setBytes(3, categoria.getImagen());
-            sentencia.setString(4, categoria.getTipoImagen());
-            sentencia.setBoolean(5, categoria.isActivo());
-            sentencia.setString(6, categoria.getUsuarioCreacion());
-            sentencia.setTimestamp(7, Timestamp.valueOf(categoria.getFechaCreacion()));
+            sentencia.setString(3, categoria.getImagen());
+            sentencia.setBoolean(4, categoria.isActivo());
+            sentencia.setString(5, categoria.getUsuarioCreacion());
+            sentencia.setTimestamp(6, Timestamp.valueOf(categoria.getFechaCreacion()));
             sentencia.executeUpdate();
             try (ResultSet claves = sentencia.getGeneratedKeys()) {
                 if (!claves.next()) throw new SQLException("No se obtuvo el id del categoria.");
@@ -111,14 +110,13 @@ public class CategoriaDAOImpl implements CategoriaDAO {
 
     @Override
     public boolean cambiarImagen(int id, ImagenDTO imagen, String usuario) throws SQLException {
-        String sql = "UPDATE CATEGORIA SET imagen=?,tipo_imagen=?,usuario_actualizacion=?,"
+        String sql = "UPDATE CATEGORIA SET imagen=?,usuario_actualizacion=?,"
                 + " fecha_actualizacion=CURRENT_TIMESTAMP WHERE id=? AND eliminado=FALSE";
         try (Connection conexion = DBManager.getConnection();
              PreparedStatement sentencia = conexion.prepareStatement(sql)) {
-            sentencia.setBytes(1, imagen == null ? null : imagen.contenido());
-            sentencia.setString(2, imagen == null ? null : imagen.tipoMime());
-            sentencia.setString(3, usuario);
-            sentencia.setInt(4, id);
+            sentencia.setString(1, imagen == null ? null : imagen.url());
+            sentencia.setString(2, usuario);
+            sentencia.setInt(3, id);
             return sentencia.executeUpdate() == 1;
         }
     }
@@ -139,7 +137,7 @@ public class CategoriaDAOImpl implements CategoriaDAO {
                 + (nombre.isEmpty() ? "" : " AND LOWER(nombre) LIKE LOWER(?) ESCAPE '!'");
         String orden = filtro.orden() == OrdenReferencia.MAS_RECIENTES
                 ? "fecha_creacion DESC,id DESC" : "nombre ASC,id ASC";
-        String columnas = conImagen ? "id,nombre,imagen,tipo_imagen" : "id,nombre";
+        String columnas = conImagen ? "id,nombre,imagen" : "id,nombre";
         String sql = "SELECT " + columnas + " FROM CATEGORIA" + condiciones + " ORDER BY " + orden + " LIMIT ? OFFSET ?";
         List<TarjetaReferenciaDTO> items = new ArrayList<>();
         long total;
@@ -232,8 +230,7 @@ public class CategoriaDAOImpl implements CategoriaDAO {
         categoria.setId(resultado.getInt("id"));
         categoria.setNombre(resultado.getString("nombre"));
         categoria.setDescripcion(resultado.getString("descripcion"));
-        categoria.setImagen(resultado.getBytes("imagen"));
-        categoria.setTipoImagen(resultado.getString("tipo_imagen"));
+        categoria.setImagen(resultado.getString("imagen"));
         categoria.setActivo(resultado.getBoolean("activo"));
         categoria.setEliminado(resultado.getBoolean("eliminado"));
         categoria.setUsuarioCreacion(resultado.getString("usuario_creacion"));
@@ -245,8 +242,8 @@ public class CategoriaDAOImpl implements CategoriaDAO {
     }
 
     private ImagenDTO imagen(ResultSet resultado) throws SQLException {
-        byte[] contenido = resultado.getBytes("imagen");
-        return contenido == null ? null : new ImagenDTO(contenido, resultado.getString("tipo_imagen"));
+        String url = resultado.getString("imagen");
+        return url == null ? null : new ImagenDTO(url);
     }
 
     private String patron(String nombre) {

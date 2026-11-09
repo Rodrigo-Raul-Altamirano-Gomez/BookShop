@@ -89,7 +89,8 @@ navegador. Los errores SQL se traducen dentro de Business.
 Correo normalizado, contraseña de al menos ocho caracteres con confirmación,
 dominio exacto admin.bookshop para administrador y reactivación de la misma cuenta.
 Editar perfil conserva correo/rol; cambiar contraseña y desactivar comprueban la
-contraseña actual. Imágenes JPEG/PNG de hasta 5 MiB se comprueban por contenido.
+contraseña actual. Las imágenes se representan mediante URLs HTTP/HTTPS de hasta
+2048 caracteres, o rutas locales bajo `/images/`. No se reciben archivos binarios.
 
 Direcciones y métodos respetan propietario, identidad, retiro lógico y un único
 predeterminado válido. Desmarcar el elegido no selecciona un sustituto. Edición
@@ -108,8 +109,7 @@ Ubicación por defecto: `config/clave-datos.key`, relativa al directorio de inic
 del servidor. Puede fijarse una ruta absoluta con `-Dbookshop.clave.file=...`.
 El archivo debe conservarse con la base para poder descifrar los métodos existentes;
 una clave inválida produce una excepción y nunca se reemplaza silenciosamente.
-El nombre del archivo está excluido en .gitignore. Los datos de registers.sql
-pertenecen al esquema/formato antiguo y no son fixtures de Business.
+El nombre del archivo está excluido en .gitignore.
 
 ## Compra y solicitudes
 

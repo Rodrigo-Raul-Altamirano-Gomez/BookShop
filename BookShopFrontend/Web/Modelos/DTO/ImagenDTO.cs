@@ -4,19 +4,14 @@ namespace Web.Modelos.DTO;
 
 public class ImagenDTO
 {
-    [JsonProperty("contenido")]
-    public int[] Contenido { get; set; } = [];
-
-    [JsonProperty("tipoMime")]
-    public string TipoMime { get; set; } = "";
+    [JsonProperty("url")]
+    public string Url { get; set; } = "";
 
     public ImagenDTO()
     {
     }
-
-    public ImagenDTO(int[] contenido, string tipoMime)
+    public ImagenDTO(string url)
     {
-        Contenido = contenido;
-        TipoMime = tipoMime;
+        Url = url;
     }
 }

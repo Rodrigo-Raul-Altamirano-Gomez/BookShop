@@ -24,17 +24,16 @@ import me.Model.entities.catalogo.Autor;
 public class AutorDAOImpl implements AutorDAO {
     @Override
     public void insertar(Autor autor) throws SQLException {
-        String sql = "INSERT INTO AUTOR (nombre,biografia,imagen,tipo_imagen,activo,usuario_creacion,fecha_creacion)"
-                + " VALUES (?,?,?,?,?,?,?)";
+        String sql = "INSERT INTO AUTOR (nombre,biografia,imagen,activo,usuario_creacion,fecha_creacion)"
+                + " VALUES (?,?,?,?,?,?)";
         try (Connection conexion = DBManager.getConnection();
              PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             sentencia.setString(1, autor.getNombre());
             sentencia.setString(2, autor.getBiografia());
-            sentencia.setBytes(3, autor.getImagen());
-            sentencia.setString(4, autor.getTipoImagen());
-            sentencia.setBoolean(5, autor.isActivo());
-            sentencia.setString(6, autor.getUsuarioCreacion());
-            sentencia.setTimestamp(7, Timestamp.valueOf(autor.getFechaCreacion()));
+            sentencia.setString(3, autor.getImagen());
+            sentencia.setBoolean(4, autor.isActivo());
+            sentencia.setString(5, autor.getUsuarioCreacion());
+            sentencia.setTimestamp(6, Timestamp.valueOf(autor.getFechaCreacion()));
             sentencia.executeUpdate();
             try (ResultSet claves = sentencia.getGeneratedKeys()) {
                 if (!claves.next()) throw new SQLException("No se obtuvo el id del autor.");
@@ -111,14 +110,13 @@ public class AutorDAOImpl implements AutorDAO {
 
     @Override
     public boolean cambiarImagen(int id, ImagenDTO imagen, String usuario) throws SQLException {
-        String sql = "UPDATE AUTOR SET imagen=?,tipo_imagen=?,usuario_actualizacion=?,"
+        String sql = "UPDATE AUTOR SET imagen=?,usuario_actualizacion=?,"
                 + " fecha_actualizacion=CURRENT_TIMESTAMP WHERE id=? AND eliminado=FALSE";
         try (Connection conexion = DBManager.getConnection();
              PreparedStatement sentencia = conexion.prepareStatement(sql)) {
-            sentencia.setBytes(1, imagen == null ? null : imagen.contenido());
-            sentencia.setString(2, imagen == null ? null : imagen.tipoMime());
-            sentencia.setString(3, usuario);
-            sentencia.setInt(4, id);
+            sentencia.setString(1, imagen == null ? null : imagen.url());
+            sentencia.setString(2, usuario);
+            sentencia.setInt(3, id);
             return sentencia.executeUpdate() == 1;
         }
     }
@@ -139,7 +137,7 @@ public class AutorDAOImpl implements AutorDAO {
                 + (nombre.isEmpty() ? "" : " AND LOWER(nombre) LIKE LOWER(?) ESCAPE '!'");
         String orden = filtro.orden() == OrdenReferencia.MAS_RECIENTES
                 ? "fecha_creacion DESC,id DESC" : "nombre ASC,id ASC";
-        String columnas = conImagen ? "id,nombre,imagen,tipo_imagen" : "id,nombre";
+        String columnas = conImagen ? "id,nombre,imagen" : "id,nombre";
         String sql = "SELECT " + columnas + " FROM AUTOR" + condiciones + " ORDER BY " + orden + " LIMIT ? OFFSET ?";
         List<TarjetaReferenciaDTO> items = new ArrayList<>();
         long total;
@@ -219,8 +217,7 @@ public class AutorDAOImpl implements AutorDAO {
         autor.setId(resultado.getInt("id"));
         autor.setNombre(resultado.getString("nombre"));
         autor.setBiografia(resultado.getString("biografia"));
-        autor.setImagen(resultado.getBytes("imagen"));
-        autor.setTipoImagen(resultado.getString("tipo_imagen"));
+        autor.setImagen(resultado.getString("imagen"));
         autor.setActivo(resultado.getBoolean("activo"));
         autor.setEliminado(resultado.getBoolean("eliminado"));
         autor.setUsuarioCreacion(resultado.getString("usuario_creacion"));
@@ -232,8 +229,8 @@ public class AutorDAOImpl implements AutorDAO {
     }
 
     private ImagenDTO imagen(ResultSet resultado) throws SQLException {
-        byte[] contenido = resultado.getBytes("imagen");
-        return contenido == null ? null : new ImagenDTO(contenido, resultado.getString("tipo_imagen"));
+        String url = resultado.getString("imagen");
+        return url == null ? null : new ImagenDTO(url);
     }
 
     private String patron(String nombre) {

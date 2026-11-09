@@ -36,8 +36,7 @@ CREATE TABLE USUARIO (
     email VARCHAR(254) COLLATE utf8mb4_0900_as_ci NOT NULL,
     contrasenia VARCHAR(255) NOT NULL COMMENT 'Guardar solamente el hash de la contrasenia',
     nombre VARCHAR(250) NOT NULL COMMENT 'Nombre completo del usuario',
-    imagen MEDIUMBLOB NULL,
-    tipo_imagen VARCHAR(30) NULL,
+    imagen VARCHAR(2048) NULL COMMENT 'URL de la imagen',
     fecha_nacimiento DATETIME NOT NULL,
     activo BOOLEAN NOT NULL DEFAULT TRUE,
     rol ENUM('ADMIN', 'CLIENTE') NOT NULL DEFAULT 'CLIENTE',
@@ -49,10 +48,7 @@ CREATE TABLE USUARIO (
     fecha_actualizacion DATETIME NULL,
     eliminado BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT ck_usuario_imagen CHECK (
-        (imagen IS NULL AND tipo_imagen IS NULL)
-        OR (imagen IS NOT NULL AND tipo_imagen IS NOT NULL
-            AND tipo_imagen IN ('image/jpeg', 'image/png')
-            AND OCTET_LENGTH(imagen) BETWEEN 1 AND 5242880)
+        imagen IS NULL OR CHAR_LENGTH(TRIM(imagen)) BETWEEN 1 AND 2048
     ),
     PRIMARY KEY (id),
     UNIQUE KEY uk_usuario_email (email),
@@ -121,8 +117,7 @@ CREATE TABLE CATEGORIA (
     id INT NOT NULL AUTO_INCREMENT,
     nombre VARCHAR(100) NOT NULL,
     descripcion TEXT NULL,
-    imagen MEDIUMBLOB NULL,
-    tipo_imagen VARCHAR(30) NULL,
+    imagen VARCHAR(2048) NULL COMMENT 'URL de la imagen',
     activo BOOLEAN NOT NULL DEFAULT TRUE,
     usuario_creacion VARCHAR(254) NOT NULL,
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -130,10 +125,7 @@ CREATE TABLE CATEGORIA (
     fecha_actualizacion DATETIME NULL,
     eliminado BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT ck_categoria_imagen CHECK (
-        (imagen IS NULL AND tipo_imagen IS NULL)
-        OR (imagen IS NOT NULL AND tipo_imagen IS NOT NULL
-            AND tipo_imagen IN ('image/jpeg', 'image/png')
-            AND OCTET_LENGTH(imagen) BETWEEN 1 AND 5242880)
+        imagen IS NULL OR CHAR_LENGTH(TRIM(imagen)) BETWEEN 1 AND 2048
     ),
     PRIMARY KEY (id),
     UNIQUE KEY uk_categoria_nombre (nombre),
@@ -151,8 +143,7 @@ CREATE TABLE AUTOR (
     id INT NOT NULL AUTO_INCREMENT,
     nombre VARCHAR(200) NOT NULL,
     biografia TEXT NULL,
-    imagen MEDIUMBLOB NULL,
-    tipo_imagen VARCHAR(30) NULL,
+    imagen VARCHAR(2048) NULL COMMENT 'URL de la imagen',
     activo BOOLEAN NOT NULL DEFAULT TRUE,
     usuario_creacion VARCHAR(254) NOT NULL,
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -160,10 +151,7 @@ CREATE TABLE AUTOR (
     fecha_actualizacion DATETIME NULL,
     eliminado BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT ck_autor_imagen CHECK (
-        (imagen IS NULL AND tipo_imagen IS NULL)
-        OR (imagen IS NOT NULL AND tipo_imagen IS NOT NULL
-            AND tipo_imagen IN ('image/jpeg', 'image/png')
-            AND OCTET_LENGTH(imagen) BETWEEN 1 AND 5242880)
+        imagen IS NULL OR CHAR_LENGTH(TRIM(imagen)) BETWEEN 1 AND 2048
     ),
     PRIMARY KEY (id),
     KEY idx_autor_nombre (nombre),
@@ -181,8 +169,7 @@ CREATE TABLE EDITORIAL (
     id INT NOT NULL AUTO_INCREMENT,
     nombre VARCHAR(150) NOT NULL,
     descripcion TEXT NULL,
-    imagen MEDIUMBLOB NULL,
-    tipo_imagen VARCHAR(30) NULL,
+    imagen VARCHAR(2048) NULL COMMENT 'URL de la imagen',
     activo BOOLEAN NOT NULL DEFAULT TRUE,
     usuario_creacion VARCHAR(254) NOT NULL,
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -190,10 +177,7 @@ CREATE TABLE EDITORIAL (
     fecha_actualizacion DATETIME NULL,
     eliminado BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT ck_editorial_imagen CHECK (
-        (imagen IS NULL AND tipo_imagen IS NULL)
-        OR (imagen IS NOT NULL AND tipo_imagen IS NOT NULL
-            AND tipo_imagen IN ('image/jpeg', 'image/png')
-            AND OCTET_LENGTH(imagen) BETWEEN 1 AND 5242880)
+        imagen IS NULL OR CHAR_LENGTH(TRIM(imagen)) BETWEEN 1 AND 2048
     ),
     PRIMARY KEY (id),
     UNIQUE KEY uk_editorial_nombre (nombre),
@@ -212,8 +196,7 @@ CREATE TABLE LIBRO (
     id_categoria INT NOT NULL,
     titulo VARCHAR(255) NOT NULL,
     id_autor INT NOT NULL,
-    portada MEDIUMBLOB NULL,
-    tipo_portada VARCHAR(30) NULL,
+    portada VARCHAR(2048) NULL COMMENT 'URL de la imagen',
     isbn VARCHAR(20) NOT NULL,
     sinopsis TEXT NOT NULL,
     id_editorial INT NOT NULL,
@@ -239,10 +222,7 @@ CREATE TABLE LIBRO (
     fecha_actualizacion DATETIME NULL,
     eliminado BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT ck_libro_imagen CHECK (
-        (portada IS NULL AND tipo_portada IS NULL)
-        OR (portada IS NOT NULL AND tipo_portada IS NOT NULL
-            AND tipo_portada IN ('image/jpeg', 'image/png')
-            AND OCTET_LENGTH(portada) BETWEEN 1 AND 5242880)
+        portada IS NULL OR CHAR_LENGTH(TRIM(portada)) BETWEEN 1 AND 2048
     ),
     PRIMARY KEY (id),
     UNIQUE KEY uk_libro_isbn (isbn),

@@ -6,6 +6,10 @@ namespace Web.Componentes.Paginas.Catalogo;
 
 public partial class Comparacion
 {
+    private string? errorCarga;
+
+    private bool cargando = true;
+
     [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
 
     [Microsoft.AspNetCore.Components.Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
@@ -28,10 +32,14 @@ public partial class Comparacion
     private Dictionary<int, ValoracionLibroDTO> valoraciones = [];
     protected override async Task OnParametersSetAsync()
     {
-        if (Sesion.IdComparacion is not int primero)
-            return;
+        cargando = true;
+        errorCarga = null;
         try
         {
+
+            if (Sesion.IdComparacion is not int primero)
+                return;
+
             var datos = await Api.Get<List<DetalleLibroDTO>>($"libros/comparacion?primerLibro={primero}&segundoLibro={SecondId}");
             foreach (var d in datos)
             {
@@ -42,7 +50,11 @@ public partial class Comparacion
         }
         catch (InvalidOperationException e)
         {
-            Sesion.Avisar(e.Message);
+            errorCarga = e.Message;
+        }
+        finally
+        {
+            cargando = false;
         }
     }
     private int CantidadResenas(Libro book) => valoraciones.TryGetValue(book.Id, out var v) ? (int)(v.CantidadUnaEstrella + v.CantidadDosEstrellas + v.CantidadTresEstrellas + v.CantidadCuatroEstrellas + v.CantidadCincoEstrellas) : 0;

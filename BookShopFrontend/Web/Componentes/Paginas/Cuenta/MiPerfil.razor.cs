@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Components.Forms;
+
 
 namespace Web.Componentes.Paginas.Cuenta;
 
@@ -108,44 +108,21 @@ public partial class MiPerfil
         catch (InvalidOperationException e) { MensajeError = e.Message; }
     }
 
-    private async Task CargarFoto(InputFileChangeEventArgs argumentos)
+    private string urlFoto = "";
+    private async Task GuardarFoto()
     {
         if (Sesion.Usuario is null || CargandoImagen)
             return;
-        var archivo = argumentos.File;
-        ErrorImagen = "";
-        if (archivo.ContentType is not ("image/jpeg" or "image/png") || archivo.Size > 5 * 1024 * 1024)
-        {
-            ErrorImagen = "Selecciona una imagen JPEG o PNG de hasta 5 MiB.";
-            return;
-        }
-
         CargandoImagen = true;
+        ErrorImagen = "";
         try
         {
-            using var flujo = archivo.OpenReadStream(5 * 1024 * 1024);
-            using var memoria = new MemoryStream();
-            await flujo.CopyToAsync(memoria);
-            Sesion.MostrarPerfil(await Api.Put<PerfilUsuarioDTO>("cuenta/imagen", new ImagenDTO
-            {
-                Contenido = memoria.ToArray().Select(n => (int)unchecked((sbyte)n)).ToArray(),
-                TipoMime = archivo.ContentType
-            }));
+            Sesion.MostrarPerfil(await Api.Put<PerfilUsuarioDTO>("cuenta/imagen", Presentacion.ImagenDesdeUrl(urlFoto)));
             Sesion.Notificar();
             Sesion.Avisar("Foto de perfil actualizada.");
         }
-        catch (InvalidOperationException e)
-        {
-            ErrorImagen = e.Message;
-        }
-        catch (IOException)
-        {
-            ErrorImagen = "No se pudo cargar la imagen. Inténtalo de nuevo.";
-        }
-        finally
-        {
-            CargandoImagen = false;
-        }
+        catch (InvalidOperationException e) { ErrorImagen = e.Message; }
+        finally { CargandoImagen = false; }
     }
 
     private async Task QuitarFoto()

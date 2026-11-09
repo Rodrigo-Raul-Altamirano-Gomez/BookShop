@@ -8,15 +8,10 @@ public static class Presentacion
     public static string Dinero(decimal valor) => "S/ " + valor.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("es-PE"));
 
     public static string Imagen(ImagenDTO? imagen, string defecto)
-        => imagen?.Contenido is null ? defecto : $"data:{imagen.TipoMime};base64,{Convert.ToBase64String(imagen.Contenido.Select(n => unchecked((byte)n)).ToArray())}";
+        => string.IsNullOrWhiteSpace(imagen?.Url) ? defecto : imagen.Url;
 
-    public static ImagenDTO? LeerImagen(string imagen)
-    {
-        if (!imagen.StartsWith("data:"))
-            return null;
-        var partes = imagen.Split(',');
-        return new(Convert.FromBase64String(partes[1]).Select(n => (int)unchecked((sbyte)n)).ToArray(), partes[0][5..].Split(';')[0]);
-    }
+    public static ImagenDTO? ImagenDesdeUrl(string url)
+        => string.IsNullOrWhiteSpace(url) ? null : new ImagenDTO(url.Trim());
 
     public static Libro Libro(TarjetaLibroDTO d) => new()
     {

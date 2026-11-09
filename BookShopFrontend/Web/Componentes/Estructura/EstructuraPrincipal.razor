@@ -37,9 +37,11 @@
         </button>
     </div>
 </header>
-<main id="main-content" class="site-main">@if (Catalogo.Cargando) { <p role="status" class="container py-3">Cargando catálogo…</p> }
-        @if (Sesion.Error is not null) { <div role="alert" class="container alert alert-danger">@Sesion.Error <button class="btn btn-secondary" @onclick="Catalogo.Inicializar">Reintentar</button></div> }
-        @if (Catalogo.Inicializado) { @Body }</main>
+<main id="main-content" class="site-main">
+    <Cargando EnCurso="@Catalogo.Cargando" Error="@(Catalogo.Inicializado ? null : Sesion.Error)" AlReintentar="Catalogo.Inicializar">
+        @if (Catalogo.Inicializado) { @Body }
+    </Cargando>
+</main>
 <footer class="site-footer">
     <div class="container d-flex flex-wrap align-items-center gap-3 footer-inner">
         <a class="brand footer-brand d-flex align-items-center gap-2" href="/">

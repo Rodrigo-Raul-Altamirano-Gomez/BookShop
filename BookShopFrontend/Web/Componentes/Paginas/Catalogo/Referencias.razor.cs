@@ -6,6 +6,10 @@ namespace Web.Componentes.Paginas.Catalogo;
 
 public partial class Referencias : IDisposable
 {
+    private string? errorCarga;
+
+    private bool cargando = true;
+
     [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
 
     [Inject]
@@ -24,8 +28,12 @@ public partial class Referencias : IDisposable
     private IEnumerable<Referencia> ReferenciasVisibles => Resultados;
     private async Task Consultar()
     {
+        cargando = true;
+        errorCarga = null;
         try
         {
+
+
             var datos = await Api.Post<ResultadoPaginadoDTO<TarjetaReferenciaDTO>>($"{Tipo}/busqueda",
                 new FiltroReferenciaDTO
                 {
@@ -37,11 +45,14 @@ public partial class Referencias : IDisposable
                 });
             Resultados = datos.Items.Select(d => Presentacion.Referencia(d, Tipo)).ToList();
             totalResultados = datos.TotalResultados;
-
         }
         catch (InvalidOperationException e)
         {
-            Sesion.Avisar(e.Message);
+            errorCarga = e.Message;
+        }
+        finally
+        {
+            cargando = false;
         }
     }
 

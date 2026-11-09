@@ -1,0 +1,11 @@
+.estado-carga {
+    min-height: 12rem;
+    color: var(--green);
+    background: var(--soft);
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+}
+.estado-carga > span:last-child {
+    color: var(--muted);
+    font-weight: 600;
+}

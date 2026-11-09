@@ -13,11 +13,29 @@ public class PaginaCuenta : ComponentBase, IDisposable
 
     protected override void OnInitialized() => Sesion.Cambiado += Actualizar;
     private string? correoCargado;
+    protected bool CargandoDatos { get; private set; } = true;
+    protected string? ErrorCarga
+    {
+        get; set;
+    }
 
     protected override async Task OnInitializedAsync()
     {
         correoCargado = Sesion.Usuario?.Correo;
-        await CargarDatos();
+        await ActualizarDatos();
+    }
+
+    private async Task ActualizarDatos()
+    {
+        CargandoDatos = true;
+        ErrorCarga = null;
+        StateHasChanged();
+        try
+        {
+            await CargarDatos();
+        }
+        catch (InvalidOperationException e) { ErrorCarga = e.Message; }
+        finally { CargandoDatos = false; }
     }
 
     protected virtual Task CargarDatos() => Task.CompletedTask;
@@ -27,7 +45,7 @@ public class PaginaCuenta : ComponentBase, IDisposable
         if (correoCargado != Sesion.Usuario?.Correo)
         {
             correoCargado = Sesion.Usuario?.Correo;
-            await CargarDatos();
+            await ActualizarDatos();
         }
         StateHasChanged();
     });

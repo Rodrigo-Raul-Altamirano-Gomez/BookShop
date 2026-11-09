@@ -6,6 +6,10 @@ namespace Web.Componentes.Paginas.Compra;
 
 public partial class Compra : IDisposable
 {
+    private string? errorCarga;
+
+    private bool cargando = true;
+
     [Microsoft.AspNetCore.Components.Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
 
     [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
@@ -31,18 +35,26 @@ public partial class Compra : IDisposable
 
     protected override async Task OnInitializedAsync()
     {
-        Sesion.Cambiado += Actualizar;
-        if (Sesion.Usuario is null)
-            return;
+        cargando = true;
+        errorCarga = null;
         try
         {
+
+            Sesion.Cambiado += Actualizar;
+            if (Sesion.Usuario is null)
+                return;
+
             await Cuenta.CargarDatosCompra();
             MostrarPreparacion(await Api.Post<PreparacionCompraDTO>("pedidos/preparacion"));
             Sesion.Notificar();
         }
         catch (InvalidOperationException e)
         {
-            Sesion.Avisar(e.Message);
+            errorCarga = e.Message;
+        }
+        finally
+        {
+            cargando = false;
         }
     }
 

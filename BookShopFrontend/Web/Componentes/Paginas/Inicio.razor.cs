@@ -6,6 +6,10 @@ namespace Web.Componentes.Paginas;
 
 public partial class Inicio : IDisposable
 {
+    private string? errorCarga;
+
+    private bool cargando = true;
+
     [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
 
     [Microsoft.AspNetCore.Components.Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
@@ -21,10 +25,14 @@ public partial class Inicio : IDisposable
     private List<Libro> LibrosNuevos = [], MasVendidos = [];
     protected override async Task OnInitializedAsync()
     {
-        Sesion.Cambiado += Actualizar;
-        await Catalogo.Inicializar();
+        cargando = true;
+        errorCarga = null;
         try
         {
+
+            Sesion.Cambiado += Actualizar;
+            await Catalogo.Inicializar();
+
             var nuevos = await Api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>("libros/busqueda", CatalogoServicio.Filtro(tamanio: 8, nuevos: true));
             LibrosNuevos = nuevos.Items.Select(Presentacion.Libro).ToList();
             var vendidos = await Api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>("libros/busqueda", CatalogoServicio.Filtro(orden: "MAS_VENDIDOS", tamanio: 8));
@@ -33,7 +41,11 @@ public partial class Inicio : IDisposable
         }
         catch (InvalidOperationException e)
         {
-            Sesion.Avisar(e.Message);
+            errorCarga = e.Message;
+        }
+        finally
+        {
+            cargando = false;
         }
     }
     private void Actualizar() => InvokeAsync(StateHasChanged);

@@ -114,7 +114,7 @@ public class CarritoBOImpl implements CarritoBO {
                 BigDecimal precioFinal = libro.getPrecioBase().multiply(BigDecimal.valueOf(100).subtract(porcentaje))
                     .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
                 ItemDTO linea = new ItemDTO(idLibro, libro.getTitulo(),
-                    new ImagenDTO(libro.getPortada(), libro.getTipoPortada()), (int) cantidadTotal,
+                    new ImagenDTO(libro.getPortada()), (int) cantidadTotal,
                     libro.getPrecioBase(), precioFinal, porcentaje,
                     precioFinal.multiply(BigDecimal.valueOf(cantidadTotal)), true, libro.getStockFisico());
                 List<ItemDTO> items = new ArrayList<>();
@@ -209,7 +209,7 @@ public class CarritoBOImpl implements CarritoBO {
             BigDecimal porcentaje = descuento == null ? BigDecimal.ZERO : descuento.getPorcentaje();
             BigDecimal precioFinal = libro.getPrecioBase().multiply(BigDecimal.valueOf(100).subtract(porcentaje))
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-            return new ItemDTO(idLibro, libro.getTitulo(), new ImagenDTO(libro.getPortada(), libro.getTipoPortada()), cantidad,
+            return new ItemDTO(idLibro, libro.getTitulo(), new ImagenDTO(libro.getPortada()), cantidad,
                 libro.getPrecioBase(), precioFinal, porcentaje, precioFinal.multiply(BigDecimal.valueOf(cantidad)),
                 libro.isActivo(), libro.getStockFisico());
         } catch (SQLException e) {

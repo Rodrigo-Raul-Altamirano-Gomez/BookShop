@@ -80,9 +80,10 @@ Carrito y preparación comparten la memoria por actor que ya proporciona Busines
 - Los nombres de propiedades son los de los records DTO de Model. Los enums usan
   sus nombres Java, por ejemplo `MAS_RECIENTES`, `AUTOR` y `CLIENTE`.
   Las fechas usan ISO: `AAAA-MM-DD` y fecha/hora sin cambio de zona de los DTO.
-- `ImagenDTO` usa `contenido` como arreglo JSON de bytes y `tipoMime`, con el
-  formato estándar de JSON-B. Business valida el contenido
-  JPEG/PNG y el límite de 5 MiB. PUT con cuerpo JSON `null` retira una imagen.
+- `ImagenDTO` contiene únicamente `url`, por ejemplo
+  `{"url":"https://ejemplo.com/portada.jpg"}`. Business valida la dirección HTTP/HTTPS
+  y su longitud máxima de 2048 caracteres. Las rutas locales `/images/...` sirven
+  los archivos estáticos de Web. PUT con cuerpo JSON `null` retira una imagen.
 - Los parámetros escalares que no aparecen entre llaves en las rutas se envían
   en la consulta: `cantidad`, `favorito`, `pagina`, `tamanioPagina`, etc.
   `complementarios` recibe un arreglo JSON de ids de libros.

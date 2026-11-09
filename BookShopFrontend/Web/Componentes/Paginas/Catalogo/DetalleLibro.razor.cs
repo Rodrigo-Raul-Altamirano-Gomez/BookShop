@@ -7,6 +7,10 @@ namespace Web.Componentes.Paginas.Catalogo;
 
 public partial class DetalleLibro : IDisposable
 {
+    private string? errorCarga;
+
+    private bool cargando = true;
+
     [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
 
     [Microsoft.AspNetCore.Components.Inject] protected CompraServicio Compras { get; set; } = default!;
@@ -50,11 +54,17 @@ public partial class DetalleLibro : IDisposable
     {
         if (idAnterior == Id)
             return;
-        idAnterior = Id;
-        cantidad = paginaResenas = 1;
-        sinopsisCompleta = fichaExpandida = false;
+        cargando = true;
+        errorCarga = null;
         try
         {
+
+            if (idAnterior == Id)
+                return;
+            idAnterior = Id;
+            cantidad = paginaResenas = 1;
+            sinopsisCompleta = fichaExpandida = false;
+
             var detalle = await Api.Get<DetalleLibroDTO>($"libros/{Id}");
             detalleLibro = detalle;
             Catalogo.Recordar(Presentacion.Libro(detalle));
@@ -73,7 +83,11 @@ public partial class DetalleLibro : IDisposable
         }
         catch (InvalidOperationException e)
         {
-            Sesion.Avisar(e.Message);
+            errorCarga = e.Message;
+        }
+        finally
+        {
+            cargando = false;
         }
     }
     private async Task CargarResenas()
@@ -183,16 +197,23 @@ public partial class DetalleLibro : IDisposable
 
     private async Task CambiarPaginaResenas(int pagina)
     {
-        paginaResenas = pagina;
+        cargando = true;
+        errorCarga = null;
         try
         {
+
+            paginaResenas = pagina;
+
             await CargarResenas();
             Sesion.Notificar();
         }
         catch (InvalidOperationException e)
         {
-            Sesion.Error = e.Message;
-            Sesion.Avisar(e.Message);
+            errorCarga = e.Message;
+        }
+        finally
+        {
+            cargando = false;
         }
     }
 }

@@ -24,17 +24,16 @@ import me.Model.entities.catalogo.Editorial;
 public class EditorialDAOImpl implements EditorialDAO {
     @Override
     public void insertar(Editorial editorial) throws SQLException {
-        String sql = "INSERT INTO EDITORIAL (nombre,descripcion,imagen,tipo_imagen,activo,usuario_creacion,fecha_creacion)"
-                + " VALUES (?,?,?,?,?,?,?)";
+        String sql = "INSERT INTO EDITORIAL (nombre,descripcion,imagen,activo,usuario_creacion,fecha_creacion)"
+                + " VALUES (?,?,?,?,?,?)";
         try (Connection conexion = DBManager.getConnection();
              PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             sentencia.setString(1, editorial.getNombre());
             sentencia.setString(2, editorial.getDescripcion());
-            sentencia.setBytes(3, editorial.getImagen());
-            sentencia.setString(4, editorial.getTipoImagen());
-            sentencia.setBoolean(5, editorial.isActivo());
-            sentencia.setString(6, editorial.getUsuarioCreacion());
-            sentencia.setTimestamp(7, Timestamp.valueOf(editorial.getFechaCreacion()));
+            sentencia.setString(3, editorial.getImagen());
+            sentencia.setBoolean(4, editorial.isActivo());
+            sentencia.setString(5, editorial.getUsuarioCreacion());
+            sentencia.setTimestamp(6, Timestamp.valueOf(editorial.getFechaCreacion()));
             sentencia.executeUpdate();
             try (ResultSet claves = sentencia.getGeneratedKeys()) {
                 if (!claves.next()) throw new SQLException("No se obtuvo el id del editorial.");
@@ -111,14 +110,13 @@ public class EditorialDAOImpl implements EditorialDAO {
 
     @Override
     public boolean cambiarImagen(int id, ImagenDTO imagen, String usuario) throws SQLException {
-        String sql = "UPDATE EDITORIAL SET imagen=?,tipo_imagen=?,usuario_actualizacion=?,"
+        String sql = "UPDATE EDITORIAL SET imagen=?,usuario_actualizacion=?,"
                 + " fecha_actualizacion=CURRENT_TIMESTAMP WHERE id=? AND eliminado=FALSE";
         try (Connection conexion = DBManager.getConnection();
              PreparedStatement sentencia = conexion.prepareStatement(sql)) {
-            sentencia.setBytes(1, imagen == null ? null : imagen.contenido());
-            sentencia.setString(2, imagen == null ? null : imagen.tipoMime());
-            sentencia.setString(3, usuario);
-            sentencia.setInt(4, id);
+            sentencia.setString(1, imagen == null ? null : imagen.url());
+            sentencia.setString(2, usuario);
+            sentencia.setInt(3, id);
             return sentencia.executeUpdate() == 1;
         }
     }
@@ -139,7 +137,7 @@ public class EditorialDAOImpl implements EditorialDAO {
                 + (nombre.isEmpty() ? "" : " AND LOWER(nombre) LIKE LOWER(?) ESCAPE '!'");
         String orden = filtro.orden() == OrdenReferencia.MAS_RECIENTES
                 ? "fecha_creacion DESC,id DESC" : "nombre ASC,id ASC";
-        String columnas = conImagen ? "id,nombre,imagen,tipo_imagen" : "id,nombre";
+        String columnas = conImagen ? "id,nombre,imagen" : "id,nombre";
         String sql = "SELECT " + columnas + " FROM EDITORIAL" + condiciones + " ORDER BY " + orden + " LIMIT ? OFFSET ?";
         List<TarjetaReferenciaDTO> items = new ArrayList<>();
         long total;
@@ -232,8 +230,7 @@ public class EditorialDAOImpl implements EditorialDAO {
         editorial.setId(resultado.getInt("id"));
         editorial.setNombre(resultado.getString("nombre"));
         editorial.setDescripcion(resultado.getString("descripcion"));
-        editorial.setImagen(resultado.getBytes("imagen"));
-        editorial.setTipoImagen(resultado.getString("tipo_imagen"));
+        editorial.setImagen(resultado.getString("imagen"));
         editorial.setActivo(resultado.getBoolean("activo"));
         editorial.setEliminado(resultado.getBoolean("eliminado"));
         editorial.setUsuarioCreacion(resultado.getString("usuario_creacion"));
@@ -245,8 +242,8 @@ public class EditorialDAOImpl implements EditorialDAO {
     }
 
     private ImagenDTO imagen(ResultSet resultado) throws SQLException {
-        byte[] contenido = resultado.getBytes("imagen");
-        return contenido == null ? null : new ImagenDTO(contenido, resultado.getString("tipo_imagen"));
+        String url = resultado.getString("imagen");
+        return url == null ? null : new ImagenDTO(url);
     }
 
     private String patron(String nombre) {

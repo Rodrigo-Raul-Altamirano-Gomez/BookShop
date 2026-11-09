@@ -188,7 +188,7 @@ public class PedidoDAOImpl implements PedidoDAO {
             }
             // Una consulta conjunta recupera solo las portadas de esta página.
             if (!pedidos.isEmpty()) {
-                String sql = "SELECT i.id_pedido, i.id_libro, l.portada, l.tipo_portada FROM ITEM_PEDIDO i JOIN LIBRO l ON l.id = i.id_libro"
+                String sql = "SELECT i.id_pedido, i.id_libro, l.portada FROM ITEM_PEDIDO i JOIN LIBRO l ON l.id = i.id_libro"
                         + " WHERE NOT i.eliminado AND i.id_pedido IN (" + String.join(",", java.util.Collections.nCopies(pedidos.size(), "?")) + ") ORDER BY i.id_pedido, i.id";
                 try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
                     int parametro = 1;
@@ -201,7 +201,7 @@ public class PedidoDAOImpl implements PedidoDAO {
                                 imagenesPedido = new ArrayList<>();
                                 portadas.put(idPedido, imagenesPedido);
                             }
-                            imagenesPedido.add(new ImagenDTO(resultado.getBytes("portada"), resultado.getString("tipo_portada")));
+                            imagenesPedido.add(new ImagenDTO(resultado.getString("portada")));
                         }
                     }
                 }

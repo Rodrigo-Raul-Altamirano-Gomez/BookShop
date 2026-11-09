@@ -220,15 +220,14 @@ class ServicioHttpTest {
     }
 
     @Test
-    void imagenLlegaComoArregloDeBytesJson() throws Exception {
+    void imagenLlegaComoUrlJson() throws Exception {
         when(request.getSession(false)).thenReturn(sesion);
         atributos.put("bookshop.actor", 7);
         try (Response respuesta = http.target("cuenta/imagen").request()
-                .put(Entity.json("{\"contenido\":[1,2,3],\"tipoMime\":\"image/png\"}"))) {
+                .put(Entity.json("{\"url\":\"https://example.test/imagen.png\"}"))) {
             assertEquals(204, respuesta.getStatus());
             verify(servicios.getUsuarioBO()).cambiarImagen(eq(7), argThat(imagen ->
-                    java.util.Arrays.equals(new byte[]{1, 2, 3}, imagen.contenido())
-                            && "image/png".equals(imagen.tipoMime())));
+                    "https://example.test/imagen.png".equals(imagen.url())));
         }
     }
 

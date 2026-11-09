@@ -19,6 +19,8 @@ builder.Logging.ClearProviders();
 await using var servidor = builder.Build();
 int verificaciones = 0;
 string? ultimoOrden = null;
+Task esperaBusqueda = Task.CompletedTask;
+bool fallarBusqueda = false;
 void Verificar(bool condicion, string mensaje)
 {
     if (!condicion) throw new Exception(mensaje);
@@ -53,8 +55,8 @@ servidor.Map("/{**ruta}", async contexto =>
     else if (ruta == "/webresources/imagen")
     {
         using var cuerpo = await JsonDocument.ParseAsync(contexto.Request.Body);
-        Verificar(cuerpo.RootElement.GetProperty("contenido")[0].GetInt32() == -1, "Byte Java incompatible");
-        resultado = new ImagenDTO([-1, 0, 127], "image/png");
+        Verificar(cuerpo.RootElement.GetProperty("url").GetString() == "https://example.test/imagen.png", "URL de imagen incorrecta");
+        resultado = new ImagenDTO("https://example.test/imagen.png");
     }
     else if (ruta == "/webresources/cuenta") resultado = perfil;
     else if (ruta == "/webresources/cuenta/direcciones") resultado = new ResultadoPaginadoDTO<DireccionEnvioDTO>([new(3, "Casa", "Calle 1", "Centro", "Lima", "", true)], 1, 1, 10);
@@ -86,6 +88,13 @@ servidor.Map("/{**ruta}", async contexto =>
     }
     else if (ruta == "/webresources/libros/busqueda")
     {
+        await esperaBusqueda;
+        if (fallarBusqueda)
+        {
+            contexto.Response.StatusCode = 500;
+            await contexto.Response.WriteAsJsonAsync(new { mensaje = "Fallo de consulta de prueba" });
+            return;
+        }
         var filtro = await contexto.Request.ReadFromJsonAsync<FiltroLibroDTO>(); ultimoOrden = filtro!.Orden;
         resultado = new ResultadoPaginadoDTO<TarjetaLibroDTO>([new(7, "Libro real", null, "Autor real", 50, 40, 20, true)], 1, filtro.Pagina, filtro.TamanioPagina);
     }
@@ -121,8 +130,8 @@ Verificar(preparado.PuedePagar && preparado.Seleccion.IdDireccionEnvio == 3, "Se
 var pedido = Presentacion.Pedido(await api.Post<DetallePedidoDTO>("pedidos/confirmacion"));
 Verificar(pedido.Id == 21 && pedido.Total == 84 && pedido.Transaccion == "SIM-21" && pedido.FechaEntrega is null, "Confirmación alterada");
 await api.Put<PerfilUsuarioDTO>("cuenta/imagen");
-var imagen = await api.Post<ImagenDTO>("imagen", new ImagenDTO([-1, 0, 127], "image/png"));
-Verificar(Presentacion.LeerImagen(Presentacion.Imagen(imagen, ""))!.Contenido.SequenceEqual(imagen.Contenido), "Imagen no reversible");
+var imagen = await api.Post<ImagenDTO>("imagen", new ImagenDTO("https://example.test/imagen.png"));
+Verificar(Presentacion.ImagenDesdeUrl(Presentacion.Imagen(imagen, ""))!.Url == imagen.Url, "Imagen no reversible");
 await api.Delete("sin-contenido");
 try { await api.Get<object>("error"); throw new Exception("No se informó el error HTTP"); }
 catch (InvalidOperationException e) { Verificar(e.Message == "Inicia sesión.", "Mensaje del backend perdido"); }
@@ -141,6 +150,18 @@ await renderer.Dispatcher.InvokeAsync(async () =>
     Verificar(catalogoServicio.Idiomas.Count == 13 && catalogoServicio.Idiomas.Contains("Español"), "No se cargaron todas las páginas de idiomas");
     var catalogo = await renderer.RenderComponentAsync<Web.Componentes.Paginas.Catalogo.ExploradorCatalogo>(ParameterView.FromDictionary(new Dictionary<string, object?> { ["Busqueda"] = "historia", ["OrdenInicial"] = "vendidos" }));
     Verificar(catalogo.ToHtmlString().Contains("Libro real") && ultimoOrden == "MAS_VENDIDOS", "Catálogo no envía el orden al servidor");
+    var bloqueo = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+    esperaBusqueda = bloqueo.Task;
+    var pendiente = renderer.BeginRenderingComponent<Web.Componentes.Paginas.Catalogo.ExploradorCatalogo>();
+    var duranteCarga = pendiente.ToHtmlString();
+    Verificar(duranteCarga.Contains("spinner-border") && !duranteCarga.Contains("empty-state") && !duranteCarga.Contains("Libro real"), "Durante la consulta se muestra contenido provisional");
+    bloqueo.SetResult();
+    await pendiente.QuiescenceTask;
+    Verificar(pendiente.ToHtmlString().Contains("Libro real") && !pendiente.ToHtmlString().Contains("spinner-border"), "La carga no termina al recibir los datos");
+    fallarBusqueda = true;
+    var fallido = await renderer.RenderComponentAsync<Web.Componentes.Paginas.Catalogo.ExploradorCatalogo>();
+    Verificar(fallido.ToHtmlString().Contains("Fallo de consulta de prueba") && !fallido.ToHtmlString().Contains("empty-state") && !fallido.ToHtmlString().Contains("spinner-border"), "El error se muestra como una lista vacía o deja la carga activa");
+    fallarBusqueda = false;
     var detalle = await renderer.RenderComponentAsync<Web.Componentes.Paginas.Catalogo.DetalleLibro>(ParameterView.FromDictionary(new Dictionary<string, object?> { ["Id"] = 7 }));
     var html = System.Net.WebUtility.HtmlDecode(detalle.ToHtmlString());
     Verificar(html.Contains("Sinopsis real") && html.Contains("Reseña real") && html.Contains("/referencias/categorias/1"), "Detalle no representa la respuesta REST");

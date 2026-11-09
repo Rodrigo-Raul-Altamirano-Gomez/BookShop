@@ -6,6 +6,8 @@ namespace Web.Componentes.Paginas.Catalogo;
 
 public partial class ExploradorCatalogo : IDisposable
 {
+    private string? errorCarga;
+
     [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
 
     [Microsoft.AspNetCore.Components.Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
@@ -60,7 +62,7 @@ public partial class ExploradorCatalogo : IDisposable
     }
     private long totalResultados;
     private List<Libro> resultados = [];
-    private bool cargando;
+    private bool cargando = true;
     private HashSet<string> categorias = [], autores = [], editoriales = [], idiomas = [];
     private HashSet<string> categoriasAplicadas = [], autoresAplicados = [], editorialesAplicadas = [],
          idiomasAplicados = [];
@@ -111,8 +113,11 @@ public partial class ExploradorCatalogo : IDisposable
     private async Task Consultar()
     {
         cargando = true;
+        errorCarga = null;
         try
         {
+
+
             var filtro = new FiltroLibroDTO
             {
                 Titulo = Busqueda,
@@ -145,13 +150,15 @@ public partial class ExploradorCatalogo : IDisposable
             var datos = await Api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>(ruta, filtro);
             resultados = datos.Items.Select(Presentacion.Libro).ToList();
             totalResultados = datos.TotalResultados;
-
         }
         catch (InvalidOperationException e)
         {
-            Sesion.Avisar(e.Message);
+            errorCarga = e.Message;
         }
-        cargando = false;
+        finally
+        {
+            cargando = false;
+        }
     }
 
     protected override async Task OnParametersSetAsync()

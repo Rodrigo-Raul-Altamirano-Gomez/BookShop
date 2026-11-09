@@ -36,7 +36,7 @@ import me.Model.entities.catalogo.Libro;
 
 public class LibroDAOImpl implements LibroDAO {
     private static final String PRECIO_FINAL = "ROUND(l.precio_base*(100-COALESCE(d.porcentaje,0))/100,2)";
-    private static final String COLUMNAS_TARJETA = "l.id,l.titulo,l.portada,l.tipo_portada,a.nombre AS nombre_autor,"
+    private static final String COLUMNAS_TARJETA = "l.id,l.titulo,l.portada,a.nombre AS nombre_autor,"
             + "l.precio_base," + PRECIO_FINAL + " AS precio_final,COALESCE(d.porcentaje,0) AS porcentaje,l.activo";
 
     @Override
@@ -44,8 +44,8 @@ public class LibroDAOImpl implements LibroDAO {
         Connection conexion = TransactionContext.getConnection();
         String sql = "INSERT INTO LIBRO (titulo,idioma,sinopsis,proveedor,isbn,anio_edicion,numero_paginas,"
                 + " peso,alto,ancho,saga,numero_tomo,id_autor,id_categoria,id_editorial,precio_base,stock_fisico,"
-                + " portada,tipo_portada,numero_vetos,vetado_directamente,usuario_creacion,fecha_creacion)"
-                + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                + " portada,numero_vetos,vetado_directamente,usuario_creacion,fecha_creacion)"
+                + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         try (PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             parametrosDatos(sentencia, libro);
             sentencia.setInt(13, libro.getAutor().getId());
@@ -53,12 +53,11 @@ public class LibroDAOImpl implements LibroDAO {
             sentencia.setInt(15, libro.getEditorial().getId());
             sentencia.setBigDecimal(16, libro.getPrecioBase());
             sentencia.setInt(17, libro.getStockFisico());
-            sentencia.setBytes(18, libro.getPortada());
-            sentencia.setString(19, libro.getTipoPortada());
-            sentencia.setInt(20, libro.isVetadoDirectamente() ? 1 : 0);
-            sentencia.setBoolean(21, libro.isVetadoDirectamente());
-            sentencia.setString(22, libro.getUsuarioCreacion());
-            sentencia.setTimestamp(23, Timestamp.valueOf(libro.getFechaCreacion()));
+            sentencia.setString(18, libro.getPortada());
+            sentencia.setInt(19, libro.isVetadoDirectamente() ? 1 : 0);
+            sentencia.setBoolean(20, libro.isVetadoDirectamente());
+            sentencia.setString(21, libro.getUsuarioCreacion());
+            sentencia.setTimestamp(22, Timestamp.valueOf(libro.getFechaCreacion()));
             sentencia.executeUpdate();
             try (ResultSet claves = sentencia.getGeneratedKeys()) {
                 if (!claves.next()) throw new SQLException("No se obtuvo el id del libro.");
@@ -147,13 +146,12 @@ public class LibroDAOImpl implements LibroDAO {
 
     @Override
     public boolean cambiarImagen(int id, ImagenDTO imagen, String usuario) throws SQLException {
-        String sql = "UPDATE LIBRO SET portada=?,tipo_portada=?,usuario_actualizacion=?,"
+        String sql = "UPDATE LIBRO SET portada=?,usuario_actualizacion=?,"
                 + " fecha_actualizacion=CURRENT_TIMESTAMP WHERE id=? AND eliminado=FALSE";
         try (Connection conexion = DBManager.getConnection(); PreparedStatement sentencia = conexion.prepareStatement(sql)) {
-            sentencia.setBytes(1, imagen == null ? null : imagen.contenido());
-            sentencia.setString(2, imagen == null ? null : imagen.tipoMime());
-            sentencia.setString(3, usuario);
-            sentencia.setInt(4, id);
+            sentencia.setString(1, imagen == null ? null : imagen.url());
+            sentencia.setString(2, usuario);
+            sentencia.setInt(3, id);
             return sentencia.executeUpdate() == 1;
         }
     }
@@ -536,7 +534,7 @@ public class LibroDAOImpl implements LibroDAO {
         List<Integer> unicos = new ArrayList<>(new LinkedHashSet<>(ids));
         if (unicos.isEmpty()) return List.of();
         String columnas = conImagen ? COLUMNAS_TARJETA
-                : COLUMNAS_TARJETA.replace("l.portada,l.tipo_portada", "NULL AS portada,NULL AS tipo_portada");
+                : COLUMNAS_TARJETA.replace("l.portada", "NULL AS portada");
         String sql = "SELECT " + columnas + baseTarjetas()
                 + " WHERE l.activo=TRUE AND l.id IN (" + marcadores(unicos.size()) + ")";
         Map<Integer, TarjetaLibroDTO> tarjetas = new LinkedHashMap<>();
@@ -595,8 +593,7 @@ public class LibroDAOImpl implements LibroDAO {
         editorial.setId(resultado.getInt("id_editorial"));
         libro.setEditorial(editorial);
         if (conPortada) {
-            libro.setPortada(resultado.getBytes("portada"));
-            libro.setTipoPortada(resultado.getString("tipo_portada"));
+            libro.setPortada(resultado.getString("portada"));
         }
         libro.setIdioma(resultado.getString("idioma"));
         libro.setPrecioBase(resultado.getBigDecimal("precio_base"));
@@ -623,8 +620,8 @@ public class LibroDAOImpl implements LibroDAO {
     }
 
     private TarjetaLibroDTO mapearTarjeta(ResultSet resultado) throws SQLException {
-        byte[] contenido = resultado.getBytes("portada");
-        ImagenDTO portada = contenido == null ? null : new ImagenDTO(contenido, resultado.getString("tipo_portada"));
+        String url = resultado.getString("portada");
+        ImagenDTO portada = url == null ? null : new ImagenDTO(url);
         return new TarjetaLibroDTO(resultado.getInt("id"), resultado.getString("titulo"), portada,
                 resultado.getString("nombre_autor"), resultado.getBigDecimal("precio_base"), resultado.getBigDecimal("precio_final").setScale(2),
                 resultado.getBigDecimal("porcentaje"), resultado.getBoolean("activo"));

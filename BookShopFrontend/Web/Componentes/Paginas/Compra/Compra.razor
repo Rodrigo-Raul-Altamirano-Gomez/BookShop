@@ -1,5 +1,6 @@
 @page "/compra"
 <PageTitle>Resumen de compra · BookShop</PageTitle>
+<Cargando EnCurso="@cargando" Error="@errorCarga">
 <div class="container py-4">
     <nav aria-label="Ruta de navegación">
         <ol class="breadcrumb">
@@ -338,3 +339,4 @@
 {
     <FormularioPago AlGuardar="GuardarMetodo" AlCerrar="CerrarMetodo" />
 }
+</Cargando>

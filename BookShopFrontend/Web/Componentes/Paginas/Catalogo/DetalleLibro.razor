@@ -1,5 +1,6 @@
 @page "/libros/{Id:int}"
 <PageTitle>@(Libro?.Titulo ?? "Libro") · BookShop</PageTitle>
+<Cargando EnCurso="@cargando" Error="@errorCarga">
 <div class="container detail-page">
     <nav aria-label="Ruta de navegación">
         <ol class="breadcrumb">
@@ -252,3 +253,4 @@
         </section>
     }
 </div>
+</Cargando>

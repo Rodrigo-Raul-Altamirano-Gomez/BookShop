@@ -67,7 +67,7 @@ class DatosCompraBOTest {
                 + "usuario_actualizacion VARCHAR(254), fecha_actualizacion DATETIME, eliminado BOOLEAN DEFAULT FALSE";
         try (var statement = conexion.createStatement()) {
             statement.execute("CREATE TABLE USUARIO (id INT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(254) UNIQUE, "
-                    + "contrasenia VARCHAR(255), nombre VARCHAR(250), imagen BLOB, tipo_imagen VARCHAR(30), "
+                    + "contrasenia VARCHAR(255), nombre VARCHAR(250), imagen VARCHAR(2048), "
                     + "fecha_nacimiento DATETIME, activo BOOLEAN DEFAULT TRUE, rol VARCHAR(40) DEFAULT 'CLIENTE', "
                     + "tiempo_total BIGINT DEFAULT 0, cantidad_pedidos_entregados INT DEFAULT 0" + auditoria + ")");
             statement.execute("CREATE TABLE DIRECCION_ENVIO (id INT AUTO_INCREMENT PRIMARY KEY, id_usuario INT, "

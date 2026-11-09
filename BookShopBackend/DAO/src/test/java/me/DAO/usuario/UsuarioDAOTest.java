@@ -46,7 +46,7 @@ class UsuarioDAOTest {
                 + "usuario_actualizacion VARCHAR(254), fecha_actualizacion DATETIME, eliminado BOOLEAN DEFAULT FALSE";
         try (var statement = conexion.createStatement()) {
             statement.execute("CREATE TABLE USUARIO (id INT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(254) UNIQUE, "
-                    + "contrasenia VARCHAR(255), nombre VARCHAR(250), imagen BLOB, tipo_imagen VARCHAR(30), "
+                    + "contrasenia VARCHAR(255), nombre VARCHAR(250), imagen VARCHAR(2048), "
                     + "fecha_nacimiento DATETIME, activo BOOLEAN DEFAULT TRUE, rol VARCHAR(40) DEFAULT 'CLIENTE', "
                     + "tiempo_total BIGINT DEFAULT 0, cantidad_pedidos_entregados INT DEFAULT 0" + auditoria + ")");
             statement.execute("CREATE TABLE DIRECCION_ENVIO (id INT AUTO_INCREMENT PRIMARY KEY, id_usuario INT, "
@@ -66,11 +66,11 @@ class UsuarioDAOTest {
             statement.execute("CREATE TABLE LIBRO_GUARDADO (id INT AUTO_INCREMENT PRIMARY KEY, id_usuario INT, "
                     + "id_libro INT, favorito BOOLEAN" + auditoria + ", UNIQUE(id_usuario, id_libro, favorito))");
             statement.execute("CREATE TABLE AUTOR (id INT PRIMARY KEY, nombre VARCHAR(100), activo BOOLEAN DEFAULT TRUE, "
-                    + "eliminado BOOLEAN DEFAULT FALSE, imagen BLOB, tipo_imagen VARCHAR(30))");
+                    + "eliminado BOOLEAN DEFAULT FALSE, imagen VARCHAR(2048))");
             statement.execute("CREATE TABLE CATEGORIA (id INT PRIMARY KEY, nombre VARCHAR(100), activo BOOLEAN DEFAULT TRUE, "
-                    + "eliminado BOOLEAN DEFAULT FALSE, imagen BLOB, tipo_imagen VARCHAR(30))");
+                    + "eliminado BOOLEAN DEFAULT FALSE, imagen VARCHAR(2048))");
             statement.execute("CREATE TABLE EDITORIAL (id INT PRIMARY KEY, nombre VARCHAR(100), activo BOOLEAN DEFAULT TRUE, "
-                    + "eliminado BOOLEAN DEFAULT FALSE, imagen BLOB, tipo_imagen VARCHAR(30))");
+                    + "eliminado BOOLEAN DEFAULT FALSE, imagen VARCHAR(2048))");
             statement.execute("INSERT INTO USUARIO (id,email,contrasenia,nombre,fecha_nacimiento,usuario_creacion) "
                     + "VALUES (1,'ana@test','hash','Ana','2000-01-01','ana@test'), "
                     + "(2,'bea@test','hash','Bea','2000-01-01','bea@test')");
@@ -325,9 +325,9 @@ class UsuarioDAOTest {
     @Test
     void perfilNoExponeHashYReactivacionConservaLaIdentidad() throws Exception {
         UsuarioDAOImpl dao = new UsuarioDAOImpl();
-        dao.cambiarImagen(1, new ImagenDTO(new byte[]{1, 2}, "image/png"), "ana@test");
+        dao.cambiarImagen(1, new ImagenDTO("https://example.test/imagen.png"), "ana@test");
         assertEquals("ana@test", dao.obtenerPerfil(1).usuario().email());
-        assertArrayEquals(new byte[]{1, 2}, dao.obtenerPerfil(1).usuario().imagen().contenido());
+        assertEquals("https://example.test/imagen.png", dao.obtenerPerfil(1).usuario().imagen().url());
         assertTrue(dao.cambiarContrasenia(1, "nuevo hash", "ana@test"));
         assertEquals("nuevo hash", dao.obtenerPorEmail("ana@test").getContrasenia());
         dao.actualizarTiempoTotal(1, Duration.ofSeconds(75), "ana@test");

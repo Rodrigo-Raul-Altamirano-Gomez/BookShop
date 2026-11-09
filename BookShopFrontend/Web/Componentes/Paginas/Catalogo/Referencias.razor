@@ -1,5 +1,6 @@
 @page "/referencias/{Tipo}"
 <PageTitle>@Titulo · BookShop</PageTitle>
+<Cargando EnCurso="@cargando" Error="@errorCarga">
 <div class="container py-4">
     <nav aria-label="Ruta de navegación">
         <ol class="breadcrumb">
@@ -39,3 +40,4 @@
         <Paginacion Pagina="pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
     }
 </div>
+</Cargando>

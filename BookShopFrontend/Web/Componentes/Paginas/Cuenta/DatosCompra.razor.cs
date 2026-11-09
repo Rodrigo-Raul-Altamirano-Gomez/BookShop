@@ -19,7 +19,7 @@ public partial class DatosCompra
             }
             catch (InvalidOperationException e)
             {
-                Sesion.Error = e.Message;
+                ErrorCarga = e.Message;
                 Sesion.Avisar(e.Message);
             }
     }

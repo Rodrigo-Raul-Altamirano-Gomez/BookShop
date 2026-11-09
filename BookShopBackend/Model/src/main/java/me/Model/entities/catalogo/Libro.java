@@ -5,8 +5,7 @@ import java.time.LocalDateTime;
 
 public class Libro {
     private int id;
-    private byte[] portada;
-    private String tipoPortada;
+    private String portada;
     private String titulo;
     private Autor autor;
     private Editorial editorial;
@@ -58,20 +57,12 @@ public class Libro {
         this.id = id;
     }
 
-    public byte[] getPortada() {
-        return portada == null ? null : portada.clone();
+    public String getPortada() {
+        return portada;
     }
 
-    public void setPortada(byte[] portada) {
-        this.portada = portada == null ? null : portada.clone();
-    }
-
-    public String getTipoPortada() {
-        return tipoPortada;
-    }
-
-    public void setTipoPortada(String tipoPortada) {
-        this.tipoPortada = tipoPortada;
+    public void setPortada(String portada) {
+        this.portada = portada;
     }
 
     public String getTitulo() {

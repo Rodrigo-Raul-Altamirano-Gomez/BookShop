@@ -2,6 +2,7 @@
 @using Web.Componentes.Paginas.Catalogo
 @inherits PaginaCuenta
 <PageTitle>Deseados y favoritos · BookShop</PageTitle>
+<Cargando EnCurso="@CargandoDatos" Error="@ErrorCarga">
 <div class="container py-4">
     <nav aria-label="Ruta de navegación">
         <ol class="breadcrumb">
@@ -42,3 +43,4 @@
         <ExploradorCatalogo Titulo="Deseados y favoritos" Favoritos="PestanaFavoritos" />
     }
 </div>
+</Cargando>

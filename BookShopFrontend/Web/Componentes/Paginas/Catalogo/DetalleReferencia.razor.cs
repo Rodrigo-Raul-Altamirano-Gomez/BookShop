@@ -6,6 +6,10 @@ namespace Web.Componentes.Paginas.Catalogo;
 
 public partial class DetalleReferencia : IDisposable
 {
+    private string? errorCarga;
+
+    private bool cargando = true;
+
     [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
 
     [Microsoft.AspNetCore.Components.Inject] protected CuentaServicio Cuenta { get; set; } = default!;
@@ -33,8 +37,12 @@ public partial class DetalleReferencia : IDisposable
     protected override void OnInitialized() => Sesion.Cambiado += ActualizarVista;
     protected override async Task OnParametersSetAsync()
     {
+        cargando = true;
+        errorCarga = null;
         try
         {
+
+
             var d = await Api.Get<DetalleReferenciaDTO>($"{Tipo}/{Id}");
             var referencia = Presentacion.Referencia(d.Referencia, Tipo);
             referencia.Descripcion = d.Introduccion;
@@ -49,7 +57,11 @@ public partial class DetalleReferencia : IDisposable
         }
         catch (InvalidOperationException e)
         {
-            Sesion.Avisar(e.Message);
+            errorCarga = e.Message;
+        }
+        finally
+        {
+            cargando = false;
         }
     }
     private void ActualizarVista() => InvokeAsync(StateHasChanged);

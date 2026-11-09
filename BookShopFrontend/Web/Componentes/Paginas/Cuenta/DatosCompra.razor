@@ -1,6 +1,7 @@
 @page "/datos-compra"
 @inherits PaginaCuenta
 <PageTitle>Datos de compra · BookShop</PageTitle>
+<Cargando EnCurso="@CargandoDatos" Error="@ErrorCarga">
 <div class="container py-4">
     <nav aria-label="Ruta de navegación">
         <ol class="breadcrumb">
@@ -222,3 +223,4 @@
 {
     <FormularioPago Valor="MetodoEnEdicion" AlGuardar="GuardarMetodo" AlCerrar="Cerrar" />
 }
+</Cargando>

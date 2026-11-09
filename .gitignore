@@ -1,5 +1,6 @@
 # Referencias de trabajo: no forman parte de la publicación.
 /docs/
+/.tmp-requisitos/
 
 # Compilaciones, publicaciones y cachés.
 **/target/

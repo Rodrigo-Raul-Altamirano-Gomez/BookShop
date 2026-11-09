@@ -204,11 +204,11 @@ class ConsultasIntegracionTest {
     void cambioDeImagenEsIndependienteDeLaEdicionDeDatos() throws Exception {
         Libro libro = registrarLibro("Libro", "Español", "50.00");
         LibroDAOImpl dao = new LibroDAOImpl();
-        assertTrue(dao.cambiarImagen(libro.getId(), new ImagenDTO(new byte[]{1, 2}, "image/png"), "admin"));
+        assertTrue(dao.cambiarImagen(libro.getId(), new ImagenDTO("https://example.test/imagen.png"), "admin"));
         libro.setTitulo("Nuevo titulo");
         libro.setUsuarioActualizacion("admin");
         dao.modificar(libro);
-        assertArrayEquals(new byte[]{1, 2}, dao.leer(libro.getId()).getPortada());
+        assertEquals("https://example.test/imagen.png", dao.leer(libro.getId()).getPortada());
         assertEquals(1, dao.leer(libro.getId()).getEditorial().getId());
         assertNull(dao.leer(libro.getId()).getEditorial().getNombre());
         assertTrue(dao.cambiarImagen(libro.getId(), null, "admin"));
@@ -262,8 +262,8 @@ class ConsultasIntegracionTest {
     @Test
     void resenaUsaSoloLaImagenDeSuContextoYElVotoNoSeDuplica() throws Exception {
         Libro libro = registrarLibro("Libro", "Español", "50.00");
-        new LibroDAOImpl().cambiarImagen(libro.getId(), new ImagenDTO(new byte[]{1}, "image/png"), "admin");
-        new UsuarioDAOImpl().cambiarImagen(1, new ImagenDTO(new byte[]{2}, "image/jpeg"), "ana@test");
+        new LibroDAOImpl().cambiarImagen(libro.getId(), new ImagenDTO("https://example.test/imagen.png"), "admin");
+        new UsuarioDAOImpl().cambiarImagen(1, new ImagenDTO("https://example.test/imagen.png"), "ana@test");
         Resena resena = new Resena();
         resena.setLibro(libro);
         Usuario usuario = new Usuario();
@@ -584,7 +584,7 @@ class ConsultasIntegracionTest {
         Libro primero = registrarLibro("Primero", "Español", "50.00");
         Libro segundo = registrarLibro("Segundo", "Español", "60.00");
         LibroDAOImpl dao = new LibroDAOImpl();
-        dao.cambiarImagen(primero.getId(), new ImagenDTO(new byte[]{1}, "image/png"), "admin");
+        dao.cambiarImagen(primero.getId(), new ImagenDTO("https://example.test/imagen.png"), "admin");
         var candidatos = dao.listarParaRecomendaciones();
         assertNull(candidatos.getFirst().getPortada());
         assertEquals(1, candidatos.getFirst().getAutor().getId());
@@ -604,13 +604,13 @@ class ConsultasIntegracionTest {
         categoria.setUsuarioCreacion("admin");
         CategoriaDAOImpl categorias = new CategoriaDAOImpl();
         categorias.insertar(categoria);
-        categorias.cambiarImagen(categoria.getId(), new ImagenDTO(new byte[]{1}, "image/png"), "admin");
+        categorias.cambiarImagen(categoria.getId(), new ImagenDTO("https://example.test/imagen.png"), "admin");
         categoria.setNombre("Categoria editada");
         categoria.setUsuarioCreacion("otro creador");
         categoria.setUsuarioActualizacion("admin");
         categorias.modificar(categoria);
         assertEquals("admin", categorias.leer(categoria.getId()).getUsuarioCreacion());
-        assertArrayEquals(new byte[]{1}, categorias.leer(categoria.getId()).getImagen());
+        assertEquals("https://example.test/imagen.png", categorias.leer(categoria.getId()).getImagen());
         SeguimientoDAOImpl seguidos = new SeguimientoDAOImpl();
         seguidos.guardar(1, TipoSeguimiento.CATEGORIA, categoria.getId(), "ana@test");
         assertTrue(seguidos.retirar(1, TipoSeguimiento.CATEGORIA, categoria.getId(), "ana@test"));

@@ -286,7 +286,7 @@ public class PedidoBOImpl implements PedidoBO {
             BigDecimal porcentaje = descuento == null ? BigDecimal.ZERO : descuento.getPorcentaje();
             BigDecimal unitario = libro.getPrecioBase().multiply(BigDecimal.valueOf(100).subtract(porcentaje))
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-            actuales.add(new ItemDTO(libro.getId(), libro.getTitulo(), new ImagenDTO(libro.getPortada(), libro.getTipoPortada()), anterior.cantidad(),
+            actuales.add(new ItemDTO(libro.getId(), libro.getTitulo(), new ImagenDTO(libro.getPortada()), anterior.cantidad(),
                 libro.getPrecioBase(), unitario, porcentaje, unitario.multiply(BigDecimal.valueOf(anterior.cantidad())), libro.isActivo(), libro.getStockFisico()));
         }
         List<ItemDTO> enOrdenOriginal = new ArrayList<>();

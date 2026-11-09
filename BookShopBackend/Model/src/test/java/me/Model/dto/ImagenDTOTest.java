@@ -1,20 +1,12 @@
 package me.Model.dto;
 
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ImagenDTOTest {
-    @Test
-    void contieneLosDatosDelArchivo() {
-        byte[] archivo = {1, 2, 3};
-        ImagenDTO imagen = new ImagenDTO(archivo, "image/png");
-        assertArrayEquals(new byte[]{1, 2, 3}, imagen.contenido());
+    @Test void conservaLaUrl() {
+        ImagenDTO imagen = new ImagenDTO("https://example.test/portada.png");
+        assertEquals("https://example.test/portada.png", imagen.url());
     }
-
-    @Test
-    void admiteAusenciaDeContenido() {
-        assertNull(new ImagenDTO(null, null).contenido());
-    }
+    @Test void admiteAusenciaDeUrl() { assertNull(new ImagenDTO(null).url()); }
 }

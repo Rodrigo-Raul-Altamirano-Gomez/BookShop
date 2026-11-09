@@ -66,8 +66,7 @@ public class UsuarioBOImpl implements UsuarioBO {
             usuario.setUsuarioCreacion(email);
             usuario.setFechaCreacion(LocalDateTime.now(reloj));
             if (datos.imagen() != null) {
-                usuario.setImagen(datos.imagen().contenido());
-                usuario.setTipoImagen(datos.imagen().tipoMime());
+                usuario.setImagen(datos.imagen().url());
             }
             usuarioDAO.insertar(usuario);
             return new AccesoUsuarioDTO(usuario.getId(), usuario.getNombre(), usuario.getRol(), false);

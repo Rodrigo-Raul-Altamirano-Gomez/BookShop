@@ -159,8 +159,7 @@ requiere consumo previo, vigencia y ausencia de otro pedido que lo esté usando.
 auditoría, relaciones, imágenes y los tres discriminadores de herencia. También
 incluye el porcentaje nominal histórico de los items. Recrea tablas: no es una
 migración y no se ejecutó sobre la base del proyecto. Una base ya creada debe
-adaptarse al esquema antes de utilizar estos DAO. `registers.sql` conserva sus
-datos antiguos y no debe usarse con este DDL sin adaptarlos primero.
+adaptarse al esquema antes de utilizar estos DAO.
 
 Desde BookShopBackend, con Maven y un JDK 25 o posterior:
 

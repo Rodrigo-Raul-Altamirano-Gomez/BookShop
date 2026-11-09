@@ -49,8 +49,7 @@ public class CategoriaBOImpl implements CategoriaBO {
         categoria.setNombre(datos.nombre());
         categoria.setDescripcion(datos.introduccion());
         if (registro.imagen() != null) {
-            categoria.setImagen(registro.imagen().contenido());
-            categoria.setTipoImagen(registro.imagen().tipoMime());
+            categoria.setImagen(registro.imagen().url());
         }
         categoria.setUsuarioCreacion(actor.getEmail());
         categoria.setFechaCreacion(LocalDateTime.now(reloj));

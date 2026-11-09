@@ -1,8 +1,7 @@
 package me.Model.dto;
 
-// Contenido binario y formato (image/jpeg o image/png); la validacion corresponde a negocio.
+// Dirección de la imagen; el archivo se aloja fuera de la base de datos.
 public record ImagenDTO(
-        byte[] contenido,
-        String tipoMime
+        String url
 ) {
 }

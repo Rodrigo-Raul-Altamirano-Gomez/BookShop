@@ -9,8 +9,7 @@ public class Usuario {
     private String email;
     private String contrasenia;
     private String nombre;
-    private byte[] imagen;
-    private String tipoImagen;
+    private String imagen;
     private LocalDateTime fechaNacimiento;
     private boolean activo;
     private Rol rol;
@@ -72,20 +71,12 @@ public class Usuario {
         this.nombre = nombre;
     }
 
-    public byte[] getImagen() {
-        return imagen == null ? null : imagen.clone();
+    public String getImagen() {
+        return imagen;
     }
 
-    public void setImagen(byte[] imagen) {
-        this.imagen = imagen == null ? null : imagen.clone();
-    }
-
-    public String getTipoImagen() {
-        return tipoImagen;
-    }
-
-    public void setTipoImagen(String tipoImagen) {
-        this.tipoImagen = tipoImagen;
+    public void setImagen(String imagen) {
+        this.imagen = imagen;
     }
 
     public LocalDateTime getFechaNacimiento() {

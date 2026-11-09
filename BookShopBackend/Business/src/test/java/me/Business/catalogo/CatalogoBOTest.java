@@ -155,7 +155,7 @@ class CatalogoBOTest {
 
     @Test
     void editarDatosConservaReferenciasPrecioStockImagen() throws Exception {
-        libro.setPortada(new byte[]{1});
+        libro.setPortada("https://example.test/imagen.png");
         bo.modificar(1, 1, datos());
         verify(libros).modificar(libro);
         assertSame(autor, libro.getAutor());
@@ -163,7 +163,7 @@ class CatalogoBOTest {
         assertSame(editorial, libro.getEditorial());
         assertEquals(new BigDecimal("20.00"), libro.getPrecioBase());
         assertEquals(5, libro.getStockFisico());
-        assertArrayEquals(new byte[]{1}, libro.getPortada());
+        assertEquals("https://example.test/imagen.png", libro.getPortada());
         assertEquals("admin@admin.bookshop", libro.getUsuarioActualizacion());
     }
 

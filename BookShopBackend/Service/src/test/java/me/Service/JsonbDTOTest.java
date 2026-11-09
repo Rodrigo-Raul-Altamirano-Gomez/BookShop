@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class JsonbDTOTest {
@@ -37,15 +37,15 @@ class JsonbDTOTest {
     }
 
     @Test
-    void conservaFechaYContenidoBinarioEnRegistro() throws Exception {
+    void conservaFechaYUrlEnRegistro() throws Exception {
         var original = new RegistroUsuarioDTO("Ana", "ana@correo.pe", LocalDate.of(2000, 2, 29),
-                "clave123", "clave123", new ImagenDTO(new byte[]{1, 2, 3}, "image/png"));
+                "clave123", "clave123", new ImagenDTO("https://example.test/imagen.png"));
         try (var jsonb = JsonbBuilder.create()) {
             var recibido = jsonb.fromJson(jsonb.toJson(original), RegistroUsuarioDTO.class);
             assertEquals(original.fechaNacimiento(), recibido.fechaNacimiento());
             assertEquals(original.email(), recibido.email());
-            assertArrayEquals(original.imagen().contenido(), recibido.imagen().contenido());
-            assertEquals(original.imagen().tipoMime(), recibido.imagen().tipoMime());
+            assertEquals(original.imagen().url(), recibido.imagen().url());
+
         }
     }
 }

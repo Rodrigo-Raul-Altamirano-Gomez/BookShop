@@ -49,8 +49,7 @@ public class EditorialBOImpl implements EditorialBO {
         editorial.setNombre(datos.nombre());
         editorial.setDescripcion(datos.introduccion());
         if (registro.imagen() != null) {
-            editorial.setImagen(registro.imagen().contenido());
-            editorial.setTipoImagen(registro.imagen().tipoMime());
+            editorial.setImagen(registro.imagen().url());
         }
         editorial.setUsuarioCreacion(actor.getEmail());
         editorial.setFechaCreacion(LocalDateTime.now(reloj));

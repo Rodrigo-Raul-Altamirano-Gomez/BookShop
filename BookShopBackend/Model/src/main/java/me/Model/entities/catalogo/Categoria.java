@@ -5,8 +5,7 @@ import java.time.LocalDateTime;
 public class Categoria {
     private int id;
     private String nombre;
-    private byte[] imagen;
-    private String tipoImagen;
+    private String imagen;
     private String descripcion;
     private boolean activo;
     private boolean eliminado;
@@ -43,20 +42,12 @@ public class Categoria {
         this.nombre = nombre;
     }
 
-    public byte[] getImagen() {
-        return imagen == null ? null : imagen.clone();
+    public String getImagen() {
+        return imagen;
     }
 
-    public void setImagen(byte[] imagen) {
-        this.imagen = imagen == null ? null : imagen.clone();
-    }
-
-    public String getTipoImagen() {
-        return tipoImagen;
-    }
-
-    public void setTipoImagen(String tipoImagen) {
-        this.tipoImagen = tipoImagen;
+    public void setImagen(String imagen) {
+        this.imagen = imagen;
     }
 
     public String getDescripcion() {

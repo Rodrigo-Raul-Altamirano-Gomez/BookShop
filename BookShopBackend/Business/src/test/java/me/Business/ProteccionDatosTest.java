@@ -1,9 +1,6 @@
 package me.Business;
 
 import java.nio.file.*;
-import java.io.ByteArrayOutputStream;
-import java.awt.image.BufferedImage;
-import javax.imageio.ImageIO;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 import me.Business.exceptions.*;
@@ -61,13 +58,12 @@ class ProteccionDatosTest {
         assertThrows(ConfiguracionException.class, () -> ProteccionDatos.cifrar("987654321"));
         assertEquals("clave-invalida", Files.readString(archivo));
     }
-    @Test void imagenExigeContenidoRealMimeYLimite() throws Exception {
-        ByteArrayOutputStream datos = new ByteArrayOutputStream();
-        ImageIO.write(new BufferedImage(2, 2, BufferedImage.TYPE_INT_RGB), "png", datos);
-        assertDoesNotThrow(() -> Imagenes.validar(new ImagenDTO(datos.toByteArray(), "image/png")));
-        assertThrows(ValidacionException.class, () -> Imagenes.validar(new ImagenDTO(datos.toByteArray(), "image/jpeg")));
-        assertThrows(ValidacionException.class, () -> Imagenes.validar(new ImagenDTO(new byte[]{1,2,3}, "image/png")));
-        assertThrows(ValidacionException.class, () -> Imagenes.validar(new ImagenDTO(new byte[5*1024*1024+1], "image/png")));
+    @Test void imagenExigeUnaUrlValida() throws Exception {
+        assertDoesNotThrow(() -> Imagenes.validar(new ImagenDTO("https://example.test/portada.jpg")));
+        assertDoesNotThrow(() -> Imagenes.validar(new ImagenDTO("/images/portada.png")));
+        assertThrows(ValidacionException.class, () -> Imagenes.validar(new ImagenDTO("data:image/png;base64,AAAA")));
+        assertThrows(ValidacionException.class, () -> Imagenes.validar(new ImagenDTO("javascript:alert(1)")));
+        assertThrows(ValidacionException.class, () -> Imagenes.validar(new ImagenDTO("https://example.test/" + "a".repeat(2048))));
         assertDoesNotThrow(() -> Imagenes.validar(null));
     }
 }

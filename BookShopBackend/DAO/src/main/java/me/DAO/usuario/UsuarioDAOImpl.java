@@ -29,25 +29,24 @@ import me.Model.entities.usuario.Usuario;
 public class UsuarioDAOImpl implements UsuarioDAO {
     @Override
     public void insertar(Usuario usuario) throws SQLException {
-        String sql = "INSERT INTO USUARIO (email, contrasenia, nombre, imagen, tipo_imagen, fecha_nacimiento, "
+        String sql = "INSERT INTO USUARIO (email, contrasenia, nombre, imagen, fecha_nacimiento, "
                 + "activo, rol, tiempo_total, cantidad_pedidos_entregados, eliminado, usuario_creacion, fecha_creacion) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         if (usuario.getFechaCreacion() == null) usuario.setFechaCreacion(LocalDateTime.now());
         try (Connection conexion = DBManager.getConnection();
              PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             sentencia.setString(1, usuario.getEmail());
             sentencia.setString(2, usuario.getContrasenia());
             sentencia.setString(3, usuario.getNombre());
-            sentencia.setBytes(4, usuario.getImagen());
-            sentencia.setString(5, usuario.getTipoImagen());
-            sentencia.setTimestamp(6, Timestamp.valueOf(usuario.getFechaNacimiento()));
-            sentencia.setBoolean(7, usuario.isActivo());
-            sentencia.setString(8, usuario.getRol().name());
-            sentencia.setLong(9, usuario.getTiempoTotal().getSeconds());
-            sentencia.setInt(10, usuario.getCantidadPedidosEntregados());
-            sentencia.setBoolean(11, usuario.isEliminado());
-            sentencia.setString(12, usuario.getUsuarioCreacion());
-            sentencia.setTimestamp(13, Timestamp.valueOf(usuario.getFechaCreacion()));
+            sentencia.setString(4, usuario.getImagen());
+            sentencia.setTimestamp(5, Timestamp.valueOf(usuario.getFechaNacimiento()));
+            sentencia.setBoolean(6, usuario.isActivo());
+            sentencia.setString(7, usuario.getRol().name());
+            sentencia.setLong(8, usuario.getTiempoTotal().getSeconds());
+            sentencia.setInt(9, usuario.getCantidadPedidosEntregados());
+            sentencia.setBoolean(10, usuario.isEliminado());
+            sentencia.setString(11, usuario.getUsuarioCreacion());
+            sentencia.setTimestamp(12, Timestamp.valueOf(usuario.getFechaCreacion()));
             sentencia.executeUpdate();
             try (ResultSet claves = sentencia.getGeneratedKeys()) {
                 if (!claves.next()) throw new SQLException("No se genero el identificador del usuario.");
@@ -104,8 +103,7 @@ public class UsuarioDAOImpl implements UsuarioDAO {
         usuario.setEmail(resultado.getString("email"));
         usuario.setContrasenia(resultado.getString("contrasenia"));
         usuario.setNombre(resultado.getString("nombre"));
-        usuario.setImagen(resultado.getBytes("imagen"));
-        usuario.setTipoImagen(resultado.getString("tipo_imagen"));
+        usuario.setImagen(resultado.getString("imagen"));
         usuario.setFechaNacimiento(resultado.getObject("fecha_nacimiento", LocalDateTime.class));
         usuario.setActivo(resultado.getBoolean("activo"));
         usuario.setRol(Rol.valueOf(resultado.getString("rol")));
@@ -146,16 +144,16 @@ public class UsuarioDAOImpl implements UsuarioDAO {
 
     @Override
     public PerfilUsuarioDTO obtenerPerfil(int id) throws SQLException {
-        String sql = "SELECT id, nombre, email, imagen, tipo_imagen, fecha_nacimiento "
+        String sql = "SELECT id, nombre, email, imagen, fecha_nacimiento "
                 + "FROM USUARIO WHERE id = ? AND NOT eliminado";
         try (Connection conexion = DBManager.getConnection();
              PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setInt(1, id);
             try (ResultSet resultado = sentencia.executeQuery()) {
                 if (!resultado.next()) return null;
-                byte[] contenido = resultado.getBytes("imagen");
+                String contenido = resultado.getString("imagen");
                 ImagenDTO imagen = contenido == null ? null
-                        : new ImagenDTO(contenido, resultado.getString("tipo_imagen"));
+                        : new ImagenDTO(contenido);
                 TarjetaUsuarioDTO tarjeta = new TarjetaUsuarioDTO(resultado.getInt("id"),
                         resultado.getString("nombre"), resultado.getString("email"), imagen);
                 return new PerfilUsuarioDTO(tarjeta,
@@ -166,14 +164,13 @@ public class UsuarioDAOImpl implements UsuarioDAO {
 
     @Override
     public boolean cambiarImagen(int id, ImagenDTO imagen, String usuario) throws SQLException {
-        String sql = "UPDATE USUARIO SET imagen = ?, tipo_imagen = ?, usuario_actualizacion = ?, "
+        String sql = "UPDATE USUARIO SET imagen = ?, usuario_actualizacion = ?, "
                 + "fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ? AND activo AND NOT eliminado";
         try (Connection conexion = DBManager.getConnection();
              PreparedStatement sentencia = conexion.prepareStatement(sql)) {
-            sentencia.setBytes(1, imagen == null ? null : imagen.contenido());
-            sentencia.setString(2, imagen == null ? null : imagen.tipoMime());
-            sentencia.setString(3, usuario);
-            sentencia.setInt(4, id);
+            sentencia.setString(1, imagen == null ? null : imagen.url());
+            sentencia.setString(2, usuario);
+            sentencia.setInt(3, id);
             return sentencia.executeUpdate() == 1;
         }
     }

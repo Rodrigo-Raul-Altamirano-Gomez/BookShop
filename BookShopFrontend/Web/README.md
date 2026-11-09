@@ -70,3 +70,28 @@ dotnet run --project BookShopFrontend/Pruebas -- --real
 Esta última prueba crea un usuario, dirección, tarjeta ficticia y pedido de prueba.
 Comprueba los servicios C# contra MySQL real y el reintento sin duplicar el pedido.
 Los datos de prueba permanecen en la base.
+
+## Estado de carga
+
+`Componentes/Compartidos/Cargando.razor` muestra un spinner de Bootstrap con los
+colores de BookShop. Recibe EnCurso y mantiene oculto ChildContent hasta terminar;
+si Error tiene un mensaje, muestra ese error en lugar de un estado vacío.
+Cada pantalla controla sus consultas con try/catch/finally. Se utiliza en inicio,
+catálogo, referencias, detalle de libro/referencia, comparación, cuenta, carrito y
+preparación de compra, incluyendo filtros, orden y paginación del catálogo y reseñas.
+Las pantallas sin consultas nuevas, como la confirmación que muestra el pedido
+recién recibido, no introducen una espera artificial.
+
+Las pruebas incluyen una consulta retenida: durante ella no se renderizan libros
+ni mensajes de lista vacía; después se muestra el contenido. También verifican
+que un error finalice el indicador y se presente como error.
+
+## Imágenes mediante URLs
+
+La base almacena URLs en columnas VARCHAR(2048), sin blobs ni campos MIME.
+ImagenDTO utiliza únicamente la propiedad `url`. Web utiliza esa dirección en
+`img src`; no convierte imágenes a Base64 ni envía arreglos de bytes.
+Registro y perfil permiten introducir una URL HTTP/HTTPS y retirar la imagen.
+Las imágenes anteriores se conservaron en `wwwroot/images/catalogo` y sus rutas
+`/images/catalogo/...` están guardadas en MySQL. Esos archivos forman parte del
+despliegue de Web. Para imágenes nuevas se introduce una dirección ya alojada.

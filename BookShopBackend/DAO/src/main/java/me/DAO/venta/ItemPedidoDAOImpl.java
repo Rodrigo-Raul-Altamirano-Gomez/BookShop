@@ -82,7 +82,7 @@ public class ItemPedidoDAOImpl implements ItemPedidoDAO {
     @Override
     public List<ItemDTO> obtenerItemsDTO(int idPedido) throws SQLException {
         String sql = """
-                SELECT i.*, l.titulo, l.portada, l.tipo_portada
+                SELECT i.*, l.titulo, l.portada
                 FROM ITEM_PEDIDO i JOIN LIBRO l ON l.id = i.id_libro
                 WHERE i.id_pedido = ? AND NOT i.eliminado ORDER BY i.id
                 """;
@@ -91,11 +91,11 @@ public class ItemPedidoDAOImpl implements ItemPedidoDAO {
             sentencia.setInt(1, idPedido);
             try (ResultSet resultado = sentencia.executeQuery()) {
                 while (resultado.next()) {
-                    byte[] portada = resultado.getBytes("portada");
+                    String portada = resultado.getString("portada");
                     BigDecimal original = resultado.getBigDecimal("precio_base");
                     BigDecimal unitario = resultado.getBigDecimal("precio_unitario");
                     items.add(new ItemDTO(resultado.getInt("id_libro"), resultado.getString("titulo"),
-                            portada == null ? new ImagenDTO(null, null) : new ImagenDTO(portada, resultado.getString("tipo_portada")),
+                            portada == null ? null : new ImagenDTO(portada),
                             resultado.getInt("cantidad"), original, unitario, resultado.getBigDecimal("porcentaje_descuento"), resultado.getBigDecimal("sub_total"), null, null));
                 }
             }
