@@ -18,6 +18,7 @@ public class ComprobanteBOImpl implements ComprobanteBO {
     private final PedidoBO pedidoBO;
     private final Autorizacion autorizacion;
     private final Clock reloj;
+    private final GeneradorPDF generador = new GeneradorPDF();
     public ComprobanteBOImpl() {
         this(new PedidoBOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")));
     }
@@ -33,5 +34,9 @@ public class ComprobanteBOImpl implements ComprobanteBO {
         return new ComprobanteCompraDTO(pedido,
             new TarjetaUsuarioDTO(comprador.getId(), comprador.getNombre(), comprador.getEmail(), null),
             LocalDateTime.now(reloj));
+    }
+    @Override
+    public byte[] generarPDF(int idActor, int idPedido) throws NegocioException {
+        return generador.comprobante(preparar(idActor, idPedido));
     }
 }

@@ -42,6 +42,17 @@
             <span class="badge bookshop-status success">@pedido.Estado</span>
         </header>
         <ResumenPedido Pedido="pedido" />
-        <div class="text-center mt-4"><a class="btn btn-primary" href="/catalogo">Seguir explorando</a></div>
+        @if (errorComprobante is not null)
+        {
+            <p class="alert alert-danger py-2 mt-3 text-center" role="alert">@errorComprobante</p>
+        }
+        <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">
+            <button class="btn btn-secondary d-flex align-items-center gap-2" @onclick="DescargarComprobante"
+                disabled="@descargando">
+                <Icono Nombre="report" />
+                @(descargando ? "Generando comprobante…" : "Descargar comprobante (PDF)")
+            </button>
+            <a class="btn btn-primary" href="/catalogo">Seguir explorando</a>
+        </div>
     }
 </div>

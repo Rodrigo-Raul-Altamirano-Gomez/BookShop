@@ -4,7 +4,19 @@ Proyecto académico de una tienda de libros: backend Java 25 con servicios REST 
 
 El frontend consume la API desde el proyecto Web para los doce requisitos elegidos. Las imágenes se guardan como URLs; los archivos actuales del catálogo están en `BookShopFrontend/Web/wwwroot/images/catalogo`.
 
-El entregable abarca RF01, RF02, RF05, RF06, RF07, RF08, RF09, RF11, RF12, RF14, RF15 y RF16. Las funcionalidades fuera de este alcance muestran un aviso de pendiente.
+El entregable abarca RF01, RF02, RF05, RF06, RF07, RF08, RF09, RF11, RF12, RF14, RF15 y RF16, además de los documentos PDF RF17, RF18 y RF19. Las funcionalidades fuera de este alcance muestran un aviso de pendiente.
+
+## Documentos PDF (RF17, RF18 y RF19)
+
+Se generan con JasperReports 7.0.6 a partir de las plantillas de `BookShopBackend/Business/src/main/resources/reportes`. `GeneradorPDF` compila cada `.jrxml` la primera vez que se usa y conserva el resultado en memoria.
+
+| Requisito | Endpoint (GET, `application/pdf`) | Acceso | Pantalla |
+|---|---|---|---|
+| RF17 Comprobante de compra | `documentos/comprobantes/{idPedido}` | Dueño del pedido | Botón en la confirmación del pedido |
+| RF18 Ventas por libro | `documentos/ventas-libros?inicio=aaaa-mm-dd&fin=aaaa-mm-dd&cantidad=n` | Administrador | `/administracion/reportes` |
+| RF19 Usuarios por gasto | `documentos/usuarios?mes=aaaa-mm&cantidad=n` | Administrador | `/administracion/reportes` |
+
+`cantidad` es opcional: si se omite, el reporte no tiene límite. Web descarga el PDF con la sesión del circuito y lo entrega al navegador mediante `bookshopDescargar` (`wwwroot/ui.js`). Para cambiar el diseño, edita el `.jrxml` en Jaspersoft Studio 7.x y vuelve a copiarlo en esa carpeta. `GeneradorPDFTest` deja ejemplos en `Business/target/reportes-prueba`.
 
 ## Estructura
 

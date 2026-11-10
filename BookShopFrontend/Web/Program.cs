@@ -7,6 +7,7 @@ builder.Services.AddScoped<SesionUsuario>();
 builder.Services.AddScoped<CatalogoServicio>();
 builder.Services.AddScoped<CuentaServicio>();
 builder.Services.AddScoped<CompraServicio>();
+builder.Services.AddScoped<DocumentoServicio>();
 // Componentes interactivos y estado temporal de la interfaz.
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 var app = builder.Build();

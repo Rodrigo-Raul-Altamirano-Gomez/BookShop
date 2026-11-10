@@ -6,8 +6,10 @@ import me.Model.dto.catalogo.ConsultaReporteLibrosDTO;
 import me.Model.dto.catalogo.ReporteVentasLibrosDTO;
 import me.Model.dto.usuario.ReporteUsuariosDTO;
 
-// Prepara datos; la generación con Jaspersoft Studio se incorpora en otra fase.
+// Prepara los datos y genera los PDF con las plantillas JRXML (RF18 y RF19).
 public interface ReporteBO {
     ReporteVentasLibrosDTO prepararLibros(int idActor, ConsultaReporteLibrosDTO consulta) throws NegocioException;
     ReporteUsuariosDTO prepararUsuarios(int idActor, YearMonth mes, Integer cantidadMaxima) throws NegocioException;
+    byte[] generarLibrosPDF(int idActor, ConsultaReporteLibrosDTO consulta) throws NegocioException;
+    byte[] generarUsuariosPDF(int idActor, YearMonth mes, Integer cantidadMaxima) throws NegocioException;
 }

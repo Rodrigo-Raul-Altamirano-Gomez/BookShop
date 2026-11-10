@@ -5,7 +5,12 @@ import java.util.List;
 import java.util.Map;
 import java.math.BigDecimal;
 import java.io.StringReader;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import me.Business.documentos.ComprobanteBO;
+import me.Business.documentos.ReporteBO;
+import me.Model.dto.catalogo.ConsultaReporteLibrosDTO;
 import jakarta.json.Json;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -70,6 +75,8 @@ class ServicioHttpTest {
         when(servicios.getDireccionEnvioBO()).thenReturn(mock(DireccionEnvioBO.class));
         when(servicios.getMetodoPagoBO()).thenReturn(mock(MetodoPagoBO.class));
         when(servicios.getSeguimientoBO()).thenReturn(mock(SeguimientoBO.class));
+        when(servicios.getComprobanteBO()).thenReturn(mock(ComprobanteBO.class));
+        when(servicios.getReporteBO()).thenReturn(mock(ReporteBO.class));
         request = mock(HttpServletRequest.class);
         sesion = mock(HttpSession.class);
         atributos = new HashMap<>();
@@ -110,6 +117,51 @@ class ServicioHttpTest {
     @AfterEach
     void cerrar() throws Exception {
         if (http != null) http.tearDown();
+    }
+
+    @Test
+    void comprobanteRF17DevuelvePdfDelPedidoDeLaSesion() throws Exception {
+        when(request.getSession(false)).thenReturn(sesion);
+        atributos.put("bookshop.actor", 7);
+        when(servicios.getComprobanteBO().generarPDF(7, 40)).thenReturn("%PDF-1.5".getBytes());
+        try (Response respuesta = http.target("documentos/comprobantes/40").request("application/pdf").get()) {
+            assertEquals(200, respuesta.getStatus());
+            assertEquals("application/pdf", respuesta.getMediaType().toString());
+            assertTrue(respuesta.getHeaderString("Content-Disposition").contains("comprobante-pedido-40.pdf"));
+            assertArrayEquals("%PDF-1.5".getBytes(), respuesta.readEntity(byte[].class));
+        }
+    }
+
+    @Test
+    void reportesRF18YRF19ConviertenParametros() throws Exception {
+        when(request.getSession(false)).thenReturn(sesion);
+        atributos.put("bookshop.actor", 1);
+        when(servicios.getReporteBO().generarLibrosPDF(eq(1), any())).thenReturn(new byte[] {1});
+        when(servicios.getReporteBO().generarUsuariosPDF(eq(1), any(), any())).thenReturn(new byte[] {2});
+        try (Response respuesta = http.target("documentos/ventas-libros").queryParam("inicio", "2026-10-01")
+                .queryParam("fin", "2026-10-31").queryParam("cantidad", 5).request("application/pdf").get()) {
+            assertEquals(200, respuesta.getStatus());
+            verify(servicios.getReporteBO()).generarLibrosPDF(1, new ConsultaReporteLibrosDTO(
+                    LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 31), 5));
+        }
+        try (Response respuesta = http.target("documentos/usuarios").queryParam("mes", "2026-10")
+                .request("application/pdf").get()) {
+            assertEquals(200, respuesta.getStatus());
+            verify(servicios.getReporteBO()).generarUsuariosPDF(1, YearMonth.of(2026, 10), null);
+        }
+        try (Response respuesta = http.target("documentos/usuarios").queryParam("mes", "octubre")
+                .request("application/pdf").get()) {
+            assertEquals(400, respuesta.getStatus());
+        }
+    }
+
+    @Test
+    void reporteSinSesionNoLlamaBusiness() {
+        try (Response respuesta = http.target("documentos/usuarios").queryParam("mes", "2026-10")
+                .request("application/pdf").get()) {
+            assertEquals(401, respuesta.getStatus());
+            verifyNoInteractions(servicios.getReporteBO());
+        }
     }
 
     @Test
