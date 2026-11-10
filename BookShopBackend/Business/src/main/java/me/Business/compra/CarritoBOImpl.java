@@ -25,7 +25,6 @@ import me.DAO.catalogo.LibroDAO;
 import me.DAO.catalogo.LibroDAOImpl;
 import me.DAO.usuario.UsuarioDAO;
 import me.DAO.usuario.UsuarioDAOImpl;
-import me.Model.dto.ImagenDTO;
 import me.Model.dto.compra.ItemDTO;
 import me.Model.dto.compra.PreparacionCompraDTO;
 import me.Model.dto.compra.ResumenCompraDTO;
@@ -95,9 +94,6 @@ public class CarritoBOImpl implements CarritoBO {
 
         EstadoCarrito carrito = obtenerCarrito(idUsuario);
         synchronized (carrito) {
-            long ejemplares = cantidad;
-            for (ItemDTO linea : carrito.lineas.values()) ejemplares += linea.cantidad();
-            if (ejemplares > Integer.MAX_VALUE) throw new ValidacionException("cantidad", "La cantidad es demasiado grande.");
             try {
                 Libro libro = libroDAO.leer(idLibro);
                 if (libro == null) throw new RecursoNoEncontradoException("El libro no existe.");
@@ -114,7 +110,7 @@ public class CarritoBOImpl implements CarritoBO {
                 BigDecimal precioFinal = libro.getPrecioBase().multiply(BigDecimal.valueOf(100).subtract(porcentaje))
                     .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
                 ItemDTO linea = new ItemDTO(idLibro, libro.getTitulo(),
-                    new ImagenDTO(libro.getPortada()), (int) cantidadTotal,
+                    libro.getPortada(), (int) cantidadTotal,
                     libro.getPrecioBase(), precioFinal, porcentaje,
                     precioFinal.multiply(BigDecimal.valueOf(cantidadTotal)), true, libro.getStockFisico());
                 List<ItemDTO> items = new ArrayList<>();
@@ -209,7 +205,7 @@ public class CarritoBOImpl implements CarritoBO {
             BigDecimal porcentaje = descuento == null ? BigDecimal.ZERO : descuento.getPorcentaje();
             BigDecimal precioFinal = libro.getPrecioBase().multiply(BigDecimal.valueOf(100).subtract(porcentaje))
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-            return new ItemDTO(idLibro, libro.getTitulo(), new ImagenDTO(libro.getPortada()), cantidad,
+            return new ItemDTO(idLibro, libro.getTitulo(), libro.getPortada(), cantidad,
                 libro.getPrecioBase(), precioFinal, porcentaje, precioFinal.multiply(BigDecimal.valueOf(cantidad)),
                 libro.isActivo(), libro.getStockFisico());
         } catch (SQLException e) {

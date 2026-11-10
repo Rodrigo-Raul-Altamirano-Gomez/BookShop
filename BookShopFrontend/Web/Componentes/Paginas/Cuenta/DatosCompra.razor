@@ -16,11 +16,11 @@
             Datos de compra
             <span>@Cantidad @EtiquetaCantidad</span>
         </h1>
-        @if (Sesion.Usuario is not null && Pestana != "coupons")
+        @if (Sesion.Usuario is not null && Pestana != "cupones")
         {
             <button class="btn btn-primary" @onclick="Anadir">
                 <Icono Nombre="plus" />
-                @(Pestana == "addresses" ? "Añadir dirección" : "Añadir método")
+                @(Pestana == "direcciones" ? "Añadir dirección" : "Añadir método")
             </button>
         }
     </div>
@@ -37,23 +37,23 @@
     {
         <div class="nav nav-tabs bookshop-tabs" role="tablist" aria-label="Datos de compra">
             <button
-                class="nav-link bookshop-tab @(Pestana == "addresses" ? "active" : "")"
+                class="nav-link bookshop-tab @(Pestana == "direcciones" ? "active" : "")"
                 role="tab"
-                aria-selected="@(Pestana == "addresses")"
+                aria-selected="@(Pestana == "direcciones")"
                 @onclick="MostrarDirecciones">
                 Direcciones
             </button>
             <button
-                class="nav-link bookshop-tab @(Pestana == "methods" ? "active" : "")"
+                class="nav-link bookshop-tab @(Pestana == "metodos" ? "active" : "")"
                 role="tab"
-                aria-selected="@(Pestana == "methods")"
+                aria-selected="@(Pestana == "metodos")"
                 @onclick="MostrarMetodos">
                 Métodos de pago
             </button>
             <button
-                class="nav-link bookshop-tab @(Pestana == "coupons" ? "active" : "")"
+                class="nav-link bookshop-tab @(Pestana == "cupones" ? "active" : "")"
                 role="tab"
-                aria-selected="@(Pestana == "coupons")"
+                aria-selected="@(Pestana == "cupones")"
                 @onclick="MostrarCupones">
                 Cupones
             </button>
@@ -63,7 +63,7 @@
             <div class="empty-state card border-0 text-center align-items-center py-5">
                 <h2>No tienes @EtiquetaCantidad en esta lista</h2>
                 <p class="mb-2">
-                    @(Pestana == "coupons" ? "Aquí aparecerán tus cupones disponibles, utilizados y vencidos." :
+                    @(Pestana == "cupones" ? "Aquí aparecerán tus cupones disponibles, utilizados y vencidos." :
                     "Añade tus datos para tenerlos a mano en tu próxima compra.")
                 </p>
             </div>
@@ -71,7 +71,7 @@
         else
         {
             <div class="purchase-data-grid row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
-                @if (Pestana == "addresses")
+                @if (Pestana == "direcciones")
                 {
                     @foreach (var direccion in DireccionesPagina)
                     {
@@ -124,7 +124,7 @@
                         </div>
                     }
                 }
-                else if (Pestana == "methods")
+                else if (Pestana == "metodos")
                 {
                     @foreach (var metodo in MetodosPagina)
                     {
@@ -199,7 +199,7 @@
                                 <dl class="border-top pt-3 mb-0">
                                     <div>
                                         <dt class="text-body-secondary">Compra mínima</dt>
-                                        <dd class="mb-0">@Importe(cupon.Minimo)</dd>
+                                        <dd class="mb-0">@Presentacion.Dinero(cupon.Minimo)</dd>
                                     </div>
                                     <div>
                                         <dt class="text-body-secondary">Vencimiento</dt>
@@ -215,11 +215,11 @@
         }
     }
 </div>
-@if (ModalAbierto == "address")
+@if (ModalAbierto == "direccion")
 {
     <FormularioDireccion Valor="DireccionEnEdicion" AlGuardar="GuardarDireccion" AlCerrar="Cerrar" />
 }
-@if (ModalAbierto == "method")
+@if (ModalAbierto == "metodo")
 {
     <FormularioPago Valor="MetodoEnEdicion" AlGuardar="GuardarMetodo" AlCerrar="Cerrar" />
 }

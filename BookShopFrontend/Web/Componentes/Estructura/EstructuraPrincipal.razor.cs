@@ -5,11 +5,11 @@ namespace Web.Componentes.Estructura;
 
 public partial class EstructuraPrincipal : IDisposable
 {
-    [Microsoft.AspNetCore.Components.Inject] protected CompraServicio Compras { get; set; } = default!;
+    [Inject] protected CompraServicio Compras { get; set; } = default!;
 
-    [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
+    [Inject] protected HttpClientUtils Api { get; set; } = default!;
 
-    [Microsoft.AspNetCore.Components.Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
+    [Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
 
     [Inject]
     private SesionUsuario Sesion { get; set; } = default!;
@@ -70,17 +70,13 @@ public partial class EstructuraPrincipal : IDisposable
     {
         try
         {
-            try
-            {
-                await Api.Delete("cuenta/sesion");
-            }
-            finally { Sesion.LimpiarCuenta(); }
-            Sesion.Notificar();
+            await Api.Delete("cuenta/sesion");
         }
         catch (InvalidOperationException e)
         {
             Sesion.Avisar(e.Message);
         }
+        Sesion.LimpiarCuenta();
         cuentaAbierta = false;
         Navegacion.NavigateTo("/");
     }
@@ -143,4 +139,3 @@ public partial class EstructuraPrincipal : IDisposable
         temporizadorAviso?.Dispose();
     }
 }
-

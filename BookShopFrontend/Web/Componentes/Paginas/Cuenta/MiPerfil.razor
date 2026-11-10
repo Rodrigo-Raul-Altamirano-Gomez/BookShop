@@ -102,7 +102,7 @@
         </div>
     }
 </div>
-@if (ModalAbierto == "profile")
+@if (ModalAbierto == "perfil")
 {
     <Modal Titulo="Editar datos personales" AlCerrar="Cerrar">
         <form @onsubmit="GuardarPerfil" @onsubmit:preventDefault novalidate>
@@ -181,7 +181,7 @@
         </form>
     </Modal>
 }
-@if (ModalAbierto == "deactivate")
+@if (ModalAbierto == "desactivar")
 {
     <Modal Titulo="Desactivar cuenta" AlCerrar="Cerrar">
         <p>Tu cuenta quedará desactivada. Conservarás tus datos, pedidos y listas para cuando decidas volver.</p>

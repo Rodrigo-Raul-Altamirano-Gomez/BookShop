@@ -324,6 +324,6 @@ public class Libro {
         if (cantidad <= 0) {
             throw new IllegalArgumentException("La cantidad debe ser positiva.");
         }
-        stockFisico = Math.addExact(stockFisico, cantidad);
+        stockFisico = stockFisico + cantidad;
     }
 }

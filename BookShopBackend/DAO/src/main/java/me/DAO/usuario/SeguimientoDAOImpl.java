@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import me.DBManager.DBManager;
-import me.Model.dto.ImagenDTO;
 import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.dto.catalogo.OrdenReferencia;
 import me.Model.dto.catalogo.TarjetaReferenciaDTO;
@@ -181,9 +180,7 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
                 sentencia.setLong(4, (long) (pagina - 1) * tamanioPagina);
                 try (ResultSet resultado = sentencia.executeQuery()) {
                     while (resultado.next()) {
-                        String contenido = resultado.getString("imagen");
-                        ImagenDTO imagen = contenido == null ? null
-                                : new ImagenDTO(contenido);
+                        String imagen = resultado.getString("imagen");
                         tarjetas.add(new TarjetaReferenciaDTO(resultado.getInt("id"),
                                 resultado.getString("nombre"), imagen));
                     }

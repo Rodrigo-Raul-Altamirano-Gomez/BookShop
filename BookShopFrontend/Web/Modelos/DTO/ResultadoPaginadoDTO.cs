@@ -8,22 +8,13 @@ public class ResultadoPaginadoDTO<T>
     public List<T> Items { get; set; } = [];
 
     [JsonProperty("totalResultados")]
-    public long TotalResultados
-    {
-        get; set;
-    }
+    public long TotalResultados { get; set; }
 
     [JsonProperty("pagina")]
-    public int Pagina
-    {
-        get; set;
-    }
+    public int Pagina { get; set; }
 
     [JsonProperty("tamanioPagina")]
-    public int TamanioPagina
-    {
-        get; set;
-    }
+    public int TamanioPagina { get; set; }
 
     public ResultadoPaginadoDTO()
     {

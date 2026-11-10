@@ -19,6 +19,7 @@ builder.Logging.ClearProviders();
 await using var servidor = builder.Build();
 int verificaciones = 0;
 string? ultimoOrden = null;
+DatosMetodoPagoDTO? ultimoMetodo = null;
 Task esperaBusqueda = Task.CompletedTask;
 bool fallarBusqueda = false;
 void Verificar(bool condicion, string mensaje)
@@ -55,12 +56,17 @@ servidor.Map("/{**ruta}", async contexto =>
     else if (ruta == "/webresources/imagen")
     {
         using var cuerpo = await JsonDocument.ParseAsync(contexto.Request.Body);
-        Verificar(cuerpo.RootElement.GetProperty("url").GetString() == "https://example.test/imagen.png", "URL de imagen incorrecta");
-        resultado = new ImagenDTO("https://example.test/imagen.png");
+        Verificar(cuerpo.RootElement.GetString() == "https://example.test/imagen.png", "URL de imagen incorrecta");
+        resultado = "https://example.test/imagen.png";
     }
     else if (ruta == "/webresources/cuenta") resultado = perfil;
     else if (ruta == "/webresources/cuenta/direcciones") resultado = new ResultadoPaginadoDTO<DireccionEnvioDTO>([new(3, "Casa", "Calle 1", "Centro", "Lima", "", true)], 1, 1, 10);
-    else if (ruta == "/webresources/cuenta/metodos") resultado = new ResultadoPaginadoDTO<MetodoPagoDTO>([new(4, true, "Ana", "Banco", "Tarjeta", "****1234", "DEBITO", new DateOnly(2030, 1, 1), true, true)], 1, 1, 10);
+    else if (ruta == "/webresources/cuenta/metodos")
+    {
+        if (contexto.Request.Method == "POST")
+            ultimoMetodo = await contexto.Request.ReadFromJsonAsync<DatosMetodoPagoDTO>();
+        resultado = new ResultadoPaginadoDTO<MetodoPagoDTO>([new(4, true, "Ana", "Banco", "Tarjeta", "****1234", "DEBITO", new DateOnly(2030, 1, 1), true, true)], 1, 1, 10);
+    }
     else if (ruta == "/webresources/cuenta/cupones") resultado = new ResultadoPaginadoDTO<CuponDTO>([], 0, 1, 10);
     else if (ruta == "/webresources/cuenta/libros-guardados/busqueda")
     {
@@ -96,6 +102,7 @@ servidor.Map("/{**ruta}", async contexto =>
             return;
         }
         var filtro = await contexto.Request.ReadFromJsonAsync<FiltroLibroDTO>(); ultimoOrden = filtro!.Orden;
+        Verificar(filtro.SoloActivos && filtro.Pagina > 0 && filtro.TamanioPagina > 0, "El catálogo público debe enviar solo activos y paginación válida");
         resultado = new ResultadoPaginadoDTO<TarjetaLibroDTO>([new(7, "Libro real", null, "Autor real", 50, 40, 20, true)], 1, filtro.Pagina, filtro.TamanioPagina);
     }
     else if (ruta == "/webresources/libros/7")
@@ -130,13 +137,21 @@ Verificar(preparado.PuedePagar && preparado.Seleccion.IdDireccionEnvio == 3, "Se
 var pedido = Presentacion.Pedido(await api.Post<DetallePedidoDTO>("pedidos/confirmacion"));
 Verificar(pedido.Id == 21 && pedido.Total == 84 && pedido.Transaccion == "SIM-21" && pedido.FechaEntrega is null, "Confirmación alterada");
 await api.Put<PerfilUsuarioDTO>("cuenta/imagen");
-var imagen = await api.Post<ImagenDTO>("imagen", new ImagenDTO("https://example.test/imagen.png"));
-Verificar(Presentacion.ImagenDesdeUrl(Presentacion.Imagen(imagen, ""))!.Url == imagen.Url, "Imagen no reversible");
+var imagen = await api.Post<string>("imagen", "https://example.test/imagen.png");
+Verificar(Presentacion.ImagenDesdeUrl(Presentacion.Imagen(imagen, ""))! == imagen, "Imagen no reversible");
 await api.Delete("sin-contenido");
 try { await api.Get<object>("error"); throw new Exception("No se informó el error HTTP"); }
 catch (InvalidOperationException e) { Verificar(e.Message == "Inicia sesión.", "Mensaje del backend perdido"); }
 Verificar(estado.Usuario is null && compraServicio.Carrito.Count == 0 && cuentaServicio.Direcciones.Count == 0, "Sesión vencida conserva datos privados");
 Verificar(await api.Get<string>("cookie") == "sin-sesion", "Cookie vencida no retirada");
+var tarjeta = new Web.Modelos.MetodoPago { Tipo = "Tarjeta", TipoTarjeta = "Crédito", Numero = "4111111111111111", Vencimiento = new DateOnly(2030, 1, 1) };
+await cuentaServicio.GuardarMetodo(tarjeta);
+Verificar(ultimoMetodo?.TipoTarjeta == "CREDITO" && ultimoMetodo.FechaVencimiento == tarjeta.Vencimiento, "Se perdieron el tipo o vencimiento de la tarjeta");
+Verificar(tarjeta.Numero is null, "Se conserva el número completo tras guardar");
+var billetera = new Web.Modelos.MetodoPago { Tipo = "Billetera", Numero = "999999999" };
+await cuentaServicio.GuardarMetodo(billetera);
+Verificar(ultimoMetodo?.TarjetaBancaria == false && ultimoMetodo.TipoTarjeta is null && ultimoMetodo.FechaVencimiento is null, "Billetera enviada como tarjeta");
+
 // Renderizar componentes reales con respuestas REST, sin navegador ni datos de demostración.
 var servicios = new ServiceCollection();
 servicios.AddLogging(); servicios.AddSingleton(estado);
@@ -148,7 +163,7 @@ await renderer.Dispatcher.InvokeAsync(async () =>
     var inicio = await renderer.RenderComponentAsync<Web.Componentes.Paginas.Inicio>();
     Verificar(inicio.ToHtmlString().Contains("Libro real"), "Inicio no muestra datos REST");
     Verificar(catalogoServicio.Idiomas.Count == 13 && catalogoServicio.Idiomas.Contains("Español"), "No se cargaron todas las páginas de idiomas");
-    var catalogo = await renderer.RenderComponentAsync<Web.Componentes.Paginas.Catalogo.ExploradorCatalogo>(ParameterView.FromDictionary(new Dictionary<string, object?> { ["Busqueda"] = "historia", ["OrdenInicial"] = "vendidos" }));
+    var catalogo = await renderer.RenderComponentAsync<Web.Componentes.Paginas.Catalogo.ExploradorCatalogo>(ParameterView.FromDictionary(new Dictionary<string, object?> { ["Busqueda"] = "historia", ["OrdenInicial"] = "MAS_VENDIDOS" }));
     Verificar(catalogo.ToHtmlString().Contains("Libro real") && ultimoOrden == "MAS_VENDIDOS", "Catálogo no envía el orden al servidor");
     var bloqueo = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
     esperaBusqueda = bloqueo.Task;

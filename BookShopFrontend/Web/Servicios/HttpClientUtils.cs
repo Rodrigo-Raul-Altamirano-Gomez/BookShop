@@ -25,9 +25,9 @@ public sealed class HttpClientUtils : IDisposable
     public Task<T> Post<T>(string ruta, object? datos = null) => Enviar<T>(HttpMethod.Post, ruta, datos);
     public Task<T> Put<T>(string ruta, object? datos = null) => Enviar<T>(HttpMethod.Put, ruta, datos);
     public Task<T> Delete<T>(string ruta) => Enviar<T>(HttpMethod.Delete, ruta);
-    public Task Post(string ruta, object? datos = null) => Enviar(HttpMethod.Post, ruta, datos);
-    public Task Put(string ruta, object? datos = null) => Enviar(HttpMethod.Put, ruta, datos);
-    public Task Delete(string ruta) => Enviar(HttpMethod.Delete, ruta);
+    public Task Post(string ruta, object? datos = null) => Enviar<object>(HttpMethod.Post, ruta, datos);
+    public Task Put(string ruta, object? datos = null) => Enviar<object>(HttpMethod.Put, ruta, datos);
+    public Task Delete(string ruta) => Enviar<object>(HttpMethod.Delete, ruta);
 
     private async Task<T> Enviar<T>(HttpMethod metodo, string ruta, object? datos = null)
     {
@@ -67,9 +67,6 @@ public sealed class HttpClientUtils : IDisposable
             return JsonConvert.DeserializeObject<T>(contenido)!;
         }
     }
-
-    private async Task Enviar(HttpMethod metodo, string ruta, object? datos = null)
-        => await Enviar<object>(metodo, ruta, datos);
 
     public void OlvidarSesion()
     {

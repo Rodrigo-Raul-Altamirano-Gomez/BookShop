@@ -220,14 +220,14 @@ class ServicioHttpTest {
     }
 
     @Test
-    void imagenLlegaComoUrlJson() throws Exception {
+    void imagenLlegaComoUrl() throws Exception {
         when(request.getSession(false)).thenReturn(sesion);
         atributos.put("bookshop.actor", 7);
-        try (Response respuesta = http.target("cuenta/imagen").request()
-                .put(Entity.json("{\"url\":\"https://example.test/imagen.png\"}"))) {
+        try (Response respuesta = http.target("cuenta/imagen").queryParam("url", "https://example.test/imagen.png").request()
+                .put(Entity.json("null"))) {
             assertEquals(204, respuesta.getStatus());
             verify(servicios.getUsuarioBO()).cambiarImagen(eq(7), argThat(imagen ->
-                    "https://example.test/imagen.png".equals(imagen.url())));
+                    "https://example.test/imagen.png".equals(imagen)));
         }
     }
 

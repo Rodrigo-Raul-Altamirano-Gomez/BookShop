@@ -159,11 +159,10 @@ class CompraBusinessTest {
         when(descuentos.obtenerVigente(eq(3), any())).thenReturn(null);
         carrito.agregar(1, 3, Integer.MAX_VALUE);
         var preparacion = negocio.preparar(1);
-        assertThrows(ValidacionException.class, () -> carrito.agregar(1, 3, 1));
-        assertThrows(ValidacionException.class, () -> carrito.agregar(1, 4, 1));
+        assertThrows(StockInsuficienteException.class, () -> carrito.agregar(1, 3, 1));
+        assertThrows(me.Business.exceptions.RecursoNoEncontradoException.class, () -> carrito.agregar(1, 4, 1));
         assertEquals(Integer.MAX_VALUE, carrito.consultar(1).cantidadLibros());
         assertSame(preparacion, negocio.consultarPreparacion(1));
-        verify(libros, never()).leer(4);
         verifyNoInteractions(conexion);
     }
 

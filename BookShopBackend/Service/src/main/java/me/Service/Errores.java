@@ -2,7 +2,6 @@ package me.Service;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.List;
 import jakarta.json.bind.JsonbException;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
@@ -70,19 +69,11 @@ public class Errores implements ExceptionMapper<Exception> {
             };
         }
         if (estado >= 500) LOG.log(Level.SEVERE, "Error al atender la solicitud REST", error);
-        Response.ResponseBuilder respuesta = Response.status(estado).type(MediaType.APPLICATION_JSON)
-                .entity(new ErrorRespuesta(codigo, mensaje, campo));
-        if (error instanceof WebApplicationException web) {
-            // Conserva cabeceras de protocolo, por ejemplo Allow y WWW-Authenticate.
-            for (String nombre : web.getResponse().getHeaders().keySet()) {
-                if (!nombre.equalsIgnoreCase("Content-Type") && !nombre.equalsIgnoreCase("Content-Length")) {
-                    List<Object> valores = web.getResponse().getHeaders().get(nombre);
-                    for (Object valor : valores) {
-                        respuesta.header(nombre, valor);
-                    }
-                }
-            }
-        }
-        return respuesta.build();
+        Response.ResponseBuilder respuesta = Response.status(estado);
+        if (error instanceof WebApplicationException web)
+            respuesta = Response.fromResponse(web.getResponse());
+        return respuesta.status(estado).type(MediaType.APPLICATION_JSON)
+                .header("Content-Length", null)
+                .entity(new ErrorRespuesta(codigo, mensaje, campo)).build();
     }
 }

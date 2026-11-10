@@ -3,7 +3,6 @@ package me.Business.catalogo;
 import java.math.BigDecimal;
 import java.util.List;
 import me.Business.exceptions.NegocioException;
-import me.Model.dto.ImagenDTO;
 import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.dto.catalogo.DatosLibroDTO;
 import me.Model.dto.catalogo.DetalleLibroDTO;
@@ -17,7 +16,7 @@ public interface LibroBO {
     void modificar(int idActor, int idLibro, DatosLibroDTO datos) throws NegocioException;
     void cambiarPrecio(int idActor, int idLibro, BigDecimal precio) throws NegocioException;
     void cambiarStock(int idActor, int idLibro, int stock) throws NegocioException;
-    void cambiarImagen(int idActor, int idLibro, ImagenDTO imagen) throws NegocioException;
+    void cambiarImagen(int idActor, int idLibro, String imagen) throws NegocioException;
     void cambiarActivo(int idActor, int idLibro, boolean activo) throws NegocioException;
     void eliminar(int idActor, int idLibro) throws NegocioException;
     ResultadoPaginadoDTO<TarjetaLibroDTO> buscar(int idActor, FiltroLibroDTO filtro) throws NegocioException;

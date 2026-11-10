@@ -17,6 +17,8 @@ public record ResultadoPaginadoDTO<T>(
     }
 
     public long totalPaginas() {
-        return totalResultados / tamanioPagina + (totalResultados % tamanioPagina == 0 ? 0 : 1);
+        long paginas = totalResultados / tamanioPagina;
+        if (totalResultados % tamanioPagina != 0) paginas++;
+        return paginas;
     }
 }

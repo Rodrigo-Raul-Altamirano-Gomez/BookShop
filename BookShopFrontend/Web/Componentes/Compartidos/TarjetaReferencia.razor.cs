@@ -8,4 +8,3 @@ public partial class TarjetaReferencia
     [Parameter, EditorRequired]
     public Referencia Referencia { get; set; } = new();
 }
-

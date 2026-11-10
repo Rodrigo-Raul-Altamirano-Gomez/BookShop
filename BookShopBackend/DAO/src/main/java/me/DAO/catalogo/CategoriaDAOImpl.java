@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import me.DBManager.DBManager;
 import me.DBManager.TransactionContext;
-import me.Model.dto.ImagenDTO;
 import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.dto.catalogo.DetalleReferenciaDTO;
 import me.Model.dto.catalogo.FiltroReferenciaDTO;
@@ -109,12 +108,12 @@ public class CategoriaDAOImpl implements CategoriaDAO {
     }
 
     @Override
-    public boolean cambiarImagen(int id, ImagenDTO imagen, String usuario) throws SQLException {
+    public boolean cambiarImagen(int id, String imagen, String usuario) throws SQLException {
         String sql = "UPDATE CATEGORIA SET imagen=?,usuario_actualizacion=?,"
                 + " fecha_actualizacion=CURRENT_TIMESTAMP WHERE id=? AND eliminado=FALSE";
         try (Connection conexion = DBManager.getConnection();
              PreparedStatement sentencia = conexion.prepareStatement(sql)) {
-            sentencia.setString(1, imagen == null ? null : imagen.url());
+            sentencia.setString(1, imagen);
             sentencia.setString(2, usuario);
             sentencia.setInt(3, id);
             return sentencia.executeUpdate() == 1;
@@ -156,7 +155,7 @@ public class CategoriaDAOImpl implements CategoriaDAO {
                 sentencia.setLong(parametro, (long) (filtro.pagina() - 1) * filtro.tamanioPagina());
                 try (ResultSet resultado = sentencia.executeQuery()) {
                     while (resultado.next()) {
-                        ImagenDTO imagen = conImagen ? imagen(resultado) : null;
+                        String imagen = conImagen ? resultado.getString("imagen") : null;
                         items.add(new TarjetaReferenciaDTO(resultado.getInt("id"), resultado.getString("nombre"), imagen));
                     }
                 }
@@ -177,7 +176,7 @@ public class CategoriaDAOImpl implements CategoriaDAO {
             try (ResultSet resultado = sentencia.executeQuery()) {
                 if (!resultado.next()) return null;
                 TarjetaReferenciaDTO tarjeta = new TarjetaReferenciaDTO(resultado.getInt("id"),
-                        resultado.getString("nombre"), imagen(resultado));
+                        resultado.getString("nombre"), resultado.getString("imagen"));
                 return new DetalleReferenciaDTO(tarjeta, resultado.getString("descripcion"),
                         resultado.getBoolean("activo"), resultado.getBoolean("seguido"));
             }
@@ -241,10 +240,6 @@ public class CategoriaDAOImpl implements CategoriaDAO {
         return categoria;
     }
 
-    private ImagenDTO imagen(ResultSet resultado) throws SQLException {
-        String url = resultado.getString("imagen");
-        return url == null ? null : new ImagenDTO(url);
-    }
 
     private String patron(String nombre) {
         return "%" + nombre.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";

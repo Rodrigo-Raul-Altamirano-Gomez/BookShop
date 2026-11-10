@@ -43,11 +43,11 @@ public class ResenaBOImpl implements ResenaBO {
                 Clock.system(ZoneId.of("America/Lima")));
     }
 
-    public ResenaBOImpl(ResenaDAO resenaDAO, LibroDAO libroDAO, PedidoDAO pedidoDAO, UsuarioDAO usuarios, Clock reloj) {
+    public ResenaBOImpl(ResenaDAO resenaDAO, LibroDAO libroDAO, PedidoDAO pedidoDAO, UsuarioDAO usuarioDAO, Clock reloj) {
         this.resenaDAO = resenaDAO;
         this.libroDAO = libroDAO;
         this.pedidoDAO = pedidoDAO;
-        this.autorizacion = new Autorizacion(usuarios);
+        this.autorizacion = new Autorizacion(usuarioDAO);
         this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
     }
 

@@ -11,10 +11,7 @@ public class PreparacionCompraDTO
     public SeleccionCompraDTO Seleccion { get; set; } = null!;
 
     [JsonProperty("puedePagar")]
-    public bool PuedePagar
-    {
-        get; set;
-    }
+    public bool PuedePagar { get; set; }
 
     public PreparacionCompraDTO()
     {

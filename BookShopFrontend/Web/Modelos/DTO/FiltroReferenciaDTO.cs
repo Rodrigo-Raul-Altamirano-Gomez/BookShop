@@ -8,25 +8,16 @@ public class FiltroReferenciaDTO
     public string Nombre { get; set; } = "";
 
     [JsonProperty("soloActivos")]
-    public bool SoloActivos
-    {
-        get; set;
-    }
+    public bool SoloActivos { get; set; }
 
     [JsonProperty("orden")]
     public string Orden { get; set; } = "";
 
     [JsonProperty("pagina")]
-    public int Pagina
-    {
-        get; set;
-    }
+    public int Pagina { get; set; }
 
     [JsonProperty("tamanioPagina")]
-    public int TamanioPagina
-    {
-        get; set;
-    }
+    public int TamanioPagina { get; set; }
 
     public FiltroReferenciaDTO()
     {

@@ -39,4 +39,3 @@ public partial class Icono
         _ => "M12 5C9 2 4 2 2 3v17c3-1 7-1 10 2 3-3 7-3 10-2V3c-2-1-7-1-10 2v17"
     };
 }
-

@@ -5,10 +5,7 @@ namespace Web.Modelos.DTO;
 public class TarjetaUsuarioDTO
 {
     [JsonProperty("id")]
-    public int Id
-    {
-        get; set;
-    }
+    public int Id { get; set; }
 
     [JsonProperty("nombre")]
     public string Nombre { get; set; } = "";
@@ -17,16 +14,13 @@ public class TarjetaUsuarioDTO
     public string Email { get; set; } = "";
 
     [JsonProperty("imagen")]
-    public ImagenDTO? Imagen
-    {
-        get; set;
-    }
+    public string? Imagen { get; set; }
 
     public TarjetaUsuarioDTO()
     {
     }
 
-    public TarjetaUsuarioDTO(int id, string nombre, string email, ImagenDTO? imagen)
+    public TarjetaUsuarioDTO(int id, string nombre, string email, string? imagen)
     {
         Id = id;
         Nombre = nombre;

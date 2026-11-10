@@ -40,7 +40,7 @@ public class CuponBOImpl implements CuponBO {
             cuponDAO.actualizarVigencias(LocalDateTime.now(reloj), usuario.getEmail());
             return cuponDAO.listarPorUsuario(idActor, LocalDateTime.now(reloj), pagina, tamanio);
         } catch (SQLException e) {
-            throw new PersistenciaException("No se pudieron consultar los cuponDAO.", e);
+            throw new PersistenciaException("No se pudieron consultar los cupones.", e);
         }
     }
 }

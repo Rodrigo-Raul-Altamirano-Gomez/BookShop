@@ -103,9 +103,10 @@ public class CuponDAOImpl implements CuponDAO {
                 try (ResultSet resultado = sentencia.executeQuery()) {
                     while (resultado.next()) {
                         Cupon cupon = mapearCupon(resultado);
-                        EstadoCupon estado = cupon.isConsumido() ? EstadoCupon.UTILIZADO :
-                                (!cupon.isActivo() || fecha.isBefore(cupon.getFechaInicio()) || fecha.isAfter(cupon.getFechaFin()))
-                                        ? EstadoCupon.VENCIDO : EstadoCupon.DISPONIBLE;
+                        EstadoCupon estado = EstadoCupon.DISPONIBLE;
+                        if (cupon.isConsumido()) estado = EstadoCupon.UTILIZADO;
+                        else if (!cupon.isActivo() || fecha.isBefore(cupon.getFechaInicio()) || fecha.isAfter(cupon.getFechaFin()))
+                            estado = EstadoCupon.VENCIDO;
                         items.add(new CuponDTO(cupon.getId(), cupon.getPorcentaje(), cupon.getMontoMinimo(), cupon.getFechaFin(), estado));
                     }
                 }

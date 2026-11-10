@@ -11,10 +11,7 @@ public class RegistroUsuarioDTO
     public string Email { get; set; } = "";
 
     [JsonProperty("fechaNacimiento")]
-    public DateOnly FechaNacimiento
-    {
-        get; set;
-    }
+    public DateOnly FechaNacimiento { get; set; }
 
     [JsonProperty("contrasenia")]
     public string Contrasenia { get; set; } = "";
@@ -23,16 +20,13 @@ public class RegistroUsuarioDTO
     public string ConfirmacionContrasenia { get; set; } = "";
 
     [JsonProperty("imagen")]
-    public ImagenDTO? Imagen
-    {
-        get; set;
-    }
+    public string? Imagen { get; set; }
 
     public RegistroUsuarioDTO()
     {
     }
 
-    public RegistroUsuarioDTO(string nombre, string email, DateOnly fechaNacimiento, string contrasenia, string confirmacionContrasenia, ImagenDTO? imagen)
+    public RegistroUsuarioDTO(string nombre, string email, DateOnly fechaNacimiento, string contrasenia, string confirmacionContrasenia, string? imagen)
     {
         Nombre = nombre;
         Email = email;

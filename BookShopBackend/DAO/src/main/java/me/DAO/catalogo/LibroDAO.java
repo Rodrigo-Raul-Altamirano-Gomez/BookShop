@@ -5,7 +5,6 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 import me.DAO.CrudDAO;
-import me.Model.dto.ImagenDTO;
 import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.dto.catalogo.ConsultaReporteLibrosDTO;
 import me.Model.dto.catalogo.DetalleLibroDTO;
@@ -30,7 +29,7 @@ public interface LibroDAO extends CrudDAO<Libro> {
     List<Libro> listarParaRecomendaciones() throws SQLException;
     List<TarjetaLibroDTO> listarTarjetasPorIds(List<Integer> ids, LocalDateTime fecha) throws SQLException;
     List<TarjetaLibroDTO> listarTarjetasSinImagenPorIds(List<Integer> ids, LocalDateTime fecha) throws SQLException;
-    boolean cambiarImagen(int idLibro, ImagenDTO imagen, String usuario) throws SQLException;
+    boolean cambiarImagen(int idLibro, String imagen, String usuario) throws SQLException;
     boolean cambiarVetoDirecto(int idLibro, boolean vetado, String usuario) throws SQLException;
     boolean descontarStock(int idLibro, int cantidad, String usuario) throws SQLException;
     boolean reponerStock(int idLibro, int cantidad, String usuario) throws SQLException;

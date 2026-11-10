@@ -10,15 +10,22 @@ public partial class Referencias : IDisposable
 
     private bool cargando = true;
 
-    [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
+    [Inject] protected HttpClientUtils Api { get; set; } = default!;
 
     [Inject]
     private SesionUsuario Sesion { get; set; } = default!;
 
     [Parameter]
     public string Tipo { get; set; } = "categorias";
-    private string Titulo => Tipo == "autores" ? "Autores" : Tipo == "editoriales" ? "Editoriales"
-        : "Categorías";
+    private string Titulo
+    {
+        get
+        {
+            if (Tipo == "autores") return "Autores";
+            if (Tipo == "editoriales") return "Editoriales";
+            return "Categorías";
+        }
+    }
 
     private string orden = "nombre", tipoAnterior = "";
     private int pagina = 1;
@@ -32,8 +39,6 @@ public partial class Referencias : IDisposable
         errorCarga = null;
         try
         {
-
-
             var datos = await Api.Post<ResultadoPaginadoDTO<TarjetaReferenciaDTO>>($"{Tipo}/busqueda",
                 new FiltroReferenciaDTO
                 {
@@ -43,7 +48,7 @@ public partial class Referencias : IDisposable
                     Pagina = pagina,
                     TamanioPagina = 12
                 });
-            Resultados = datos.Items.Select(d => Presentacion.Referencia(d, Tipo)).ToList();
+            Resultados = datos.Items.Select(dto => Presentacion.Referencia(dto, Tipo)).ToList();
             totalResultados = datos.TotalResultados;
         }
         catch (InvalidOperationException e)
@@ -84,9 +89,7 @@ public partial class Referencias : IDisposable
             return;
         Sesion.EstadoVistas[$"referencias:{tipoAnterior}"] = new VistaReferencias
         {
-
             Orden = orden,
-
             Pagina = pagina
 
         };
@@ -104,10 +107,9 @@ public partial class Referencias : IDisposable
         pagina = 1;
         await Consultar();
     }
-    private async Task CambiarPagina(int value)
+    private async Task CambiarPagina(int valor)
     {
-        pagina = value;
+        pagina = valor;
         await Consultar();
     }
 }
-

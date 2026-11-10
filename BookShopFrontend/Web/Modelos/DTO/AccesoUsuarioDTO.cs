@@ -5,10 +5,7 @@ namespace Web.Modelos.DTO;
 public class AccesoUsuarioDTO
 {
     [JsonProperty("id")]
-    public int Id
-    {
-        get; set;
-    }
+    public int Id { get; set; }
 
     [JsonProperty("nombre")]
     public string Nombre { get; set; } = "";
@@ -17,10 +14,7 @@ public class AccesoUsuarioDTO
     public string Rol { get; set; } = "";
 
     [JsonProperty("requiereReactivacion")]
-    public bool RequiereReactivacion
-    {
-        get; set;
-    }
+    public bool RequiereReactivacion { get; set; }
 
     public AccesoUsuarioDTO()
     {

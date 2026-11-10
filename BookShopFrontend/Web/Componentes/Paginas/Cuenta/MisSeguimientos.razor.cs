@@ -1,30 +1,24 @@
+using Microsoft.AspNetCore.Components;
 using Web.Modelos;
 
 namespace Web.Componentes.Paginas.Cuenta;
 
 public partial class MisSeguimientos
 {
-    [Microsoft.AspNetCore.Components.Inject] protected CuentaServicio Cuenta { get; set; } = default!;
+    [Inject] protected CuentaServicio Cuenta { get; set; } = default!;
 
-    [Microsoft.AspNetCore.Components.Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
+    [Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
 
     protected override async Task CargarDatos()
     {
-        if (Sesion.Usuario is not null)
-            try
-            {
-                await Cuenta.CargarSeguimientos();
-                Sesion.Notificar();
-            }
-            catch (InvalidOperationException e)
-            {
-                ErrorCarga = e.Message;
-                Sesion.Avisar(e.Message);
-            }
+        if (Sesion.Usuario is null)
+            return;
+        await Cuenta.CargarSeguimientos();
+        Sesion.Notificar();
     }
     private const string ClaveVista = "cuenta:mis-seguimientos";
     private string Tipo { get; set; } = "autores";
-    private string Orden { get; set; } = "name";
+    private string Orden { get; set; } = "nombre";
     private int Pagina { get; set; } = 1;
 
     private const int TamanoPagina = 12;
@@ -37,8 +31,9 @@ public partial class MisSeguimientos
             if (Sesion.Usuario is null)
                 return [];
             var referencias = Catalogo.Referencias.Where(referencia => referencia.Tipo == Tipo && Cuenta.Seguimientos.Contains($"{referencia.Tipo}:{referencia.Id}"));
-            return (Orden == "recent" ? referencias.OrderByDescending(referencia => Cuenta.OrdenSeguimientos.GetValueOrDefault($"{referencia.Tipo}:{referencia.Id}")) : referencias
-                    .OrderBy(referencia => referencia.Nombre)).ToList();
+            if (Orden == "reciente")
+                return referencias.OrderByDescending(referencia => Cuenta.OrdenSeguimientos[$"{referencia.Tipo}:{referencia.Id}"]).ToList();
+            return referencias.OrderBy(referencia => referencia.Nombre).ToList();
         }
     }
 
@@ -59,11 +54,8 @@ public partial class MisSeguimientos
 
     private void GuardarVista() => Sesion.EstadoVistas[ClaveVista] = new VistaSeguimientos
     {
-
         Tipo = Tipo,
-
         Orden = Orden,
-
         Pagina = Pagina
 
     };
@@ -103,8 +95,7 @@ public partial class MisSeguimientos
     private class VistaSeguimientos
     {
         public string Tipo { get; set; } = "autores";
-        public string Orden { get; set; } = "name";
+        public string Orden { get; set; } = "nombre";
         public int Pagina { get; set; } = 1;
     }
 }
-

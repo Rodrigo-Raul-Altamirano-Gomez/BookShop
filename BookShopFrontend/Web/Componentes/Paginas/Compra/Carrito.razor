@@ -46,51 +46,51 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var line in Compras.Carrito.ToList())
+                                @foreach (var linea in Compras.Carrito.ToList())
                                 {
-                                    var book = Catalogo.Libros.FirstOrDefault(libro => libro.Id == line.Key);
-                                    if (book is not null)
+                                    var libro = Catalogo.Libros.FirstOrDefault(libro => libro.Id == linea.Key);
+                                    if (libro is not null)
                                     {
                                         <tr>
                                             <td>
                                                 <div class="line-book d-flex align-items-center gap-3">
-                                                    <a href="/libros/@book.Id">
-                                                        <img src="@book.Portada" alt="Portada de @book.Titulo" />
+                                                    <a href="/libros/@libro.Id">
+                                                        <img src="@libro.Portada" alt="Portada de @libro.Titulo" />
                                                     </a>
-                                                    <strong>@book.Titulo</strong>
+                                                    <strong>@libro.Titulo</strong>
                                                 </div>
                                             </td>
                                             <td>
                                                 <div class="line-price d-flex flex-column gap-1">
-                                                    @if (book.Descuento > 0)
+                                                    @if (libro.Descuento > 0)
                                                     {
-                                                        <del>@Presentacion.Dinero(book.PrecioOriginal)</del>
-                                                        <span class="badge badge-bookshop">−@book.Descuento%</span>
+                                                        <del>@Presentacion.Dinero(libro.PrecioOriginal)</del>
+                                                        <span class="badge badge-bookshop">−@libro.Descuento%</span>
                                                     }
-                                                    <strong>@Presentacion.Dinero(book.Precio)</strong>
+                                                    <strong>@Presentacion.Dinero(libro.Precio)</strong>
                                                 </div>
                                             </td>
                                             <td>
                                                 <div class="quantity btn-group">
                                                     <button class="btn btn-outline-secondary"
-                                                        aria-label="Reducir cantidad de @book.Titulo"
-                                                        @onclick="() => Cambiar(book.Id, line.Value - 1)">
+                                                        aria-label="Reducir cantidad de @libro.Titulo"
+                                                        @onclick="() => Cambiar(libro.Id, linea.Value - 1)">
                                                         −
                                                     </button>
-                                                    <span>@line.Value</span>
+                                                    <span>@linea.Value</span>
                                                     <button class="btn btn-outline-secondary"
-                                                        aria-label="Aumentar cantidad de @book.Titulo"
-                                                        @onclick="() => Cambiar(book.Id, line.Value + 1)">
+                                                        aria-label="Aumentar cantidad de @libro.Titulo"
+                                                        @onclick="() => Cambiar(libro.Id, linea.Value + 1)">
                                                         +
                                                     </button>
                                                 </div>
                                             </td>
-                                            <td>@Presentacion.Dinero(book.Precio * line.Value)</td>
+                                            <td>@Presentacion.Dinero(libro.Precio * linea.Value)</td>
                                             <td>
                                                 <button
                                                     class="btn btn-outline-secondary icon-button"
-                                                    aria-label="Retirar @book.Titulo"
-                                                    @onclick="() => Cambiar(book.Id, 0)">
+                                                    aria-label="Retirar @libro.Titulo"
+                                                    @onclick="() => Cambiar(libro.Id, 0)">
                                                     <Icono Nombre="trash" />
                                                 </button>
                                             </td>
@@ -140,9 +140,9 @@
                 <h2>Completa tu biblioteca</h2>
             </div>
             <div class="book-grid row row-cols-2 row-cols-md-4 g-4">
-                @foreach (var book in Complementarios)
+                @foreach (var libro in Complementarios)
                 {
-                    <TarjetaLibro Libro="book" />
+                    <TarjetaLibro Libro="libro" />
                 }
             </div>
         </section>

@@ -25,4 +25,3 @@ app.MapGet("/salud", () => Results.Text("ok"));
 app.MapStaticAssets();
 app.MapRazorComponents<Aplicacion>().AddInteractiveServerRenderMode();
 app.Run();
-

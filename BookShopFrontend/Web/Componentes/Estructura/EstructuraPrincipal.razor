@@ -73,11 +73,11 @@
                 </button>
             </header>
             <nav class="offcanvas-body d-flex flex-column gap-1" aria-label="Mi cuenta">
-                @foreach (var item in EnlacesCuenta)
+                @foreach (var enlace in EnlacesCuenta)
                 {
-                    <button class="btn d-flex align-items-center gap-3" @onclick="() => NavegarCuenta(item.Ruta)">
-                        <Icono Nombre="@item.Icono" />
-                        @item.Etiqueta
+                    <button class="btn d-flex align-items-center gap-3" @onclick="() => NavegarCuenta(enlace.Ruta)">
+                        <Icono Nombre="@enlace.Icono" />
+                        @enlace.Etiqueta
                         <Icono Nombre="arrow" />
                     </button>
                 }

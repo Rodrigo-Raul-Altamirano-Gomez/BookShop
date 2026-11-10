@@ -17,16 +17,13 @@ public partial class FiltroReferencias
     public HashSet<string> Seleccionados { get; set; } = [];
 
     [Parameter]
-    public EventCallback<string> SeleccionCambiada
-    {
-        get; set;
-    }
+    public EventCallback<string> SeleccionCambiada { get; set; }
 
     private string textoBusqueda = "", busquedaAplicada = "";
     private bool expandido;
     private List<string> OpcionesFiltradas => Opciones.Where(o => o.Contains(busquedaAplicada,
          StringComparison.OrdinalIgnoreCase)).Distinct().Order().ToList();
-    private IEnumerable<string> VisibleOptions => expandido ? OpcionesFiltradas : OpcionesFiltradas.Take(4);
+    private IEnumerable<string> OpcionesVisibles => expandido ? OpcionesFiltradas : OpcionesFiltradas.Take(4);
 
     private void Buscar()
     {
@@ -35,6 +32,5 @@ public partial class FiltroReferencias
     }
 
     private void AlternarExpansion() => expandido = !expandido;
-    private Task Seleccionar(string option) => SeleccionCambiada.InvokeAsync(option);
+    private Task Seleccionar(string opcion) => SeleccionCambiada.InvokeAsync(opcion);
 }
-

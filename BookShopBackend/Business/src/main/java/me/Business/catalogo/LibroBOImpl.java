@@ -24,7 +24,6 @@ import me.DAO.catalogo.LibroDAOImpl;
 import me.DAO.usuario.UsuarioDAO;
 import me.DAO.usuario.UsuarioDAOImpl;
 import me.DBManager.TransactionContext;
-import me.Model.dto.ImagenDTO;
 import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.dto.catalogo.DatosLibroDTO;
 import me.Model.dto.catalogo.DetalleLibroDTO;
@@ -52,12 +51,12 @@ public class LibroBOImpl implements LibroBO {
     }
 
     public LibroBOImpl(LibroDAO libroDAO, AutorDAO autorDAO, CategoriaDAO categoriaDAO, EditorialDAO editorialDAO,
-                       UsuarioDAO usuarios, Clock reloj) {
+                       UsuarioDAO usuarioDAO, Clock reloj) {
         this.libroDAO = libroDAO;
         this.autorDAO = autorDAO;
         this.categoriaDAO = categoriaDAO;
         this.editorialDAO = editorialDAO;
-        this.autorizacion = new Autorizacion(usuarios);
+        this.autorizacion = new Autorizacion(usuarioDAO);
         this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
     }
 
@@ -97,9 +96,7 @@ public class LibroBOImpl implements LibroBO {
             libro.setEditorial(editorial);
             libro.setPrecioBase(precio);
             libro.setStockFisico(registro.stockInicial());
-            if (registro.portada() != null) {
-                libro.setPortada(registro.portada().url());
-            }
+            libro.setPortada(registro.portada());
             libro.setUsuarioCreacion(actor.getEmail());
             libro.setFechaCreacion(LocalDateTime.now(reloj));
             libroDAO.insertar(libro);
@@ -174,7 +171,7 @@ public class LibroBOImpl implements LibroBO {
     }
 
     @Override
-    public void cambiarImagen(int idActor, int id, ImagenDTO imagen) throws NegocioException {
+    public void cambiarImagen(int idActor, int id, String imagen) throws NegocioException {
         Usuario actor = autorizacion.administrador(idActor);
         Imagenes.validar(imagen);
         try {

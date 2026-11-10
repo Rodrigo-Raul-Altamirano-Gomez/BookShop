@@ -31,11 +31,11 @@
             <div class="book-information col-12 col-md-8">
                 <h1>@Libro.Titulo</h1>
                 <div class="book-references d-flex flex-wrap align-items-center gap-2">
-                    <a href="@RutaReferencia("autores", Libro.Autor)">@Libro.Autor</a>
+                    <a href="@($"/referencias/autores/{detalleLibro?.IdAutor}")">@Libro.Autor</a>
                     <span>·</span>
-                    <a href="@RutaReferencia("categorias", Libro.Categoria)">@Libro.Categoria</a>
+                    <a href="@($"/referencias/categorias/{detalleLibro?.IdCategoria}")">@Libro.Categoria</a>
                     <span>·</span>
-                    <a href="@RutaReferencia("editoriales", Libro.Editorial)">@Libro.Editorial</a>
+                    <a href="@($"/referencias/editoriales/{detalleLibro?.IdEditorial}")">@Libro.Editorial</a>
                 </div>
                 <p class="language">Idioma: @Libro.Idioma</p>
                 <div class="detail-rating d-flex flex-wrap align-items-center gap-3">
@@ -220,27 +220,27 @@
                     }
                 </div>
                 <div class="reviews-list col-12 col-lg-9">
-                    @if (Resenas.Count == 0)
+                    @if (resenas.Count == 0)
                     {
                         <div class="empty-state">
                             <p>Este libro todavía no tiene reseñas.</p>
                         </div>
                     }
-                    @foreach (var review in ResenasVisibles)
+                    @foreach (var resena in resenas)
                     {
                         <article class="review-row d-flex align-items-start gap-3">
-                            <img class="review-avatar" src="@review.FotoUsuario" alt="" />
+                            <img class="review-avatar" src="@resena.FotoUsuario" alt="" />
                             <div class="review-content d-flex flex-column gap-2 flex-grow-1">
-                                <strong>@review.Usuario</strong>
+                                <strong>@resena.Usuario</strong>
                                 <span class="text-body-secondary">
-                                    @review.Fecha.ToString("d 'de' MMMM 'de' yyyy", CulturaEspanola)
+                                    @resena.Fecha.ToString("d 'de' MMMM 'de' yyyy", CulturaEspanola)
                                 </span>
-                                <span class="stars" aria-label="@($"{review.Puntuacion} de 5 estrellas")">
-                                    @TextoEstrellas(review.Puntuacion)
+                                <span class="stars" aria-label="@($"{resena.Puntuacion} de 5 estrellas")">
+                                    @TextoEstrellas(resena.Puntuacion)
                                 </span>
-                                <p>@review.Comentario</p>
+                                <p>@resena.Comentario</p>
                             </div>
-                            <span class="text-body-secondary">@review.Votos votos útiles</span>
+                            <span class="text-body-secondary">@resena.Votos votos útiles</span>
                         </article>
                     }
                     <Paginacion

@@ -1,15 +1,14 @@
 package me.Model.dto.compra;
 
 import java.util.List;
-import me.Model.dto.ImagenDTO;
 
-// Solo historial: una portada por libro distinto; ImagenDTO sin contenido conserva el lugar de la generica.
+// Una URL por libro; null indica que se muestra la portada genérica.
 // El frontend compone las imagenes y muestra el indicador de las que no caben.
 public record TarjetaPedidoDTO(
         ResumenPedidoDTO pedido,
-        List<ImagenDTO> portadas
+        List<String> portadas
 ) {
     public TarjetaPedidoDTO {
-        portadas = portadas == null ? List.of() : List.copyOf(portadas);
+        if (portadas == null) portadas = List.of();
     }
 }

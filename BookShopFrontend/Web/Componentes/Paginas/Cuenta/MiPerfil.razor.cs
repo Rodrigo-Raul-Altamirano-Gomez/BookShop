@@ -1,33 +1,24 @@
-
+using Microsoft.AspNetCore.Components;
 
 namespace Web.Componentes.Paginas.Cuenta;
 
 public partial class MiPerfil
 {
-    [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
+    [Inject] protected HttpClientUtils Api { get; set; } = default!;
 
     private string ModalAbierto { get; set; } = "";
     private string Nombre { get; set; } = "";
-    private DateOnly Nacimiento
-    {
-        get; set;
-    }
+    private DateOnly Nacimiento { get; set; }
     private string ContrasenaActual { get; set; } = "";
     private string NuevaContrasena { get; set; } = "";
     private string ConfirmacionContrasena { get; set; } = "";
-    private bool MostrarContrasenas
-    {
-        get; set;
-    }
+    private bool MostrarContrasenas { get; set; }
     private string TipoContrasena => MostrarContrasenas ? "text" : "password";
     private bool ContrasenasCompletas => ContrasenaActual.Length > 0 && NuevaContrasena.Length > 0
         && ConfirmacionContrasena.Length > 0;
     private string MensajeError { get; set; } = "";
     private string ErrorImagen { get; set; } = "";
-    private bool CargandoImagen
-    {
-        get; set;
-    }
+    private bool CargandoImagen { get; set; }
 
     private void EditarPerfil()
     {
@@ -36,7 +27,7 @@ public partial class MiPerfil
         Nombre = Sesion.Usuario.Nombre;
         Nacimiento = Sesion.Usuario.Nacimiento;
         MensajeError = "";
-        ModalAbierto = "profile";
+        ModalAbierto = "perfil";
     }
 
     private void AbrirContrasena()
@@ -48,7 +39,7 @@ public partial class MiPerfil
     private void AbrirDesactivacion()
     {
         Cerrar();
-        ModalAbierto = "deactivate";
+        ModalAbierto = "desactivar";
     }
 
     private void AlternarContrasenas() => MostrarContrasenas = !MostrarContrasenas;
@@ -74,7 +65,10 @@ public partial class MiPerfil
             Cerrar();
             Sesion.Notificar();
         }
-        catch (InvalidOperationException e) { MensajeError = e.Message; }
+        catch (InvalidOperationException e)
+        {
+            MensajeError = e.Message;
+        }
     }
 
     private async Task GuardarContrasena()
@@ -90,7 +84,10 @@ public partial class MiPerfil
             Cerrar();
             Sesion.Avisar("Contraseña actualizada.");
         }
-        catch (InvalidOperationException e) { MensajeError = e.Message; }
+        catch (InvalidOperationException e)
+        {
+            MensajeError = e.Message;
+        }
     }
 
     private async Task Desactivar()
@@ -105,7 +102,10 @@ public partial class MiPerfil
             Cerrar();
             Navegacion.NavigateTo("/");
         }
-        catch (InvalidOperationException e) { MensajeError = e.Message; }
+        catch (InvalidOperationException e)
+        {
+            MensajeError = e.Message;
+        }
     }
 
     private string urlFoto = "";
@@ -117,12 +117,21 @@ public partial class MiPerfil
         ErrorImagen = "";
         try
         {
-            Sesion.MostrarPerfil(await Api.Put<PerfilUsuarioDTO>("cuenta/imagen", Presentacion.ImagenDesdeUrl(urlFoto)));
+            string ruta = "cuenta/imagen";
+            if (!string.IsNullOrWhiteSpace(urlFoto))
+                ruta += "?url=" + Uri.EscapeDataString(urlFoto.Trim());
+            Sesion.MostrarPerfil(await Api.Put<PerfilUsuarioDTO>(ruta));
             Sesion.Notificar();
             Sesion.Avisar("Foto de perfil actualizada.");
         }
-        catch (InvalidOperationException e) { ErrorImagen = e.Message; }
-        finally { CargandoImagen = false; }
+        catch (InvalidOperationException e)
+        {
+            ErrorImagen = e.Message;
+        }
+        finally
+        {
+            CargandoImagen = false;
+        }
     }
 
     private async Task QuitarFoto()
@@ -138,4 +147,3 @@ public partial class MiPerfil
         }
     }
 }
-

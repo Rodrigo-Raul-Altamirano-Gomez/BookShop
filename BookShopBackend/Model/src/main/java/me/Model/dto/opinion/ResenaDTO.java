@@ -1,7 +1,6 @@
 package me.Model.dto.opinion;
 
 import java.time.LocalDateTime;
-import me.Model.dto.ImagenDTO;
 
 // Libro: foto del usuario; Mis resenas: portada; administracion: ambas. Imagenes omitidas son nulas.
 // Voto propio solo para el listado publico interactivo. Activo permite consultar referencias retiradas.
@@ -10,9 +9,9 @@ public record ResenaDTO(
         int id,
         int idLibro,
         String tituloLibro,
-        ImagenDTO portadaLibro,
+        String portadaLibro,
         String nombreUsuario,
-        ImagenDTO imagenUsuario,
+        String imagenUsuario,
         int puntuacion,
         String comentario,
         LocalDateTime fecha,

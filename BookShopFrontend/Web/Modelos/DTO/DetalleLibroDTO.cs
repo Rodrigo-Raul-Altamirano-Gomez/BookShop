@@ -8,25 +8,16 @@ public class DetalleLibroDTO
     public TarjetaLibroDTO Libro { get; set; } = null!;
 
     [JsonProperty("idAutor")]
-    public int IdAutor
-    {
-        get; set;
-    }
+    public int IdAutor { get; set; }
 
     [JsonProperty("idCategoria")]
-    public int IdCategoria
-    {
-        get; set;
-    }
+    public int IdCategoria { get; set; }
 
     [JsonProperty("nombreCategoria")]
     public string NombreCategoria { get; set; } = "";
 
     [JsonProperty("idEditorial")]
-    public int IdEditorial
-    {
-        get; set;
-    }
+    public int IdEditorial { get; set; }
 
     [JsonProperty("nombreEditorial")]
     public string NombreEditorial { get; set; } = "";
@@ -41,64 +32,37 @@ public class DetalleLibroDTO
     public string Isbn { get; set; } = "";
 
     [JsonProperty("anioEdicion")]
-    public int AnioEdicion
-    {
-        get; set;
-    }
+    public int AnioEdicion { get; set; }
 
     [JsonProperty("numeroPaginas")]
-    public int NumeroPaginas
-    {
-        get; set;
-    }
+    public int NumeroPaginas { get; set; }
 
     [JsonProperty("peso")]
-    public double? Peso
-    {
-        get; set;
-    }
+    public double? Peso { get; set; }
 
     [JsonProperty("alto")]
-    public double? Alto
-    {
-        get; set;
-    }
+    public double? Alto { get; set; }
 
     [JsonProperty("ancho")]
-    public double? Ancho
-    {
-        get; set;
-    }
+    public double? Ancho { get; set; }
 
     [JsonProperty("saga")]
     public string Saga { get; set; } = "";
 
     [JsonProperty("numeroTomo")]
-    public int? NumeroTomo
-    {
-        get; set;
-    }
+    public int? NumeroTomo { get; set; }
 
     [JsonProperty("stockDisponible")]
-    public int StockDisponible
-    {
-        get; set;
-    }
+    public int StockDisponible { get; set; }
 
     [JsonProperty("valoracion")]
     public ValoracionLibroDTO Valoracion { get; set; } = null!;
 
     [JsonProperty("favorito")]
-    public bool Favorito
-    {
-        get; set;
-    }
+    public bool Favorito { get; set; }
 
     [JsonProperty("deseado")]
-    public bool Deseado
-    {
-        get; set;
-    }
+    public bool Deseado { get; set; }
 
     public DetalleLibroDTO()
     {

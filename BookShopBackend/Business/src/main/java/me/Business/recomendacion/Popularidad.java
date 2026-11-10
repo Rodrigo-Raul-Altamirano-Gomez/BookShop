@@ -19,10 +19,10 @@ final class Popularidad {
                 cantidades.put(venta.idLibro(), cantidades.getOrDefault(venta.idLibro(), 0L) + venta.cantidad());
         Map<Integer, ValoracionLibroDTO> porLibro = new HashMap<>();
         long resenas = 0, suma = 0;
-        for (ValoracionLibroDTO v : valoraciones) {
-            porLibro.put(v.idLibro(), v);
-            resenas += v.cantidadResenas();
-            suma += v.sumaPuntuaciones();
+        for (ValoracionLibroDTO valoracion : valoraciones) {
+            porLibro.put(valoracion.idLibro(), valoracion);
+            resenas += valoracion.cantidadResenas();
+            suma += valoracion.sumaPuntuaciones();
         }
         double promedioGlobal = resenas == 0 ? 3.0 : (double) suma / resenas;
         long maximo = 0;
@@ -31,15 +31,15 @@ final class Popularidad {
         }
         Map<Integer, Double> puntos = new HashMap<>();
         for (Libro libro : libros) {
-            ValoracionLibroDTO v = porLibro.get(libro.getId());
-            long n = v == null ? 0 : v.cantidadResenas();
-            long estrellas = v == null ? 0 : v.sumaPuntuaciones();
-            double bayesiana = (estrellas + 5 * promedioGlobal) / (n + 5.0);
+            ValoracionLibroDTO valoracion = porLibro.get(libro.getId());
+            long cantidadResenas = valoracion == null ? 0 : valoracion.cantidadResenas();
+            long estrellas = valoracion == null ? 0 : valoracion.sumaPuntuaciones();
+            double valoracionAjustada = (estrellas + 5 * promedioGlobal) / (cantidadResenas + 5.0);
             double ventasNormalizadas = maximo == 0 ? 0
             : Math.log1p(cantidades.getOrDefault(libro.getId(), 0L)) / Math.log1p(maximo);
             long dias = Math.max(0, ChronoUnit.DAYS.between(libro.getFechaCreacion(), ahora));
-            double recencia = Math.exp(-dias / 30.0);
-            puntos.put(libro.getId(), .60 * ventasNormalizadas + .25 * bayesiana / 5.0 + .15 * recencia);
+            double puntajeNovedad = Math.exp(-dias / 30.0);
+            puntos.put(libro.getId(), .60 * ventasNormalizadas + .25 * valoracionAjustada / 5.0 + .15 * puntajeNovedad);
         }
         return puntos;
     }

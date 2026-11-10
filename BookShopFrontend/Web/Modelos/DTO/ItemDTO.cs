@@ -5,67 +5,40 @@ namespace Web.Modelos.DTO;
 public class ItemDTO
 {
     [JsonProperty("idLibro")]
-    public int IdLibro
-    {
-        get; set;
-    }
+    public int IdLibro { get; set; }
 
     [JsonProperty("titulo")]
     public string Titulo { get; set; } = "";
 
     [JsonProperty("portada")]
-    public ImagenDTO? Portada
-    {
-        get; set;
-    }
+    public string? Portada { get; set; }
 
     [JsonProperty("cantidad")]
-    public int Cantidad
-    {
-        get; set;
-    }
+    public int Cantidad { get; set; }
 
     [JsonProperty("precioOriginal")]
-    public decimal PrecioOriginal
-    {
-        get; set;
-    }
+    public decimal PrecioOriginal { get; set; }
 
     [JsonProperty("precioUnitario")]
-    public decimal PrecioUnitario
-    {
-        get; set;
-    }
+    public decimal PrecioUnitario { get; set; }
 
     [JsonProperty("porcentajeDescuento")]
-    public decimal PorcentajeDescuento
-    {
-        get; set;
-    }
+    public decimal PorcentajeDescuento { get; set; }
 
     [JsonProperty("subtotal")]
-    public decimal Subtotal
-    {
-        get; set;
-    }
+    public decimal Subtotal { get; set; }
 
     [JsonProperty("activo")]
-    public bool? Activo
-    {
-        get; set;
-    }
+    public bool? Activo { get; set; }
 
     [JsonProperty("stockDisponible")]
-    public int? StockDisponible
-    {
-        get; set;
-    }
+    public int? StockDisponible { get; set; }
 
     public ItemDTO()
     {
     }
 
-    public ItemDTO(int idLibro, string titulo, ImagenDTO? portada, int cantidad, decimal precioOriginal, decimal precioUnitario, decimal porcentajeDescuento, decimal subtotal, bool? activo, int? stockDisponible)
+    public ItemDTO(int idLibro, string titulo, string? portada, int cantidad, decimal precioOriginal, decimal precioUnitario, decimal porcentajeDescuento, decimal subtotal, bool? activo, int? stockDisponible)
     {
         IdLibro = idLibro;
         Titulo = titulo;

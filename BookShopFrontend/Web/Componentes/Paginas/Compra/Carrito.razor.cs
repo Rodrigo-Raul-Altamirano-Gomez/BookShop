@@ -10,11 +10,11 @@ public partial class Carrito : IDisposable
 
     private bool cargando = true;
 
-    [Microsoft.AspNetCore.Components.Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
+    [Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
 
-    [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
+    [Inject] protected HttpClientUtils Api { get; set; } = default!;
 
-    [Microsoft.AspNetCore.Components.Inject] protected CompraServicio Compras { get; set; } = default!;
+    [Inject] protected CompraServicio Compras { get; set; } = default!;
 
     [Inject]
     private SesionUsuario Sesion { get; set; } = default!;
@@ -33,7 +33,6 @@ public partial class Carrito : IDisposable
         errorCarga = null;
         try
         {
-
             Sesion.Cambiado += Actualizar;
             if (Sesion.Usuario is not null)
             {
@@ -90,4 +89,3 @@ public partial class Carrito : IDisposable
 
     public void Dispose() => Sesion.Cambiado -= Actualizar;
 }
-

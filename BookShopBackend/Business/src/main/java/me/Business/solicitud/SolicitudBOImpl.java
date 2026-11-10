@@ -257,14 +257,14 @@ public class SolicitudBOImpl implements SolicitudBO {
 
     private ResultadoPaginadoDTO<ResumenSolicitudDTO> listar(int propietario, FiltroSolicitudDTO filtro) throws NegocioException {
         if (filtro == null) filtro = FiltroSolicitudDTO.porDefecto();
-        if (filtro.tipo() == null) throw new ValidacionException("tipo", "Selecciona la pestana de solicitudDAO.");
+        if (filtro.tipo() == null) throw new ValidacionException("tipo", "Selecciona la pestaña de solicitudes.");
         if (filtro.pagina() < 1 || filtro.tamanioPagina() < 1)
             throw new ValidacionException("pagina", "La pagina y su tamaño deben ser positivos.");
         try {
             return solicitudDAO.listar(propietario, filtro);
         }
         catch (SQLException e) {
-            throw new PersistenciaException("No se pudieron consultar las solicitudDAO.", e);
+            throw new PersistenciaException("No se pudieron consultar las solicitudes.", e);
         }
     }
 

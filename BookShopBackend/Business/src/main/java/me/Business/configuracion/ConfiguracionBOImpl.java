@@ -8,7 +8,6 @@ import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Properties;
 import me.Business.exceptions.ConfiguracionException;
 import me.Business.exceptions.NegocioException;
@@ -56,26 +55,14 @@ public class ConfiguracionBOImpl implements ConfiguracionBO {
         valores.setProperty("porcentajeCupon", nueva.porcentajeCupon().toPlainString());
         valores.setProperty("montoMinimoCupon", nueva.montoMinimoCupon().toPlainString());
         valores.setProperty("vigenciaDiasCupon", Integer.toString(nueva.vigenciaDiasCupon()));
-        Path temporal = null;
         try {
             Files.createDirectories(archivo.getParent());
-            temporal = Files.createTempFile(archivo.getParent(), "negocio-", ".tmp");
-            try (Writer salida = Files.newBufferedWriter(temporal, StandardCharsets.UTF_8)) {
+            try (Writer salida = Files.newBufferedWriter(archivo, StandardCharsets.UTF_8)) {
                 valores.store(salida, "Configuracion de negocio BookShop");
             }
-            Files.move(temporal, archivo, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
             configuracion = nueva;
         } catch (IOException | SecurityException e) {
-            throw new ConfiguracionException("No se pudo guardar la configuración; se conserva la anterior.", e);
-        } finally {
-            if (temporal != null) {
-                try {
-                    Files.deleteIfExists(temporal);
-                }
-                catch (IOException e) {
-                    /* La configuración vigente no depende del temporal. */
-                }
-            }
+            throw new ConfiguracionException("No se pudo guardar la configuración.", e);
         }
     }
 

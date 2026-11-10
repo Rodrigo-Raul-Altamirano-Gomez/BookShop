@@ -18,7 +18,6 @@ import me.Business.Imagenes;
 import me.Business.ProteccionDatos;
 import me.DAO.usuario.UsuarioDAO;
 import me.DAO.usuario.UsuarioDAOImpl;
-import me.Model.dto.ImagenDTO;
 import me.Model.dto.usuario.AccesoUsuarioDTO;
 import me.Model.dto.usuario.CambioContraseniaDTO;
 import me.Model.dto.usuario.CredencialesDTO;
@@ -65,9 +64,7 @@ public class UsuarioBOImpl implements UsuarioBO {
             usuario.asignarRolPorCorreo();
             usuario.setUsuarioCreacion(email);
             usuario.setFechaCreacion(LocalDateTime.now(reloj));
-            if (datos.imagen() != null) {
-                usuario.setImagen(datos.imagen().url());
-            }
+            usuario.setImagen(datos.imagen());
             usuarioDAO.insertar(usuario);
             return new AccesoUsuarioDTO(usuario.getId(), usuario.getNombre(), usuario.getRol(), false);
         } catch (SQLException e) {
@@ -144,7 +141,7 @@ public class UsuarioBOImpl implements UsuarioBO {
     }
 
     @Override
-    public PerfilUsuarioDTO cambiarImagen(int idActor, ImagenDTO imagen) throws NegocioException {
+    public PerfilUsuarioDTO cambiarImagen(int idActor, String imagen) throws NegocioException {
         Usuario usuario = autorizacion.usuarioActivo(idActor);
         Imagenes.validar(imagen);
         try {

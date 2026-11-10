@@ -5,16 +5,10 @@ namespace Web.Modelos.DTO;
 public class MetodoPagoDTO
 {
     [JsonProperty("id")]
-    public int Id
-    {
-        get; set;
-    }
+    public int Id { get; set; }
 
     [JsonProperty("tarjetaBancaria")]
-    public bool TarjetaBancaria
-    {
-        get; set;
-    }
+    public bool TarjetaBancaria { get; set; }
 
     [JsonProperty("titular")]
     public string Titular { get; set; } = "";
@@ -29,28 +23,16 @@ public class MetodoPagoDTO
     public string NumeroEnmascarado { get; set; } = "";
 
     [JsonProperty("tipoTarjeta")]
-    public string? TipoTarjeta
-    {
-        get; set;
-    }
+    public string? TipoTarjeta { get; set; }
 
     [JsonProperty("fechaVencimiento")]
-    public DateOnly FechaVencimiento
-    {
-        get; set;
-    }
+    public DateOnly FechaVencimiento { get; set; }
 
     [JsonProperty("predeterminado")]
-    public bool Predeterminado
-    {
-        get; set;
-    }
+    public bool Predeterminado { get; set; }
 
     [JsonProperty("vigente")]
-    public bool Vigente
-    {
-        get; set;
-    }
+    public bool Vigente { get; set; }
 
     public MetodoPagoDTO()
     {

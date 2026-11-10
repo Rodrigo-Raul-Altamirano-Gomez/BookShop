@@ -5,28 +5,16 @@ namespace Web.Modelos.DTO;
 public class CuponDTO
 {
     [JsonProperty("id")]
-    public int Id
-    {
-        get; set;
-    }
+    public int Id { get; set; }
 
     [JsonProperty("porcentaje")]
-    public decimal Porcentaje
-    {
-        get; set;
-    }
+    public decimal Porcentaje { get; set; }
 
     [JsonProperty("montoMinimo")]
-    public decimal MontoMinimo
-    {
-        get; set;
-    }
+    public decimal MontoMinimo { get; set; }
 
     [JsonProperty("fechaFin")]
-    public DateTime FechaFin
-    {
-        get; set;
-    }
+    public DateTime FechaFin { get; set; }
 
     [JsonProperty("estado")]
     public string Estado { get; set; } = "";

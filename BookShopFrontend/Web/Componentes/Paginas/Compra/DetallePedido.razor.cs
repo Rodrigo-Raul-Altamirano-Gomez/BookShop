@@ -6,7 +6,7 @@ namespace Web.Componentes.Paginas.Compra;
 
 public partial class DetallePedido : IDisposable
 {
-    [Microsoft.AspNetCore.Components.Inject] protected CompraServicio Compras { get; set; } = default!;
+    [Inject] protected CompraServicio Compras { get; set; } = default!;
 
     [Inject]
     private SesionUsuario Sesion { get; set; } = default!;
@@ -15,10 +15,7 @@ public partial class DetallePedido : IDisposable
     private NavigationManager Navegacion { get; set; } = default!;
 
     [Parameter]
-    public int Id
-    {
-        get; set;
-    }
+    public int Id { get; set; }
 
     private Pedido? pedido;
     private bool confirmacion;
@@ -30,6 +27,5 @@ public partial class DetallePedido : IDisposable
     }
 
     private void Actualizar() => _ = InvokeAsync(StateHasChanged);
-    private static string ClaseEstado(string estado) => "success";
     public void Dispose() => Sesion.Cambiado -= Actualizar;
 }

@@ -12,10 +12,10 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import me.Business.exceptions.NegocioException;
-import me.Model.dto.ImagenDTO;
 import me.Model.dto.usuario.AccesoUsuarioDTO;
 import me.Model.dto.usuario.CambioContraseniaDTO;
 import me.Model.dto.usuario.CredencialesDTO;
@@ -76,8 +76,8 @@ public class UsuarioRS {
 
     @PUT
     @Path("imagen")
-    public PerfilUsuarioDTO imagen(ImagenDTO datos) throws NegocioException {
-        return servicios.getUsuarioBO().cambiarImagen(Sesion.exigirIdUsuario(peticion), datos);
+    public PerfilUsuarioDTO imagen(@QueryParam("url") String url) throws NegocioException {
+        return servicios.getUsuarioBO().cambiarImagen(Sesion.exigirIdUsuario(peticion), url);
     }
 
     @PUT

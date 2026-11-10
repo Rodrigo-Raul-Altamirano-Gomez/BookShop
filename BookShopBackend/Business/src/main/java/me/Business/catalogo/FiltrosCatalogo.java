@@ -55,8 +55,11 @@ public final class FiltrosCatalogo {
     }
 
     public static BigDecimal importe(BigDecimal importe, String campo, boolean permitirCero) throws ValidacionException {
-        if (importe == null || (permitirCero ? importe.signum() < 0 : importe.signum() <= 0)
-                || importe.compareTo(new BigDecimal("9999999999.99")) > 0 || importe.stripTrailingZeros().scale() > 2)
+        if (importe == null)
+            throw new ValidacionException(campo, "Ingrese un importe.");
+        if (importe.signum() < 0 || (!permitirCero && importe.signum() == 0))
+            throw new ValidacionException(campo, "Ingrese un importe positivo.");
+        if (importe.compareTo(new BigDecimal("9999999999.99")) > 0 || importe.stripTrailingZeros().scale() > 2)
             throw new ValidacionException(campo, "Ingrese un importe valido con hasta dos decimales.");
         return importe.setScale(2);
     }

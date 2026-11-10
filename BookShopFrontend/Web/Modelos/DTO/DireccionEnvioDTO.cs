@@ -5,10 +5,7 @@ namespace Web.Modelos.DTO;
 public class DireccionEnvioDTO
 {
     [JsonProperty("id")]
-    public int Id
-    {
-        get; set;
-    }
+    public int Id { get; set; }
 
     [JsonProperty("alias")]
     public string Alias { get; set; } = "";
@@ -26,10 +23,7 @@ public class DireccionEnvioDTO
     public string Referencia { get; set; } = "";
 
     [JsonProperty("predeterminada")]
-    public bool Predeterminada
-    {
-        get; set;
-    }
+    public bool Predeterminada { get; set; }
 
     public DireccionEnvioDTO()
     {

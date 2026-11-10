@@ -315,6 +315,6 @@ public class Pedido {
     }
 
     public void registrarIntento() {
-        numeroIntentos = Math.incrementExact(numeroIntentos);
+        numeroIntentos = numeroIntentos + 1;
     }
 }

@@ -8,10 +8,7 @@ public class PerfilUsuarioDTO
     public TarjetaUsuarioDTO Usuario { get; set; } = null!;
 
     [JsonProperty("fechaNacimiento")]
-    public DateOnly FechaNacimiento
-    {
-        get; set;
-    }
+    public DateOnly FechaNacimiento { get; set; }
 
     public PerfilUsuarioDTO()
     {

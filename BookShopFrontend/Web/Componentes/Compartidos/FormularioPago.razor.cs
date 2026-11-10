@@ -6,33 +6,18 @@ namespace Web.Componentes.Compartidos;
 public partial class FormularioPago
 {
     [Parameter]
-    public MetodoPago? Valor
-    {
-        get; set;
-    }
+    public MetodoPago? Valor { get; set; }
 
     [Parameter]
-    public EventCallback<MetodoPago> AlGuardar
-    {
-        get; set;
-    }
+    public EventCallback<MetodoPago> AlGuardar { get; set; }
 
     [Parameter]
-    public EventCallback AlCerrar
-    {
-        get; set;
-    }
+    public EventCallback AlCerrar { get; set; }
     private MetodoPago Borrador { get; set; } = new();
     private string Numero { get; set; } = "";
-    private DateOnly? FechaVencimiento
-    {
-        get; set;
-    }
+    private DateOnly? FechaVencimiento { get; set; }
     private string MensajeError { get; set; } = "";
-    private bool Guardando
-    {
-        get; set;
-    }
+    private bool Guardando { get; set; }
     private bool Completo => !string.IsNullOrWhiteSpace(Borrador.Titular) && !string.IsNullOrWhiteSpace(
         Borrador.Proveedor) && (Valor is not null || !string.IsNullOrWhiteSpace(Numero)) && (Borrador
             .Tipo != "Tarjeta" || FechaVencimiento.HasValue);
@@ -43,23 +28,14 @@ public partial class FormularioPago
         {
             Borrador = new MetodoPago
             {
-
                 Id = Valor.Id,
-
                 Tipo = Valor.Tipo,
-
                 Alias = Valor.Alias,
-
                 Titular = Valor.Titular,
-
                 Proveedor = Valor.Proveedor,
-
                 TipoTarjeta = Valor.TipoTarjeta,
-
                 NumeroEnmascarado = Valor.NumeroEnmascarado,
-
                 Vencimiento = Valor.Vencimiento,
-
                 Predeterminada = Valor.Predeterminada
 
             };
@@ -92,11 +68,15 @@ public partial class FormularioPago
         }
 
         var digitos = Numero.Replace(" ", "").Replace("-", "");
-        if (Numero.Length > 0 && (!digitos.All(char.IsDigit) || (Borrador.Tipo == "Tarjeta" ? digitos
-            .Length != 16 : digitos.Length != 9)))
+        int cantidadDigitos = 9;
+        if (Borrador.Tipo == "Tarjeta")
+            cantidadDigitos = 16;
+        if (Numero.Length > 0 && (!digitos.All(char.IsDigit) || digitos.Length != cantidadDigitos))
         {
-            MensajeError = Borrador.Tipo == "Tarjeta" ? "Ingresa un número de tarjeta de 16 dígitos."
-                : "Ingresa un celular de 9 dígitos.";
+            if (Borrador.Tipo == "Tarjeta")
+                MensajeError = "Ingresa un número de tarjeta de 16 dígitos.";
+            else
+                MensajeError = "Ingresa un celular de 9 dígitos.";
             return;
         }
 
@@ -110,4 +90,3 @@ public partial class FormularioPago
         Guardando = false;
     }
 }
-

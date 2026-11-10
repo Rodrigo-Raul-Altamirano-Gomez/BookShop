@@ -18,13 +18,8 @@ public final class Sesion {
     public static int obtenerIdUsuario(HttpServletRequest peticion) {
         HttpSession sesion = peticion.getSession(false);
         if (sesion == null) return 0;
-        try {
-            Integer idUsuario = (Integer) sesion.getAttribute(ID_USUARIO);
-            return idUsuario == null ? 0 : idUsuario;
-        } catch (IllegalStateException e) {
-            // Otra petición pudo cerrar la sesión mientras se consultaba.
-            return 0;
-        }
+        Integer idUsuario = (Integer) sesion.getAttribute(ID_USUARIO);
+        return idUsuario == null ? 0 : idUsuario;
     }
 
     public static int exigirIdUsuario(HttpServletRequest peticion) {
@@ -45,35 +40,21 @@ public final class Sesion {
         HttpSession sesion = peticion.getSession(false);
         if (sesion == null) throw new NotAuthorizedException("Se requiere iniciar sesión.", "Sesion");
         synchronized (sesion) {
-            Integer idUsuario;
-            Instant inicioSesion;
-            try {
-                idUsuario = (Integer) sesion.getAttribute(ID_USUARIO);
-                inicioSesion = (Instant) sesion.getAttribute(INICIO_SESION);
-            } catch (IllegalStateException e) {
-                throw new NotAuthorizedException("La sesión ya está cerrada.", "Sesion");
-            }
+            Integer idUsuario = (Integer) sesion.getAttribute(ID_USUARIO);
+            Instant inicioSesion = (Instant) sesion.getAttribute(INICIO_SESION);
             if (idUsuario == null || inicioSesion == null) {
                 throw new NotAuthorizedException("Se requiere iniciar sesión.", "Sesion");
             }
             Instant finSesion = Instant.now();
             Duration tiempoDeUso = Duration.between(inicioSesion, finSesion);
             usuarioBO.cerrarSesion(idUsuario, tiempoDeUso);
-            try {
-                sesion.setAttribute(INICIO_SESION, finSesion);
-            } catch (IllegalStateException e) {
-                // El tiempo ya se guardó; otra petición cerró la sesión entretanto.
-            }
+            sesion.setAttribute(INICIO_SESION, finSesion);
         }
     }
 
     public static void cerrar(HttpServletRequest peticion) {
         HttpSession sesion = peticion.getSession(false);
         if (sesion == null) return;
-        try {
-            sesion.invalidate();
-        } catch (IllegalStateException e) {
-            // Una sesión cerrada por otra petición ya no requiere invalidación.
-        }
+        sesion.invalidate();
     }
 }

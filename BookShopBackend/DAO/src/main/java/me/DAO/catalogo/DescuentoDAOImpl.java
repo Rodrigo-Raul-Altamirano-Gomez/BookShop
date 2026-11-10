@@ -128,8 +128,9 @@ public class DescuentoDAOImpl implements DescuentoDAO {
                     while (resultado.next()) {
                         LocalDateTime inicio = resultado.getTimestamp("fecha_inicio").toLocalDateTime();
                         LocalDateTime fin = resultado.getTimestamp("fecha_fin").toLocalDateTime();
-                        EstadoDescuento estado = fecha.isBefore(inicio) ? EstadoDescuento.PROXIMO
-                                : fecha.isAfter(fin) ? EstadoDescuento.VENCIDO : EstadoDescuento.VIGENTE;
+                        EstadoDescuento estado = EstadoDescuento.VIGENTE;
+                        if (fecha.isBefore(inicio)) estado = EstadoDescuento.PROXIMO;
+                        else if (fecha.isAfter(fin)) estado = EstadoDescuento.VENCIDO;
                         items.add(new DescuentoDTO(resultado.getInt("id"), resultado.getBigDecimal("porcentaje"), inicio, fin, estado));
                     }
                 }
@@ -174,7 +175,13 @@ public class DescuentoDAOImpl implements DescuentoDAO {
     @Override
     public boolean haySuperposicion(int idLibro, int idExcluir, LocalDateTime inicio, LocalDateTime fin) throws SQLException {
         Connection conexion = TransactionContext.getConnection();
-        bloquearLibro(conexion, idLibro);
+
+        try (PreparedStatement sentencia = conexion.prepareStatement("SELECT id FROM LIBRO WHERE id=? AND eliminado=FALSE FOR UPDATE")) {
+            sentencia.setInt(1, idLibro);
+            try (ResultSet resultado = sentencia.executeQuery()) {
+                if (!resultado.next()) throw new SQLException("El libro no esta disponible.");
+            }
+        }
         // El bloqueo tambien consulta datos actuales si la transaccion ya tenia una lectura previa.
         String sql = "SELECT 1 FROM DESCUENTO WHERE id_libro=? AND id<>? AND eliminado=FALSE"
                 + " AND fecha_inicio<=? AND fecha_fin>=? LIMIT 1 FOR UPDATE";
@@ -189,14 +196,7 @@ public class DescuentoDAOImpl implements DescuentoDAO {
         }
     }
 
-    private void bloquearLibro(Connection conexion, int idLibro) throws SQLException {
-        try (PreparedStatement sentencia = conexion.prepareStatement("SELECT id FROM LIBRO WHERE id=? AND eliminado=FALSE FOR UPDATE")) {
-            sentencia.setInt(1, idLibro);
-            try (ResultSet resultado = sentencia.executeQuery()) {
-                if (!resultado.next()) throw new SQLException("El libro no esta disponible.");
-            }
-        }
-    }
+
 
     private Descuento mapearDescuento(ResultSet resultado) throws SQLException {
         Descuento descuento = new Descuento();

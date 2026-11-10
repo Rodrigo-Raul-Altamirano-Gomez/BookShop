@@ -8,58 +8,31 @@ public class ResumenCompraDTO
     public List<ItemDTO> Items { get; set; } = [];
 
     [JsonProperty("subtotalProductos")]
-    public decimal SubtotalProductos
-    {
-        get; set;
-    }
+    public decimal SubtotalProductos { get; set; }
 
     [JsonProperty("descuentoLibros")]
-    public decimal DescuentoLibros
-    {
-        get; set;
-    }
+    public decimal DescuentoLibros { get; set; }
 
     [JsonProperty("idCupon")]
-    public int IdCupon
-    {
-        get; set;
-    }
+    public int IdCupon { get; set; }
 
     [JsonProperty("porcentajeCupon")]
-    public decimal PorcentajeCupon
-    {
-        get; set;
-    }
+    public decimal PorcentajeCupon { get; set; }
 
     [JsonProperty("descuentoCupon")]
-    public decimal DescuentoCupon
-    {
-        get; set;
-    }
+    public decimal DescuentoCupon { get; set; }
 
     [JsonProperty("porcentajeEnvio")]
-    public decimal PorcentajeEnvio
-    {
-        get; set;
-    }
+    public decimal PorcentajeEnvio { get; set; }
 
     [JsonProperty("costoEnvio")]
-    public decimal CostoEnvio
-    {
-        get; set;
-    }
+    public decimal CostoEnvio { get; set; }
 
     [JsonProperty("total")]
-    public decimal Total
-    {
-        get; set;
-    }
+    public decimal Total { get; set; }
 
     [JsonProperty("cantidadLibros")]
-    public int CantidadLibros
-    {
-        get; set;
-    }
+    public int CantidadLibros { get; set; }
 
     public ResumenCompraDTO()
     {

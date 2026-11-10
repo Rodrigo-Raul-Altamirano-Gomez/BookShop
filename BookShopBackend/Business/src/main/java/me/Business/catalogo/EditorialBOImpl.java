@@ -16,7 +16,6 @@ import me.DAO.catalogo.EditorialDAOImpl;
 import me.DAO.usuario.UsuarioDAO;
 import me.DAO.usuario.UsuarioDAOImpl;
 import me.DBManager.TransactionContext;
-import me.Model.dto.ImagenDTO;
 import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.dto.catalogo.DatosReferenciaDTO;
 import me.Model.dto.catalogo.DetalleReferenciaDTO;
@@ -33,9 +32,9 @@ public class EditorialBOImpl implements EditorialBO {
 
     public EditorialBOImpl() { this(new EditorialDAOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima"))); }
 
-    public EditorialBOImpl(EditorialDAO editorialDAO, UsuarioDAO usuarios, Clock reloj) {
+    public EditorialBOImpl(EditorialDAO editorialDAO, UsuarioDAO usuarioDAO, Clock reloj) {
         this.editorialDAO = editorialDAO;
-        this.autorizacion = new Autorizacion(usuarios);
+        this.autorizacion = new Autorizacion(usuarioDAO);
         this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
     }
 
@@ -48,9 +47,7 @@ public class EditorialBOImpl implements EditorialBO {
         Editorial editorial = new Editorial();
         editorial.setNombre(datos.nombre());
         editorial.setDescripcion(datos.introduccion());
-        if (registro.imagen() != null) {
-            editorial.setImagen(registro.imagen().url());
-        }
+        editorial.setImagen(registro.imagen());
         editorial.setUsuarioCreacion(actor.getEmail());
         editorial.setFechaCreacion(LocalDateTime.now(reloj));
         try {
@@ -81,7 +78,7 @@ public class EditorialBOImpl implements EditorialBO {
     }
 
     @Override
-    public void cambiarImagen(int idActor, int id, ImagenDTO imagen) throws NegocioException {
+    public void cambiarImagen(int idActor, int id, String imagen) throws NegocioException {
         Usuario actor = autorizacion.administrador(idActor);
         Imagenes.validar(imagen);
         try {

@@ -59,19 +59,19 @@
                                     ‹
                                 </button>
                                 <div class="selection-cards row row-cols-1 row-cols-xl-2 g-3 flex-grow-1">
-                                    @foreach (var address in Cuenta.Direcciones.Skip(indiceDireccion).Take(2))
+                                    @foreach (var direccion in Cuenta.Direcciones.Skip(indiceDireccion).Take(2))
                                     {
                                         <div class="col">
                                             <button
                                                 class="selection-card btn btn-outline-secondary w-100 h-100
                                                     d-flex gap-3 text-start
-                                                    @(direccionId == address.Id ? "selected" : "")"
-                                                @onclick="() => Seleccionar(address.Id, metodoId, cuponId)">
+                                                    @(direccionId == direccion.Id ? "selected" : "")"
+                                                @onclick="() => Seleccionar(direccion.Id, metodoId, cuponId)">
                                                 <span class="radio-mark">
                                                 </span>
                                                 <div>
                                                     <h3>
-                                                        @address.Alias @if (address.Predeterminada)
+                                                        @direccion.Alias @if (direccion.Predeterminada)
                                                         {
                                                             <span class="badge badge-bookshop">
                                                                 Predeterminada
@@ -79,11 +79,11 @@
                                                         }
                                                     </h3>
                                                     <p>
-                                                        @address.Calle
+                                                        @direccion.Calle
                                                         <br />
-                                                        @address.Distrito, @address.Ciudad
+                                                        @direccion.Distrito, @direccion.Ciudad
                                                         <br />
-                                                        @address.ReferenciaAdicional
+                                                        @direccion.ReferenciaAdicional
                                                     </p>
                                                 </div>
                                             </button>
@@ -132,19 +132,19 @@
                                     ‹
                                 </button>
                                 <div class="selection-cards row row-cols-1 row-cols-xl-2 g-3 flex-grow-1">
-                                    @foreach (var method in Cuenta.Metodos.Skip(indiceMetodo).Take(2))
+                                    @foreach (var metodo in Cuenta.Metodos.Skip(indiceMetodo).Take(2))
                                     {
                                         <div class="col">
                                             <button
                                                 class="selection-card btn btn-outline-secondary w-100 h-100
                                                     d-flex gap-3 text-start
-                                                    @(metodoId == method.Id ? "selected" : "")"
-                                                disabled="@(!method.Vigente || procesando)" @onclick="() => Seleccionar(direccionId, method.Id, cuponId)">
+                                                    @(metodoId == metodo.Id ? "selected" : "")"
+                                                disabled="@(!metodo.Vigente || procesando)" @onclick="() => Seleccionar(direccionId, metodo.Id, cuponId)">
                                                 <span class="radio-mark">
                                                 </span>
                                                 <div>
                                                     <h3>
-                                                        @method.Alias @if (method.Predeterminada)
+                                                        @metodo.Alias @if (metodo.Predeterminada)
                                                         {
                                                             <span class="badge badge-bookshop">
                                                                 Predeterminado
@@ -153,17 +153,17 @@
                                                     </h3>
                                                     <p>
                                                         <Icono
-                                                            Nombre="@(method.Tipo == "Tarjeta"
+                                                            Nombre="@(metodo.Tipo == "Tarjeta"
                                                                 ? "card" : "wallet")"
                                                             />
-                                                        @method.Proveedor · @method.TipoTarjeta
+                                                        @metodo.Proveedor · @metodo.TipoTarjeta
                                                         <br />
-                                                        @method.NumeroEnmascarado
+                                                        @metodo.NumeroEnmascarado
                                                         <br />
-                                                        @method.Titular
+                                                        @metodo.Titular
                                                         <br />
                                                         <span class="text-body-secondary small">
-                                                            Vence @method.Vencimiento.ToString("MM/yyyy")
+                                                            Vence @metodo.Vencimiento.ToString("MM/yyyy")
                                                         </span>
                                                     </p>
                                                 </div>
@@ -202,28 +202,28 @@
                                 ‹
                             </button>
                             <div class="selection-cards row row-cols-1 row-cols-xl-2 g-3 flex-grow-1">
-                                @foreach (var coupon in CuponesVisibles)
+                                @foreach (var cupon in CuponesVisibles)
                                 {
                                     <div class="col">
                                         <button
                                             class="selection-card btn btn-outline-secondary w-100 h-100
                                                 d-flex gap-3 text-start
-                                                @(cuponId == coupon?.Id ? "selected" : "")"
-                                            @onclick="() => SeleccionarCupon(coupon)">
+                                                @(cuponId == cupon?.Id ? "selected" : "")"
+                                            @onclick="() => SeleccionarCupon(cupon)">
                                             <span class="radio-mark">
                                             </span>
                                             <div>
-                                                @if (coupon is null)
+                                                @if (cupon is null)
                                                 {
                                                     <h3>Sin cupón</h3>
                                                 }
                                                 else
                                                 {
-                                                    <h3>@coupon.Porcentaje% de descuento</h3>
+                                                    <h3>@cupon.Porcentaje% de descuento</h3>
                                                     <p>
-                                                        Mínimo @Presentacion.Dinero(coupon.Minimo)
+                                                        Mínimo @Presentacion.Dinero(cupon.Minimo)
                                                         <br />
-                                                        Vence @coupon.Vencimiento.ToString("dd/MM/yyyy")
+                                                        Vence @cupon.Vencimiento.ToString("dd/MM/yyyy")
                                                     </p>
                                                 }
                                             </div>
@@ -259,29 +259,29 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var line in Compras.Carrito)
+                                @foreach (var linea in Compras.Carrito)
                                 {
-                                    var book = Catalogo.Libros.FirstOrDefault(libro => libro.Id == line.Key);
-                                    if (book is not null)
+                                    var libro = Catalogo.Libros.FirstOrDefault(libro => libro.Id == linea.Key);
+                                    if (libro is not null)
                                     {
                                         <tr>
                                             <td>
                                                 <div class="line-book d-flex align-items-center gap-3">
-                                                    <img src="@book.Portada" alt="@book.Titulo" />
-                                                    <strong>@book.Titulo</strong>
+                                                    <img src="@libro.Portada" alt="@libro.Titulo" />
+                                                    <strong>@libro.Titulo</strong>
                                                 </div>
                                             </td>
-                                            <td>@line.Value</td>
+                                            <td>@linea.Value</td>
                                             <td>
                                                 <div class="line-price d-flex flex-column gap-1">
-                                                    @if (book.Descuento > 0)
+                                                    @if (libro.Descuento > 0)
                                                     {
-                                                        <del>@Presentacion.Dinero(book.PrecioOriginal)</del>
+                                                        <del>@Presentacion.Dinero(libro.PrecioOriginal)</del>
                                                     }
-                                                    @Presentacion.Dinero(book.Precio)
+                                                    @Presentacion.Dinero(libro.Precio)
                                                 </div>
                                             </td>
-                                            <td>@Presentacion.Dinero(book.Precio * line.Value)</td>
+                                            <td>@Presentacion.Dinero(libro.Precio * linea.Value)</td>
                                         </tr>
                                     }
                                 }

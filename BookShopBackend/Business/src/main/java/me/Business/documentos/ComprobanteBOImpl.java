@@ -21,9 +21,9 @@ public class ComprobanteBOImpl implements ComprobanteBO {
     public ComprobanteBOImpl() {
         this(new PedidoBOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")));
     }
-    public ComprobanteBOImpl(PedidoBO pedidoBO, UsuarioDAO usuarios, Clock reloj) {
+    public ComprobanteBOImpl(PedidoBO pedidoBO, UsuarioDAO usuarioDAO, Clock reloj) {
         this.pedidoBO = pedidoBO;
-        this.autorizacion = new Autorizacion(usuarios);
+        this.autorizacion = new Autorizacion(usuarioDAO);
         this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
     }
     @Override

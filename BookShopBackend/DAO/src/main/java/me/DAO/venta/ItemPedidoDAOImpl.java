@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import me.DBManager.DBManager;
 import me.DBManager.TransactionContext;
-import me.Model.dto.ImagenDTO;
 import me.Model.dto.compra.ItemDTO;
 import me.Model.entities.catalogo.Libro;
 import me.Model.entities.compra.Item;
@@ -95,7 +94,7 @@ public class ItemPedidoDAOImpl implements ItemPedidoDAO {
                     BigDecimal original = resultado.getBigDecimal("precio_base");
                     BigDecimal unitario = resultado.getBigDecimal("precio_unitario");
                     items.add(new ItemDTO(resultado.getInt("id_libro"), resultado.getString("titulo"),
-                            portada == null ? null : new ImagenDTO(portada),
+                            portada,
                             resultado.getInt("cantidad"), original, unitario, resultado.getBigDecimal("porcentaje_descuento"), resultado.getBigDecimal("sub_total"), null, null));
                 }
             }

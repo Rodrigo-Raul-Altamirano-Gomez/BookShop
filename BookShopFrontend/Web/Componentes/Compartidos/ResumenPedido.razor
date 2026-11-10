@@ -13,30 +13,30 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var line in Pedido.Lineas)
+                        @foreach (var linea in Pedido.Lineas)
                         {
-                            var book = Catalogo.Libros.FirstOrDefault(libro => libro.Id == line.IdLibro);
+                            var libro = Catalogo.Libros.FirstOrDefault(libro => libro.Id == linea.IdLibro);
                             <tr>
                                 <td>
                                     <div class="line-book d-flex align-items-center gap-3">
                                         <img
-                                            src="@(book?.Portada ?? "/images/book-placeholder.svg")"
-                                            alt="@(book?.Titulo ?? "Libro")"
+                                            src="@(libro?.Portada ?? "/images/book-placeholder.svg")"
+                                            alt="@(libro?.Titulo ?? "Libro")"
                                             />
-                                        <strong>@(book?.Titulo ?? "Libro")</strong>
+                                        <strong>@(libro?.Titulo ?? "Libro")</strong>
                                     </div>
                                 </td>
-                                <td>@line.Cantidad</td>
+                                <td>@linea.Cantidad</td>
                                 <td>
                                     <div class="line-price d-flex flex-column align-items-start">
-                                        @if (line.Descuento > 0)
+                                        @if (linea.Descuento > 0)
                                         {
-                                            <del>@Presentacion.Dinero(line.PrecioOriginal)</del>
+                                            <del>@Presentacion.Dinero(linea.PrecioOriginal)</del>
                                         }
-                                        <strong>@Presentacion.Dinero(line.Precio)</strong>
+                                        <strong>@Presentacion.Dinero(linea.Precio)</strong>
                                     </div>
                                 </td>
-                                <td>@Presentacion.Dinero(line.Precio * line.Cantidad)</td>
+                                <td>@Presentacion.Dinero(linea.Precio * linea.Cantidad)</td>
                             </tr>
                         }
                     </tbody>
@@ -127,18 +127,18 @@
                 <span>Entrega estimada</span>
                 <strong>@Pedido.EntregaEstimada.ToString("dd/MM/yyyy HH:mm")</strong>
             </div>
-            @if (Pedido.FechaSalida is DateTime departure)
+            @if (Pedido.FechaSalida is DateTime fechaSalida)
             {
                 <div class="col-md-4 d-flex flex-column gap-1">
                     <span>Fecha de salida</span>
-                    <strong>@departure.ToString("dd/MM/yyyy HH:mm")</strong>
+                    <strong>@fechaSalida.ToString("dd/MM/yyyy HH:mm")</strong>
                 </div>
             }
-            @if (Pedido.FechaEntrega is DateTime delivered)
+            @if (Pedido.FechaEntrega is DateTime fechaEntrega)
             {
                 <div class="col-md-4 d-flex flex-column gap-1">
                     <span>Fecha de entrega</span>
-                    <strong>@delivered.ToString("dd/MM/yyyy HH:mm")</strong>
+                    <strong>@fechaEntrega.ToString("dd/MM/yyyy HH:mm")</strong>
                 </div>
             }
         </div>

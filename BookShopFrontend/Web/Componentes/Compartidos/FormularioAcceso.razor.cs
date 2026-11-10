@@ -7,16 +7,13 @@ namespace Web.Componentes.Compartidos;
 public partial class FormularioAcceso
 {
     [Inject] private CompraServicio Compras { get; set; } = default!;
-    [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
+    [Inject] protected HttpClientUtils Api { get; set; } = default!;
 
     [Inject]
     private SesionUsuario Sesion { get; set; } = default!;
 
     [Parameter]
-    public EventCallback AlCerrar
-    {
-        get; set;
-    }
+    public EventCallback AlCerrar { get; set; }
 
     private bool registro, mostrarContrasena, reactivacion, enviando;
     private string correo = "", contrasena = "", confirmacion = "", nombre = "", urlFoto = "";
@@ -50,9 +47,12 @@ public partial class FormularioAcceso
         enviando = true;
         try
         {
-            var ruta = registro ? "cuenta/registro" : reactivacion ? "cuenta/reactivacion" : "cuenta/sesion";
-            object datos = registro
-                ? new RegistroUsuarioDTO
+            string ruta;
+            object datos;
+            if (registro)
+            {
+                ruta = "cuenta/registro";
+                datos = new RegistroUsuarioDTO
                 {
                     Nombre = nombre.Trim(),
                     Email = correo.Trim(),
@@ -60,12 +60,19 @@ public partial class FormularioAcceso
                     Contrasenia = contrasena,
                     ConfirmacionContrasenia = confirmacion,
                     Imagen = Presentacion.ImagenDesdeUrl(urlFoto)
-                }
-                : new CredencialesDTO
+                };
+            }
+            else
+            {
+                ruta = "cuenta/sesion";
+                if (reactivacion)
+                    ruta = "cuenta/reactivacion";
+                datos = new CredencialesDTO
                 {
                     Email = correo.Trim(),
                     Contrasenia = contrasena
                 };
+            }
             var acceso = await Api.Post<AccesoUsuarioDTO>(ruta, datos);
             if (acceso.RequiereReactivacion)
             {
@@ -77,10 +84,15 @@ public partial class FormularioAcceso
             Sesion.Notificar();
             await Cerrar();
         }
-        catch (InvalidOperationException e) { error = e.Message; }
-        finally { enviando = false; }
+        catch (InvalidOperationException e)
+        {
+            error = e.Message;
+        }
+        finally
+        {
+            enviando = false;
+        }
     }
 
     private Task Cerrar() => AlCerrar.InvokeAsync();
 }
-

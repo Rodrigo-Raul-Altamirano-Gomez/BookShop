@@ -5,7 +5,6 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 import me.Business.exceptions.*;
 import me.Business.Imagenes;
-import me.Model.dto.ImagenDTO;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ProteccionDatosTest {
@@ -59,11 +58,11 @@ class ProteccionDatosTest {
         assertEquals("clave-invalida", Files.readString(archivo));
     }
     @Test void imagenExigeUnaUrlValida() throws Exception {
-        assertDoesNotThrow(() -> Imagenes.validar(new ImagenDTO("https://example.test/portada.jpg")));
-        assertDoesNotThrow(() -> Imagenes.validar(new ImagenDTO("/images/portada.png")));
-        assertThrows(ValidacionException.class, () -> Imagenes.validar(new ImagenDTO("data:image/png;base64,AAAA")));
-        assertThrows(ValidacionException.class, () -> Imagenes.validar(new ImagenDTO("javascript:alert(1)")));
-        assertThrows(ValidacionException.class, () -> Imagenes.validar(new ImagenDTO("https://example.test/" + "a".repeat(2048))));
+        assertDoesNotThrow(() -> Imagenes.validar("https://example.test/portada.jpg"));
+        assertDoesNotThrow(() -> Imagenes.validar("/images/portada.png"));
+        assertThrows(ValidacionException.class, () -> Imagenes.validar("data:image/png;base64,AAAA"));
+        assertThrows(ValidacionException.class, () -> Imagenes.validar("javascript:alert(1)"));
+        assertThrows(ValidacionException.class, () -> Imagenes.validar("https://example.test/" + "a".repeat(2048)));
         assertDoesNotThrow(() -> Imagenes.validar(null));
     }
 }

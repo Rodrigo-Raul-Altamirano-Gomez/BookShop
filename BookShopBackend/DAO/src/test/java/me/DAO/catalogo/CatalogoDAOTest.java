@@ -19,7 +19,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import me.DBManager.DBManager;
 import me.DBManager.TransactionContext;
-import me.Model.dto.ImagenDTO;
 import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.dto.catalogo.ConsultaReporteLibrosDTO;
 import me.Model.dto.catalogo.DetalleLibroDTO;
@@ -245,7 +244,7 @@ class CatalogoDAOTest {
 
     @Test
     void recomendacionesNoCargaPortadasNiRecortaElConjuntoYRespetaOrdenDeIds() throws Exception {
-        libros.cambiarImagen(1, new ImagenDTO("https://example.test/imagen.png"), "admin");
+        libros.cambiarImagen(1, "https://example.test/imagen.png", "admin");
         for (int i = 0; i < 9; i++) {
             registrarLibro("Extra " + i, 1, "Español", "10", 100, 1, 2026, 0);
         }
@@ -260,7 +259,7 @@ class CatalogoDAOTest {
         assertEquals(List.of(4, 1), libros.listarTarjetasPorIds(List.of(4, 4, 1), FECHA)
                 .stream().map(TarjetaLibroDTO::id).toList());
         assertEquals("https://example.test/imagen.png", libros.listarTarjetasPorIds(List.of(1), FECHA)
-                .getFirst().portada().url());
+                .getFirst().portada());
         List<TarjetaLibroDTO> sinImagen = libros.listarTarjetasSinImagenPorIds(List.of(4, 2, 1, 3), FECHA);
         assertEquals(List.of(4, 1), sinImagen.stream().map(TarjetaLibroDTO::id).toList());
         assertTrue(sinImagen.stream().allMatch(t -> t.portada() == null));
@@ -335,15 +334,15 @@ class CatalogoDAOTest {
 
     @Test
     void imagenesSeCambianYQuitanComoOperacionIndependiente() throws Exception {
-        ImagenDTO imagen = new ImagenDTO("https://example.test/imagen.png");
+        String imagen = "https://example.test/imagen.png";
         libros.cambiarImagen(1, imagen, "admin");
         autores.cambiarImagen(1, imagen, "admin");
         categorias.cambiarImagen(1, imagen, "admin");
         editoriales.cambiarImagen(1, imagen, "admin");
-        assertEquals(imagen.url(), libros.leer(1).getPortada());
-        assertEquals(imagen.url(), autores.leer(1).getImagen());
-        assertEquals(imagen.url(), categorias.leer(1).getImagen());
-        assertEquals(imagen.url(), editoriales.leer(1).getImagen());
+        assertEquals(imagen, libros.leer(1).getPortada());
+        assertEquals(imagen, autores.leer(1).getImagen());
+        assertEquals(imagen, categorias.leer(1).getImagen());
+        assertEquals(imagen, editoriales.leer(1).getImagen());
         libros.cambiarImagen(1, null, "admin");
         autores.cambiarImagen(1, null, "admin");
         categorias.cambiarImagen(1, null, "admin");
@@ -446,7 +445,7 @@ class CatalogoDAOTest {
         assertTrue(categorias.obtenerDetalle(1, 1).seguido());
         assertTrue(editoriales.obtenerDetalle(1, 1).seguido());
         assertFalse(autores.obtenerDetalle(1, 2).seguido());
-        autores.cambiarImagen(1, new ImagenDTO("https://example.test/imagen.png"), "admin");
+        autores.cambiarImagen(1, "https://example.test/imagen.png", "admin");
         assertNotNull(autores.buscar(filtro).items().getFirst().imagen());
         assertNull(autores.buscarOpciones(filtro).items().getFirst().imagen());
         assertNull(categorias.buscarOpciones(filtro).items().getFirst().imagen());

@@ -98,7 +98,18 @@
         <div class="modal-footer px-0 pb-0 mt-4">
             <button type="button" class="btn btn-secondary" @onclick="Cerrar">Cancelar</button>
             <button type="submit" class="btn btn-primary" disabled="@enviando">
-                @(reactivacion ? "Reactivar cuenta" : registro ? "Crear cuenta" : "Iniciar sesión")
+                @if (reactivacion)
+                {
+                    <span>Reactivar cuenta</span>
+                }
+                else if (registro)
+                {
+                    <span>Crear cuenta</span>
+                }
+                else
+                {
+                    <span>Iniciar sesión</span>
+                }
             </button>
         </div>
     </form>

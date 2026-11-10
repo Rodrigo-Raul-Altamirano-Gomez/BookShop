@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import me.DBManager.DBManager;
 import me.DBManager.TransactionContext;
-import me.Model.dto.ImagenDTO;
 import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.dto.opinion.*;
 import me.Model.entities.catalogo.Libro;
@@ -179,8 +178,8 @@ public class ResenaDAOImpl implements ResenaDAO {
         String portada = resultado.getString("portada");
         String imagen = resultado.getString("imagen");
         return new ResenaDTO(resultado.getInt("id"), resultado.getInt("id_libro"), resultado.getString("titulo"),
-                portada == null ? null : new ImagenDTO(portada),
-                resultado.getString("nombre"), imagen == null ? null : new ImagenDTO(imagen),
+                portada,
+                resultado.getString("nombre"), imagen,
                 resultado.getInt("puntuacion"), resultado.getString("comentario"), resultado.getObject("fecha", LocalDateTime.class),
                 resultado.getInt("cantidad_votos_utiles"), resultado.getBoolean("voto_propio"), resultado.getBoolean("activo") && !resultado.getBoolean("eliminado"));
     }

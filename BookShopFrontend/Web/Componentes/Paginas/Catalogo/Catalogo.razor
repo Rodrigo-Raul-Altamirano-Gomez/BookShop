@@ -7,5 +7,5 @@
             <li class="breadcrumb-item active" aria-current="page"><span>Catálogo</span></li>
         </ol>
     </nav>
-    <ExploradorCatalogo Titulo="@Titulo" Busqueda="@(Q ?? "")" OrdenInicial="@Sort" SoloNuevos="@(Criterion == "nuevos")" />
+    <ExploradorCatalogo Titulo="@Titulo" Busqueda="@(Busqueda ?? "")" OrdenInicial="@OrdenInicial" SoloNuevos="@(Criterio == "nuevos")" />
 </div>

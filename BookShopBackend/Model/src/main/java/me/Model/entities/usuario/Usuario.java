@@ -179,6 +179,6 @@ public class Usuario {
     }
 
     public void registrarPedidoEntregado() {
-        cantidadPedidosEntregados = Math.incrementExact(cantidadPedidosEntregados);
+        cantidadPedidosEntregados = cantidadPedidosEntregados + 1;
     }
 }

@@ -1,7 +1,6 @@
 package me.Model.dto.catalogo;
 
 import java.math.BigDecimal;
-import me.Model.dto.ImagenDTO;
 
 // Alta completa: referencias iniciales, precio, stock y portada opcional se guardan con los datos.
 public record RegistroLibroDTO(
@@ -11,6 +10,6 @@ public record RegistroLibroDTO(
         int idEditorial,
         BigDecimal precioBase,
         int stockInicial,
-        ImagenDTO portada
+        String portada
 ) {
 }

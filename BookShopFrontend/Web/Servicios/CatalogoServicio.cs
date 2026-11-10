@@ -10,27 +10,13 @@ public class CatalogoServicio
     public List<Libro> Libros { get; } = [];
     public List<Referencia> Referencias { get; } = [];
     public List<string> Idiomas { get; } = [];
-    public List<Resena> Resenas { get; } = [];
-    public bool Cargando
-    {
-        get; private set;
-    }
-    public bool Inicializado
-    {
-        get; private set;
-    }
+    public bool Cargando { get; private set; }
+    public bool Inicializado { get; private set; }
 
     public CatalogoServicio(HttpClientUtils api, SesionUsuario sesion)
     {
         this.api = api;
         Sesion = sesion;
-        Sesion.Cerrada += Limpiar;
-    }
-
-    private void Limpiar()
-    {
-        Resenas.Clear();
-
     }
 
     public async Task Inicializar()
@@ -55,7 +41,7 @@ public class CatalogoServicio
                         Pagina = pagina,
                         TamanioPagina = 12
                     });
-                    Referencias.AddRange(resultado.Items.Select(d => Presentacion.Referencia(d, tipo)));
+                    Referencias.AddRange(resultado.Items.Select(dto => Presentacion.Referencia(dto, tipo)));
                     total = resultado.TotalResultados;
                     pagina++;
                 } while ((pagina - 1) * 12 < total);
@@ -73,7 +59,10 @@ public class CatalogoServicio
             Inicializado = true;
             Sesion.Error = null;
         }
-        catch (InvalidOperationException e) { Sesion.Error = e.Message; Sesion.Avisar(e.Message); }
+        catch (InvalidOperationException e)
+        {
+            Sesion.Error = e.Message; Sesion.Avisar(e.Message);
+        }
         Cargando = false;
         Sesion.Notificar();
     }
@@ -87,6 +76,4 @@ public class CatalogoServicio
             Libros[indice] = libro;
     }
 
-    public static FiltroLibroDTO Filtro(int pagina = 1, string orden = "MAS_RECIENTES", int tamanio = 12, bool nuevos = false)
-        => new(null, [], [], [], [], null, null, true, nuevos, orden, pagina, tamanio);
 }

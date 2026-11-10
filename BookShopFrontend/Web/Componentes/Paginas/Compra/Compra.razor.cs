@@ -10,13 +10,13 @@ public partial class Compra : IDisposable
 
     private bool cargando = true;
 
-    [Microsoft.AspNetCore.Components.Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
+    [Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
 
-    [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
+    [Inject] protected HttpClientUtils Api { get; set; } = default!;
 
-    [Microsoft.AspNetCore.Components.Inject] protected CompraServicio Compras { get; set; } = default!;
+    [Inject] protected CompraServicio Compras { get; set; } = default!;
 
-    [Microsoft.AspNetCore.Components.Inject] protected CuentaServicio Cuenta { get; set; } = default!;
+    [Inject] protected CuentaServicio Cuenta { get; set; } = default!;
 
     [Inject] private SesionUsuario Sesion { get; set; } = default!;
     [Inject] private NavigationManager Navegacion { get; set; } = default!;
@@ -30,7 +30,16 @@ public partial class Compra : IDisposable
     private decimal DescuentoCupon => Resumen?.DescuentoCupon ?? 0;
     private decimal CostoEnvio => Resumen?.CostoEnvio ?? 0;
     private decimal Total => Resumen?.Total ?? 0;
-    private List<Cupon?> Cupones => new Cupon?[] { null }.Concat(Cuenta.Cupones.Where(c => c.Estado == "Disponible")).ToList();
+    private List<Cupon?> Cupones
+    {
+        get
+        {
+            // La primera opción permite comprar sin cupón.
+            var cupones = new List<Cupon?> { null };
+            cupones.AddRange(Cuenta.Cupones.Where(cupon => cupon.Estado == "Disponible"));
+            return cupones;
+        }
+    }
     private IEnumerable<Cupon?> CuponesVisibles => Cupones.Skip(indiceCupon).Take(2);
 
     protected override async Task OnInitializedAsync()
@@ -39,7 +48,6 @@ public partial class Compra : IDisposable
         errorCarga = null;
         try
         {
-
             Sesion.Cambiado += Actualizar;
             if (Sesion.Usuario is null)
                 return;
@@ -116,8 +124,14 @@ public partial class Compra : IDisposable
                     IdCupon = cupon ?? 0
                 }));
         }
-        catch (InvalidOperationException e) { errorPago = e.Message; }
-        finally { procesando = false; }
+        catch (InvalidOperationException e)
+        {
+            errorPago = e.Message;
+        }
+        finally
+        {
+            procesando = false;
+        }
     }
     private Task SeleccionarCupon(Cupon? cupon) => Seleccionar(direccionId, metodoId, cupon?.Id);
 
@@ -132,19 +146,7 @@ public partial class Compra : IDisposable
             var detalle = await Api.Post<DetallePedidoDTO>("pedidos/confirmacion");
             Compras.Pedidos.Insert(0, Presentacion.Pedido(detalle));
             // El pedido ya fue confirmado; no se envía otra confirmación ni se altera su detalle.
-            Compras.MostrarCarrito(new ResumenCompraDTO
-            {
-                Items = [],
-                SubtotalProductos = 0,
-                DescuentoLibros = 0,
-                IdCupon = 0,
-                PorcentajeCupon = 0,
-                DescuentoCupon = 0,
-                PorcentajeEnvio = 0,
-                CostoEnvio = 0,
-                Total = 0,
-                CantidadLibros = 0
-            });
+            Compras.MostrarCarrito(new ResumenCompraDTO());
             Compras.Preparacion = null;
             Navegacion.NavigateTo($"/confirmacion/{detalle.Pedido.Id}");
         }
@@ -161,7 +163,10 @@ public partial class Compra : IDisposable
                 catch (InvalidOperationException) { Compras.Preparacion = null; }
             }
         }
-        finally { procesando = false; }
+        finally
+        {
+            procesando = false;
+        }
     }
     public void Dispose() => Sesion.Cambiado -= Actualizar;
 }

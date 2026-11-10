@@ -3,7 +3,6 @@ package me.Service;
 import java.time.LocalDate;
 import java.util.stream.Stream;
 import jakarta.json.bind.JsonbBuilder;
-import me.Model.dto.ImagenDTO;
 import me.Model.dto.catalogo.ConsultaRecomendacionesDTO;
 import me.Model.dto.catalogo.FiltroLibroDTO;
 import me.Model.dto.catalogo.FiltroReferenciaDTO;
@@ -39,12 +38,12 @@ class JsonbDTOTest {
     @Test
     void conservaFechaYUrlEnRegistro() throws Exception {
         var original = new RegistroUsuarioDTO("Ana", "ana@correo.pe", LocalDate.of(2000, 2, 29),
-                "clave123", "clave123", new ImagenDTO("https://example.test/imagen.png"));
+                "clave123", "clave123", "https://example.test/imagen.png");
         try (var jsonb = JsonbBuilder.create()) {
             var recibido = jsonb.fromJson(jsonb.toJson(original), RegistroUsuarioDTO.class);
             assertEquals(original.fechaNacimiento(), recibido.fechaNacimiento());
             assertEquals(original.email(), recibido.email());
-            assertEquals(original.imagen().url(), recibido.imagen().url());
+            assertEquals(original.imagen(), recibido.imagen());
 
         }
     }

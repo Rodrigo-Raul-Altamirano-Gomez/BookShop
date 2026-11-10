@@ -18,7 +18,6 @@ import me.DAO.catalogo.CategoriaDAOImpl;
 import me.DAO.catalogo.EditorialDAOImpl;
 import me.DBManager.DBManager;
 import me.DBManager.TransactionContext;
-import me.Model.dto.ImagenDTO;
 import me.Model.dto.catalogo.TarjetaReferenciaDTO;
 import me.Model.dto.usuario.PerfilUsuarioDTO;
 import me.Model.dto.usuario.ResumenActividadUsuarioDTO;
@@ -151,9 +150,7 @@ public class UsuarioDAOImpl implements UsuarioDAO {
             sentencia.setInt(1, id);
             try (ResultSet resultado = sentencia.executeQuery()) {
                 if (!resultado.next()) return null;
-                String contenido = resultado.getString("imagen");
-                ImagenDTO imagen = contenido == null ? null
-                        : new ImagenDTO(contenido);
+                String imagen = resultado.getString("imagen");
                 TarjetaUsuarioDTO tarjeta = new TarjetaUsuarioDTO(resultado.getInt("id"),
                         resultado.getString("nombre"), resultado.getString("email"), imagen);
                 return new PerfilUsuarioDTO(tarjeta,
@@ -163,12 +160,12 @@ public class UsuarioDAOImpl implements UsuarioDAO {
     }
 
     @Override
-    public boolean cambiarImagen(int id, ImagenDTO imagen, String usuario) throws SQLException {
+    public boolean cambiarImagen(int id, String imagen, String usuario) throws SQLException {
         String sql = "UPDATE USUARIO SET imagen = ?, usuario_actualizacion = ?, "
                 + "fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ? AND activo AND NOT eliminado";
         try (Connection conexion = DBManager.getConnection();
              PreparedStatement sentencia = conexion.prepareStatement(sql)) {
-            sentencia.setString(1, imagen == null ? null : imagen.url());
+            sentencia.setString(1, imagen);
             sentencia.setString(2, usuario);
             sentencia.setInt(3, id);
             return sentencia.executeUpdate() == 1;

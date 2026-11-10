@@ -11,16 +11,10 @@ public class DetalleReferenciaDTO
     public string Introduccion { get; set; } = "";
 
     [JsonProperty("activo")]
-    public bool Activo
-    {
-        get; set;
-    }
+    public bool Activo { get; set; }
 
     [JsonProperty("seguido")]
-    public bool Seguido
-    {
-        get; set;
-    }
+    public bool Seguido { get; set; }
 
     public DetalleReferenciaDTO()
     {

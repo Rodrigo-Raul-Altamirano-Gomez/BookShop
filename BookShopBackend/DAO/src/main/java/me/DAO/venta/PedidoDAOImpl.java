@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import me.DBManager.DBManager;
 import me.DBManager.TransactionContext;
-import me.Model.dto.ImagenDTO;
 import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.dto.compra.*;
 import me.Model.entities.compra.*;
@@ -166,7 +165,7 @@ public class PedidoDAOImpl implements PedidoDAO {
             case FECHA_PAGO_DESCENDENTE -> "fecha_pago DESC, id DESC";
         };
         List<ResumenPedidoDTO> pedidos = new ArrayList<>();
-        Map<Integer, List<ImagenDTO>> portadas = new HashMap<>();
+        Map<Integer, List<String>> portadas = new HashMap<>();
         long total;
         try (Connection conexion = DBManager.getConnection()) {
             try (PreparedStatement sentencia = conexion.prepareStatement("SELECT COUNT(*) FROM PEDIDO" + condiciones)) {
@@ -196,12 +195,12 @@ public class PedidoDAOImpl implements PedidoDAO {
                     try (ResultSet resultado = sentencia.executeQuery()) {
                         while (resultado.next()) {
                             int idPedido = resultado.getInt("id_pedido");
-                            List<ImagenDTO> imagenesPedido = portadas.get(idPedido);
+                            List<String> imagenesPedido = portadas.get(idPedido);
                             if (imagenesPedido == null) {
                                 imagenesPedido = new ArrayList<>();
                                 portadas.put(idPedido, imagenesPedido);
                             }
-                            imagenesPedido.add(new ImagenDTO(resultado.getString("portada")));
+                            imagenesPedido.add(resultado.getString("portada"));
                         }
                     }
                 }

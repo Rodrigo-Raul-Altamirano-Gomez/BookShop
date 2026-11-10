@@ -2,7 +2,6 @@ package me.Business.usuario;
 
 import java.time.Duration;
 import me.Business.exceptions.NegocioException;
-import me.Model.dto.ImagenDTO;
 import me.Model.dto.usuario.AccesoUsuarioDTO;
 import me.Model.dto.usuario.CambioContraseniaDTO;
 import me.Model.dto.usuario.CredencialesDTO;
@@ -16,7 +15,7 @@ public interface UsuarioBO {
     AccesoUsuarioDTO reactivar(CredencialesDTO credenciales) throws NegocioException;
     PerfilUsuarioDTO obtenerPerfil(int idActor) throws NegocioException;
     PerfilUsuarioDTO modificarPerfil(int idActor, DatosPerfilDTO datos) throws NegocioException;
-    PerfilUsuarioDTO cambiarImagen(int idActor, ImagenDTO imagen) throws NegocioException;
+    PerfilUsuarioDTO cambiarImagen(int idActor, String imagen) throws NegocioException;
     void cambiarContrasenia(int idActor, CambioContraseniaDTO datos) throws NegocioException;
     void desactivar(int idActor, String contraseniaActual) throws NegocioException;
     void cerrarSesion(int idActor, Duration tiempoSesion) throws NegocioException;

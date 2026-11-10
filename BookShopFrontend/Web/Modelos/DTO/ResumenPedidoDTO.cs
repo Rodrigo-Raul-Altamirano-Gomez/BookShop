@@ -5,31 +5,19 @@ namespace Web.Modelos.DTO;
 public class ResumenPedidoDTO
 {
     [JsonProperty("id")]
-    public int Id
-    {
-        get; set;
-    }
+    public int Id { get; set; }
 
     [JsonProperty("fechaPago")]
-    public DateTime FechaPago
-    {
-        get; set;
-    }
+    public DateTime FechaPago { get; set; }
 
     [JsonProperty("estado")]
     public string Estado { get; set; } = "";
 
     [JsonProperty("cantidadLibros")]
-    public int CantidadLibros
-    {
-        get; set;
-    }
+    public int CantidadLibros { get; set; }
 
     [JsonProperty("total")]
-    public decimal Total
-    {
-        get; set;
-    }
+    public decimal Total { get; set; }
 
     public ResumenPedidoDTO()
     {

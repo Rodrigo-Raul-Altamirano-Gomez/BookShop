@@ -5,10 +5,7 @@ namespace Web.Modelos.DTO;
 public class FiltroLibroDTO
 {
     [JsonProperty("titulo")]
-    public string? Titulo
-    {
-        get; set;
-    }
+    public string? Titulo { get; set; }
 
     [JsonProperty("idsCategorias")]
     public List<int> IdsCategorias { get; set; } = [];
@@ -23,61 +20,24 @@ public class FiltroLibroDTO
     public List<string> Idiomas { get; set; } = [];
 
     [JsonProperty("precioMinimo")]
-    public decimal? PrecioMinimo
-    {
-        get; set;
-    }
+    public decimal? PrecioMinimo { get; set; }
 
     [JsonProperty("precioMaximo")]
-    public decimal? PrecioMaximo
-    {
-        get; set;
-    }
+    public decimal? PrecioMaximo { get; set; }
 
     [JsonProperty("soloActivos")]
-    public bool SoloActivos
-    {
-        get; set;
-    }
+    public bool SoloActivos { get; set; } = true;
 
     [JsonProperty("soloNuevos")]
-    public bool SoloNuevos
-    {
-        get; set;
-    }
+    public bool SoloNuevos { get; set; }
 
     [JsonProperty("orden")]
-    public string Orden { get; set; } = "";
+    public string Orden { get; set; } = "MAS_RECIENTES";
 
     [JsonProperty("pagina")]
-    public int Pagina
-    {
-        get; set;
-    }
+    public int Pagina { get; set; } = 1;
 
     [JsonProperty("tamanioPagina")]
-    public int TamanioPagina
-    {
-        get; set;
-    }
+    public int TamanioPagina { get; set; } = 12;
 
-    public FiltroLibroDTO()
-    {
-    }
-
-    public FiltroLibroDTO(string? titulo, List<int> idsCategorias, List<int> idsAutores, List<int> idsEditoriales, List<string> idiomas, decimal? precioMinimo, decimal? precioMaximo, bool soloActivos, bool soloNuevos, string orden, int pagina, int tamanioPagina)
-    {
-        Titulo = titulo;
-        IdsCategorias = idsCategorias;
-        IdsAutores = idsAutores;
-        IdsEditoriales = idsEditoriales;
-        Idiomas = idiomas;
-        PrecioMinimo = precioMinimo;
-        PrecioMaximo = precioMaximo;
-        SoloActivos = soloActivos;
-        SoloNuevos = soloNuevos;
-        Orden = orden;
-        Pagina = pagina;
-        TamanioPagina = tamanioPagina;
-    }
 }

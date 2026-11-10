@@ -8,19 +8,22 @@ public partial class Paginacion
     public int Pagina { get; set; } = 1;
 
     [Parameter]
-    public int TotalPaginas
-    {
-        get; set;
-    }
+    public int TotalPaginas { get; set; }
 
     [Parameter]
-    public EventCallback<int> PaginaCambiada
+    public EventCallback<int> PaginaCambiada { get; set; }
+    private IEnumerable<int> PaginasVisibles
     {
-        get; set;
+        get
+        {
+            int primeraPagina = Math.Max(1, Pagina - 2);
+            int ultimaPagina = Math.Min(TotalPaginas, Pagina + 2);
+            var paginas = new List<int>();
+            for (int numero = primeraPagina; numero <= ultimaPagina; numero++)
+                paginas.Add(numero);
+            return paginas;
+        }
     }
-    private IEnumerable<int> PaginasVisibles => Enumerable.Range(Math.Max(1, Pagina - 2), Math.Max(0, Math
-        .Min(TotalPaginas, Pagina + 2) - Math.Max(1, Pagina - 2) + 1));
 
-    private Task Ir(int page) => PaginaCambiada.InvokeAsync(page);
+    private Task Ir(int pagina) => PaginaCambiada.InvokeAsync(pagina);
 }
-

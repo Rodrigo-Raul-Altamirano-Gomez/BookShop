@@ -5,10 +5,7 @@ namespace Web.Componentes.Paginas.Cuenta;
 public partial class LibrosGuardados
 {
     private const string ClavePestana = "libros-guardados:pestana-favoritos";
-    private bool PestanaFavoritos
-    {
-        get; set;
-    }
+    private bool PestanaFavoritos { get; set; }
 
     protected override void OnInitialized()
     {
@@ -29,4 +26,3 @@ public partial class LibrosGuardados
         Sesion.EstadoVistas[ClavePestana] = true;
     }
 }
-

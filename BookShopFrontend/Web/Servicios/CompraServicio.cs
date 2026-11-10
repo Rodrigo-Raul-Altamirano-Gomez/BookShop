@@ -10,14 +10,8 @@ public class CompraServicio
     private readonly CatalogoServicio Catalogo;
     public Dictionary<int, int> Carrito { get; } = [];
     public List<Pedido> Pedidos { get; } = [];
-    public ResumenCompraDTO? Resumen
-    {
-        get; private set;
-    }
-    public PreparacionCompraDTO? Preparacion
-    {
-        get; set;
-    }
+    public ResumenCompraDTO? Resumen { get; private set; }
+    public PreparacionCompraDTO? Preparacion { get; set; }
     public int CantidadCarrito => Resumen?.CantidadLibros ?? 0;
 
     public CompraServicio(HttpClientUtils api, SesionUsuario sesion, CatalogoServicio catalogo)
@@ -40,17 +34,17 @@ public class CompraServicio
     {
         Resumen = resumen;
         Carrito.Clear();
-        foreach (var d in resumen.Items)
+        foreach (var dto in resumen.Items)
         {
-            Carrito[d.IdLibro] = d.Cantidad;
-            var libro = Catalogo.Libros.FirstOrDefault(libro => libro.Id == d.IdLibro) ?? new Libro { Id = d.IdLibro };
-            libro.Titulo = d.Titulo;
-            libro.Portada = Presentacion.Imagen(d.Portada, "/images/book-placeholder.svg");
-            libro.PrecioOriginal = d.PrecioOriginal;
-            libro.Precio = d.PrecioUnitario;
-            libro.Descuento = d.PorcentajeDescuento;
-            libro.Stock = d.StockDisponible ?? 0;
-            libro.Activo = d.Activo ?? true;
+            Carrito[dto.IdLibro] = dto.Cantidad;
+            var libro = Catalogo.Libros.FirstOrDefault(libro => libro.Id == dto.IdLibro) ?? new Libro { Id = dto.IdLibro };
+            libro.Titulo = dto.Titulo;
+            libro.Portada = Presentacion.Imagen(dto.Portada, "/images/book-placeholder.svg");
+            libro.PrecioOriginal = dto.PrecioOriginal;
+            libro.Precio = dto.PrecioUnitario;
+            libro.Descuento = dto.PorcentajeDescuento;
+            libro.Stock = dto.StockDisponible ?? 0;
+            libro.Activo = dto.Activo ?? true;
             Catalogo.Recordar(libro);
         }
         Sesion.Notificar();

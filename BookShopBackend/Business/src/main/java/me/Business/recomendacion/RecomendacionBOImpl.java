@@ -6,7 +6,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -61,7 +60,7 @@ public class RecomendacionBOImpl implements RecomendacionBO {
     public List<TarjetaLibroDTO> similares(int idLibro) throws NegocioException {
         if (idLibro < 1) throw new ValidacionException("idLibro", "Selecciona un libro.");
         try {
-            DatosRecomendacion datos = cargar();
+            DatosRecomendacion datos = cargarDatos();
             Libro origen = null;
             for (Libro candidato : datos.libros) {
                 if (candidato.getId() == idLibro) {
@@ -71,7 +70,7 @@ public class RecomendacionBOImpl implements RecomendacionBO {
             }
             if (origen == null) throw new RecursoNoEncontradoException("El libro no está disponible.");
             Map<Integer, Double> puntos = SimilitudContenido.puntuar(origen, datos.libros);
-            List<Integer> ids = ordenarPuntos(datos.libros, puntos, Set.of(idLibro));
+            List<Integer> ids = ordenarPorPuntuacion(datos.libros, puntos, Set.of(idLibro));
             return libroDAO.listarTarjetasPorIds(ids.subList(0, Math.min(8, ids.size())), datos.ahora);
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudieron consultar los libros similares.", e);
@@ -87,9 +86,9 @@ public class RecomendacionBOImpl implements RecomendacionBO {
         if (idsCarrito.isEmpty()) return List.of();
         Set<Integer> carrito = new HashSet<>(idsCarrito);
         try {
-            DatosRecomendacion datos = cargar();
+            DatosRecomendacion datos = cargarDatos();
             Map<Integer, Double> puntos = AsociacionCompras.puntuar(carrito, datos.ventas);
-            List<Integer> ids = conRespaldo(datos, puntos, carrito);
+            List<Integer> ids = completarConPopulares(datos, puntos, carrito);
             return libroDAO.listarTarjetasPorIds(ids.subList(0, Math.min(8, ids.size())), datos.ahora);
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudieron consultar los libros complementarios.", e);
@@ -111,9 +110,9 @@ public class RecomendacionBOImpl implements RecomendacionBO {
     public RecomendacionesDTO abrirPopulares(ConsultaRecomendacionesDTO consulta) throws NegocioException {
         validarConsulta(consulta);
         try {
-            DatosRecomendacion datos = cargar();
+            DatosRecomendacion datos = cargarDatos();
             Map<Integer, Double> puntos = Popularidad.puntuar(datos.libros, datos.ventas, datos.valoraciones, datos.ahora);
-            return abrir(0, ordenarPuntos(datos.libros, puntos, Set.of()), consulta);
+            return abrir(0, ordenarPorPuntuacion(datos.libros, puntos, Set.of()), consulta);
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo consultar el ranking de popularidad.", e);
         }
@@ -124,11 +123,11 @@ public class RecomendacionBOImpl implements RecomendacionBO {
         autorizacion.usuarioActivo(idActor);
         validarConsulta(consulta);
         try {
-            DatosRecomendacion datos = cargar();
+            DatosRecomendacion datos = cargarDatos();
             if (FiltradoColaborativo.pedidosUsuario(idActor, datos.ventas).size() < 3)
                 throw new ConflictoException("Para ti requiere al menos tres pedidos confirmados válidos.");
             Set<Integer> comprados = FiltradoColaborativo.librosUsuario(idActor, datos.ventas);
-            return abrir(idActor, conRespaldo(datos,
+            return abrir(idActor, completarConPopulares(datos,
                 FiltradoColaborativo.puntuar(idActor, datos.ventas), comprados), consulta);
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudieron preparar tus recomendaciones.", e);
@@ -139,7 +138,7 @@ public class RecomendacionBOImpl implements RecomendacionBO {
         ConsultaRecomendacionesDTO consulta) throws NegocioException, SQLException {
         ConsultaGuardada conjunto = new ConsultaGuardada(propietario, List.copyOf(ids));
         String id = UUID.randomUUID().toString();
-        ResultadoPaginadoDTO<TarjetaLibroDTO> pagina = pagina(conjunto, consulta);
+        ResultadoPaginadoDTO<TarjetaLibroDTO> pagina = consultarPagina(conjunto, consulta);
         consultas.put(id, conjunto);
         return new RecomendacionesDTO(id, pagina);
     }
@@ -150,7 +149,7 @@ public class RecomendacionBOImpl implements RecomendacionBO {
         validarConsulta(consulta);
         ConsultaGuardada conjunto = obtener(idActor, idConsulta);
         try {
-            return pagina(conjunto, consulta);
+            return consultarPagina(conjunto, consulta);
         }
         catch (SQLException e) {
             throw new PersistenciaException("No se pudo consultar la página de recomendaciones.", e);
@@ -172,7 +171,7 @@ public class RecomendacionBOImpl implements RecomendacionBO {
         return conjunto;
     }
 
-    private ResultadoPaginadoDTO<TarjetaLibroDTO> pagina(ConsultaGuardada conjunto,
+    private ResultadoPaginadoDTO<TarjetaLibroDTO> consultarPagina(ConsultaGuardada conjunto,
         ConsultaRecomendacionesDTO consulta) throws SQLException {
         LocalDateTime fecha = LocalDateTime.now(reloj);
         Map<Integer, TarjetaLibroDTO> precios = new HashMap<>();
@@ -180,48 +179,64 @@ public class RecomendacionBOImpl implements RecomendacionBO {
             precios.put(tarjeta.id(), tarjeta);
         Map<Integer, Libro> atributos = new HashMap<>();
         for (Libro libro : libroDAO.listarParaRecomendaciones()) atributos.put(libro.getId(), libro);
-        // Refresca atributos del conjunto original; no repite el algoritmo ni incorpora otros libroDAO.
+        // Refresca atributos del conjunto original; no repite el algoritmo ni incorpora otros libros.
         List<Integer> ids = new ArrayList<>();
         for (Integer id : conjunto.ids) {
             if (precios.containsKey(id) && atributos.containsKey(id)) ids.add(id);
         }
-        Comparator<Integer> orden = switch (consulta.orden()) {
-            case MAS_RECIENTES -> Comparator.comparing((Integer id) -> atributos.get(id).getFechaCreacion()).reversed();
-            case PRECIO_ASCENDENTE -> Comparator.comparing((Integer id) -> precios.get(id).precioConDescuento());
-            case PRECIO_DESCENDENTE -> Comparator.comparing((Integer id) -> precios.get(id).precioConDescuento()).reversed();
-            case TITULO_ASCENDENTE -> Comparator.comparing((Integer id) -> precios.get(id).titulo(), String.CASE_INSENSITIVE_ORDER);
-            case PAGINAS_ASCENDENTE -> Comparator.comparingInt((Integer id) -> atributos.get(id).getNumeroPaginas());
-            case PAGINAS_DESCENDENTE -> Comparator.comparingInt((Integer id) -> atributos.get(id).getNumeroPaginas()).reversed();
-            case STOCK_DESCENDENTE -> Comparator.comparingInt((Integer id) -> atributos.get(id).getStockFisico()).reversed();
-            case ANIO_EDICION_DESCENDENTE -> Comparator.comparingInt((Integer id) -> atributos.get(id).getAnioEdicion()).reversed();
-            default -> null;
-        };
-        // List.sort es estable: los empates conservan el orden del algoritmo sobre todo el conjunto.
-        if (orden != null) ids.sort(orden);
+        // sort conserva el orden anterior cuando dos libros empatan.
+        ids.sort((primero, segundo) -> {
+            Libro libroPrimero = atributos.get(primero);
+            Libro libroSegundo = atributos.get(segundo);
+            switch (consulta.orden()) {
+                case MAS_RECIENTES:
+                    return libroSegundo.getFechaCreacion().compareTo(libroPrimero.getFechaCreacion());
+                case PRECIO_ASCENDENTE:
+                    return precios.get(primero).precioConDescuento().compareTo(precios.get(segundo).precioConDescuento());
+                case PRECIO_DESCENDENTE:
+                    return precios.get(segundo).precioConDescuento().compareTo(precios.get(primero).precioConDescuento());
+                case TITULO_ASCENDENTE:
+                    return precios.get(primero).titulo().compareToIgnoreCase(precios.get(segundo).titulo());
+                case PAGINAS_ASCENDENTE:
+                    return Integer.compare(libroPrimero.getNumeroPaginas(), libroSegundo.getNumeroPaginas());
+                case PAGINAS_DESCENDENTE:
+                    return Integer.compare(libroSegundo.getNumeroPaginas(), libroPrimero.getNumeroPaginas());
+                case STOCK_DESCENDENTE:
+                    return Integer.compare(libroSegundo.getStockFisico(), libroPrimero.getStockFisico());
+                case ANIO_EDICION_DESCENDENTE:
+                    return Integer.compare(libroSegundo.getAnioEdicion(), libroPrimero.getAnioEdicion());
+                default:
+                    return 0;
+            }
+        });
         int inicio = (int) Math.min(ids.size(), (long) (consulta.pagina() - 1) * consulta.tamanioPagina());
         int fin = (int) Math.min(ids.size(), (long) inicio + consulta.tamanioPagina());
         List<TarjetaLibroDTO> tarjetas = libroDAO.listarTarjetasPorIds(ids.subList(inicio, fin), fecha);
         return new ResultadoPaginadoDTO<>(tarjetas, ids.size(), consulta.pagina(), consulta.tamanioPagina());
     }
 
-    private List<Integer> conRespaldo(DatosRecomendacion datos, Map<Integer, Double> puntos, Set<Integer> excluir) {
-        List<Integer> ids = ordenarPuntos(datos.libros, puntos, excluir);
+    private List<Integer> completarConPopulares(DatosRecomendacion datos, Map<Integer, Double> puntos, Set<Integer> excluir) {
+        List<Integer> ids = ordenarPorPuntuacion(datos.libros, puntos, excluir);
         Map<Integer, Double> populares = Popularidad.puntuar(datos.libros, datos.ventas, datos.valoraciones, datos.ahora);
         Set<Integer> yaIncluidos = new HashSet<>(excluir);
         yaIncluidos.addAll(ids);
-        ids.addAll(ordenarPuntos(datos.libros, populares, yaIncluidos));
+        ids.addAll(ordenarPorPuntuacion(datos.libros, populares, yaIncluidos));
         return ids;
     }
 
-    private List<Integer> ordenarPuntos(List<Libro> libros, Map<Integer, Double> puntos, Set<Integer> excluir) {
+    private List<Integer> ordenarPorPuntuacion(List<Libro> libros, Map<Integer, Double> puntos, Set<Integer> excluir) {
         List<Integer> ids = new ArrayList<>();
         for (Libro libro : libros)
             if (!excluir.contains(libro.getId()) && puntos.containsKey(libro.getId())) ids.add(libro.getId());
-        ids.sort(Comparator.comparingDouble((Integer id) -> puntos.get(id)).reversed().thenComparingInt(Integer::intValue));
+        ids.sort((primero, segundo) -> {
+            int comparacion = Double.compare(puntos.get(segundo), puntos.get(primero));
+            if (comparacion == 0) return Integer.compare(primero, segundo);
+            return comparacion;
+        });
         return ids;
     }
 
-    private DatosRecomendacion cargar() throws SQLException {
+    private DatosRecomendacion cargarDatos() throws SQLException {
         return new DatosRecomendacion(libroDAO.listarParaRecomendaciones(), ventasValidas(), resenaDAO.listarValoraciones(), LocalDateTime.now(reloj));
     }
 

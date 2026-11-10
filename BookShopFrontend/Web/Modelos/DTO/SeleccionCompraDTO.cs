@@ -5,22 +5,13 @@ namespace Web.Modelos.DTO;
 public class SeleccionCompraDTO
 {
     [JsonProperty("idDireccionEnvio")]
-    public int IdDireccionEnvio
-    {
-        get; set;
-    }
+    public int IdDireccionEnvio { get; set; }
 
     [JsonProperty("idMetodoPago")]
-    public int IdMetodoPago
-    {
-        get; set;
-    }
+    public int IdMetodoPago { get; set; }
 
     [JsonProperty("idCupon")]
-    public int IdCupon
-    {
-        get; set;
-    }
+    public int IdCupon { get; set; }
 
     public SeleccionCompraDTO()
     {

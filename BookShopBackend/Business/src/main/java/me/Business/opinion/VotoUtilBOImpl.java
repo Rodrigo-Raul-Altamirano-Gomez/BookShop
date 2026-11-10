@@ -26,11 +26,11 @@ public class VotoUtilBOImpl implements VotoUtilBO {
 
     public VotoUtilBOImpl() { this(new VotoUtilDAOImpl(), new ResenaDAOImpl(), new LibroDAOImpl(), new UsuarioDAOImpl()); }
 
-    public VotoUtilBOImpl(VotoUtilDAO votoUtilDAO, ResenaDAO resenaDAO, LibroDAO libroDAO, UsuarioDAO usuarios) {
+    public VotoUtilBOImpl(VotoUtilDAO votoUtilDAO, ResenaDAO resenaDAO, LibroDAO libroDAO, UsuarioDAO usuarioDAO) {
         this.votoUtilDAO = votoUtilDAO;
         this.resenaDAO = resenaDAO;
         this.libroDAO = libroDAO;
-        this.autorizacion = new Autorizacion(usuarios);
+        this.autorizacion = new Autorizacion(usuarioDAO);
     }
 
     @Override

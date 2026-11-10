@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import me.DBManager.DBManager;
 import me.DBManager.TransactionContext;
-import me.Model.dto.ImagenDTO;
 import me.Model.dto.catalogo.OrdenReferencia;
 import me.Model.dto.usuario.TipoSeguimiento;
 import me.Model.entities.catalogo.Autor;
@@ -325,9 +324,9 @@ class UsuarioDAOTest {
     @Test
     void perfilNoExponeHashYReactivacionConservaLaIdentidad() throws Exception {
         UsuarioDAOImpl dao = new UsuarioDAOImpl();
-        dao.cambiarImagen(1, new ImagenDTO("https://example.test/imagen.png"), "ana@test");
+        dao.cambiarImagen(1, "https://example.test/imagen.png", "ana@test");
         assertEquals("ana@test", dao.obtenerPerfil(1).usuario().email());
-        assertEquals("https://example.test/imagen.png", dao.obtenerPerfil(1).usuario().imagen().url());
+        assertEquals("https://example.test/imagen.png", dao.obtenerPerfil(1).usuario().imagen());
         assertTrue(dao.cambiarContrasenia(1, "nuevo hash", "ana@test"));
         assertEquals("nuevo hash", dao.obtenerPorEmail("ana@test").getContrasenia());
         dao.actualizarTiempoTotal(1, Duration.ofSeconds(75), "ana@test");

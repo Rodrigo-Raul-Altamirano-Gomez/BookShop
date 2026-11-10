@@ -11,13 +11,13 @@ public partial class DetalleLibro : IDisposable
 
     private bool cargando = true;
 
-    [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
+    [Inject] protected HttpClientUtils Api { get; set; } = default!;
 
-    [Microsoft.AspNetCore.Components.Inject] protected CompraServicio Compras { get; set; } = default!;
+    [Inject] protected CompraServicio Compras { get; set; } = default!;
 
-    [Microsoft.AspNetCore.Components.Inject] protected CuentaServicio Cuenta { get; set; } = default!;
+    [Inject] protected CuentaServicio Cuenta { get; set; } = default!;
 
-    [Microsoft.AspNetCore.Components.Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
+    [Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
 
     [Inject]
     private SesionUsuario Sesion { get; set; } = default!;
@@ -26,21 +26,26 @@ public partial class DetalleLibro : IDisposable
     private NavigationManager Navegacion { get; set; } = default!;
 
     [Parameter]
-    public int Id
-    {
-        get; set;
-    }
+    public int Id { get; set; }
     private Libro? Libro => Catalogo.Libros.FirstOrDefault(libro => libro.Id == Id);
 
     private int cantidad = 1, idAnterior, paginaResenas = 1;
     private bool sinopsisCompleta, fichaExpandida;
     private bool Deseado => Cuenta.Deseados.Contains(Id);
     private bool Favorito => Cuenta.Favoritos.Contains(Id);
-    private List<Resena> Resenas => Catalogo.Resenas.Where(r => r.IdLibro == Id && r.Activo)
-        .OrderByDescending(r => r.Fecha).ToList();
-    private double Promedio => totalResenas == 0 ? 0 : Enumerable.Range(1, 5).Sum(n => n * CantidadEstrellas(n)) / (double)totalResenas;
+    private List<Resena> resenas = [];
+    private double Promedio
+    {
+        get
+        {
+            if (totalResenas == 0) return 0;
+            long puntos = 0;
+            for (int estrellas = 1; estrellas <= 5; estrellas++)
+                puntos += estrellas * CantidadEstrellas(estrellas);
+            return puntos / (double)totalResenas;
+        }
+    }
     private string EstiloPromedio => $"--relleno:{(Promedio * 20).ToString(CultureInfo.InvariantCulture)}%";
-    private IEnumerable<Resena> ResenasVisibles => Resenas;
     private int PaginasResenas => Math.Max(1, (int)((totalResenas + 9) / 10));
     private List<Libro> LibrosSimilares = [];
     private ValoracionLibroDTO? valoracion;
@@ -58,10 +63,6 @@ public partial class DetalleLibro : IDisposable
         errorCarga = null;
         try
         {
-
-            if (idAnterior == Id)
-                return;
-            idAnterior = Id;
             cantidad = paginaResenas = 1;
             sinopsisCompleta = fichaExpandida = false;
 
@@ -79,6 +80,7 @@ public partial class DetalleLibro : IDisposable
                 Cuenta.Deseados.Remove(Id);
             LibrosSimilares = (await Api.Get<List<TarjetaLibroDTO>>($"recomendaciones/similares/{Id}")).Select(Presentacion.Libro).ToList();
             await CargarResenas();
+            idAnterior = Id;
             Sesion.Notificar();
         }
         catch (InvalidOperationException e)
@@ -99,19 +101,18 @@ public partial class DetalleLibro : IDisposable
             TamanioPagina = 10
         });
         totalResenas = datos.TotalResultados;
-        Catalogo.Resenas.RemoveAll(r => r.IdLibro == Id);
-        Catalogo.Resenas.AddRange(datos.Items.Select(d => new Resena
+        resenas = datos.Items.Where(dto => dto.Activo).Select(dto => new Resena
         {
-            Id = d.Id,
-            IdLibro = d.IdLibro,
-            Usuario = d.NombreUsuario,
-            FotoUsuario = Presentacion.Imagen(d.ImagenUsuario, "/images/user-placeholder.svg"),
-            Fecha = d.Fecha,
-            Puntuacion = d.Puntuacion,
-            Comentario = d.Comentario,
-            Votos = d.CantidadVotosUtiles,
-            Activo = d.Activo
-        }));
+            Id = dto.Id,
+            IdLibro = dto.IdLibro,
+            Usuario = dto.NombreUsuario,
+            FotoUsuario = Presentacion.Imagen(dto.ImagenUsuario, "/images/user-placeholder.svg"),
+            Fecha = dto.Fecha,
+            Puntuacion = dto.Puntuacion,
+            Comentario = dto.Comentario,
+            Votos = dto.CantidadVotosUtiles,
+            Activo = dto.Activo
+        }).ToList();
     }
     private long CantidadEstrellas(int puntuacion) => puntuacion switch
     {
@@ -124,10 +125,9 @@ public partial class DetalleLibro : IDisposable
 
     private void ActualizarVista() => InvokeAsync(StateHasChanged);
     public void Dispose() => Sesion.Cambiado -= ActualizarVista;
-    private string RutaReferencia(string kind, string name) => $"/referencias/{kind}/{(kind == "autores" ? detalleLibro?.IdAutor : kind == "categorias" ? detalleLibro?.IdCategoria : detalleLibro?.IdEditorial)}";
-    private static string TextoEstrellas(int rating) => new string('★', rating) + new string('☆',
-         5 - rating);
-    private int PorcentajePuntuacion(int rating) => totalResenas == 0 ? 0 : (int)(CantidadEstrellas(rating) * 100 / totalResenas);
+    private static string TextoEstrellas(int puntuacion) => new string('★', puntuacion) + new string('☆',
+         5 - puntuacion);
+    private int PorcentajePuntuacion(int puntuacion) => totalResenas == 0 ? 0 : (int)(CantidadEstrellas(puntuacion) * 100 / totalResenas);
     private void Disminuir()
     {
         if (cantidad > 1)
@@ -146,7 +146,10 @@ public partial class DetalleLibro : IDisposable
             await Compras.AgregarLibro(Id, cantidad);
             Sesion.Avisar("Libro agregado al carrito.");
         }
-        catch (InvalidOperationException e) { Sesion.Avisar(e.Message); }
+        catch (InvalidOperationException e)
+        {
+            Sesion.Avisar(e.Message);
+        }
     }
 
     private async Task AlternarDeseado()
@@ -201,10 +204,10 @@ public partial class DetalleLibro : IDisposable
         errorCarga = null;
         try
         {
-
             paginaResenas = pagina;
 
             await CargarResenas();
+            idAnterior = Id;
             Sesion.Notificar();
         }
         catch (InvalidOperationException e)

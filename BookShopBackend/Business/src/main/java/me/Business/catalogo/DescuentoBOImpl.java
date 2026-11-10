@@ -36,10 +36,10 @@ public class DescuentoBOImpl implements DescuentoBO {
         this(new DescuentoDAOImpl(), new LibroDAOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")));
     }
 
-    public DescuentoBOImpl(DescuentoDAO descuentoDAO, LibroDAO libroDAO, UsuarioDAO usuarios, Clock reloj) {
+    public DescuentoBOImpl(DescuentoDAO descuentoDAO, LibroDAO libroDAO, UsuarioDAO usuarioDAO, Clock reloj) {
         this.descuentoDAO = descuentoDAO;
         this.libroDAO = libroDAO;
-        this.autorizacion = new Autorizacion(usuarios);
+        this.autorizacion = new Autorizacion(usuarioDAO);
         this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
     }
 
@@ -49,7 +49,15 @@ public class DescuentoBOImpl implements DescuentoBO {
         if (idLibro < 1 || datos == null || datos.id() < 0)
             throw new ValidacionException("descuento", "Seleccione un libro y descuento validos.");
         if (datos.eliminar() && datos.id() == 0) return 0;
-        if (!datos.eliminar()) validarDatos(datos);
+        if (!datos.eliminar()) {
+            if (datos.porcentaje() == null || datos.porcentaje().signum() <= 0
+                    || datos.porcentaje().compareTo(BigDecimal.valueOf(100)) > 0 || datos.porcentaje().stripTrailingZeros().scale() > 2)
+                throw new ValidacionException("porcentaje", "Ingrese un porcentaje mayor que cero y hasta 100, con dos decimales.");
+            if (datos.fechaInicio() == null || datos.fechaFin() == null)
+                throw new ValidacionException("vigencia", "Indique ambas fechas de vigencia.");
+            if (datos.fechaInicio().getYear() < 1000 || datos.fechaFin().getYear() > 9999 || !datos.fechaFin().isAfter(datos.fechaInicio()))
+                throw new ValidacionException("fechaFin", "El fin debe ser posterior al inicio y las fechas deben ser validas.");
+        }
         try {
             Libro libro = libroDAO.leerParaActualizar(idLibro);
             if (libro == null || libro.isEliminado()) throw new RecursoNoEncontradoException("El libro no esta disponible.");
@@ -110,13 +118,4 @@ public class DescuentoBOImpl implements DescuentoBO {
         }
     }
 
-    private void validarDatos(DatosDescuentoDTO datos) throws ValidacionException {
-        if (datos.porcentaje() == null || datos.porcentaje().signum() <= 0
-                || datos.porcentaje().compareTo(BigDecimal.valueOf(100)) > 0 || datos.porcentaje().stripTrailingZeros().scale() > 2)
-            throw new ValidacionException("porcentaje", "Ingrese un porcentaje mayor que cero y hasta 100, con dos decimales.");
-        if (datos.fechaInicio() == null || datos.fechaFin() == null)
-            throw new ValidacionException("vigencia", "Indique ambas fechas de vigencia.");
-        if (datos.fechaInicio().getYear() < 1000 || datos.fechaFin().getYear() > 9999 || !datos.fechaFin().isAfter(datos.fechaInicio()))
-            throw new ValidacionException("fechaFin", "El fin debe ser posterior al inicio y las fechas deben ser validas.");
-    }
 }

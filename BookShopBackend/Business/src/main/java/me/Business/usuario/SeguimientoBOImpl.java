@@ -39,12 +39,12 @@ public class SeguimientoBOImpl implements SeguimientoBO {
     }
 
     public SeguimientoBOImpl(SeguimientoDAO seguimientoDAO, AutorDAO autorDAO, CategoriaDAO categoriaDAO,
-                             EditorialDAO editorialDAO, UsuarioDAO usuarios) {
+                             EditorialDAO editorialDAO, UsuarioDAO usuarioDAO) {
         this.seguimientoDAO = seguimientoDAO;
         this.autorDAO = autorDAO;
         this.categoriaDAO = categoriaDAO;
         this.editorialDAO = editorialDAO;
-        this.autorizacion = new Autorizacion(usuarios);
+        this.autorizacion = new Autorizacion(usuarioDAO);
     }
 
     @Override

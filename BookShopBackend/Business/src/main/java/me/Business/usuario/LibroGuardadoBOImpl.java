@@ -34,11 +34,11 @@ public class LibroGuardadoBOImpl implements LibroGuardadoBO {
                 Clock.system(ZoneId.of("America/Lima")));
     }
 
-    public LibroGuardadoBOImpl(LibroGuardadoDAO libroGuardadoDAO, LibroDAO libroDAO, UsuarioDAO usuarios, Clock reloj) {
+    public LibroGuardadoBOImpl(LibroGuardadoDAO libroGuardadoDAO, LibroDAO libroDAO, UsuarioDAO usuarioDAO, Clock reloj) {
         this.libroGuardadoDAO = libroGuardadoDAO;
         this.libroDAO = libroDAO;
         this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
-        this.autorizacion = new Autorizacion(usuarios);
+        this.autorizacion = new Autorizacion(usuarioDAO);
     }
 
     @Override

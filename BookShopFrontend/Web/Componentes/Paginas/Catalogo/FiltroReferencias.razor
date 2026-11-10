@@ -10,7 +10,7 @@
         <button class="btn btn-primary" type="submit">Buscar</button>
     </form>
     <div class="filter-options d-grid gap-2 overflow-auto">
-        @foreach (var option in VisibleOptions)
+        @foreach (var option in OpcionesVisibles)
         {
             <label class="form-check d-flex align-items-center gap-2">
                 <input class="form-check-input"
@@ -21,7 +21,7 @@
                 <span>@option</span>
             </label>
         }
-        @if (!VisibleOptions.Any())
+        @if (!OpcionesVisibles.Any())
         {
             <p class="text-body-secondary">Sin coincidencias</p>
         }

@@ -39,7 +39,7 @@
                 <h1>Pedido #@pedido.Id</h1>
             }
             <p class="text-body-secondary">Fecha de pago: @pedido.FechaPago.ToString("dd/MM/yyyy HH:mm")</p>
-            <span class="badge bookshop-status @ClaseEstado(pedido.Estado)">@pedido.Estado</span>
+            <span class="badge bookshop-status success">@pedido.Estado</span>
         </header>
         <ResumenPedido Pedido="pedido" />
         <div class="text-center mt-4"><a class="btn btn-primary" href="/catalogo">Seguir explorando</a></div>

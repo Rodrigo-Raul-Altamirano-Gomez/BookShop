@@ -10,9 +10,9 @@ public partial class Inicio : IDisposable
 
     private bool cargando = true;
 
-    [Microsoft.AspNetCore.Components.Inject] protected HttpClientUtils Api { get; set; } = default!;
+    [Inject] protected HttpClientUtils Api { get; set; } = default!;
 
-    [Microsoft.AspNetCore.Components.Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
+    [Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
 
     [Inject]
     private SesionUsuario Sesion { get; set; } = default!;
@@ -29,13 +29,12 @@ public partial class Inicio : IDisposable
         errorCarga = null;
         try
         {
-
             Sesion.Cambiado += Actualizar;
             await Catalogo.Inicializar();
 
-            var nuevos = await Api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>("libros/busqueda", CatalogoServicio.Filtro(tamanio: 8, nuevos: true));
+            var nuevos = await Api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>("libros/busqueda", new FiltroLibroDTO { TamanioPagina = 8, SoloNuevos = true });
             LibrosNuevos = nuevos.Items.Select(Presentacion.Libro).ToList();
-            var vendidos = await Api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>("libros/busqueda", CatalogoServicio.Filtro(orden: "MAS_VENDIDOS", tamanio: 8));
+            var vendidos = await Api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>("libros/busqueda", new FiltroLibroDTO { Orden = "MAS_VENDIDOS", TamanioPagina = 8 });
             MasVendidos = vendidos.Items.Select(Presentacion.Libro).ToList();
             Sesion.Notificar();
         }
@@ -51,4 +50,3 @@ public partial class Inicio : IDisposable
     private void Actualizar() => InvokeAsync(StateHasChanged);
     public void Dispose() => Sesion.Cambiado -= Actualizar;
 }
-

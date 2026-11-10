@@ -8,10 +8,7 @@ public class DatosPerfilDTO
     public string Nombre { get; set; } = "";
 
     [JsonProperty("fechaNacimiento")]
-    public DateOnly FechaNacimiento
-    {
-        get; set;
-    }
+    public DateOnly FechaNacimiento { get; set; }
 
     public DatosPerfilDTO()
     {

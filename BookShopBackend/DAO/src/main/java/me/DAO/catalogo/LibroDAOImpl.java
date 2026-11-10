@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import me.DBManager.DBManager;
 import me.DBManager.TransactionContext;
-import me.Model.dto.ImagenDTO;
 import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.dto.catalogo.ConsultaReporteLibrosDTO;
 import me.Model.dto.catalogo.DatosLibroDTO;
@@ -145,11 +144,11 @@ public class LibroDAOImpl implements LibroDAO {
     }
 
     @Override
-    public boolean cambiarImagen(int id, ImagenDTO imagen, String usuario) throws SQLException {
+    public boolean cambiarImagen(int id, String imagen, String usuario) throws SQLException {
         String sql = "UPDATE LIBRO SET portada=?,usuario_actualizacion=?,"
                 + " fecha_actualizacion=CURRENT_TIMESTAMP WHERE id=? AND eliminado=FALSE";
         try (Connection conexion = DBManager.getConnection(); PreparedStatement sentencia = conexion.prepareStatement(sql)) {
-            sentencia.setString(1, imagen == null ? null : imagen.url());
+            sentencia.setString(1, imagen);
             sentencia.setString(2, usuario);
             sentencia.setInt(3, id);
             return sentencia.executeUpdate() == 1;
@@ -620,8 +619,7 @@ public class LibroDAOImpl implements LibroDAO {
     }
 
     private TarjetaLibroDTO mapearTarjeta(ResultSet resultado) throws SQLException {
-        String url = resultado.getString("portada");
-        ImagenDTO portada = url == null ? null : new ImagenDTO(url);
+        String portada = resultado.getString("portada");
         return new TarjetaLibroDTO(resultado.getInt("id"), resultado.getString("titulo"), portada,
                 resultado.getString("nombre_autor"), resultado.getBigDecimal("precio_base"), resultado.getBigDecimal("precio_final").setScale(2),
                 resultado.getBigDecimal("porcentaje"), resultado.getBoolean("activo"));

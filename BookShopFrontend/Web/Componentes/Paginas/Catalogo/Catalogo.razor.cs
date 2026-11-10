@@ -1,24 +1,33 @@
 using Microsoft.AspNetCore.Components;
-using Web.Servicios;
-using Web.Modelos;
 
 namespace Web.Componentes.Paginas.Catalogo;
 
 public partial class Catalogo
 {
     [SupplyParameterFromQuery(Name = "q")]
-    public string? Q
-    {
-        get; set;
-    }
+    public string? Busqueda { get; set; }
 
     [SupplyParameterFromQuery(Name = "criterio")]
-    public string? Criterion
+    public string? Criterio { get; set; }
+    private string Titulo
     {
-        get; set;
+        get
+        {
+            if (Criterio == "nuevos")
+                return "Libros nuevos";
+            if (Criterio == "vendidos")
+                return "Más vendidos";
+            return "Catálogo";
+        }
     }
-    private string Titulo => Criterion == "nuevos" ? "Libros nuevos" : Criterion == "vendidos"
-        ? "Más vendidos" : "Catálogo";
-    private string Sort => Criterion == "vendidos" ? "vendidos" : "reciente";
-}
 
+    private string OrdenInicial
+    {
+        get
+        {
+            if (Criterio == "vendidos")
+                return "MAS_VENDIDOS";
+            return "MAS_RECIENTES";
+        }
+    }
+}

@@ -61,7 +61,7 @@ public class Carrito {
     public int getCantidad() {
         int cantidad = 0;
         for (Item item : items) {
-            if (!item.isEliminado()) cantidad = Math.addExact(cantidad, item.getCantidad());
+            if (!item.isEliminado()) cantidad = cantidad + item.getCantidad();
         }
         return cantidad;
     }
@@ -74,7 +74,7 @@ public class Carrito {
                     item.setCantidad(cantidad);
                     item.setEliminado(false);
                 } else {
-                    item.setCantidad(Math.addExact(item.getCantidad(), cantidad));
+                    item.setCantidad(item.getCantidad() + cantidad);
                 }
                 return;
             }

@@ -11,16 +11,10 @@ public class ConsultaSeguimientosDTO
     public string Orden { get; set; } = "";
 
     [JsonProperty("pagina")]
-    public int Pagina
-    {
-        get; set;
-    }
+    public int Pagina { get; set; }
 
     [JsonProperty("tamanioPagina")]
-    public int TamanioPagina
-    {
-        get; set;
-    }
+    public int TamanioPagina { get; set; }
 
     public ConsultaSeguimientosDTO()
     {

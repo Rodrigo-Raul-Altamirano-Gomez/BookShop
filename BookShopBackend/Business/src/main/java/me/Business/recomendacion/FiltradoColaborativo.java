@@ -34,9 +34,9 @@ final class FiltradoColaborativo {
             Set<Integer> union = new HashSet<>(entrada.getValue());
             union.addAll(propios);
             if (comunes.isEmpty()) continue;
-            double jaccard = (double) comunes.size() / union.size();
+            double similitud = (double) comunes.size() / union.size();
             for (int candidato : entrada.getValue())
-                if (!propios.contains(candidato)) puntos.put(candidato, puntos.getOrDefault(candidato, 0.0) + jaccard);
+                if (!propios.contains(candidato)) puntos.put(candidato, puntos.getOrDefault(candidato, 0.0) + similitud);
         }
         return puntos;
     }

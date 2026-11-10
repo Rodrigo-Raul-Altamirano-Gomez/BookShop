@@ -6,20 +6,11 @@ namespace Web.Servicios;
 public class SesionUsuario
 {
     private readonly HttpClientUtils api;
-    public Perfil? Usuario
-    {
-        get; set;
-    }
+    public Perfil? Usuario { get; set; }
     public bool EsAdministrador => Usuario?.EsAdministrador == true;
-    public int? IdComparacion
-    {
-        get; set;
-    }
+    public int? IdComparacion { get; set; }
     public Dictionary<string, object> EstadoVistas { get; } = [];
-    public string? Error
-    {
-        get; set;
-    }
+    public string? Error { get; set; }
     public event Action? Cambiado;
     public event Action? Cerrada;
     public event Action? AccesoSolicitado;
@@ -42,14 +33,14 @@ public class SesionUsuario
         Notificar();
     }
 
-    public void MostrarPerfil(PerfilUsuarioDTO d, bool? administrador = null)
+    public void MostrarPerfil(PerfilUsuarioDTO dto, bool? administrador = null)
     {
         Usuario = new Perfil
         {
-            Nombre = d.Usuario.Nombre,
-            Correo = d.Usuario.Email,
-            Nacimiento = d.FechaNacimiento,
-            Imagen = Presentacion.Imagen(d.Usuario.Imagen, "/images/user-placeholder.svg"),
+            Nombre = dto.Usuario.Nombre,
+            Correo = dto.Usuario.Email,
+            Nacimiento = dto.FechaNacimiento,
+            Imagen = Presentacion.Imagen(dto.Usuario.Imagen, "/images/user-placeholder.svg"),
             EsAdministrador = administrador ?? EsAdministrador
         };
     }

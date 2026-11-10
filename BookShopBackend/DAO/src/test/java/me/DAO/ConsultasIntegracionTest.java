@@ -18,7 +18,6 @@ import me.DAO.usuario.*;
 import me.DAO.venta.*;
 import me.DAO.solicitud.*;
 import me.DBManager.TransactionContext;
-import me.Model.dto.ImagenDTO;
 import me.Model.dto.catalogo.*;
 import me.Model.dto.solicitud.FiltroSolicitudDTO;
 import me.Model.dto.compra.FiltroPedidoDTO;
@@ -204,7 +203,7 @@ class ConsultasIntegracionTest {
     void cambioDeImagenEsIndependienteDeLaEdicionDeDatos() throws Exception {
         Libro libro = registrarLibro("Libro", "Español", "50.00");
         LibroDAOImpl dao = new LibroDAOImpl();
-        assertTrue(dao.cambiarImagen(libro.getId(), new ImagenDTO("https://example.test/imagen.png"), "admin"));
+        assertTrue(dao.cambiarImagen(libro.getId(), "https://example.test/imagen.png", "admin"));
         libro.setTitulo("Nuevo titulo");
         libro.setUsuarioActualizacion("admin");
         dao.modificar(libro);
@@ -262,8 +261,8 @@ class ConsultasIntegracionTest {
     @Test
     void resenaUsaSoloLaImagenDeSuContextoYElVotoNoSeDuplica() throws Exception {
         Libro libro = registrarLibro("Libro", "Español", "50.00");
-        new LibroDAOImpl().cambiarImagen(libro.getId(), new ImagenDTO("https://example.test/imagen.png"), "admin");
-        new UsuarioDAOImpl().cambiarImagen(1, new ImagenDTO("https://example.test/imagen.png"), "ana@test");
+        new LibroDAOImpl().cambiarImagen(libro.getId(), "https://example.test/imagen.png", "admin");
+        new UsuarioDAOImpl().cambiarImagen(1, "https://example.test/imagen.png", "ana@test");
         Resena resena = new Resena();
         resena.setLibro(libro);
         Usuario usuario = new Usuario();
@@ -584,7 +583,7 @@ class ConsultasIntegracionTest {
         Libro primero = registrarLibro("Primero", "Español", "50.00");
         Libro segundo = registrarLibro("Segundo", "Español", "60.00");
         LibroDAOImpl dao = new LibroDAOImpl();
-        dao.cambiarImagen(primero.getId(), new ImagenDTO("https://example.test/imagen.png"), "admin");
+        dao.cambiarImagen(primero.getId(), "https://example.test/imagen.png", "admin");
         var candidatos = dao.listarParaRecomendaciones();
         assertNull(candidatos.getFirst().getPortada());
         assertEquals(1, candidatos.getFirst().getAutor().getId());
@@ -604,7 +603,7 @@ class ConsultasIntegracionTest {
         categoria.setUsuarioCreacion("admin");
         CategoriaDAOImpl categorias = new CategoriaDAOImpl();
         categorias.insertar(categoria);
-        categorias.cambiarImagen(categoria.getId(), new ImagenDTO("https://example.test/imagen.png"), "admin");
+        categorias.cambiarImagen(categoria.getId(), "https://example.test/imagen.png", "admin");
         categoria.setNombre("Categoria editada");
         categoria.setUsuarioCreacion("otro creador");
         categoria.setUsuarioActualizacion("admin");

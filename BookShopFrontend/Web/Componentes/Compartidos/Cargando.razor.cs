@@ -5,24 +5,12 @@ namespace Web.Componentes.Compartidos;
 public partial class Cargando
 {
     [Parameter]
-    public bool EnCurso
-    {
-        get; set;
-    }
+    public bool EnCurso { get; set; }
     [Parameter] public string Mensaje { get; set; } = "Cargando…";
     [Parameter]
-    public string? Error
-    {
-        get; set;
-    }
+    public string? Error { get; set; }
     [Parameter]
-    public EventCallback AlReintentar
-    {
-        get; set;
-    }
+    public EventCallback AlReintentar { get; set; }
     [Parameter]
-    public RenderFragment? ChildContent
-    {
-        get; set;
-    }
+    public RenderFragment? ChildContent { get; set; }
 }

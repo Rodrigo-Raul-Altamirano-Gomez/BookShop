@@ -2,15 +2,6 @@
 <div class="row g-4">
     <aside class="filters col-12 col-lg-3">
         <h2>Filtros</h2>
-        @if (Administracion)
-        {
-            <div class="filter-group">
-                <label class="form-check d-flex align-items-center gap-2 ps-0">
-                    <input class="form-check-input m-0" type="checkbox" @bind="soloActivos" />
-                    Solo activos
-                </label>
-            </div>
-        }
         @if (TipoAmbito != "categorias")
         {
             <FiltroReferencias
@@ -141,13 +132,6 @@
                         <Icono Nombre="close" />
                     </button>
                 }
-                @if (Administracion && soloActivosAplicado)
-                {
-                    <button class="btn btn-sm btn-outline-secondary rounded-pill" @onclick="QuitarSoloActivos">
-                        Solo activos
-                        <Icono Nombre="close" />
-                    </button>
-                }
                 @if (!HayFiltros)
                 {
                     <span class="text-body-secondary">Ninguno</span>
@@ -163,7 +147,7 @@
                 <h1>@Titulo</h1>
                 <span>@totalResultados libros</span>
             </div>
-            @AccionesCabecera
+
             <label class="sort-label d-flex align-items-center gap-2">
                 Ordenar por:
                 <select class="form-select" aria-label="Ordenar libros" @bind="orden" @bind:after="CambiarOrden">
@@ -190,9 +174,9 @@
         else
         {
             <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-4">
-                @foreach (var book in LibrosVisibles)
+                @foreach (var libro in resultados)
                 {
-                    <TarjetaLibro Libro="book" />
+                    <TarjetaLibro Libro="libro" />
                 }
             </div>
             <Paginacion Pagina="pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />

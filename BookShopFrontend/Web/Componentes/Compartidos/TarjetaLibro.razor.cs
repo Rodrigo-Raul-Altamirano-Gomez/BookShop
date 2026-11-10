@@ -8,4 +8,3 @@ public partial class TarjetaLibro
     [Parameter, EditorRequired]
     public Libro Libro { get; set; } = new();
 }
-

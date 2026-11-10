@@ -10,7 +10,7 @@
     </nav>
     <h1>Comparar libros</h1>
     <a href="/catalogo" class="back-link">← Volver al catálogo</a>
-    @if (First is null || Second is null || First.Id == Second.Id)
+    @if (PrimerLibro is null || SegundoLibro is null || PrimerLibro.Id == SegundoLibro.Id)
     {
         <div class="empty-state">
             <Icono Nombre="compare" />
@@ -22,18 +22,18 @@
     else
     {
         <div class="comparison-cards row g-4">
-            @foreach (var book in ComparedBooks)
+            @foreach (var libro in LibrosComparados)
             {
                 <div class="col-12 col-md-6">
                     <article class="card bookshop-panel comparison-card flex-row gap-4 p-4 h-100">
-                        <img src="@book.Portada" alt="@($"Portada de {book.Titulo}")" />
+                        <img src="@libro.Portada" alt="@($"Portada de {libro.Titulo}")" />
                         <div class="d-flex flex-column align-items-stretch justify-content-center flex-grow-1">
-                            <h2>@book.Titulo</h2>
-                            <p>@book.Autor</p>
-                            <a class="btn btn-primary" href="@($"/libros/{book.Id}")">Ver libro</a>
+                            <h2>@libro.Titulo</h2>
+                            <p>@libro.Autor</p>
+                            <a class="btn btn-primary" href="@($"/libros/{libro.Id}")">Ver libro</a>
                             <button
                                 class="btn btn-link text-button"
-                                @onclick="() => QuitarLibro(book)">× Quitar</button>
+                                @onclick="() => QuitarLibro(libro)">× Quitar</button>
                         </div>
                     </article>
                 </div>
@@ -44,35 +44,35 @@
                 <thead>
                     <tr>
                         <th>Característica</th>
-                        <th>@First.Titulo</th>
-                        <th>@Second.Titulo</th>
+                        <th>@PrimerLibro.Titulo</th>
+                        <th>@SegundoLibro.Titulo</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <th>Precio</th>
-                        @foreach (var book in ComparedBooks)
+                        @foreach (var libro in LibrosComparados)
                         {
                             <td>
-                                <strong>@Presentacion.Dinero(book.Precio)</strong>
-                                @if (book.Descuento > 0)
+                                <strong>@Presentacion.Dinero(libro.Precio)</strong>
+                                @if (libro.Descuento > 0)
                                 {
-                                    <del>@Presentacion.Dinero(book.PrecioOriginal)</del>
-                                    <span class="badge badge-bookshop discount-badge">-@book.Descuento%</span>
+                                    <del>@Presentacion.Dinero(libro.PrecioOriginal)</del>
+                                    <span class="badge badge-bookshop discount-badge">-@libro.Descuento%</span>
                                 }
                             </td>
                         }
                     </tr>
                     <tr>
                         <th>Valoración</th>
-                        @foreach (var book in ComparedBooks)
+                        @foreach (var libro in LibrosComparados)
                         {
                             <td>
-                                @if (CantidadResenas(book) > 0)
+                                @if (CantidadResenas(libro) > 0)
                                 {
                                     <span class="stars">★★★★★</span>
-                                    <span>@PromedioResenas(book).ToString("N1") / 5</span>
-                                    <small>(@CantidadResenas(book) reseñas)</small>
+                                    <span>@PromedioResenas(libro).ToString("N1") / 5</span>
+                                    <small>(@CantidadResenas(libro) reseñas)</small>
                                 }
                                 else
                                 {
@@ -83,58 +83,58 @@
                     </tr>
                     <tr>
                         <th>Autor</th>
-                        <td>@First.Autor</td>
-                        <td>@Second.Autor</td>
+                        <td>@PrimerLibro.Autor</td>
+                        <td>@SegundoLibro.Autor</td>
                     </tr>
                     <tr>
                         <th>Idioma</th>
-                        <td>@First.Idioma</td>
-                        <td>@Second.Idioma</td>
+                        <td>@PrimerLibro.Idioma</td>
+                        <td>@SegundoLibro.Idioma</td>
                     </tr>
                     <tr>
                         <th>Categoría</th>
-                        <td>@First.Categoria</td>
-                        <td>@Second.Categoria</td>
+                        <td>@PrimerLibro.Categoria</td>
+                        <td>@SegundoLibro.Categoria</td>
                     </tr>
                     <tr>
                         <th>Editorial</th>
-                        <td>@First.Editorial</td>
-                        <td>@Second.Editorial</td>
+                        <td>@PrimerLibro.Editorial</td>
+                        <td>@SegundoLibro.Editorial</td>
                     </tr>
                     <tr>
                         <th>Año de edición</th>
-                        <td>@First.Anio</td>
-                        <td>@Second.Anio</td>
+                        <td>@PrimerLibro.Anio</td>
+                        <td>@SegundoLibro.Anio</td>
                     </tr>
                     <tr>
                         <th>Páginas</th>
-                        <td>@First.Paginas</td>
-                        <td>@Second.Paginas</td>
+                        <td>@PrimerLibro.Paginas</td>
+                        <td>@SegundoLibro.Paginas</td>
                     </tr>
                     <tr>
                         <th>Peso</th>
-                        <td>@First.Peso</td>
-                        <td>@Second.Peso</td>
+                        <td>@PrimerLibro.Peso</td>
+                        <td>@SegundoLibro.Peso</td>
                     </tr>
                     <tr>
                         <th>Dimensiones</th>
-                        <td>@First.Dimensiones</td>
-                        <td>@Second.Dimensiones</td>
+                        <td>@PrimerLibro.Dimensiones</td>
+                        <td>@SegundoLibro.Dimensiones</td>
                     </tr>
                     <tr>
                         <th>Saga</th>
-                        <td>@ValorODash(First.Saga)</td>
-                        <td>@ValorODash(Second.Saga)</td>
+                        <td>@TextoODefecto(PrimerLibro.Saga)</td>
+                        <td>@TextoODefecto(SegundoLibro.Saga)</td>
                     </tr>
                     <tr>
                         <th>Tomo</th>
-                        <td>@(First.Tomo?.ToString() ?? "—")</td>
-                        <td>@(Second.Tomo?.ToString() ?? "—")</td>
+                        <td>@(PrimerLibro.Tomo?.ToString() ?? "—")</td>
+                        <td>@(SegundoLibro.Tomo?.ToString() ?? "—")</td>
                     </tr>
                     <tr>
                         <th>Disponibilidad</th>
-                        <td>@Disponibilidad(First)</td>
-                        <td>@Disponibilidad(Second)</td>
+                        <td>@Disponibilidad(PrimerLibro)</td>
+                        <td>@Disponibilidad(SegundoLibro)</td>
                     </tr>
                 </tbody>
             </table>

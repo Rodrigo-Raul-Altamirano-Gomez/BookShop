@@ -23,34 +23,19 @@ public class DetallePedidoDTO
     public string CodigoSeguimiento { get; set; } = "";
 
     [JsonProperty("fechaEntregaEstimada")]
-    public DateTime? FechaEntregaEstimada
-    {
-        get; set;
-    }
+    public DateTime? FechaEntregaEstimada { get; set; }
 
     [JsonProperty("fechaSalida")]
-    public DateTime? FechaSalida
-    {
-        get; set;
-    }
+    public DateTime? FechaSalida { get; set; }
 
     [JsonProperty("fechaEntrega")]
-    public DateTime? FechaEntrega
-    {
-        get; set;
-    }
+    public DateTime? FechaEntrega { get; set; }
 
     [JsonProperty("puedeCancelar")]
-    public bool PuedeCancelar
-    {
-        get; set;
-    }
+    public bool PuedeCancelar { get; set; }
 
     [JsonProperty("puedeSolicitarDevolucion")]
-    public bool PuedeSolicitarDevolucion
-    {
-        get; set;
-    }
+    public bool PuedeSolicitarDevolucion { get; set; }
 
     public DetallePedidoDTO()
     {

@@ -7,101 +7,101 @@ public static class Presentacion
 {
     public static string Dinero(decimal valor) => "S/ " + valor.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("es-PE"));
 
-    public static string Imagen(ImagenDTO? imagen, string defecto)
-        => string.IsNullOrWhiteSpace(imagen?.Url) ? defecto : imagen.Url;
+    public static string Imagen(string? imagen, string defecto)
+        => string.IsNullOrWhiteSpace(imagen) ? defecto : imagen;
 
-    public static ImagenDTO? ImagenDesdeUrl(string url)
-        => string.IsNullOrWhiteSpace(url) ? null : new ImagenDTO(url.Trim());
+    public static string? ImagenDesdeUrl(string url)
+        => string.IsNullOrWhiteSpace(url) ? null : url.Trim();
 
-    public static Libro Libro(TarjetaLibroDTO d) => new()
+    public static Libro Libro(TarjetaLibroDTO dto) => new()
     {
-        Id = d.Id,
-        Titulo = d.Titulo,
-        Autor = d.NombreAutor,
-        PrecioOriginal = d.PrecioOriginal,
-        Precio = d.PrecioConDescuento,
-        Descuento = d.PorcentajeDescuento,
-        Activo = d.Activo,
-        Portada = Imagen(d.Portada, "/images/book-placeholder.svg")
+        Id = dto.Id,
+        Titulo = dto.Titulo,
+        Autor = dto.NombreAutor,
+        PrecioOriginal = dto.PrecioOriginal,
+        Precio = dto.PrecioConDescuento,
+        Descuento = dto.PorcentajeDescuento,
+        Activo = dto.Activo,
+        Portada = Imagen(dto.Portada, "/images/book-placeholder.svg")
     };
 
-    public static Libro Libro(DetalleLibroDTO d)
+    public static Libro Libro(DetalleLibroDTO dto)
     {
-        var libro = Libro(d.Libro);
-        libro.Categoria = d.NombreCategoria;
-        libro.Editorial = d.NombreEditorial;
-        libro.Idioma = d.Idioma;
-        libro.Sinopsis = d.Sinopsis;
-        libro.ISBN = d.Isbn;
-        libro.Anio = d.AnioEdicion;
-        libro.Paginas = d.NumeroPaginas;
-        libro.Stock = d.StockDisponible;
-        libro.Peso = d.Peso is null ? "—" : $"{d.Peso} kg";
-        libro.Dimensiones = $"{d.Alto} × {d.Ancho} cm";
-        libro.Saga = d.Saga ?? "";
-        libro.Tomo = d.NumeroTomo;
+        var libro = Libro(dto.Libro);
+        libro.Categoria = dto.NombreCategoria;
+        libro.Editorial = dto.NombreEditorial;
+        libro.Idioma = dto.Idioma;
+        libro.Sinopsis = dto.Sinopsis;
+        libro.ISBN = dto.Isbn;
+        libro.Anio = dto.AnioEdicion;
+        libro.Paginas = dto.NumeroPaginas;
+        libro.Stock = dto.StockDisponible;
+        libro.Peso = dto.Peso is null ? "—" : $"{dto.Peso} kg";
+        libro.Dimensiones = $"{dto.Alto} × {dto.Ancho} cm";
+        libro.Saga = dto.Saga ?? "";
+        libro.Tomo = dto.NumeroTomo;
         return libro;
     }
 
-    public static Referencia Referencia(TarjetaReferenciaDTO d, string tipo) => new()
+    public static Referencia Referencia(TarjetaReferenciaDTO dto, string tipo) => new()
     {
-        Id = d.Id,
-        Nombre = d.Nombre,
+        Id = dto.Id,
+        Nombre = dto.Nombre,
         Tipo = tipo,
-        Imagen = Imagen(d.Imagen, "/images/reference-placeholder.svg")
+        Imagen = Imagen(dto.Imagen, "/images/reference-placeholder.svg")
     };
 
-    public static Direccion Direccion(DireccionEnvioDTO d) => new()
+    public static Direccion Direccion(DireccionEnvioDTO dto) => new()
     {
-        Id = d.Id,
-        Alias = d.Alias,
-        Calle = d.Calle,
-        Distrito = d.Distrito,
-        Ciudad = d.Ciudad,
-        ReferenciaAdicional = d.Referencia ?? "",
-        Predeterminada = d.Predeterminada
+        Id = dto.Id,
+        Alias = dto.Alias,
+        Calle = dto.Calle,
+        Distrito = dto.Distrito,
+        Ciudad = dto.Ciudad,
+        ReferenciaAdicional = dto.Referencia ?? "",
+        Predeterminada = dto.Predeterminada
     };
 
-    public static MetodoPago Metodo(MetodoPagoDTO d) => new()
+    public static MetodoPago Metodo(MetodoPagoDTO dto) => new()
     {
-        Id = d.Id,
-        Tipo = d.TarjetaBancaria ? "Tarjeta" : "Billetera",
-        Titular = d.Titular,
-        Alias = d.Alias ?? "",
-        Proveedor = d.Proveedor,
-        NumeroEnmascarado = d.NumeroEnmascarado,
-        TipoTarjeta = d.TipoTarjeta == "CREDITO" ? "Crédito" : "Débito",
-        Vencimiento = d.FechaVencimiento,
-        Predeterminada = d.Predeterminado,
-        Vigente = d.Vigente
+        Id = dto.Id,
+        Tipo = dto.TarjetaBancaria ? "Tarjeta" : "Billetera",
+        Titular = dto.Titular,
+        Alias = dto.Alias ?? "",
+        Proveedor = dto.Proveedor,
+        NumeroEnmascarado = dto.NumeroEnmascarado,
+        TipoTarjeta = dto.TipoTarjeta == "CREDITO" ? "Crédito" : "Débito",
+        Vencimiento = dto.FechaVencimiento,
+        Predeterminada = dto.Predeterminado,
+        Vigente = dto.Vigente
     };
 
-    public static Pedido Pedido(DetallePedidoDTO d) => new()
+    public static Pedido Pedido(DetallePedidoDTO dto) => new()
     {
-        Id = d.Pedido.Id,
-        FechaPago = d.Pedido.FechaPago,
-        Estado = d.Pedido.Estado switch
+        Id = dto.Pedido.Id,
+        FechaPago = dto.Pedido.FechaPago,
+        Estado = dto.Pedido.Estado switch
         {
             "EN_ALMACEN" => "En almacén",
             "EN_CAMINO" => "En camino",
             "ENTREGADO" => "Entregado",
             "CANCELADO" => "Cancelado",
             "DEVUELTO" => "Devuelto",
-            _ => d.Pedido.Estado
+            _ => dto.Pedido.Estado
         },
-        Direccion = Direccion(d.DireccionEnvio),
-        Metodo = Metodo(d.MetodoPago),
-        Productos = d.Resumen.SubtotalProductos,
-        DescuentoLibro = d.Resumen.DescuentoLibros,
-        Subtotal = d.Resumen.SubtotalProductos - d.Resumen.DescuentoLibros,
-        DescuentoCupon = d.Resumen.DescuentoCupon,
-        Envio = d.Resumen.CostoEnvio,
-        Total = d.Resumen.Total,
-        Transaccion = d.IdentificadorTransaccion,
-        Seguimiento = d.CodigoSeguimiento,
-        EntregaEstimada = d.FechaEntregaEstimada ?? default,
-        FechaSalida = d.FechaSalida,
-        FechaEntrega = d.FechaEntrega,
-        Lineas = d.Resumen.Items.Select(i => new LineaPedido { IdLibro = i.IdLibro, Cantidad = i.Cantidad, Precio = i.PrecioUnitario, PrecioOriginal = i.PrecioOriginal, Descuento = i.PorcentajeDescuento }).ToList()
+        Direccion = Direccion(dto.DireccionEnvio),
+        Metodo = Metodo(dto.MetodoPago),
+        Productos = dto.Resumen.SubtotalProductos,
+        DescuentoLibro = dto.Resumen.DescuentoLibros,
+        Subtotal = dto.Resumen.SubtotalProductos - dto.Resumen.DescuentoLibros,
+        DescuentoCupon = dto.Resumen.DescuentoCupon,
+        Envio = dto.Resumen.CostoEnvio,
+        Total = dto.Resumen.Total,
+        Transaccion = dto.IdentificadorTransaccion,
+        Seguimiento = dto.CodigoSeguimiento,
+        EntregaEstimada = dto.FechaEntregaEstimada ?? default,
+        FechaSalida = dto.FechaSalida,
+        FechaEntrega = dto.FechaEntrega,
+        Lineas = dto.Resumen.Items.Select(i => new LineaPedido { IdLibro = i.IdLibro, Cantidad = i.Cantidad, Precio = i.PrecioUnitario, PrecioOriginal = i.PrecioOriginal, Descuento = i.PorcentajeDescuento }).ToList()
     };
 }
