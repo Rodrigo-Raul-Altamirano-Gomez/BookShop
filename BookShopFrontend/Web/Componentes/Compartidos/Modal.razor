@@ -5,7 +5,7 @@
     aria-modal="true"
     aria-labelledby="@IdTitulo"
     tabindex="-1"
-    @onclick="Cerrar">
+    @onclick="AlCerrar">
     <div
         class="modal-dialog modal-dialog-centered modal-dialog-scrollable @(Amplio ? "modal-lg" : "")"
         @onclick:stopPropagation>
@@ -16,7 +16,7 @@
                     type="button"
                     class="btn btn-link icon-button modal-close"
                     aria-label="Cerrar ventana"
-                    @onclick="Cerrar">
+                    @onclick="AlCerrar">
                     <Icono Nombre="close" />
                 </button>
             </header>

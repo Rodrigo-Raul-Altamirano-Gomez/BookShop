@@ -8,7 +8,7 @@ public class SesionUsuario
     private readonly HttpClientUtils api;
     public Perfil? Usuario { get; set; }
     public bool EsAdministrador => Usuario?.EsAdministrador == true;
-    public int? IdComparacion { get; set; }
+    public Libro? LibroComparacion { get; set; }
     public Dictionary<string, object> EstadoVistas { get; } = [];
     public string? Error { get; set; }
     public event Action? Cambiado;
@@ -27,7 +27,7 @@ public class SesionUsuario
         api.OlvidarSesion();
         Usuario = null;
         EstadoVistas.Clear();
-        IdComparacion = null;
+        LibroComparacion = null;
         Error = null;
         Cerrada?.Invoke();
         Notificar();
@@ -40,7 +40,7 @@ public class SesionUsuario
             Nombre = dto.Usuario.Nombre,
             Correo = dto.Usuario.Email,
             Nacimiento = dto.FechaNacimiento,
-            Imagen = Presentacion.Imagen(dto.Usuario.Imagen, "/images/user-placeholder.svg"),
+            Imagen = dto.Usuario.Imagen ?? "/images/user-placeholder.svg",
             EsAdministrador = administrador ?? EsAdministrador
         };
     }

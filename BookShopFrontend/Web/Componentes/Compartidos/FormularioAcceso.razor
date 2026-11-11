@@ -1,4 +1,4 @@
-<Modal Titulo="@(reactivacion ? "Reactivar cuenta" : "Bienvenido a BookShop")" AlCerrar="Cerrar">
+<Modal Titulo="@(reactivacion ? "Reactivar cuenta" : "Bienvenido a BookShop")" AlCerrar="AlCerrar">
     @if (!reactivacion)
     {
         <div class="nav nav-tabs bookshop-tabs mb-4" role="tablist">
@@ -96,7 +96,7 @@
             <p class="alert alert-danger form-error" role="alert">@error</p>
         }
         <div class="modal-footer px-0 pb-0 mt-4">
-            <button type="button" class="btn btn-secondary" @onclick="Cerrar">Cancelar</button>
+            <button type="button" class="btn btn-secondary" @onclick="AlCerrar">Cancelar</button>
             <button type="submit" class="btn btn-primary" disabled="@enviando">
                 @if (reactivacion)
                 {

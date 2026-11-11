@@ -10,8 +10,6 @@ public partial class Carrito : IDisposable
 
     private bool cargando = true;
 
-    [Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
-
     [Inject] protected HttpClientUtils Api { get; set; } = default!;
 
     [Inject] protected CompraServicio Compras { get; set; } = default!;
@@ -50,7 +48,12 @@ public partial class Carrito : IDisposable
             cargando = false;
         }
     }
-    private async Task CargarComplementarios() => Complementarios = (await Api.Post<List<TarjetaLibroDTO>>("recomendaciones/complementarios", Compras.Carrito.Keys.ToList())).Select(Presentacion.Libro).ToList();
+    private async Task CargarComplementarios()
+    {
+        var idsLibros = Compras.Resumen!.Items.Select(item => item.IdLibro).ToList();
+        var datos = await Api.Post<List<TarjetaLibroDTO>>("recomendaciones/complementarios", idsLibros);
+        Complementarios = datos.Select(Presentacion.Libro).ToList();
+    }
     private void Actualizar() => _ = InvokeAsync(StateHasChanged);
     private async Task Cambiar(int id, int cantidad)
     {

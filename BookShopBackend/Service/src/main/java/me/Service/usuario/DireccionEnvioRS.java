@@ -27,8 +27,10 @@ import me.Service.Sesion;
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
 public class DireccionEnvioRS {
+
     @Inject
     private Servicios servicios;
+
     @Context
     private HttpServletRequest peticion;
 
@@ -39,9 +41,8 @@ public class DireccionEnvioRS {
 
     @PUT
     @Path("{idDireccion}")
-    public DireccionEnvioDTO modificar(
-            @PathParam("idDireccion") int idDireccion,
-            DatosDireccionEnvioDTO datos) throws NegocioException {
+    public DireccionEnvioDTO modificar(@PathParam("idDireccion") int idDireccion, DatosDireccionEnvioDTO
+        datos) throws NegocioException {
         return servicios.getDireccionEnvioBO().modificar(Sesion.exigirIdUsuario(peticion), idDireccion, datos);
     }
 
@@ -52,9 +53,8 @@ public class DireccionEnvioRS {
     }
 
     @GET
-    public ResultadoPaginadoDTO<DireccionEnvioDTO> listar(
-            @DefaultValue("1") @QueryParam("pagina") int pagina,
-            @DefaultValue("10") @QueryParam("tamanioPagina") int tamanioPagina) throws NegocioException {
+    public ResultadoPaginadoDTO<DireccionEnvioDTO> listar(@DefaultValue("1") @QueryParam("pagina") int pagina,
+        @DefaultValue("10") @QueryParam("tamanioPagina") int tamanioPagina) throws NegocioException {
         return servicios.getDireccionEnvioBO().listar(Sesion.exigirIdUsuario(peticion), pagina, tamanioPagina);
     }
 

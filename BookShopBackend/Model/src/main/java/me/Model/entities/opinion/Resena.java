@@ -5,6 +5,7 @@ import me.Model.entities.catalogo.Libro;
 import me.Model.entities.usuario.Usuario;
 
 public class Resena {
+
     private int id;
     private Libro libro;
     private Usuario usuario;

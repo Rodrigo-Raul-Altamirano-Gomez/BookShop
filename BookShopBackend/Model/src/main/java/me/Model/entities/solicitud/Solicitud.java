@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import me.Model.entities.usuario.Usuario;
 
 public abstract class Solicitud {
+
     private int id;
     private Usuario usuario;
     private String comentario;
@@ -116,39 +117,18 @@ public abstract class Solicitud {
     }
 
     public void editar(String comentario, String correo, LocalDateTime fecha) {
-        if (!estaPendiente()) {
-            throw new IllegalStateException("Solo se puede editar una solicitud pendiente.");
-        }
-        if (fecha == null || correo == null || correo.isBlank()) {
-            throw new IllegalArgumentException("La actualizacion requiere fecha y correo.");
-        }
         this.comentario = comentario;
         this.usuarioActualizacion = correo;
         this.fechaActualizacion = fecha;
     }
 
     public void retirar(String correo, LocalDateTime fecha) {
-        if (!estaPendiente()) {
-            throw new IllegalStateException("Solo se puede retirar una solicitud pendiente.");
-        }
-        if (fecha == null || correo == null || correo.isBlank()) {
-            throw new IllegalArgumentException("La actualizacion requiere fecha y correo.");
-        }
         eliminado = true;
         usuarioActualizacion = correo;
         fechaActualizacion = fecha;
     }
 
     public void resolver(EstadoSolicitud resultado, String correo, LocalDateTime fecha) {
-        if (!estaPendiente()) {
-            throw new IllegalStateException("La solicitud ya no esta pendiente.");
-        }
-        if (resultado == null || resultado == EstadoSolicitud.PENDIENTE) {
-            throw new IllegalArgumentException("El resultado debe resolver la solicitud.");
-        }
-        if (fecha == null || correo == null || correo.isBlank()) {
-            throw new IllegalArgumentException("La resolucion requiere fecha y correo.");
-        }
         estado = resultado;
         fechaResolucion = fecha;
         usuarioActualizacion = correo;

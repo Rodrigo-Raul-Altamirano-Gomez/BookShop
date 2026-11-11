@@ -10,8 +10,6 @@ public partial class Compra : IDisposable
 
     private bool cargando = true;
 
-    [Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
-
     [Inject] protected HttpClientUtils Api { get; set; } = default!;
 
     [Inject] protected CompraServicio Compras { get; set; } = default!;
@@ -75,10 +73,6 @@ public partial class Compra : IDisposable
         Compras.MostrarCarrito(preparacion.Resumen);
     }
     private void Actualizar() => _ = InvokeAsync(StateHasChanged);
-    private void AbrirDireccion() => formularioDireccion = true;
-    private void AbrirMetodo() => formularioMetodo = true;
-    private void CerrarDireccion() => formularioDireccion = false;
-    private void CerrarMetodo() => formularioMetodo = false;
     private async Task GuardarDireccion(Direccion direccion)
     {
         try
@@ -133,7 +127,6 @@ public partial class Compra : IDisposable
             procesando = false;
         }
     }
-    private Task SeleccionarCupon(Cupon? cupon) => Seleccionar(direccionId, metodoId, cupon?.Id);
 
     private async Task Confirmar()
     {

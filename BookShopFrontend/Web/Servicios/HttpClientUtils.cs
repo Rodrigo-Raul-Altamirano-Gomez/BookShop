@@ -18,7 +18,6 @@ public sealed class HttpClientUtils : IDisposable
         cliente.Timeout = TimeSpan.FromSeconds(30);
         cliente.DefaultRequestHeaders.Accept.ParseAdd("application/json");
         cliente.BaseAddress = new Uri(configuracion["Backend:Url"]!.TrimEnd('/') + "/");
-        cliente.DefaultRequestHeaders.Add("X-BookShop-Cliente", "web");
     }
 
     public Task<T> Get<T>(string ruta) => Enviar<T>(HttpMethod.Get, ruta);
@@ -33,7 +32,8 @@ public sealed class HttpClientUtils : IDisposable
     {
         using var peticion = new HttpRequestMessage(metodo, ruta);
         if (datos is not null || metodo == HttpMethod.Put)
-            peticion.Content = new StringContent(JsonConvert.SerializeObject(datos), Encoding.UTF8, "application/json");
+            peticion.Content = new StringContent(
+                JsonConvert.SerializeObject(datos), Encoding.UTF8, "application/json");
         HttpResponseMessage respuesta;
         try
         {
@@ -45,7 +45,8 @@ public sealed class HttpClientUtils : IDisposable
         }
         catch (TaskCanceledException)
         {
-            throw new InvalidOperationException("El backend tardó demasiado en responder. Consulta el estado antes de repetir la operación.");
+            throw new InvalidOperationException("El backend tardó demasiado en responder. "
+                + "Consulta el estado antes de repetir la operación.");
         }
         using (respuesta)
         {

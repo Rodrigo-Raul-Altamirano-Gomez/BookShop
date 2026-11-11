@@ -4,12 +4,8 @@ import me.Model.dto.catalogo.OrdenReferencia;
 
 // Consulta de la pestaña elegida; MAS_RECIENTES usa la fecha del seguimiento.
 // El usuario se obtiene del contexto autenticado; las respuestas reutilizan TarjetaReferenciaDTO.
-public record ConsultaSeguimientosDTO(
-        TipoSeguimiento tipo,
-        OrdenReferencia orden,
-        int pagina,
-        int tamanioPagina
-) {
+public record ConsultaSeguimientosDTO(TipoSeguimiento tipo, OrdenReferencia orden, int pagina, int tamanioPagina) {
+
     public static ConsultaSeguimientosDTO porDefecto() {
         return new ConsultaSeguimientosDTO(TipoSeguimiento.AUTOR, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 12);
     }

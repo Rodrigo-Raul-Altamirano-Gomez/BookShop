@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import me.Model.entities.catalogo.Libro;
 
 public class LibroGuardado {
+
     private int id;
     private Usuario usuario;
     private Libro libro;

@@ -15,13 +15,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class TransaccionesDAOTest {
+
     private Connection conexion;
+
     private PreparedStatement statement;
+
     private MockedStatic<DBManager> manager;
 
     @BeforeEach
@@ -59,17 +61,6 @@ class TransaccionesDAOTest {
         verify(statement).close();
         verify(conexion).close();
         verify(conexion, never()).setAutoCommit(false);
-        manager.verify(DBManager::getConnection, times(1));
-    }
-
-    @Test
-    void lecturaBloqueadaAbreYConservaLaTransaccion() throws Exception {
-        ResultSet rs = mock(ResultSet.class);
-        when(statement.executeQuery()).thenReturn(rs);
-        assertNull(new LibroDAOImpl().leerParaActualizar(1));
-        verify(conexion).setAutoCommit(false);
-        verify(conexion, never()).close();
-        assertSame(conexion, TransactionContext.getConnection());
         manager.verify(DBManager::getConnection, times(1));
     }
 

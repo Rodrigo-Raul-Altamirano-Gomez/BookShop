@@ -6,7 +6,7 @@
                 <button
                     class="page-link"
                     disabled="@(Pagina <= 1)"
-                    @onclick="() => Ir(Pagina - 1)"
+                    @onclick="() => PaginaCambiada.InvokeAsync(Pagina - 1)"
                     aria-label="Página anterior">
                     ‹
                 </button>
@@ -18,7 +18,7 @@
                         class="page-link"
                         aria-current="@(Pagina == p ? "page" : null)"
                         aria-label="Página @p"
-                        @onclick="() => Ir(p)">
+                        @onclick="() => PaginaCambiada.InvokeAsync(p)">
                         @p
                     </button>
                 </li>
@@ -27,7 +27,7 @@
                 <button
                     class="page-link"
                     disabled="@(Pagina >= TotalPaginas)"
-                    @onclick="() => Ir(Pagina + 1)"
+                    @onclick="() => PaginaCambiada.InvokeAsync(Pagina + 1)"
                     aria-label="Página siguiente">
                     ›
                 </button>

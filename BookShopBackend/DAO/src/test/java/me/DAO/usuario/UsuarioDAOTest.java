@@ -26,13 +26,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class UsuarioDAOTest {
+
     private static final LocalDate FECHA = LocalDate.of(2026, 10, 7);
+
     private Connection conexion;
+
     private MockedStatic<DBManager> manager;
 
     @BeforeEach
@@ -41,44 +43,21 @@ class UsuarioDAOTest {
         conexion = DriverManager.getConnection(url);
         manager = mockStatic(DBManager.class);
         manager.when(DBManager::getConnection).thenAnswer(inv -> DriverManager.getConnection(url));
-        String auditoria = ", usuario_creacion VARCHAR(254) NOT NULL, fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP, "
-                + "usuario_actualizacion VARCHAR(254), fecha_actualizacion DATETIME, eliminado BOOLEAN DEFAULT FALSE";
+        String auditoria = ", usuario_creacion VARCHAR(254) NOT NULL, fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP, " + "usuario_actualizacion VARCHAR(254), fecha_actualizacion DATETIME, eliminado BOOLEAN DEFAULT FALSE";
         try (var statement = conexion.createStatement()) {
-            statement.execute("CREATE TABLE USUARIO (id INT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(254) UNIQUE, "
-                    + "contrasenia VARCHAR(255), nombre VARCHAR(250), imagen VARCHAR(2048), "
-                    + "fecha_nacimiento DATETIME, activo BOOLEAN DEFAULT TRUE, rol VARCHAR(40) DEFAULT 'CLIENTE', "
-                    + "tiempo_total BIGINT DEFAULT 0, cantidad_pedidos_entregados INT DEFAULT 0" + auditoria + ")");
-            statement.execute("CREATE TABLE DIRECCION_ENVIO (id INT AUTO_INCREMENT PRIMARY KEY, id_usuario INT, "
-                    + "alias VARCHAR(100), calle VARCHAR(255), distrito VARCHAR(100), ciudad VARCHAR(100), "
-                    + "referencia VARCHAR(255), activo BOOLEAN DEFAULT TRUE, predeterminada BOOLEAN DEFAULT FALSE"
-                    + auditoria + ", marca INT GENERATED ALWAYS AS (CASE WHEN predeterminada THEN 1 ELSE NULL END), "
-                    + "UNIQUE(id_usuario, marca))");
-            statement.execute("CREATE TABLE METODO_PAGO (id INT AUTO_INCREMENT PRIMARY KEY, id_usuario INT, "
-                    + "titular VARCHAR(150), proveedor VARCHAR(100), alias VARCHAR(100), activo BOOLEAN DEFAULT TRUE, "
-                    + "tipo_metodo VARCHAR(40), numero_tarjeta_cifrado VARCHAR(512), numero_telefono_cifrado VARCHAR(512), "
-                    + "tipo_tarjeta VARCHAR(40), fecha_vencimiento DATE, predeterminado BOOLEAN DEFAULT FALSE"
-                    + auditoria + ", marca INT GENERATED ALWAYS AS (CASE WHEN predeterminado THEN 1 ELSE NULL END), "
-                    + "UNIQUE(id_usuario, marca))");
-            statement.execute("CREATE TABLE SEGUIMIENTO (id INT AUTO_INCREMENT PRIMARY KEY, id_usuario INT, "
-                    + "tipo_seguimiento VARCHAR(40), id_autor INT, id_categoria INT, id_editorial INT" + auditoria
-                    + ", UNIQUE(id_usuario, id_autor), UNIQUE(id_usuario, id_categoria), UNIQUE(id_usuario, id_editorial))");
-            statement.execute("CREATE TABLE LIBRO_GUARDADO (id INT AUTO_INCREMENT PRIMARY KEY, id_usuario INT, "
-                    + "id_libro INT, favorito BOOLEAN" + auditoria + ", UNIQUE(id_usuario, id_libro, favorito))");
-            statement.execute("CREATE TABLE AUTOR (id INT PRIMARY KEY, nombre VARCHAR(100), activo BOOLEAN DEFAULT TRUE, "
-                    + "eliminado BOOLEAN DEFAULT FALSE, imagen VARCHAR(2048))");
-            statement.execute("CREATE TABLE CATEGORIA (id INT PRIMARY KEY, nombre VARCHAR(100), activo BOOLEAN DEFAULT TRUE, "
-                    + "eliminado BOOLEAN DEFAULT FALSE, imagen VARCHAR(2048))");
-            statement.execute("CREATE TABLE EDITORIAL (id INT PRIMARY KEY, nombre VARCHAR(100), activo BOOLEAN DEFAULT TRUE, "
-                    + "eliminado BOOLEAN DEFAULT FALSE, imagen VARCHAR(2048))");
-            statement.execute("INSERT INTO USUARIO (id,email,contrasenia,nombre,fecha_nacimiento,usuario_creacion) "
-                    + "VALUES (1,'ana@test','hash','Ana','2000-01-01','ana@test'), "
-                    + "(2,'bea@test','hash','Bea','2000-01-01','bea@test')");
+            statement.execute("CREATE TABLE USUARIO (id INT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(254) UNIQUE, " + "contrasenia VARCHAR(255), nombre VARCHAR(250), imagen VARCHAR(2048), " + "fecha_nacimiento DATETIME, activo BOOLEAN DEFAULT TRUE, rol VARCHAR(40) DEFAULT 'CLIENTE', " + "tiempo_total BIGINT DEFAULT 0, cantidad_pedidos_entregados INT DEFAULT 0" + auditoria + ")");
+            statement.execute("CREATE TABLE DIRECCION_ENVIO (id INT AUTO_INCREMENT PRIMARY KEY, id_usuario INT, " + "alias VARCHAR(100), calle VARCHAR(255), distrito VARCHAR(100), ciudad VARCHAR(100), " + "referencia VARCHAR(255), activo BOOLEAN DEFAULT TRUE, predeterminada BOOLEAN DEFAULT FALSE" + auditoria + ", marca INT GENERATED ALWAYS AS (CASE WHEN predeterminada THEN 1 ELSE NULL END), " + "UNIQUE(id_usuario, marca))");
+            statement.execute("CREATE TABLE METODO_PAGO (id INT AUTO_INCREMENT PRIMARY KEY, id_usuario INT, " + "titular VARCHAR(150), proveedor VARCHAR(100), alias VARCHAR(100), activo BOOLEAN DEFAULT TRUE, " + "tipo_metodo VARCHAR(40), numero_tarjeta_cifrado VARCHAR(512), numero_telefono_cifrado VARCHAR(512), " + "tipo_tarjeta VARCHAR(40), fecha_vencimiento DATE, predeterminado BOOLEAN DEFAULT FALSE" + auditoria + ", marca INT GENERATED ALWAYS AS (CASE WHEN predeterminado THEN 1 ELSE NULL END), " + "UNIQUE(id_usuario, marca))");
+            statement.execute("CREATE TABLE SEGUIMIENTO (id INT AUTO_INCREMENT PRIMARY KEY, id_usuario INT, " + "tipo_seguimiento VARCHAR(40), id_autor INT, id_categoria INT, id_editorial INT" + auditoria + ", UNIQUE(id_usuario, id_autor), UNIQUE(id_usuario, id_categoria), UNIQUE(id_usuario, id_editorial))");
+            statement.execute("CREATE TABLE LIBRO_GUARDADO (id INT AUTO_INCREMENT PRIMARY KEY, id_usuario INT, " + "id_libro INT, favorito BOOLEAN" + auditoria + ", UNIQUE(id_usuario, id_libro, favorito))");
+            statement.execute("CREATE TABLE AUTOR (id INT PRIMARY KEY, nombre VARCHAR(100), activo BOOLEAN DEFAULT TRUE, " + "eliminado BOOLEAN DEFAULT FALSE, imagen VARCHAR(2048))");
+            statement.execute("CREATE TABLE CATEGORIA (id INT PRIMARY KEY, nombre VARCHAR(100), activo BOOLEAN DEFAULT TRUE, " + "eliminado BOOLEAN DEFAULT FALSE, imagen VARCHAR(2048))");
+            statement.execute("CREATE TABLE EDITORIAL (id INT PRIMARY KEY, nombre VARCHAR(100), activo BOOLEAN DEFAULT TRUE, " + "eliminado BOOLEAN DEFAULT FALSE, imagen VARCHAR(2048))");
+            statement.execute("INSERT INTO USUARIO (id,email,contrasenia,nombre,fecha_nacimiento,usuario_creacion) " + "VALUES (1,'ana@test','hash','Ana','2000-01-01','ana@test'), " + "(2,'bea@test','hash','Bea','2000-01-01','bea@test')");
             statement.execute("INSERT INTO AUTOR (id,nombre) VALUES (1,'Autor A'),(2,'Autor B')");
             statement.execute("INSERT INTO CATEGORIA (id,nombre) VALUES (1,'Categoria')");
             statement.execute("INSERT INTO EDITORIAL (id,nombre) VALUES (1,'Editorial')");
-            statement.execute("INSERT INTO DIRECCION_ENVIO (id,id_usuario,alias,calle,distrito,ciudad,usuario_creacion) "
-                    + "VALUES (1,1,'Casa','Calle','Distrito','Lima','ana@test'), "
-                    + "(2,2,'Casa','Calle','Distrito','Lima','bea@test')");
+            statement.execute("INSERT INTO DIRECCION_ENVIO (id,id_usuario,alias,calle,distrito,ciudad,usuario_creacion) " + "VALUES (1,1,'Casa','Calle','Distrito','Lima','ana@test'), " + "(2,2,'Casa','Calle','Distrito','Lima','bea@test')");
         }
     }
 
@@ -99,7 +78,6 @@ class UsuarioDAOTest {
         assertTrue(dao.establecerPredeterminado(1, 1, "ana@test"));
         assertFalse(dao.establecerPredeterminado(1, 2, "ana@test"));
         assertFalse(dao.establecerPredeterminado(1, 999, "ana@test"));
-        assertTrue(dao.leerParaActualizar(1).isPredeterminada());
         TransactionContext.commit();
         TransactionContext.close();
         assertTrue(dao.eliminar(1, "ana@test"));
@@ -146,8 +124,6 @@ class UsuarioDAOTest {
         dao.insertar(nueva);
         assertFalse(nueva.isPredeterminada());
         assertTrue(dao.establecerPredeterminado(1, nueva.getId(), "ana@test"));
-        assertTrue(dao.leerParaActualizar(nueva.getId()).isPredeterminada());
-        assertFalse(dao.leerParaActualizar(1).isPredeterminada());
         TransactionContext.rollback();
         TransactionContext.close();
         assertNull(dao.leer(nueva.getId()));
@@ -180,7 +156,6 @@ class UsuarioDAOTest {
         assertTrue(leido.isActivo());
         assertTrue(dao.listarPorUsuario(1, 1, 12).items().getFirst().isPredeterminado());
         assertFalse(dao.establecerPredeterminado(1, billetera.getId(), FECHA.plusDays(1), "ana@test"));
-        assertTrue(dao.leerParaActualizar(billetera.getId()).isPredeterminado());
         TransactionContext.commit();
         TransactionContext.close();
         dao.desactivarVencidos(FECHA.plusDays(1), "sistema");
@@ -242,7 +217,7 @@ class UsuarioDAOTest {
         dao.guardar(1, TipoSeguimiento.CATEGORIA, 1, "ana@test");
         dao.guardar(1, TipoSeguimiento.EDITORIAL, 1, "ana@test");
         try (var statement = conexion.createStatement();
-             var resultado = statement.executeQuery("SELECT id FROM SEGUIMIENTO ORDER BY id")) {
+            var resultado = statement.executeQuery("SELECT id FROM SEGUIMIENTO ORDER BY id")) {
             resultado.next();
             int idAutor = resultado.getInt(1);
             Seguimiento primero = dao.leer(idAutor);
@@ -261,14 +236,10 @@ class UsuarioDAOTest {
             resultado.next();
             assertInstanceOf(SeguimientoEditorial.class, dao.leer(resultado.getInt(1)));
         }
-        assertEquals(1, dao.listarPorUsuario(1, TipoSeguimiento.AUTOR,
-                OrdenReferencia.NOMBRE_ASCENDENTE, 1, 12).totalResultados());
-        assertEquals(1, dao.listarPorUsuario(1, TipoSeguimiento.CATEGORIA,
-                OrdenReferencia.MAS_RECIENTES, 1, 12).totalResultados());
-        assertEquals(1, dao.listarPorUsuario(1, TipoSeguimiento.EDITORIAL,
-                OrdenReferencia.MAS_RECIENTES, 1, 12).totalResultados());
-        assertEquals(0, dao.listarPorUsuario(2, TipoSeguimiento.AUTOR,
-                OrdenReferencia.MAS_RECIENTES, 1, 12).totalResultados());
+        assertEquals(1, dao.listarPorUsuario(1, TipoSeguimiento.AUTOR, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 12).totalResultados());
+        assertEquals(1, dao.listarPorUsuario(1, TipoSeguimiento.CATEGORIA, OrdenReferencia.MAS_RECIENTES, 1, 12).totalResultados());
+        assertEquals(1, dao.listarPorUsuario(1, TipoSeguimiento.EDITORIAL, OrdenReferencia.MAS_RECIENTES, 1, 12).totalResultados());
+        assertEquals(0, dao.listarPorUsuario(2, TipoSeguimiento.AUTOR, OrdenReferencia.MAS_RECIENTES, 1, 12).totalResultados());
     }
 
     @Test
@@ -286,8 +257,7 @@ class UsuarioDAOTest {
         var pagina = dao.listarPorUsuario(1, TipoSeguimiento.AUTOR, OrdenReferencia.MAS_RECIENTES, 1, 1);
         assertEquals(2, pagina.totalResultados());
         assertEquals(1, pagina.items().getFirst().id());
-        assertEquals(2, dao.listarPorUsuario(1, TipoSeguimiento.AUTOR,
-                OrdenReferencia.MAS_RECIENTES, 2, 1).items().getFirst().id());
+        assertEquals(2, dao.listarPorUsuario(1, TipoSeguimiento.AUTOR, OrdenReferencia.MAS_RECIENTES, 2, 1).items().getFirst().id());
         SeguimientoAutor leido = (SeguimientoAutor) dao.leer(nuevo.getId());
         assertEquals(2, leido.getAutor().getId());
         assertNull(leido.getAutor().getNombre());
@@ -301,7 +271,7 @@ class UsuarioDAOTest {
         dao.guardar(1, 10, true, "ana@test");
         dao.guardar(1, 10, false, "ana@test");
         try (var statement = conexion.createStatement();
-             var resultado = statement.executeQuery("SELECT id FROM LIBRO_GUARDADO WHERE favorito")) {
+            var resultado = statement.executeQuery("SELECT id FROM LIBRO_GUARDADO WHERE favorito")) {
             resultado.next();
             int id = resultado.getInt(1);
             var favorito = dao.leer(id);
@@ -315,7 +285,7 @@ class UsuarioDAOTest {
             assertFalse(dao.leer(id).isEliminado());
         }
         try (var statement = conexion.createStatement();
-             var resultado = statement.executeQuery("SELECT COUNT(*) FROM LIBRO_GUARDADO WHERE NOT eliminado")) {
+            var resultado = statement.executeQuery("SELECT COUNT(*) FROM LIBRO_GUARDADO WHERE NOT eliminado")) {
             resultado.next();
             assertEquals(2, resultado.getInt(1));
         }

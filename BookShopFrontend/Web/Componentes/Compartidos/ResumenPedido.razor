@@ -15,15 +15,14 @@
                     <tbody>
                         @foreach (var linea in Pedido.Lineas)
                         {
-                            var libro = Catalogo.Libros.FirstOrDefault(libro => libro.Id == linea.IdLibro);
                             <tr>
                                 <td>
                                     <div class="line-book d-flex align-items-center gap-3">
                                         <img
-                                            src="@(libro?.Portada ?? "/images/book-placeholder.svg")"
-                                            alt="@(libro?.Titulo ?? "Libro")"
+                                            src="@(linea.Portada ?? "/images/book-placeholder.svg")"
+                                            alt="@(linea.Titulo)"
                                             />
-                                        <strong>@(libro?.Titulo ?? "Libro")</strong>
+                                        <strong>@linea.Titulo</strong>
                                     </div>
                                 </td>
                                 <td>@linea.Cantidad</td>

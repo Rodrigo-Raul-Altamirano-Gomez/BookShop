@@ -53,14 +53,18 @@ public partial class ExploradorCatalogo : IDisposable
     {
         get
         {
-            string inicio = (minimo * 100 / LimitePrecio).ToString(System.Globalization.CultureInfo.InvariantCulture);
+            string inicio = (minimo * 100 / LimitePrecio)
+                .ToString(System.Globalization.CultureInfo.InvariantCulture);
             string fin = (maximo * 100 / LimitePrecio).ToString(System.Globalization.CultureInfo.InvariantCulture);
             return $"--inicio:{inicio}%;--fin:{fin}%";
         }
     }
-    private IEnumerable<string> OpcionesCategorias => Catalogo.Referencias.Where(r => r.Tipo == "categorias").Select(r => r.Nombre);
-    private IEnumerable<string> OpcionesAutores => Catalogo.Referencias.Where(r => r.Tipo == "autores").Select(r => r.Nombre);
-    private IEnumerable<string> OpcionesEditoriales => Catalogo.Referencias.Where(r => r.Tipo == "editoriales").Select(r => r.Nombre);
+    private IEnumerable<string> OpcionesCategorias =>
+        Catalogo.Referencias.Where(r => r.Tipo == "categorias").Select(r => r.Nombre);
+    private IEnumerable<string> OpcionesAutores =>
+        Catalogo.Referencias.Where(r => r.Tipo == "autores").Select(r => r.Nombre);
+    private IEnumerable<string> OpcionesEditoriales =>
+        Catalogo.Referencias.Where(r => r.Tipo == "editoriales").Select(r => r.Nombre);
     private IEnumerable<string> OpcionesIdiomas => Catalogo.Idiomas;
     private bool HayFiltros => categoriasAplicadas.Count > 0 || autoresAplicados.Count > 0
         || editorialesAplicadas.Count > 0 || idiomasAplicados.Count > 0 || precioFiltrado;
@@ -89,9 +93,6 @@ public partial class ExploradorCatalogo : IDisposable
             var filtro = new FiltroLibroDTO
             {
                 Titulo = Busqueda,
-                IdsCategorias = Catalogo.Referencias.Where(r => r.Tipo == "categorias" && categoriasAplicadas.Contains(r.Nombre)).Select(r => r.Id).ToList(),
-                IdsAutores = Catalogo.Referencias.Where(r => r.Tipo == "autores" && autoresAplicados.Contains(r.Nombre)).Select(r => r.Id).ToList(),
-                IdsEditoriales = Catalogo.Referencias.Where(r => r.Tipo == "editoriales" && editorialesAplicadas.Contains(r.Nombre)).Select(r => r.Id).ToList(),
                 Idiomas = idiomasAplicados.ToList(),
                 PrecioMinimo = precioFiltrado ? minimoAplicado : null,
                 PrecioMaximo = precioFiltrado ? maximoAplicado : null,
@@ -100,6 +101,15 @@ public partial class ExploradorCatalogo : IDisposable
                 Pagina = pagina,
                 TamanioPagina = 12
             };
+            foreach (var referencia in Catalogo.Referencias)
+            {
+                if (referencia.Tipo == "categorias" && categoriasAplicadas.Contains(referencia.Nombre))
+                    filtro.IdsCategorias.Add(referencia.Id);
+                if (referencia.Tipo == "autores" && autoresAplicados.Contains(referencia.Nombre))
+                    filtro.IdsAutores.Add(referencia.Id);
+                if (referencia.Tipo == "editoriales" && editorialesAplicadas.Contains(referencia.Nombre))
+                    filtro.IdsEditoriales.Add(referencia.Id);
+            }
             string ruta = "libros/busqueda";
             if (IdAmbito != 0)
             {
@@ -111,7 +121,8 @@ public partial class ExploradorCatalogo : IDisposable
                 ruta = $"libros/por-{referencia}/{IdAmbito}";
             }
             if (Favoritos.HasValue)
-                ruta = $"cuenta/libros-guardados/busqueda?favorito={Favoritos.Value.ToString().ToLowerInvariant()}";
+                ruta = "cuenta/libros-guardados/busqueda?favorito="
+                    + Favoritos.Value.ToString().ToLowerInvariant();
             var datos = await Api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>(ruta, filtro);
             resultados = datos.Items.Select(Presentacion.Libro).ToList();
             totalResultados = datos.TotalResultados;

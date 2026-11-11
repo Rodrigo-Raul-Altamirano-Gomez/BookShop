@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import me.Model.entities.usuario.Usuario;
 
 public class VotoUtil {
+
     private int id;
     private Usuario usuario;
     private Resena resena;

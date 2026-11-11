@@ -6,12 +6,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import me.Business.exceptions.AccesoDenegadoException;
 import me.Business.exceptions.ConflictoException;
-import me.Business.exceptions.CuentaInactivaException;
 import me.Business.exceptions.NegocioException;
 import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.RecursoNoEncontradoException;
 import me.Business.exceptions.ValidacionException;
-import me.Business.Autorizacion;
 import me.DAO.usuario.DireccionEnvioDAO;
 import me.DAO.usuario.DireccionEnvioDAOImpl;
 import me.DAO.usuario.UsuarioDAO;
@@ -24,10 +22,10 @@ import me.Model.entities.compra.DireccionEnvio;
 import me.Model.entities.usuario.Usuario;
 
 public class DireccionEnvioBOImpl implements DireccionEnvioBO {
+
     private final DireccionEnvioDAO direccionEnvioDAO;
     private final UsuarioDAO usuarioDAO;
     private final Clock reloj;
-    private final Autorizacion autorizacion;
 
     public DireccionEnvioBOImpl() {
         this(new DireccionEnvioDAOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")));
@@ -37,19 +35,17 @@ public class DireccionEnvioBOImpl implements DireccionEnvioBO {
         this.direccionEnvioDAO = direccionEnvioDAO;
         this.usuarioDAO = usuarioDAO;
         this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
-        this.autorizacion = new Autorizacion(usuarioDAO);
     }
 
     @Override
     public DireccionEnvioDTO registrar(int idActor, DatosDireccionEnvioDTO datos) throws NegocioException {
-        Usuario actor = autorizacion.usuarioActivo(idActor);
-        DatosDireccionEnvioDTO validos = validarFormulario(datos);
-        DireccionEnvio direccion = new DireccionEnvio(0, actor, validos.alias(), validos.calle(),
-                validos.distrito(), validos.ciudad(), validos.referencia());
-        direccion.setUsuarioCreacion(actor.getEmail());
-        direccion.setFechaCreacion(LocalDateTime.now(reloj));
         try {
-            bloquearUsuario(idActor);
+            Usuario actor = usuarioDAO.leer(idActor);
+            DatosDireccionEnvioDTO validos = validarFormulario(datos);
+            DireccionEnvio direccion = new DireccionEnvio(0, actor, validos.alias(), validos.calle(),
+                validos.distrito(), validos.ciudad(), validos.referencia());
+            direccion.setUsuarioCreacion(actor.getEmail());
+            direccion.setFechaCreacion(LocalDateTime.now(reloj));
             direccionEnvioDAO.insertar(direccion);
             if (validos.predeterminada()) {
                 if (!direccionEnvioDAO.establecerPredeterminado(idActor, direccion.getId(), actor.getEmail())) {
@@ -57,7 +53,9 @@ public class DireccionEnvioBOImpl implements DireccionEnvioBO {
                 }
                 direccion.setPredeterminada(true);
             }
-            DireccionEnvioDTO respuesta = aDTO(direccion);
+            DireccionEnvioDTO respuesta = new DireccionEnvioDTO(direccion.getId(), direccion.getAlias(),
+                direccion.getCalle(), direccion.getDistrito(), direccion.getCiudad(),
+                direccion.getReferencia(), direccion.isPredeterminada());
             TransactionContext.commit();
             return respuesta;
         } catch (SQLException e) {
@@ -72,13 +70,12 @@ public class DireccionEnvioBOImpl implements DireccionEnvioBO {
     }
 
     @Override
-    public DireccionEnvioDTO modificar(int idActor, int idDireccion, DatosDireccionEnvioDTO datos)
-            throws NegocioException {
-        Usuario actor = autorizacion.usuarioActivo(idActor);
-        DatosDireccionEnvioDTO validos = validarFormulario(datos);
+    public DireccionEnvioDTO modificar(int idActor, int idDireccion, DatosDireccionEnvioDTO datos) throws
+        NegocioException {
         try {
-            bloquearUsuario(idActor);
-            DireccionEnvio direccion = direccionEnvioDAO.leerParaActualizar(idDireccion);
+            Usuario actor = usuarioDAO.leer(idActor);
+            DatosDireccionEnvioDTO validos = validarFormulario(datos);
+            DireccionEnvio direccion = direccionEnvioDAO.leer(idDireccion);
             comprobarPropiedad(direccion, actor);
             direccion.setAlias(validos.alias());
             direccion.setCalle(validos.calle());
@@ -98,7 +95,9 @@ public class DireccionEnvioBOImpl implements DireccionEnvioBO {
                 }
                 direccion.setPredeterminada(false);
             }
-            DireccionEnvioDTO respuesta = aDTO(direccion);
+            DireccionEnvioDTO respuesta = new DireccionEnvioDTO(direccion.getId(), direccion.getAlias(),
+                direccion.getCalle(), direccion.getDistrito(), direccion.getCiudad(),
+                direccion.getReferencia(), direccion.isPredeterminada());
             TransactionContext.commit();
             return respuesta;
         } catch (SQLException e) {
@@ -114,20 +113,21 @@ public class DireccionEnvioBOImpl implements DireccionEnvioBO {
 
     @Override
     public DireccionEnvioDTO consultar(int idActor, int idDireccion) throws NegocioException {
-        Usuario actor = autorizacion.usuarioActivo(idActor);
         try {
+            Usuario actor = usuarioDAO.leer(idActor);
             DireccionEnvio direccion = direccionEnvioDAO.leer(idDireccion);
             comprobarPropiedad(direccion, actor);
-            return aDTO(direccion);
+            return new DireccionEnvioDTO(direccion.getId(), direccion.getAlias(), direccion.getCalle(),
+                direccion.getDistrito(), direccion.getCiudad(), direccion.getReferencia(),
+                direccion.isPredeterminada());
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo consultar la direccion.", e);
         }
     }
 
     @Override
-    public ResultadoPaginadoDTO<DireccionEnvioDTO> listar(int idActor, int pagina, int tamanioPagina)
-            throws NegocioException {
-        autorizacion.usuarioActivo(idActor);
+    public ResultadoPaginadoDTO<DireccionEnvioDTO> listar(int idActor, int pagina, int tamanioPagina) throws
+        NegocioException {
         if (pagina < 1 || tamanioPagina < 1)
             throw new ValidacionException("pagina", "La página y su tamaño deben ser positivos.");
         try {
@@ -139,8 +139,8 @@ public class DireccionEnvioBOImpl implements DireccionEnvioBO {
 
     @Override
     public void eliminar(int idActor, int idDireccion) throws NegocioException {
-        Usuario actor = autorizacion.usuarioActivo(idActor);
         try {
+            Usuario actor = usuarioDAO.leer(idActor);
             comprobarPropiedad(direccionEnvioDAO.leer(idDireccion), actor);
             if (!direccionEnvioDAO.eliminar(idDireccion, actor.getEmail())) {
                 throw new ConflictoException("La direccion ya se habia eliminado.");
@@ -152,10 +152,9 @@ public class DireccionEnvioBOImpl implements DireccionEnvioBO {
 
     @Override
     public void establecerPredeterminado(int idActor, int idDireccion) throws NegocioException {
-        Usuario actor = autorizacion.usuarioActivo(idActor);
         try {
-            bloquearUsuario(idActor);
-            comprobarPropiedad(direccionEnvioDAO.leerParaActualizar(idDireccion), actor);
+            Usuario actor = usuarioDAO.leer(idActor);
+            comprobarPropiedad(direccionEnvioDAO.leer(idDireccion), actor);
             if (!direccionEnvioDAO.establecerPredeterminado(idActor, idDireccion, actor.getEmail())) {
                 throw new ConflictoException("La direccion no puede elegirse como predeterminada.");
             }
@@ -172,38 +171,34 @@ public class DireccionEnvioBOImpl implements DireccionEnvioBO {
     }
 
     private DatosDireccionEnvioDTO validarFormulario(DatosDireccionEnvioDTO datos) throws ValidacionException {
-        if (datos == null) throw new ValidacionException("direccion", "Los datos de la direccion son obligatorios.");
+        if (datos == null)
+            throw new ValidacionException("direccion", "Los datos de la direccion son obligatorios.");
         String alias = datos.alias() == null ? "" : datos.alias().strip();
-        if (alias.isEmpty()) throw new ValidacionException("alias", "Este campo es obligatorio.");
+        if (alias.isEmpty())
+            throw new ValidacionException("alias", "Este campo es obligatorio.");
         if (alias.length() > 100)
             throw new ValidacionException("alias", "El máximo es 100 caracteres.");
         String calle = datos.calle() == null ? "" : datos.calle().strip();
-        if (calle.isEmpty()) throw new ValidacionException("calle", "Este campo es obligatorio.");
+        if (calle.isEmpty())
+            throw new ValidacionException("calle", "Este campo es obligatorio.");
         if (calle.length() > 255)
             throw new ValidacionException("calle", "El máximo es 255 caracteres.");
         String distrito = datos.distrito() == null ? "" : datos.distrito().strip();
-        if (distrito.isEmpty()) throw new ValidacionException("distrito", "Este campo es obligatorio.");
+        if (distrito.isEmpty())
+            throw new ValidacionException("distrito", "Este campo es obligatorio.");
         if (distrito.length() > 100)
             throw new ValidacionException("distrito", "El máximo es 100 caracteres.");
         String ciudad = datos.ciudad() == null ? "" : datos.ciudad().strip();
-        if (ciudad.isEmpty()) throw new ValidacionException("ciudad", "Este campo es obligatorio.");
+        if (ciudad.isEmpty())
+            throw new ValidacionException("ciudad", "Este campo es obligatorio.");
         if (ciudad.length() > 100)
             throw new ValidacionException("ciudad", "El máximo es 100 caracteres.");
         String referencia = datos.referencia() == null ? null : datos.referencia().strip();
-        if (referencia != null && referencia.isEmpty()) referencia = null;
+        if (referencia != null && referencia.isEmpty())
+            referencia = null;
         if (referencia != null && referencia.length() > 255)
             throw new ValidacionException("referencia", "El máximo es 255 caracteres.");
-        return new DatosDireccionEnvioDTO(alias,
-                calle, distrito,
-                ciudad,
-                referencia, datos.predeterminada());
-    }
-
-    private void bloquearUsuario(int idActor) throws SQLException, NegocioException {
-        Usuario usuario = usuarioDAO.leerParaActualizar(idActor);
-        if (usuario == null || !usuario.estaDisponible()) {
-            throw new CuentaInactivaException("La cuenta ya no esta activa.");
-        }
+        return new DatosDireccionEnvioDTO(alias, calle, distrito, ciudad, referencia, datos.predeterminada());
     }
 
     private void comprobarPropiedad(DireccionEnvio direccion, Usuario actor) throws NegocioException {
@@ -213,11 +208,7 @@ public class DireccionEnvioBOImpl implements DireccionEnvioBO {
         if (direccion.getUsuario().getId() != actor.getId()) {
             throw new AccesoDenegadoException("La direccion pertenece a otro usuario.");
         }
-        if (!direccion.isActivo()) throw new ConflictoException("La direccion no esta disponible.");
-    }
-
-    private DireccionEnvioDTO aDTO(DireccionEnvio direccion) {
-        return new DireccionEnvioDTO(direccion.getId(), direccion.getAlias(), direccion.getCalle(),
-                direccion.getDistrito(), direccion.getCiudad(), direccion.getReferencia(), direccion.isPredeterminada());
+        if (!direccion.isActivo())
+            throw new ConflictoException("La direccion no esta disponible.");
     }
 }

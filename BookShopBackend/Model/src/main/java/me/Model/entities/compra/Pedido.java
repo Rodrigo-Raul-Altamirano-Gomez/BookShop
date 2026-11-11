@@ -9,6 +9,7 @@ import me.Model.entities.compra.MetodoPago;
 import me.Model.entities.usuario.Usuario;
 
 public class Pedido {
+
     private int id;
     private Usuario usuario;
     private List<Item> items;
@@ -57,10 +58,11 @@ public class Pedido {
         this.id = id;
         this.usuario = usuario;
         for (Item item : carrito.getItems()) {
-            if (item.isEliminado()) continue;
+            if (item.isEliminado())
+                continue;
             this.items.add(new Item(item));
-            subtotalProductos = subtotalProductos.add(item.getPrecioBase().multiply(
-                    BigDecimal.valueOf(item.getCantidad())));
+            subtotalProductos =
+                subtotalProductos.add(item.getPrecioBase().multiply(BigDecimal.valueOf(item.getCantidad())));
             descuentoLibros = descuentoLibros.add(item.getDescuentoTotal());
         }
         total = carrito.getTotal();
@@ -308,10 +310,9 @@ public class Pedido {
     }
 
     public boolean puedeSolicitarDevolucion(LocalDateTime fechaActual, int plazoDias, int maximoIntentos) {
-        return !eliminado && estado == EstadoPedido.ENTREGADO && fechaEntrega != null
-                && fechaActual != null && plazoDias >= 0 && maximoIntentos > 0
-                && numeroIntentos < maximoIntentos && !fechaActual.isBefore(fechaEntrega)
-                && !fechaActual.isAfter(fechaEntrega.plusDays(plazoDias));
+        return !eliminado && estado == EstadoPedido.ENTREGADO && fechaEntrega != null && fechaActual != null
+            && plazoDias >= 0 && maximoIntentos > 0 && numeroIntentos < maximoIntentos &&
+            !fechaActual.isBefore(fechaEntrega) && !fechaActual.isAfter(fechaEntrega.plusDays(plazoDias));
     }
 
     public void registrarIntento() {

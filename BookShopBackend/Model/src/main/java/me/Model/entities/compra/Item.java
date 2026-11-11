@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import me.Model.entities.catalogo.Libro;
 
 public class Item {
+
     private int id;
     private Libro libro;
     private int cantidad;
@@ -33,7 +34,9 @@ public class Item {
         this.cantidad = cantidad;
         this.precioBase = libro.getPrecioBase();
         this.precioUnitario = precioBase;
-        recalcularSubTotal();
+        subTotal = BigDecimal.ZERO;
+        if (precioUnitario != null)
+            subTotal = precioUnitario.multiply(BigDecimal.valueOf(cantidad));
     }
 
     public Item(Item original) {
@@ -76,7 +79,9 @@ public class Item {
             throw new IllegalArgumentException("La cantidad no puede ser negativa.");
         }
         this.cantidad = cantidad;
-        recalcularSubTotal();
+        subTotal = BigDecimal.ZERO;
+        if (precioUnitario != null)
+            subTotal = precioUnitario.multiply(BigDecimal.valueOf(cantidad));
     }
 
     public BigDecimal getPrecioBase() {
@@ -93,7 +98,9 @@ public class Item {
 
     public void setPrecioUnitario(BigDecimal precioUnitario) {
         this.precioUnitario = precioUnitario;
-        recalcularSubTotal();
+        subTotal = BigDecimal.ZERO;
+        if (precioUnitario != null)
+            subTotal = precioUnitario.multiply(BigDecimal.valueOf(cantidad));
     }
 
     public BigDecimal getPorcentajeDescuento() {
@@ -153,12 +160,8 @@ public class Item {
     }
 
     public BigDecimal getDescuentoTotal() {
-        if (precioBase == null || precioUnitario == null) return BigDecimal.ZERO;
+        if (precioBase == null || precioUnitario == null)
+            return BigDecimal.ZERO;
         return precioBase.subtract(precioUnitario).multiply(BigDecimal.valueOf(cantidad));
-    }
-
-    private void recalcularSubTotal() {
-        subTotal = precioUnitario == null ? BigDecimal.ZERO
-                : precioUnitario.multiply(BigDecimal.valueOf(cantidad));
     }
 }

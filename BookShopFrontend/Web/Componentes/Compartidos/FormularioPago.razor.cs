@@ -18,9 +18,21 @@ public partial class FormularioPago
     private DateOnly? FechaVencimiento { get; set; }
     private string MensajeError { get; set; } = "";
     private bool Guardando { get; set; }
-    private bool Completo => !string.IsNullOrWhiteSpace(Borrador.Titular) && !string.IsNullOrWhiteSpace(
-        Borrador.Proveedor) && (Valor is not null || !string.IsNullOrWhiteSpace(Numero)) && (Borrador
-            .Tipo != "Tarjeta" || FechaVencimiento.HasValue);
+    private bool Completo
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(Borrador.Titular))
+                return false;
+            if (string.IsNullOrWhiteSpace(Borrador.Proveedor))
+                return false;
+            if (Valor is null && string.IsNullOrWhiteSpace(Numero))
+                return false;
+            if (Borrador.Tipo == "Tarjeta" && !FechaVencimiento.HasValue)
+                return false;
+            return true;
+        }
+    }
 
     protected override void OnInitialized()
     {
@@ -67,21 +79,7 @@ public partial class FormularioPago
             return;
         }
 
-        var digitos = Numero.Replace(" ", "").Replace("-", "");
-        int cantidadDigitos = 9;
-        if (Borrador.Tipo == "Tarjeta")
-            cantidadDigitos = 16;
-        if (Numero.Length > 0 && (!digitos.All(char.IsDigit) || digitos.Length != cantidadDigitos))
-        {
-            if (Borrador.Tipo == "Tarjeta")
-                MensajeError = "Ingresa un número de tarjeta de 16 dígitos.";
-            else
-                MensajeError = "Ingresa un celular de 9 dígitos.";
-            return;
-        }
-
-        if (digitos.Length > 0)
-            Borrador.Numero = digitos;
+        Borrador.Numero = string.IsNullOrWhiteSpace(Numero) ? null : Numero.Trim();
         if (FechaVencimiento.HasValue && Borrador.Tipo == "Tarjeta")
             Borrador.Vencimiento = FechaVencimiento.Value;
         Guardando = true;

@@ -46,56 +46,55 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var linea in Compras.Carrito.ToList())
+                                @foreach (var linea in Compras.Resumen!.Items)
                                 {
-                                    var libro = Catalogo.Libros.FirstOrDefault(libro => libro.Id == linea.Key);
-                                    if (libro is not null)
-                                    {
-                                        <tr>
-                                            <td>
-                                                <div class="line-book d-flex align-items-center gap-3">
-                                                    <a href="/libros/@libro.Id">
-                                                        <img src="@libro.Portada" alt="Portada de @libro.Titulo" />
-                                                    </a>
-                                                    <strong>@libro.Titulo</strong>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="line-price d-flex flex-column gap-1">
-                                                    @if (libro.Descuento > 0)
-                                                    {
-                                                        <del>@Presentacion.Dinero(libro.PrecioOriginal)</del>
-                                                        <span class="badge badge-bookshop">−@libro.Descuento%</span>
-                                                    }
-                                                    <strong>@Presentacion.Dinero(libro.Precio)</strong>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="quantity btn-group">
-                                                    <button class="btn btn-outline-secondary"
-                                                        aria-label="Reducir cantidad de @libro.Titulo"
-                                                        @onclick="() => Cambiar(libro.Id, linea.Value - 1)">
-                                                        −
-                                                    </button>
-                                                    <span>@linea.Value</span>
-                                                    <button class="btn btn-outline-secondary"
-                                                        aria-label="Aumentar cantidad de @libro.Titulo"
-                                                        @onclick="() => Cambiar(libro.Id, linea.Value + 1)">
-                                                        +
-                                                    </button>
-                                                </div>
-                                            </td>
-                                            <td>@Presentacion.Dinero(libro.Precio * linea.Value)</td>
-                                            <td>
-                                                <button
-                                                    class="btn btn-outline-secondary icon-button"
-                                                    aria-label="Retirar @libro.Titulo"
-                                                    @onclick="() => Cambiar(libro.Id, 0)">
-                                                    <Icono Nombre="trash" />
+                                    <tr>
+                                        <td>
+                                            <div class="line-book d-flex align-items-center gap-3">
+                                                <a href="/libros/@linea.IdLibro">
+                                                    <img src="@(linea.Portada ?? "/images/book-placeholder.svg")"
+                                                        alt="Portada de @linea.Titulo" />
+                                                </a>
+                                                <strong>@linea.Titulo</strong>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="line-price d-flex flex-column gap-1">
+                                                @if (linea.PorcentajeDescuento > 0)
+                                                {
+                                                    <del>@Presentacion.Dinero(linea.PrecioOriginal)</del>
+                                                    <span class="badge badge-bookshop">
+                                                        −@linea.PorcentajeDescuento%
+                                                    </span>
+                                                }
+                                                <strong>@Presentacion.Dinero(linea.PrecioUnitario)</strong>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="quantity btn-group">
+                                                <button class="btn btn-outline-secondary"
+                                                    aria-label="Reducir cantidad de @linea.Titulo"
+                                                    @onclick="() => Cambiar(linea.IdLibro, linea.Cantidad - 1)">
+                                                    −
                                                 </button>
-                                            </td>
-                                        </tr>
-                                    }
+                                                <span>@linea.Cantidad</span>
+                                                <button class="btn btn-outline-secondary"
+                                                    aria-label="Aumentar cantidad de @linea.Titulo"
+                                                    @onclick="() => Cambiar(linea.IdLibro, linea.Cantidad + 1)">
+                                                    +
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td>@Presentacion.Dinero(linea.Subtotal)</td>
+                                        <td>
+                                            <button
+                                                class="btn btn-outline-secondary icon-button"
+                                                aria-label="Retirar @linea.Titulo"
+                                                @onclick="() => Cambiar(linea.IdLibro, 0)">
+                                                <Icono Nombre="trash" />
+                                            </button>
+                                        </td>
+                                    </tr>
                                 }
                             </tbody>
                         </table>

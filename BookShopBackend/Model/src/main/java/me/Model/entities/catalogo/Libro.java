@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class Libro {
+
     private int id;
     private String portada;
     private String titulo;
@@ -36,8 +37,8 @@ public class Libro {
         this.fechaCreacion = LocalDateTime.now();
     }
 
-    public Libro(int id, String titulo, Autor autor, Editorial editorial, Categoria categoria,
-                 BigDecimal precioBase, int stockFisico) {
+    public Libro(int id, String titulo, Autor autor, Editorial editorial, Categoria categoria, BigDecimal
+        precioBase, int stockFisico) {
         this();
         this.id = id;
         this.titulo = titulo;
@@ -78,9 +79,6 @@ public class Libro {
     }
 
     public void setAutor(Autor autor) {
-        if (this.autor != null && (autor == null || this.autor.getId() != autor.getId())) {
-            throw new IllegalStateException("No se puede cambiar el autor del libro.");
-        }
         this.autor = autor;
     }
 
@@ -89,9 +87,6 @@ public class Libro {
     }
 
     public void setEditorial(Editorial editorial) {
-        if (this.editorial != null && (editorial == null || this.editorial.getId() != editorial.getId())) {
-            throw new IllegalStateException("No se puede cambiar la editorial del libro.");
-        }
         this.editorial = editorial;
     }
 
@@ -100,9 +95,6 @@ public class Libro {
     }
 
     public void setCategoria(Categoria categoria) {
-        if (this.categoria != null && (categoria == null || this.categoria.getId() != categoria.getId())) {
-            throw new IllegalStateException("No se puede cambiar la categoria del libro.");
-        }
         this.categoria = categoria;
     }
 
@@ -285,28 +277,27 @@ public class Libro {
     }
 
     public void aplicarVetoDirecto() {
-        if (vetadoDirectamente) return;
-        if (numeroVetos >= 4) {
-            throw new IllegalStateException("El contador de vetos es inconsistente.");
-        }
+        if (vetadoDirectamente)
+            return;
         vetadoDirectamente = true;
         numeroVetos++;
     }
 
     public void retirarVetoDirecto() {
-        if (!vetadoDirectamente) return;
-        if (numeroVetos == 0) {
-            throw new IllegalStateException("El contador de vetos es inconsistente.");
-        }
+        if (!vetadoDirectamente)
+            return;
         vetadoDirectamente = false;
         numeroVetos--;
     }
 
     public void recalcularVetos() {
         numeroVetos = vetadoDirectamente ? 1 : 0;
-        if (autor != null && !autor.estaDisponible()) numeroVetos++;
-        if (editorial != null && !editorial.estaDisponible()) numeroVetos++;
-        if (categoria != null && !categoria.estaDisponible()) numeroVetos++;
+        if (autor != null && !autor.estaDisponible())
+            numeroVetos++;
+        if (editorial != null && !editorial.estaDisponible())
+            numeroVetos++;
+        if (categoria != null && !categoria.estaDisponible())
+            numeroVetos++;
     }
 
     public boolean tieneStockSuficiente(int cantidad) {

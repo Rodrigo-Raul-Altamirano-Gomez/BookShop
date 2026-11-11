@@ -38,7 +38,9 @@ public class MetodoPagoDTO
     {
     }
 
-    public MetodoPagoDTO(int id, bool tarjetaBancaria, string titular, string proveedor, string alias, string numeroEnmascarado, string? tipoTarjeta, DateOnly fechaVencimiento, bool predeterminado, bool vigente)
+    public MetodoPagoDTO(
+        int id, bool tarjetaBancaria, string titular, string proveedor, string alias, string numeroEnmascarado,
+        string? tipoTarjeta, DateOnly fechaVencimiento, bool predeterminado, bool vigente)
     {
         Id = id;
         TarjetaBancaria = tarjetaBancaria;

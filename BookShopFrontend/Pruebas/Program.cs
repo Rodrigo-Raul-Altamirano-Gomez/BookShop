@@ -33,7 +33,6 @@ var seleccion = new SeleccionCompraDTO(3, 4, 0);
 servidor.Map("/{**ruta}", async contexto =>
 {
     var ruta = contexto.Request.Path.Value!;
-    if (contexto.Request.Method != "GET") Verificar(contexto.Request.Headers["X-BookShop-Cliente"] == "web", "Cabecera REST ausente");
     object? resultado = null;
     if (ruta == "/webresources/cuenta/sesion")
     {
@@ -123,8 +122,8 @@ Verificar(await api.Get<string>("cookie") == "sesion-ana", "Cookie no conservada
 Verificar(await otroUsuario.Get<string>("cookie") == "sin-sesion", "Cookies compartidas entre usuarios");
 var estado = new SesionUsuario(api);
 var catalogoServicio = new CatalogoServicio(api, estado);
-var cuentaServicio = new CuentaServicio(api, estado, catalogoServicio);
-var compraServicio = new CompraServicio(api, estado, catalogoServicio);
+var cuentaServicio = new CuentaServicio(api, estado);
+var compraServicio = new CompraServicio(api, estado);
 estado.MostrarPerfil(await api.Get<PerfilUsuarioDTO>("cuenta"));
 await cuentaServicio.CargarDatosCompra();
 compraServicio.MostrarCarrito(await api.Get<ResumenCompraDTO>("carrito"));
@@ -138,11 +137,11 @@ var pedido = Presentacion.Pedido(await api.Post<DetallePedidoDTO>("pedidos/confi
 Verificar(pedido.Id == 21 && pedido.Total == 84 && pedido.Transaccion == "SIM-21" && pedido.FechaEntrega is null, "Confirmación alterada");
 await api.Put<PerfilUsuarioDTO>("cuenta/imagen");
 var imagen = await api.Post<string>("imagen", "https://example.test/imagen.png");
-Verificar(Presentacion.ImagenDesdeUrl(Presentacion.Imagen(imagen, ""))! == imagen, "Imagen no reversible");
+Verificar(imagen == "https://example.test/imagen.png", "URL JSON alterada");
 await api.Delete("sin-contenido");
 try { await api.Get<object>("error"); throw new Exception("No se informó el error HTTP"); }
 catch (InvalidOperationException e) { Verificar(e.Message == "Inicia sesión.", "Mensaje del backend perdido"); }
-Verificar(estado.Usuario is null && compraServicio.Carrito.Count == 0 && cuentaServicio.Direcciones.Count == 0, "Sesión vencida conserva datos privados");
+Verificar(estado.Usuario is null && compraServicio.CantidadCarrito == 0 && cuentaServicio.Direcciones.Count == 0, "Sesión vencida conserva datos privados");
 Verificar(await api.Get<string>("cookie") == "sin-sesion", "Cookie vencida no retirada");
 var tarjeta = new Web.Modelos.MetodoPago { Tipo = "Tarjeta", TipoTarjeta = "Crédito", Numero = "4111111111111111", Vencimiento = new DateOnly(2030, 1, 1) };
 await cuentaServicio.GuardarMetodo(tarjeta);

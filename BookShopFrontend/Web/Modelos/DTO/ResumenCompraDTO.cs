@@ -38,7 +38,10 @@ public class ResumenCompraDTO
     {
     }
 
-    public ResumenCompraDTO(List<ItemDTO> items, decimal subtotalProductos, decimal descuentoLibros, int idCupon, decimal porcentajeCupon, decimal descuentoCupon, decimal porcentajeEnvio, decimal costoEnvio, decimal total, int cantidadLibros)
+    public ResumenCompraDTO(
+        List<ItemDTO> items, decimal subtotalProductos, decimal descuentoLibros, int idCupon,
+        decimal porcentajeCupon, decimal descuentoCupon, decimal porcentajeEnvio, decimal costoEnvio,
+        decimal total, int cantidadLibros)
     {
         Items = items;
         SubtotalProductos = subtotalProductos;

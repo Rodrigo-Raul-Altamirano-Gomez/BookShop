@@ -4,21 +4,31 @@ import java.nio.file.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 import me.Business.exceptions.*;
-import me.Business.Imagenes;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ProteccionDatosTest {
-    @TempDir Path temporal;
+
+    @TempDir
+    Path temporal;
+
     String anterior;
-    @BeforeEach void preparar() {
+
+    @BeforeEach
+    void preparar() {
         anterior = System.getProperty("bookshop.clave.file");
         System.setProperty("bookshop.clave.file", temporal.resolve("clave-datos.key").toString());
     }
-    @AfterEach void restaurar() {
-        if (anterior == null) System.clearProperty("bookshop.clave.file");
-        else System.setProperty("bookshop.clave.file", anterior);
+
+    @AfterEach
+    void restaurar() {
+        if (anterior == null)
+            System.clearProperty("bookshop.clave.file");
+        else
+            System.setProperty("bookshop.clave.file", anterior);
     }
-    @Test void hashUsaSalesDiferentesYVerificaSinCambiarMayusculas() throws Exception {
+
+    @Test
+    void hashUsaSalesDiferentesYVerificaSinCambiarMayusculas() throws Exception {
         String primero = ProteccionDatos.hash("ClaveSegura1");
         String segundo = ProteccionDatos.hash("ClaveSegura1");
         assertNotEquals(primero, segundo);
@@ -26,12 +36,16 @@ class ProteccionDatosTest {
         assertFalse(ProteccionDatos.verificar("clavesegura1", primero));
         assertFalse(primero.contains("ClaveSegura1"));
     }
-    @Test void hashDesconocidoMalformadoOExcesivoNoAutentica() throws Exception {
+
+    @Test
+    void hashDesconocidoMalformadoOExcesivoNoAutentica() throws Exception {
         assertFalse(ProteccionDatos.verificar("ClaveSegura1", "SHA256$datos-antiguos"));
         assertFalse(ProteccionDatos.verificar("ClaveSegura1", "PBKDF2$999999999$aaaa$bbbb"));
         assertFalse(ProteccionDatos.verificar("ClaveSegura1", "PBKDF2$120000$!$!"));
     }
-    @Test void cifradoTieneNonceDistintoYClavePersistente() throws Exception {
+
+    @Test
+    void cifradoTieneNonceDistintoYClavePersistente() throws Exception {
         String numero = "1234567890123456";
         String primero = ProteccionDatos.cifrar(numero);
         byte[] clave = Files.readAllBytes(temporal.resolve("clave-datos.key"));
@@ -44,25 +58,21 @@ class ProteccionDatosTest {
         assertEquals(32, clave.length);
         assertEquals("**** 3456", ProteccionDatos.enmascarar(numero));
     }
-    @Test void cifradoModificadoFallaEnLugarDeProducirOtroNumero() throws Exception {
+
+    @Test
+    void cifradoModificadoFallaEnLugarDeProducirOtroNumero() throws Exception {
         String cifrado = ProteccionDatos.cifrar("987654321");
         byte[] datos = java.util.Base64.getDecoder().decode(cifrado.substring(7));
         datos[datos.length - 1] ^= 1;
         String alterado = "AESGCM$" + java.util.Base64.getEncoder().encodeToString(datos);
         assertThrows(ProteccionDatosException.class, () -> ProteccionDatos.descifrar(alterado));
     }
-    @Test void claveInvalidaSeInformaSinReemplazarla() throws Exception {
+
+    @Test
+    void claveInvalidaSeInformaSinReemplazarla() throws Exception {
         Path archivo = temporal.resolve("clave-datos.key");
         Files.writeString(archivo, "clave-invalida");
         assertThrows(ConfiguracionException.class, () -> ProteccionDatos.cifrar("987654321"));
         assertEquals("clave-invalida", Files.readString(archivo));
-    }
-    @Test void imagenExigeUnaUrlValida() throws Exception {
-        assertDoesNotThrow(() -> Imagenes.validar("https://example.test/portada.jpg"));
-        assertDoesNotThrow(() -> Imagenes.validar("/images/portada.png"));
-        assertThrows(ValidacionException.class, () -> Imagenes.validar("data:image/png;base64,AAAA"));
-        assertThrows(ValidacionException.class, () -> Imagenes.validar("javascript:alert(1)"));
-        assertThrows(ValidacionException.class, () -> Imagenes.validar("https://example.test/" + "a".repeat(2048)));
-        assertDoesNotThrow(() -> Imagenes.validar(null));
     }
 }

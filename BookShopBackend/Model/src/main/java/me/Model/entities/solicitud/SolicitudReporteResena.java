@@ -5,6 +5,7 @@ import me.Model.entities.opinion.Resena;
 import me.Model.entities.usuario.Usuario;
 
 public class SolicitudReporteResena extends Solicitud {
+
     private Resena resena;
     private MotivoReporteResena motivo;
     private String comentarioOriginal;
@@ -13,8 +14,8 @@ public class SolicitudReporteResena extends Solicitud {
     public SolicitudReporteResena() {
     }
 
-    public SolicitudReporteResena(int id, Usuario usuario, Resena resena,
-                                 MotivoReporteResena motivo, String comentario) {
+    public SolicitudReporteResena(int id, Usuario usuario, Resena resena, MotivoReporteResena motivo, String
+        comentario) {
         super(id, usuario, comentario);
         this.resena = resena;
         this.motivo = motivo;
@@ -40,9 +41,6 @@ public class SolicitudReporteResena extends Solicitud {
     }
 
     public void setResena(Resena resena) {
-        if (this.resena != null && (resena == null || this.resena.getId() != resena.getId())) {
-            throw new IllegalStateException("No se puede cambiar la resena de la solicitud.");
-        }
         this.resena = resena;
     }
 

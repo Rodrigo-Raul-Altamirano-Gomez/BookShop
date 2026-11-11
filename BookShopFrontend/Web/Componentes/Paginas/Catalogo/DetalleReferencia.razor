@@ -33,7 +33,7 @@
                 <p>@Referencia.Descripcion</p>
                 <button class="btn btn-secondary" @onclick="AlternarSeguimiento">
                     <Icono Nombre="follow" />
-                    @(Seguimientos ? "Dejar de seguir" : $"Seguir {Singular}")
+                    @(seguido ? "Dejar de seguir" : $"Seguir {Singular}")
                 </button>
 
             </div>

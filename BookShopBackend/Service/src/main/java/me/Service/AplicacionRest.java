@@ -20,23 +20,12 @@ import me.Service.usuario.UsuarioRS;
 
 @ApplicationPath("webresources")
 public class AplicacionRest extends Application {
+
     @Override
     public Set<Class<?>> getClasses() {
-        return Set.of(
-                AutorRS.class,
-                CategoriaRS.class,
-                EditorialRS.class,
-                LibroRS.class,
-                DireccionEnvioRS.class,
-                MetodoPagoRS.class,
-                LibroGuardadoRS.class,
-                SeguimientoRS.class,
-                CarritoRS.class,
-                CuponRS.class,
-                PedidoRS.class,
-                ResenaRS.class,
-                RecomendacionRS.class,
-                UsuarioRS.class,
-                Errores.class);
+        return Set.of(AutorRS.class, CategoriaRS.class, EditorialRS.class, LibroRS.class,
+            DireccionEnvioRS.class, MetodoPagoRS.class, LibroGuardadoRS.class, SeguimientoRS.class,
+            CarritoRS.class, CuponRS.class, PedidoRS.class, ResenaRS.class, RecomendacionRS.class,
+            UsuarioRS.class, Errores.class);
     }
 }

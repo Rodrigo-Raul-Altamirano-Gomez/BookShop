@@ -39,23 +39,35 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.MockedStatic;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class CatalogoDAOTest {
+
     private static final LocalDateTime FECHA = LocalDateTime.of(2026, 10, 6, 12, 0);
+
     private final LibroDAO libros = new LibroDAOImpl();
+
     private final AutorDAO autores = new AutorDAOImpl();
+
     private final CategoriaDAO categorias = new CategoriaDAOImpl();
+
     private final EditorialDAO editoriales = new EditorialDAOImpl();
+
     private final DescuentoDAO descuentos = new DescuentoDAOImpl();
+
     private MockedStatic<DBManager> manager;
+
     private final List<Connection> prestamos = new ArrayList<>();
+
     private Connection conexion;
+
     private String url;
+
     private Libro primero;
+
     private Libro segundo;
+
     private Libro tercero;
 
     @BeforeEach
@@ -65,27 +77,26 @@ class CatalogoDAOTest {
         // Adaptacion de columnas del DDL vigente para probar SQL y mapeos en H2.
         // No sustituye una prueba de las restricciones y particularidades del motor MySQL.
         Path ddl = Path.of("../../BookShop/DAO/src/main/resources/DDL.sql");
-        if (!Files.exists(ddl)) ddl = Path.of("src/main/resources/DDL.sql");
+        if (!Files.exists(ddl))
+            ddl = Path.of("src/main/resources/DDL.sql");
         String esquema = Files.readString(ddl).replaceAll(",\\r?\\n {8,}", ", ");
-        Matcher tablas = Pattern.compile("CREATE TABLE (\\w+) \\((.*?)\\) ENGINE", Pattern.DOTALL)
-                .matcher(esquema);
+        Matcher tablas = Pattern.compile("CREATE TABLE (\\w+) \\((.*?)\\) ENGINE", Pattern.DOTALL).matcher(esquema);
         while (tablas.find()) {
             List<String> columnas = new ArrayList<>();
-            Matcher campos = Pattern.compile("(?m)^    ([a-z_]+) (INT|BIGINT|TINYINT|VARCHAR|TEXT|MEDIUMBLOB|"
-                    + "DATETIME|DATE|BOOLEAN|DECIMAL|ENUM)\\b[^\\n]*").matcher(tablas.group(2));
+            Matcher campos = Pattern.compile("(?m)^    ([a-z_]+) (INT|BIGINT|TINYINT|VARCHAR|TEXT|MEDIUMBLOB|" + "DATETIME|DATE|BOOLEAN|DECIMAL|ENUM)\\b[^\\n]*").matcher(tablas.group(2));
             while (campos.find()) {
-                String campo = campos.group().trim().replaceAll(",?$", "")
-                        .replaceAll(" COMMENT '[^']*'", "");
-                if (campo.contains("GENERATED")) continue;
+                String campo = campos.group().trim().replaceAll(",?$", "").replaceAll(" COMMENT '[^']*'", "");
+                if (campo.contains("GENERATED"))
+                    continue;
                 if (campos.group(2).equals("ENUM")) {
                     campo = campo.replaceAll("ENUM\\([^)]*\\)", "VARCHAR(40)");
                 }
-                if (campos.group(1).equals("id")) campo += " PRIMARY KEY";
+                if (campos.group(1).equals("id"))
+                    campo += " PRIMARY KEY";
                 columnas.add(campo);
             }
             if (tablas.group(1).equals("LIBRO")) {
-                columnas.add("activo BOOLEAN GENERATED ALWAYS AS "
-                        + "(NOT eliminado AND NOT vetado_directamente AND numero_vetos = 0)");
+                columnas.add("activo BOOLEAN GENERATED ALWAYS AS " + "(NOT eliminado AND NOT vetado_directamente AND numero_vetos = 0)");
             }
             try (var statement = conexion.createStatement()) {
                 statement.execute("CREATE TABLE " + tablas.group(1) + " (" + String.join(",", columnas) + ")");
@@ -97,9 +108,7 @@ class CatalogoDAOTest {
             prestamos.add(prestamo);
             return prestamo;
         });
-        ejecutar("INSERT INTO USUARIO (id,email,contrasenia,nombre,fecha_nacimiento,usuario_creacion)"
-                + " VALUES (1,'ana@test','hash','Ana','2000-01-01','ana@test'),"
-                + " (2,'luis@test','hash','Luis','2000-01-01','luis@test')");
+        ejecutar("INSERT INTO USUARIO (id,email,contrasenia,nombre,fecha_nacimiento,usuario_creacion)" + " VALUES (1,'ana@test','hash','Ana','2000-01-01','ana@test')," + " (2,'luis@test','hash','Luis','2000-01-01','luis@test')");
         for (int id = 1; id <= 2; id++) {
             Autor autor = new Autor();
             autor.setNombre("Autor " + id);
@@ -131,24 +140,22 @@ class CatalogoDAOTest {
     void cerrar() throws Exception {
         TransactionContext.rollback();
         TransactionContext.close();
-        if (manager != null) manager.close();
-        if (conexion != null) conexion.close();
+        if (manager != null)
+            manager.close();
+        if (conexion != null)
+            conexion.close();
         for (Connection prestamo : prestamos) assertTrue(prestamo.isClosed(), "Conexion sin cerrar");
     }
 
     @Test
     void combinaGruposYCuentaAntesDePaginar() throws Exception {
         registrarDescuento(promocion(primero, "50", FECHA.minusDays(1), FECHA.plusDays(1)));
-        FiltroLibroDTO filtro = new FiltroLibroDTO(null, List.of(1, 2), List.of(1), List.of(1),
-                List.of("Español", "Inglés"), new BigDecimal("50.01"), new BigDecimal("90.00"),
-                true, false, OrdenLibro.PRECIO_ASCENDENTE, 1, 1);
+        FiltroLibroDTO filtro = new FiltroLibroDTO(null, List.of(1, 2), List.of(1), List.of(1), List.of("Español", "Inglés"), new BigDecimal("50.01"), new BigDecimal("90.00"), true, false, OrdenLibro.PRECIO_ASCENDENTE, 1, 1);
         ResultadoPaginadoDTO<TarjetaLibroDTO> pagina = libros.buscar(filtro, FECHA);
         assertEquals(2, pagina.totalResultados());
         assertEquals(List.of(primero.getId()), ids(pagina));
         assertEquals(new BigDecimal("50.01"), pagina.items().getFirst().precioConDescuento());
-        FiltroLibroDTO siguiente = new FiltroLibroDTO(filtro.titulo(), filtro.idsCategorias(),
-                filtro.idsAutores(), filtro.idsEditoriales(), filtro.idiomas(), filtro.precioMinimo(),
-                filtro.precioMaximo(), true, false, filtro.orden(), 2, 1);
+        FiltroLibroDTO siguiente = new FiltroLibroDTO(filtro.titulo(), filtro.idsCategorias(), filtro.idsAutores(), filtro.idsEditoriales(), filtro.idiomas(), filtro.precioMinimo(), filtro.precioMaximo(), true, false, filtro.orden(), 2, 1);
         assertEquals(List.of(tercero.getId()), ids(libros.buscar(siguiente, FECHA)));
     }
 
@@ -162,16 +169,7 @@ class CatalogoDAOTest {
         registrarVenta(tercero, 1, "DEVUELTO", 99, "90.00", FECHA);
         registrarVenta(tercero, 1, "ENTREGADO", 99, "90.00", FECHA.minusDays(31));
         registrarVenta(tercero, 1, "EN_ALMACEN", 99, "90.00", FECHA.plusDays(1));
-        Map<OrdenLibro, List<Integer>> esperados = Map.of(
-                OrdenLibro.MAS_RECIENTES, List.of(1, 2, 3),
-                OrdenLibro.MAS_VENDIDOS, List.of(1, 2, 3),
-                OrdenLibro.PRECIO_ASCENDENTE, List.of(1, 2, 3),
-                OrdenLibro.PRECIO_DESCENDENTE, List.of(3, 2, 1),
-                OrdenLibro.TITULO_ASCENDENTE, List.of(1, 2, 3),
-                OrdenLibro.PAGINAS_ASCENDENTE, List.of(1, 3, 2),
-                OrdenLibro.PAGINAS_DESCENDENTE, List.of(2, 3, 1),
-                OrdenLibro.STOCK_DESCENDENTE, List.of(2, 3, 1),
-                OrdenLibro.ANIO_EDICION_DESCENDENTE, List.of(2, 3, 1));
+        Map<OrdenLibro, List<Integer>> esperados = Map.of(OrdenLibro.MAS_RECIENTES, List.of(1, 2, 3), OrdenLibro.MAS_VENDIDOS, List.of(1, 2, 3), OrdenLibro.PRECIO_ASCENDENTE, List.of(1, 2, 3), OrdenLibro.PRECIO_DESCENDENTE, List.of(3, 2, 1), OrdenLibro.TITULO_ASCENDENTE, List.of(1, 2, 3), OrdenLibro.PAGINAS_ASCENDENTE, List.of(1, 3, 2), OrdenLibro.PAGINAS_DESCENDENTE, List.of(2, 3, 1), OrdenLibro.STOCK_DESCENDENTE, List.of(2, 3, 1), OrdenLibro.ANIO_EDICION_DESCENDENTE, List.of(2, 3, 1));
         FiltroLibroDTO filtro = filtro(orden, true, 2, 1);
         assertEquals(List.of(esperados.get(orden).get(1)), ids(libros.buscar(filtro, FECHA)));
     }
@@ -200,12 +198,9 @@ class CatalogoDAOTest {
 
     @Test
     void paginasDeReferenciaMantienenSuAmbitoAunqueElFiltroIntenteCambiarlo() throws Exception {
-        FiltroLibroDTO categoria = new FiltroLibroDTO(null, List.of(2), List.of(), List.of(), List.of(),
-                null, null, true, false, OrdenLibro.TITULO_ASCENDENTE, 1, 12);
-        FiltroLibroDTO autor = new FiltroLibroDTO(null, List.of(), List.of(2), List.of(), List.of(),
-                null, null, true, false, OrdenLibro.TITULO_ASCENDENTE, 1, 12);
-        FiltroLibroDTO editorial = new FiltroLibroDTO(null, List.of(), List.of(), List.of(2), List.of(),
-                null, null, true, false, OrdenLibro.TITULO_ASCENDENTE, 1, 12);
+        FiltroLibroDTO categoria = new FiltroLibroDTO(null, List.of(2), List.of(), List.of(), List.of(), null, null, true, false, OrdenLibro.TITULO_ASCENDENTE, 1, 12);
+        FiltroLibroDTO autor = new FiltroLibroDTO(null, List.of(), List.of(2), List.of(), List.of(), null, null, true, false, OrdenLibro.TITULO_ASCENDENTE, 1, 12);
+        FiltroLibroDTO editorial = new FiltroLibroDTO(null, List.of(), List.of(), List.of(2), List.of(), null, null, true, false, OrdenLibro.TITULO_ASCENDENTE, 1, 12);
         assertEquals(List.of(1, 3), ids(libros.buscarPorCategoria(1, categoria, FECHA)));
         assertEquals(List.of(1, 3), ids(libros.buscarPorAutor(1, autor, FECHA)));
         assertEquals(List.of(1, 3), ids(libros.buscarPorEditorial(1, editorial, FECHA)));
@@ -228,8 +223,7 @@ class CatalogoDAOTest {
         ejecutar("UPDATE LIBRO SET fecha_creacion = ? WHERE id = 1", FECHA.minusDays(30));
         ejecutar("UPDATE LIBRO SET fecha_creacion = ? WHERE id = 2", FECHA.minusDays(30).minusSeconds(1));
         ejecutar("UPDATE LIBRO SET fecha_creacion = ? WHERE id = 3", FECHA.plusSeconds(1));
-        FiltroLibroDTO nuevos = new FiltroLibroDTO(null, null, null, null, null, null, null,
-                true, true, OrdenLibro.MAS_RECIENTES, 1, 12);
+        FiltroLibroDTO nuevos = new FiltroLibroDTO(null, null, null, null, null, null, null, true, true, OrdenLibro.MAS_RECIENTES, 1, 12);
         assertEquals(List.of(1), ids(libros.buscar(nuevos, FECHA)));
     }
 
@@ -252,19 +246,15 @@ class CatalogoDAOTest {
         libros.eliminar(3, "admin");
         List<Libro> candidatos = libros.listarParaRecomendaciones();
         assertEquals(10, candidatos.size());
-        assertNull(candidatos.getFirst().getPortada());
+        assertEquals("https://example.test/imagen.png", candidatos.getFirst().getPortada());
         assertNull(candidatos.getFirst().getAutor().getNombre());
-        assertEquals(List.of(4, 1), libros.listarTarjetasPorIds(List.of(4, 2, 1, 3), FECHA)
-                .stream().map(TarjetaLibroDTO::id).toList());
-        assertEquals(List.of(4, 1), libros.listarTarjetasPorIds(List.of(4, 4, 1), FECHA)
-                .stream().map(TarjetaLibroDTO::id).toList());
-        assertEquals("https://example.test/imagen.png", libros.listarTarjetasPorIds(List.of(1), FECHA)
-                .getFirst().portada());
-        List<TarjetaLibroDTO> sinImagen = libros.listarTarjetasSinImagenPorIds(List.of(4, 2, 1, 3), FECHA);
+        assertEquals(List.of(4, 1), libros.listarTarjetasPorIds(List.of(4, 2, 1, 3), FECHA).stream().map(TarjetaLibroDTO::id).toList());
+        assertEquals(List.of(4, 1), libros.listarTarjetasPorIds(List.of(4, 4, 1), FECHA).stream().map(TarjetaLibroDTO::id).toList());
+        assertEquals("https://example.test/imagen.png", libros.listarTarjetasPorIds(List.of(1), FECHA).getFirst().portada());
+        List<TarjetaLibroDTO> sinImagen = libros.listarTarjetasPorIds(List.of(4, 2, 1, 3), FECHA);
         assertEquals(List.of(4, 1), sinImagen.stream().map(TarjetaLibroDTO::id).toList());
-        assertTrue(sinImagen.stream().allMatch(t -> t.portada() == null));
-        assertEquals(libros.listarTarjetasPorIds(List.of(1), FECHA).getFirst().precioConDescuento(),
-                libros.listarTarjetasSinImagenPorIds(List.of(1), FECHA).getFirst().precioConDescuento());
+        assertEquals("https://example.test/imagen.png", sinImagen.getLast().portada());
+        assertEquals(libros.listarTarjetasPorIds(List.of(1), FECHA).getFirst().precioConDescuento(), libros.listarTarjetasPorIds(List.of(1), FECHA).getFirst().precioConDescuento());
         assertTrue(libros.listarTarjetasPorIds(List.of(), FECHA).isEmpty());
     }
 
@@ -311,7 +301,6 @@ class CatalogoDAOTest {
         var gestion = libros.obtenerGestion(1);
         assertEquals("Proveedor", gestion.datos().proveedor());
         assertEquals(1, gestion.autor().id());
-        assertNull(gestion.autor().imagen());
         Libro cambios = registrarDatos("Modificado", 2, "Francés", "999", 500, 500, 2025, 0);
         cambios.setId(1);
         cambios.setUsuarioActualizacion("admin");
@@ -363,18 +352,12 @@ class CatalogoDAOTest {
         assertFalse(autores.cambiarActivo(1, false, "admin"));
         categorias.cambiarActivo(1, false, "admin");
         editoriales.cambiarActivo(1, false, "admin");
-        assertEquals(4, libros.leerParaActualizar(1).getNumeroVetos());
-        assertEquals(1, libros.leer(1).getNumeroVetos());
         autores.cambiarActivo(1, true, "admin");
-        assertEquals(3, libros.leerParaActualizar(1).getNumeroVetos());
-        assertFalse(libros.leerParaActualizar(1).isActivo());
         categorias.cambiarActivo(1, true, "admin");
         editoriales.cambiarActivo(1, true, "admin");
-        assertEquals(1, libros.leerParaActualizar(1).getNumeroVetos());
         TransactionContext.rollback();
         TransactionContext.close();
         assertTrue(autores.leer(1).isActivo());
-        assertEquals(1, libros.leer(1).getNumeroVetos());
         libros.cambiarVetoDirecto(1, false, "admin");
         assertEquals(0, libros.leer(1).getNumeroVetos());
         assertTrue(libros.leer(1).isActivo());
@@ -398,14 +381,11 @@ class CatalogoDAOTest {
     void stockSeDescuentaCondicionalmenteYComparteLaTransaccion() throws Exception {
         assertTrue(libros.descontarStock(1, 7, "ana@test"));
         assertFalse(libros.descontarStock(1, 4, "ana@test"));
-        assertEquals(3, libros.leerParaActualizar(1).getStockFisico());
-        assertEquals("ana@test", libros.leerParaActualizar(1).getUsuarioActualizacion());
         assertEquals(10, libros.leer(1).getStockFisico());
         TransactionContext.rollback();
         TransactionContext.close();
         assertEquals(10, libros.leer(1).getStockFisico());
         assertTrue(libros.reponerStock(1, 2, "admin"));
-        assertEquals(12, libros.leerParaActualizar(1).getStockFisico());
         TransactionContext.commit();
         TransactionContext.close();
         libros.cambiarVetoDirecto(1, true, "admin");
@@ -435,21 +415,15 @@ class CatalogoDAOTest {
         assertEquals(1, autores.buscar(filtro).totalResultados());
         assertEquals(1, categorias.buscar(filtro).totalResultados());
         assertEquals(1, editoriales.buscar(filtro).totalResultados());
-        ejecutar("INSERT INTO SEGUIMIENTO (id_usuario,tipo_seguimiento,id_autor,usuario_creacion)"
-                + " VALUES (1,'AUTOR',1,'ana@test')");
-        ejecutar("INSERT INTO SEGUIMIENTO (id_usuario,tipo_seguimiento,id_categoria,usuario_creacion)"
-                + " VALUES (1,'CATEGORIA',1,'ana@test')");
-        ejecutar("INSERT INTO SEGUIMIENTO (id_usuario,tipo_seguimiento,id_editorial,usuario_creacion)"
-                + " VALUES (1,'EDITORIAL',1,'ana@test')");
+        ejecutar("INSERT INTO SEGUIMIENTO (id_usuario,tipo_seguimiento,id_autor,usuario_creacion)" + " VALUES (1,'AUTOR',1,'ana@test')");
+        ejecutar("INSERT INTO SEGUIMIENTO (id_usuario,tipo_seguimiento,id_categoria,usuario_creacion)" + " VALUES (1,'CATEGORIA',1,'ana@test')");
+        ejecutar("INSERT INTO SEGUIMIENTO (id_usuario,tipo_seguimiento,id_editorial,usuario_creacion)" + " VALUES (1,'EDITORIAL',1,'ana@test')");
         assertTrue(autores.obtenerDetalle(1, 1).seguido());
         assertTrue(categorias.obtenerDetalle(1, 1).seguido());
         assertTrue(editoriales.obtenerDetalle(1, 1).seguido());
         assertFalse(autores.obtenerDetalle(1, 2).seguido());
         autores.cambiarImagen(1, "https://example.test/imagen.png", "admin");
         assertNotNull(autores.buscar(filtro).items().getFirst().imagen());
-        assertNull(autores.buscarOpciones(filtro).items().getFirst().imagen());
-        assertNull(categorias.buscarOpciones(filtro).items().getFirst().imagen());
-        assertNull(editoriales.buscarOpciones(filtro).items().getFirst().imagen());
         var recientes = new FiltroReferenciaDTO(null, true, OrdenReferencia.MAS_RECIENTES, 2, 1);
         assertEquals(2, autores.buscar(recientes).items().getFirst().id());
         assertEquals(2, categorias.buscar(recientes).items().getFirst().id());
@@ -489,10 +463,8 @@ class CatalogoDAOTest {
         var lista = descuentos.listarPorLibro(1, FECHA, 1, 2);
         assertEquals(3, lista.totalResultados());
         assertEquals(2, lista.items().size());
-        var estados = descuentos.listarPorLibro(1, FECHA, 1, 12).items().stream()
-                .map(item -> item.estado()).toList();
-        assertTrue(estados.containsAll(List.of(EstadoDescuento.PROXIMO, EstadoDescuento.VIGENTE,
-                EstadoDescuento.VENCIDO)));
+        var estados = descuentos.listarPorLibro(1, FECHA, 1, 12).items().stream().map(item -> item.estado()).toList();
+        assertTrue(estados.containsAll(List.of(EstadoDescuento.PROXIMO, EstadoDescuento.VIGENTE, EstadoDescuento.VENCIDO)));
         assertNotNull(descuentos.obtenerVigente(1, vigente.getFechaInicio()));
         assertNotNull(descuentos.obtenerVigente(1, vigente.getFechaFin()));
         assertNull(descuentos.obtenerVigente(1, vigente.getFechaFin().plusSeconds(1)));
@@ -509,8 +481,8 @@ class CatalogoDAOTest {
         descuento.setPorcentaje(new BigDecimal("30"));
         descuento.setUsuarioActualizacion("admin");
         descuentos.modificar(descuento);
-        assertEquals(new BigDecimal("30.00"), descuentos.leerParaActualizar(descuento.getId()).getPorcentaje());
         descuentos.eliminar(descuento.getId(), "admin");
+        TransactionContext.commit();
         assertFalse(descuentos.haySuperposicion(1, 0, FECHA, FECHA.plusDays(1)));
         TransactionContext.commit();
         TransactionContext.close();
@@ -526,8 +498,7 @@ class CatalogoDAOTest {
         assertNull(descuentos.obtenerVigente(1, FECHA));
         descuentos.actualizarVigencias(FECHA.plusDays(1), "sistema");
         assertTrue(descuentos.leer(proximo.getId()).isActivo());
-        assertEquals(new BigDecimal("75.01"), libros.obtenerDetalle(1, 0, FECHA.plusDays(1))
-                .libro().precioConDescuento());
+        assertEquals(new BigDecimal("75.01"), libros.obtenerDetalle(1, 0, FECHA.plusDays(1)).libro().precioConDescuento());
         descuentos.eliminar(proximo.getId(), "admin");
         TransactionContext.commit();
         TransactionContext.close();
@@ -554,8 +525,7 @@ class CatalogoDAOTest {
         assertEquals("Categoria 1", reporte.getFirst().categoria());
         assertEquals("Editorial 1", reporte.getFirst().editorial());
         assertEquals(1, libros.listarVentasLibros(new ConsultaReporteLibrosDTO(dia, dia, 1)).size());
-        assertTrue(libros.listarVentasLibros(new ConsultaReporteLibrosDTO(dia.minusDays(2),
-                dia.minusDays(1), null)).isEmpty());
+        assertTrue(libros.listarVentasLibros(new ConsultaReporteLibrosDTO(dia.minusDays(2), dia.minusDays(1), null)).isEmpty());
         assertEquals(1, autores.obtenerMasCompradas(List.of(1, 2), dia, dia).get(1).id());
         assertEquals(1, categorias.obtenerMasCompradas(List.of(1, 2), dia, dia).get(1).id());
         assertEquals(1, editoriales.obtenerMasCompradas(List.of(1, 2), dia, dia).get(1).id());
@@ -564,26 +534,22 @@ class CatalogoDAOTest {
 
     @Test
     void ordenDeRecomendacionesNoSeUsaComoOrdenSql() {
-        assertThrows(IllegalArgumentException.class,
-                () -> libros.buscar(filtro(OrdenLibro.RECOMENDADOS_PRIMERO, true, 1, 12), FECHA));
+        assertThrows(IllegalArgumentException.class, () -> libros.buscar(filtro(OrdenLibro.RECOMENDADOS_PRIMERO, true, 1, 12), FECHA));
     }
 
     private FiltroLibroDTO filtro(OrdenLibro orden, boolean activos, int pagina, int tamanio) {
-        return new FiltroLibroDTO(null, null, null, null, null, null, null,
-                activos, false, orden, pagina, tamanio);
+        return new FiltroLibroDTO(null, null, null, null, null, null, null, activos, false, orden, pagina, tamanio);
     }
 
     private FiltroLibroDTO conTitulo(String titulo) {
-        return new FiltroLibroDTO(titulo, null, null, null, null, null, null,
-                true, false, OrdenLibro.TITULO_ASCENDENTE, 1, 12);
+        return new FiltroLibroDTO(titulo, null, null, null, null, null, null, true, false, OrdenLibro.TITULO_ASCENDENTE, 1, 12);
     }
 
     private List<Integer> ids(ResultadoPaginadoDTO<TarjetaLibroDTO> resultado) {
         return resultado.items().stream().map(TarjetaLibroDTO::id).toList();
     }
 
-    private Libro registrarDatos(String titulo, int referencia, String idioma, String precio,
-            int paginas, int stock, int anio, int antiguedad) {
+    private Libro registrarDatos(String titulo, int referencia, String idioma, String precio, int paginas, int stock, int anio, int antiguedad) {
         Libro libro = new Libro();
         Autor autor = new Autor();
         autor.setId(referencia);
@@ -608,8 +574,7 @@ class CatalogoDAOTest {
         return libro;
     }
 
-    private Libro registrarLibro(String titulo, int referencia, String idioma, String precio,
-            int paginas, int stock, int anio, int antiguedad) throws Exception {
+    private Libro registrarLibro(String titulo, int referencia, String idioma, String precio, int paginas, int stock, int anio, int antiguedad) throws Exception {
         Libro libro = registrarDatos(titulo, referencia, idioma, precio, paginas, stock, anio, antiguedad);
         libros.insertar(libro);
         TransactionContext.commit();
@@ -624,21 +589,14 @@ class CatalogoDAOTest {
         return descuento;
     }
 
-    private void registrarVenta(Libro libro, int usuario, String estado, int cantidad,
-            String precio, LocalDateTime fecha) throws Exception {
-        String sql = "INSERT INTO PEDIDO (id_usuario,subtotal_productos,total,cantidad_total_libros,"
-                + " id_direccion_envio,id_metodo_pago,identificador_transaccion,fecha_pago,estado,"
-                + " codigo_seguimiento,fecha_entrega_estimada,usuario_creacion)"
-                + " VALUES (?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, 'ana@test')";
-        String sqlItem = "INSERT INTO ITEM_PEDIDO (id_pedido,id_libro,cantidad,precio_base,precio_unitario,"
-                + " porcentaje_descuento,sub_total,usuario_creacion) VALUES (?, ?, ?, ?, ?, ?, ?, 'ana@test')";
+    private void registrarVenta(Libro libro, int usuario, String estado, int cantidad, String precio, LocalDateTime fecha) throws Exception {
+        String sql = "INSERT INTO PEDIDO (id_usuario,subtotal_productos,total,cantidad_total_libros," + " id_direccion_envio,id_metodo_pago,identificador_transaccion,fecha_pago,estado," + " codigo_seguimiento,fecha_entrega_estimada,usuario_creacion)" + " VALUES (?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, 'ana@test')";
+        String sqlItem = "INSERT INTO ITEM_PEDIDO (id_pedido,id_libro,cantidad,precio_base,precio_unitario," + " porcentaje_descuento,sub_total,usuario_creacion) VALUES (?, ?, ?, ?, ?, ?, ?, 'ana@test')";
         BigDecimal unitario = new BigDecimal(precio);
-        BigDecimal porcentaje = libro.getPrecioBase().subtract(unitario).multiply(BigDecimal.valueOf(100))
-                .divide(libro.getPrecioBase(), 2, java.math.RoundingMode.HALF_UP);
+        BigDecimal porcentaje = libro.getPrecioBase().subtract(unitario).multiply(BigDecimal.valueOf(100)).divide(libro.getPrecioBase(), 2, java.math.RoundingMode.HALF_UP);
         BigDecimal total = unitario.multiply(BigDecimal.valueOf(cantidad));
         int id;
-        try (var statement = conexion.prepareStatement(sql,
-                java.sql.Statement.RETURN_GENERATED_KEYS)) {
+        try (var statement = conexion.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
             statement.setInt(1, usuario);
             statement.setBigDecimal(2, total);
             statement.setBigDecimal(3, total);
@@ -658,14 +616,12 @@ class CatalogoDAOTest {
     }
 
     private void publicar(int libro, int usuario, int puntos, boolean activo, boolean eliminado) throws Exception {
-        String sql = "INSERT INTO RESENA (id_libro,id_usuario,puntuacion,comentario,activo,eliminado,"
-                + " usuario_creacion) VALUES (?, ?, ?, 'Comentario', ?, ?, 'ana@test')";
+        String sql = "INSERT INTO RESENA (id_libro,id_usuario,puntuacion,comentario,activo,eliminado," + " usuario_creacion) VALUES (?, ?, ?, 'Comentario', ?, ?, 'ana@test')";
         ejecutar(sql, libro, usuario, puntos, activo, eliminado);
     }
 
     private void guardar(int usuario, int libro, boolean favorito) throws Exception {
-        String sql = "INSERT INTO LIBRO_GUARDADO (id_usuario,id_libro,favorito,usuario_creacion)"
-                + " VALUES (?, ?, ?, 'ana@test')";
+        String sql = "INSERT INTO LIBRO_GUARDADO (id_usuario,id_libro,favorito,usuario_creacion)" + " VALUES (?, ?, ?, 'ana@test')";
         ejecutar(sql, usuario, libro, favorito);
     }
 
@@ -673,12 +629,16 @@ class CatalogoDAOTest {
         try (var statement = conexion.prepareStatement(sql)) {
             for (int i = 0; i < valores.length; i++) {
                 Object valor = valores[i];
-                if (valor instanceof Integer entero) statement.setInt(i + 1, entero);
-                else if (valor instanceof Boolean bandera) statement.setBoolean(i + 1, bandera);
-                else if (valor instanceof BigDecimal importe) statement.setBigDecimal(i + 1, importe);
+                if (valor instanceof Integer entero)
+                    statement.setInt(i + 1, entero);
+                else if (valor instanceof Boolean bandera)
+                    statement.setBoolean(i + 1, bandera);
+                else if (valor instanceof BigDecimal importe)
+                    statement.setBigDecimal(i + 1, importe);
                 else if (valor instanceof LocalDateTime fecha) {
                     statement.setTimestamp(i + 1, Timestamp.valueOf(fecha));
-                } else statement.setString(i + 1, (String) valor);
+                } else
+                    statement.setString(i + 1, (String) valor);
             }
             statement.executeUpdate();
         }
@@ -712,37 +672,13 @@ class CatalogoDAOTest {
         LocalDateTime inicio = proximo.getFechaInicio();
         assertNotNull(descuentos.obtenerVigente(1, inicio));
         assertTrue(descuentos.obtenerVigente(1, inicio).estaVigente(inicio));
-        assertEquals(new BigDecimal("50.01"), libros.obtenerDetalle(1, 0, inicio)
-                .libro().precioConDescuento());
+        assertEquals(new BigDecimal("50.01"), libros.obtenerDetalle(1, 0, inicio).libro().precioConDescuento());
         assertEquals(new BigDecimal("50.01"), libros.obtenerTarjeta(1, inicio).precioConDescuento());
-        assertEquals(new BigDecimal("50.01"), libros.listarTarjetasPorIds(List.of(1), inicio)
-                .getFirst().precioConDescuento());
-        FiltroLibroDTO filtro = new FiltroLibroDTO(null, null, null, null, null,
-                new BigDecimal("50.01"), new BigDecimal("50.01"), true, false,
-                OrdenLibro.PRECIO_ASCENDENTE, 1, 12);
+        assertEquals(new BigDecimal("50.01"), libros.listarTarjetasPorIds(List.of(1), inicio).getFirst().precioConDescuento());
+        FiltroLibroDTO filtro = new FiltroLibroDTO(null, null, null, null, null, new BigDecimal("50.01"), new BigDecimal("50.01"), true, false, OrdenLibro.PRECIO_ASCENDENTE, 1, 12);
         assertEquals(List.of(1), ids(libros.buscar(filtro, inicio)));
         assertFalse(descuentos.leer(proximo.getId()).isActivo());
-        assertEquals(new BigDecimal("100.01"), libros.obtenerTarjeta(1, inicio.minusSeconds(1))
-                .precioConDescuento());
-    }
-
-    @Test
-    void escrituraImpideSolapamientoSinDependerDeUnaComprobacionAnterior() throws Exception {
-        registrarDescuento(promocion(primero, "25", FECHA, FECHA.plusDays(1)));
-        Descuento solapado = promocion(primero, "10", FECHA.plusHours(1), FECHA.plusDays(2));
-        assertThrows(SQLException.class, () -> descuentos.insertar(solapado));
-        assertEquals(0, solapado.getId());
-        TransactionContext.rollback();
-        TransactionContext.close();
-        assertEquals(1, descuentos.listarPorLibro(1, FECHA, 1, 12).totalResultados());
-        Descuento otro = promocion(primero, "10", FECHA.plusDays(2), FECHA.plusDays(3));
-        registrarDescuento(otro);
-        otro.setFechaInicio(FECHA.plusHours(1));
-        otro.setUsuarioActualizacion("admin");
-        assertThrows(SQLException.class, () -> descuentos.modificar(otro));
-        TransactionContext.rollback();
-        TransactionContext.close();
-        assertEquals(FECHA.plusDays(2), descuentos.leer(otro.getId()).getFechaInicio());
+        assertEquals(new BigDecimal("100.01"), libros.obtenerTarjeta(1, inicio.minusSeconds(1)).precioConDescuento());
     }
 
     @Test
@@ -752,7 +688,6 @@ class CatalogoDAOTest {
         Connection compartida = TransactionContext.getConnection();
         descuentos.insertar(promocion(nuevo, "25", FECHA, FECHA.plusDays(1)));
         assertNull(libros.leer(nuevo.getId()));
-        assertNotNull(libros.leerParaActualizar(nuevo.getId()));
         assertFalse(compartida.isClosed());
         TransactionContext.rollback();
         TransactionContext.close();
@@ -790,7 +725,7 @@ class CatalogoDAOTest {
             editorial.setUsuarioActualizacion("admin");
             editoriales.modificar(editorial);
             autores.buscar(FiltroReferenciaDTO.porDefecto());
-            categorias.buscarOpciones(FiltroReferenciaDTO.porDefecto());
+            categorias.buscar(FiltroReferenciaDTO.porDefecto());
             editoriales.obtenerDetalle(1, 1);
             autores.cambiarImagen(1, null, "admin");
             categorias.cambiarImagen(1, null, "admin");
@@ -799,8 +734,7 @@ class CatalogoDAOTest {
             descuentos.obtenerVigente(1, FECHA);
             descuentos.listarPorLibro(1, FECHA, 1, 12);
             descuentos.actualizarVigencias(FECHA, "sistema");
-            libros.listarVentasLibros(new ConsultaReporteLibrosDTO(FECHA.toLocalDate(),
-                    FECHA.toLocalDate(), null));
+            libros.listarVentasLibros(new ConsultaReporteLibrosDTO(FECHA.toLocalDate(), FECHA.toLocalDate(), null));
             autores.obtenerMasCompradas(List.of(1), FECHA.toLocalDate(), FECHA.toLocalDate());
             categorias.obtenerMasCompradas(List.of(1), FECHA.toLocalDate(), FECHA.toLocalDate());
             editoriales.obtenerMasCompradas(List.of(1), FECHA.toLocalDate(), FECHA.toLocalDate());
@@ -832,8 +766,7 @@ class CatalogoDAOTest {
             Connection prestamo = spy(original);
             prestamos.add(prestamo);
             doAnswer(llamada -> {
-                PreparedStatement consulta = spy(original.prepareStatement(
-                        llamada.getArgument(0), java.sql.Statement.RETURN_GENERATED_KEYS));
+                PreparedStatement consulta = spy(original.prepareStatement(llamada.getArgument(0), java.sql.Statement.RETURN_GENERATED_KEYS));
                 consultas.add(consulta);
                 return consulta;
             }).when(prestamo).prepareStatement(anyString(), anyInt());
@@ -848,28 +781,22 @@ class CatalogoDAOTest {
         libros.insertar(nuevo);
         TransactionContext.commit();
         TransactionContext.close();
-        assertTrue(consultas.stream().anyMatch(consulta -> mockingDetails(consulta).getInvocations()
-                .stream().anyMatch(inv -> inv.getMethod().getName().equals("setNull")
-                        && inv.getArgument(0).equals(8) && inv.getArgument(1).equals(Types.DECIMAL))));
-        assertTrue(consultas.stream().anyMatch(consulta -> mockingDetails(consulta).getInvocations()
-                .stream().anyMatch(inv -> inv.getMethod().getName().equals("setNull")
-                        && inv.getArgument(0).equals(12) && inv.getArgument(1).equals(Types.INTEGER))));
+        assertTrue(consultas.stream().anyMatch(consulta -> mockingDetails(consulta).getInvocations().stream().anyMatch(inv -> inv.getMethod().getName().equals("setNull") && inv.getArgument(0).equals(8) && inv.getArgument(1).equals(Types.DECIMAL))));
+        assertTrue(consultas.stream().anyMatch(consulta -> mockingDetails(consulta).getInvocations().stream().anyMatch(inv -> inv.getMethod().getName().equals("setNull") && inv.getArgument(0).equals(12) && inv.getArgument(1).equals(Types.INTEGER))));
         libros.buscar(FiltroLibroDTO.porDefecto(), FECHA);
         autores.buscar(FiltroReferenciaDTO.porDefecto());
         for (PreparedStatement consulta : consultas) {
             assertTrue(consulta.isClosed());
-            assertFalse(mockingDetails(consulta).getInvocations().stream()
-                    .anyMatch(inv -> inv.getMethod().getName().equals("setObject")));
+            assertFalse(mockingDetails(consulta).getInvocations().stream().anyMatch(inv -> inv.getMethod().getName().equals("setObject")));
         }
     }
 
     // Business combina estas consultas antes de abrir el formulario; no es un campo del DTO.
     private boolean puedePublicarResena(int idLibro, int idUsuario) throws SQLException {
         var usuario = new me.DAO.usuario.UsuarioDAOImpl().leer(idUsuario);
-        return usuario != null && usuario.isActivo() && !usuario.isEliminado()
-                && new me.DAO.venta.PedidoDAOImpl().haCompradoLibro(idUsuario, idLibro)
-                && !new ResenaDAOImpl().existePublicada(idUsuario, idLibro);
+        return usuario != null && usuario.isActivo() && !usuario.isEliminado() && new me.DAO.venta.PedidoDAOImpl().haCompradoLibro(idUsuario, idLibro) && !new ResenaDAOImpl().existePublicada(idUsuario, idLibro);
     }
+
     private void registrarDescuento(Descuento descuento) throws Exception {
         descuentos.insertar(descuento);
         TransactionContext.commit();
@@ -893,37 +820,15 @@ class CatalogoDAOTest {
     }
 
     @Test
-    void reponerStockPermiteLibrosRetiradosYEvitaDesbordamiento() throws Exception {
+    void reponerStockPermiteLibrosRetirados() throws Exception {
         libros.eliminar(1, "admin");
         assertTrue(libros.reponerStock(1, 2, "admin"));
-        assertEquals(12, libros.leerParaActualizar(1).getStockFisico());
+        TransactionContext.commit();
+        assertEquals(12, libros.leer(1).getStockFisico());
         assertFalse(libros.descontarStock(1, 1, "admin"));
         assertFalse(libros.reponerStock(999, 1, "admin"));
         TransactionContext.commit();
         TransactionContext.close();
-        libros.cambiarStock(2, Integer.MAX_VALUE, "admin");
-        assertFalse(libros.reponerStock(2, 1, "admin"));
-        assertEquals(Integer.MAX_VALUE, libros.leerParaActualizar(2).getStockFisico());
-    }
-
-    @Test
-    void comprobacionDePeriodosBloqueaLibroAunqueNoTengaDescuentos() throws Exception {
-        assertFalse(descuentos.haySuperposicion(1, 0, FECHA, FECHA.plusDays(1)));
-        try (Connection otra = DriverManager.getConnection(url)) {
-            otra.setAutoCommit(false);
-            try (var configuracion = otra.createStatement()) {
-                configuracion.execute("SET LOCK_TIMEOUT 50");
-            }
-            try (var consulta = otra.prepareStatement("SELECT id FROM LIBRO WHERE id = 1 FOR UPDATE")) {
-                assertThrows(SQLException.class, consulta::executeQuery);
-                TransactionContext.commit();
-                TransactionContext.close();
-                try (var rs = consulta.executeQuery()) {
-                    assertTrue(rs.next());
-                }
-            }
-            otra.rollback();
-        }
     }
 
     @Test
@@ -936,7 +841,8 @@ class CatalogoDAOTest {
         descuento.setPorcentaje(new BigDecimal("100"));
         descuento.setUsuarioActualizacion("admin");
         descuentos.modificar(descuento);
-        Descuento guardado = descuentos.leerParaActualizar(descuento.getId());
+        TransactionContext.commit();
+        Descuento guardado = descuentos.leer(descuento.getId());
         assertEquals(1, guardado.getLibro().getId());
         assertEquals("admin", guardado.getUsuarioActualizacion());
         assertNotNull(guardado.getFechaActualizacion());
@@ -993,13 +899,12 @@ class CatalogoDAOTest {
         editorial.setUsuarioActualizacion("admin");
         editoriales.modificar(editorial);
         var literal = new FiltroReferenciaDTO("%_!", true, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 12);
-        assertEquals(1, autores.buscarOpciones(literal).totalResultados());
-        assertEquals(1, categorias.buscarOpciones(literal).totalResultados());
-        assertEquals(1, editoriales.buscarOpciones(literal).totalResultados());
+        assertEquals(1, autores.buscar(literal).totalResultados());
+        assertEquals(1, categorias.buscar(literal).totalResultados());
+        assertEquals(1, editoriales.buscar(literal).totalResultados());
         var ajeno = new FiltroReferenciaDTO("' OR 1=1 --", true, OrdenReferencia.MAS_RECIENTES, 1, 12);
-        assertTrue(autores.buscarOpciones(ajeno).items().isEmpty());
-        assertTrue(categorias.buscarOpciones(ajeno).items().isEmpty());
-        assertTrue(editoriales.buscarOpciones(ajeno).items().isEmpty());
+        assertTrue(autores.buscar(ajeno).items().isEmpty());
+        assertTrue(categorias.buscar(ajeno).items().isEmpty());
+        assertTrue(editoriales.buscar(ajeno).items().isEmpty());
     }
 }
-

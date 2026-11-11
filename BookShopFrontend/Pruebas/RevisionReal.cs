@@ -15,8 +15,8 @@ public static class RevisionReal
         using var api = new HttpClientUtils(configuracion);
         var sesion = new SesionUsuario(api);
         var catalogo = new CatalogoServicio(api, sesion);
-        var cuenta = new CuentaServicio(api, sesion, catalogo);
-        var compras = new CompraServicio(api, sesion, catalogo);
+        var cuenta = new CuentaServicio(api, sesion);
+        var compras = new CompraServicio(api, sesion);
         await catalogo.Inicializar();
         if (!catalogo.Inicializado || catalogo.Idiomas.Count == 0) throw new Exception("No se pudo cargar el catálogo real.");
         var libros = await api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>("libros/busqueda", new FiltroLibroDTO());
@@ -49,7 +49,7 @@ public static class RevisionReal
             await cuenta.AlternarGuardado(idLibro, true);
             var favoritos = await api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>("cuenta/libros-guardados/busqueda?favorito=true", new FiltroLibroDTO());
             if (!favoritos.Items.Any(libro => libro.Id == idLibro)) throw new Exception("Favorito no persistido.");
-            await cuenta.AlternarSeguimiento("autores", detalle.IdAutor);
+            await cuenta.AlternarSeguimiento("autores", detalle.IdAutor, false);
             await compras.AgregarLibro(idLibro, 1);
             await compras.CambiarCantidad(idLibro, 2);
             if (compras.CantidadCarrito != 2) throw new Exception("Cantidad incorrecta.");

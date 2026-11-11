@@ -39,7 +39,7 @@
                                 <Icono Nombre="pin" />
                                 Dirección de envío
                             </h2>
-                            <button class="btn btn-secondary" @onclick="AbrirDireccion">
+                            <button class="btn btn-secondary" @onclick="() => formularioDireccion = true">
                                 <Icono Nombre="plus" />
                                 Añadir dirección
                             </button>
@@ -112,7 +112,7 @@
                                 <Icono Nombre="card" />
                                 Método de pago
                             </h2>
-                            <button class="btn btn-secondary" @onclick="AbrirMetodo">
+                            <button class="btn btn-secondary" @onclick="() => formularioMetodo = true">
                                 <Icono Nombre="plus" />
                                 Añadir método
                             </button>
@@ -139,7 +139,8 @@
                                                 class="selection-card btn btn-outline-secondary w-100 h-100
                                                     d-flex gap-3 text-start
                                                     @(metodoId == metodo.Id ? "selected" : "")"
-                                                disabled="@(!metodo.Vigente || procesando)" @onclick="() => Seleccionar(direccionId, metodo.Id, cuponId)">
+                                                disabled="@(!metodo.Vigente || procesando)"
+                                                @onclick="() => Seleccionar(direccionId, metodo.Id, cuponId)">
                                                 <span class="radio-mark">
                                                 </span>
                                                 <div>
@@ -209,7 +210,7 @@
                                             class="selection-card btn btn-outline-secondary w-100 h-100
                                                 d-flex gap-3 text-start
                                                 @(cuponId == cupon?.Id ? "selected" : "")"
-                                            @onclick="() => SeleccionarCupon(cupon)">
+                                            @onclick="() => Seleccionar(direccionId, metodoId, cupon?.Id)">
                                             <span class="radio-mark">
                                             </span>
                                             <div>
@@ -259,31 +260,28 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var linea in Compras.Carrito)
+                                @foreach (var linea in Compras.Resumen!.Items)
                                 {
-                                    var libro = Catalogo.Libros.FirstOrDefault(libro => libro.Id == linea.Key);
-                                    if (libro is not null)
-                                    {
-                                        <tr>
-                                            <td>
-                                                <div class="line-book d-flex align-items-center gap-3">
-                                                    <img src="@libro.Portada" alt="@libro.Titulo" />
-                                                    <strong>@libro.Titulo</strong>
-                                                </div>
-                                            </td>
-                                            <td>@linea.Value</td>
-                                            <td>
-                                                <div class="line-price d-flex flex-column gap-1">
-                                                    @if (libro.Descuento > 0)
-                                                    {
-                                                        <del>@Presentacion.Dinero(libro.PrecioOriginal)</del>
-                                                    }
-                                                    @Presentacion.Dinero(libro.Precio)
-                                                </div>
-                                            </td>
-                                            <td>@Presentacion.Dinero(libro.Precio * linea.Value)</td>
-                                        </tr>
-                                    }
+                                    <tr>
+                                        <td>
+                                            <div class="line-book d-flex align-items-center gap-3">
+                                                <img src="@(linea.Portada ?? "/images/book-placeholder.svg")"
+                                                    alt="@linea.Titulo" />
+                                                <strong>@linea.Titulo</strong>
+                                            </div>
+                                        </td>
+                                        <td>@linea.Cantidad</td>
+                                        <td>
+                                            <div class="line-price d-flex flex-column gap-1">
+                                                @if (linea.PorcentajeDescuento > 0)
+                                                {
+                                                    <del>@Presentacion.Dinero(linea.PrecioOriginal)</del>
+                                                }
+                                                @Presentacion.Dinero(linea.PrecioUnitario)
+                                            </div>
+                                        </td>
+                                        <td>@Presentacion.Dinero(linea.Subtotal)</td>
+                                    </tr>
                                 }
                             </tbody>
                         </table>
@@ -333,10 +331,10 @@
 </div>
 @if (formularioDireccion)
 {
-    <FormularioDireccion AlGuardar="GuardarDireccion" AlCerrar="CerrarDireccion" />
+    <FormularioDireccion AlGuardar="GuardarDireccion" AlCerrar="() => formularioDireccion = false" />
 }
 @if (formularioMetodo)
 {
-    <FormularioPago AlGuardar="GuardarMetodo" AlCerrar="CerrarMetodo" />
+    <FormularioPago AlGuardar="GuardarMetodo" AlCerrar="() => formularioMetodo = false" />
 }
 </Cargando>

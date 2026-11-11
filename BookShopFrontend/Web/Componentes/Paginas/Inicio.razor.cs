@@ -4,7 +4,7 @@ using Web.Modelos;
 
 namespace Web.Componentes.Paginas;
 
-public partial class Inicio : IDisposable
+public partial class Inicio
 {
     private string? errorCarga;
 
@@ -14,12 +14,10 @@ public partial class Inicio : IDisposable
 
     [Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
 
-    [Inject]
-    private SesionUsuario Sesion { get; set; } = default!;
-    private IEnumerable<Referencia> Categorias => Catalogo.Referencias.Where(r => r.Tipo == "categorias" && r
-        .Activo).Take(6);
-    private IEnumerable<Referencia> Autores => Catalogo.Referencias.Where(r => r.Tipo == "autores" && r
-        .Activo).Take(6);
+    private IEnumerable<Referencia> Categorias =>
+        Catalogo.Referencias.Where(r => r.Tipo == "categorias" && r.Activo).Take(6);
+    private IEnumerable<Referencia> Autores =>
+        Catalogo.Referencias.Where(r => r.Tipo == "autores" && r.Activo).Take(6);
     private IEnumerable<Referencia> Editoriales => Catalogo.Referencias.Where(r => r.Tipo == "editoriales"
         && r.Activo).Take(6);
     private List<Libro> LibrosNuevos = [], MasVendidos = [];
@@ -29,14 +27,14 @@ public partial class Inicio : IDisposable
         errorCarga = null;
         try
         {
-            Sesion.Cambiado += Actualizar;
             await Catalogo.Inicializar();
 
-            var nuevos = await Api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>("libros/busqueda", new FiltroLibroDTO { TamanioPagina = 8, SoloNuevos = true });
+            var nuevos = await Api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>("libros/busqueda",
+                new FiltroLibroDTO { TamanioPagina = 8, SoloNuevos = true });
             LibrosNuevos = nuevos.Items.Select(Presentacion.Libro).ToList();
-            var vendidos = await Api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>("libros/busqueda", new FiltroLibroDTO { Orden = "MAS_VENDIDOS", TamanioPagina = 8 });
+            var vendidos = await Api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>("libros/busqueda",
+                new FiltroLibroDTO { Orden = "MAS_VENDIDOS", TamanioPagina = 8 });
             MasVendidos = vendidos.Items.Select(Presentacion.Libro).ToList();
-            Sesion.Notificar();
         }
         catch (InvalidOperationException e)
         {
@@ -47,6 +45,4 @@ public partial class Inicio : IDisposable
             cargando = false;
         }
     }
-    private void Actualizar() => InvokeAsync(StateHasChanged);
-    public void Dispose() => Sesion.Cambiado -= Actualizar;
 }

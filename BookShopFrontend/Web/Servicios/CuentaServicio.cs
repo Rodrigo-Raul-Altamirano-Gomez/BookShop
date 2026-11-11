@@ -7,20 +7,16 @@ public class CuentaServicio
 {
     private readonly HttpClientUtils api;
     private readonly SesionUsuario Sesion;
-    private readonly CatalogoServicio Catalogo;
     public List<Direccion> Direcciones { get; } = [];
     public List<MetodoPago> Metodos { get; } = [];
     public List<Cupon> Cupones { get; } = [];
     public HashSet<int> Deseados { get; } = [];
     public HashSet<int> Favoritos { get; } = [];
-    public HashSet<string> Seguimientos { get; } = [];
-    public Dictionary<string, int> OrdenSeguimientos { get; } = [];
 
-    public CuentaServicio(HttpClientUtils api, SesionUsuario sesion, CatalogoServicio catalogo)
+    public CuentaServicio(HttpClientUtils api, SesionUsuario sesion)
     {
         this.api = api;
         Sesion = sesion;
-        Catalogo = catalogo;
         Sesion.Cerrada += Limpiar;
     }
 
@@ -31,8 +27,6 @@ public class CuentaServicio
         Cupones.Clear();
         Deseados.Clear();
         Favoritos.Clear();
-        Seguimientos.Clear();
-        OrdenSeguimientos.Clear();
 
     }
 
@@ -50,7 +44,8 @@ public class CuentaServicio
         long total;
         do
         {
-            var datos = await api.Get<ResultadoPaginadoDTO<DireccionEnvioDTO>>($"cuenta/direcciones?pagina={pagina}&tamanioPagina=10");
+            var datos = await api.Get<ResultadoPaginadoDTO<DireccionEnvioDTO>>(
+                $"cuenta/direcciones?pagina={pagina}&tamanioPagina=10");
             Direcciones.AddRange(datos.Items.Select(Presentacion.Direccion));
             total = datos.TotalResultados;
             pagina++;
@@ -64,7 +59,8 @@ public class CuentaServicio
         long total;
         do
         {
-            var datos = await api.Get<ResultadoPaginadoDTO<MetodoPagoDTO>>($"cuenta/metodos?pagina={pagina}&tamanioPagina=10");
+            var datos = await api.Get<ResultadoPaginadoDTO<MetodoPagoDTO>>(
+                $"cuenta/metodos?pagina={pagina}&tamanioPagina=10");
             Metodos.AddRange(datos.Items.Select(Presentacion.Metodo));
             total = datos.TotalResultados;
             pagina++;
@@ -78,12 +74,15 @@ public class CuentaServicio
         long total;
         do
         {
-            var datos = await api.Get<ResultadoPaginadoDTO<CuponDTO>>($"cuenta/cupones?pagina={pagina}&tamanioPagina=10");
+            var datos = await api.Get<ResultadoPaginadoDTO<CuponDTO>>(
+                $"cuenta/cupones?pagina={pagina}&tamanioPagina=10");
             foreach (var cupon in datos.Items)
             {
                 string estado = "Usado";
-                if (cupon.Estado == "DISPONIBLE") estado = "Disponible";
-                else if (cupon.Estado == "VENCIDO") estado = "Vencido";
+                if (cupon.Estado == "DISPONIBLE")
+                    estado = "Disponible";
+                else if (cupon.Estado == "VENCIDO")
+                    estado = "Vencido";
                 Cupones.Add(new Cupon
                 {
                     Id = cupon.Id,
@@ -163,51 +162,19 @@ public class CuentaServicio
 
     public static string TipoSeguimiento(string tipo)
     {
-        if (tipo == "autores") return "AUTOR";
-        if (tipo == "categorias") return "CATEGORIA";
+        if (tipo == "autores")
+            return "AUTOR";
+        if (tipo == "categorias")
+            return "CATEGORIA";
         return "EDITORIAL";
     }
 
-    public async Task CargarSeguimientos()
+    public async Task AlternarSeguimiento(string tipo, int id, bool seguido)
     {
-        Seguimientos.Clear();
-        OrdenSeguimientos.Clear();
-        foreach (var tipo in new[] { "autores", "categorias", "editoriales" })
-        {
-            int pagina = 1;
-            long total;
-            do
-            {
-                var datos = await api.Post<ResultadoPaginadoDTO<TarjetaReferenciaDTO>>("cuenta/seguimientos/busqueda", new ConsultaSeguimientosDTO
-                {
-                    Tipo = TipoSeguimiento(tipo),
-                    Orden = "MAS_RECIENTES",
-                    Pagina = pagina,
-                    TamanioPagina = 12
-                });
-                foreach (var dto in datos.Items)
-                {
-                    var clave = $"{tipo}:{dto.Id}";
-                    Seguimientos.Add(clave);
-                    OrdenSeguimientos[clave] = -(pagina - 1) * 12 - datos.Items.IndexOf(dto);
-                    if (!Catalogo.Referencias.Any(r => r.Tipo == tipo && r.Id == dto.Id))
-                        Catalogo.Referencias.Add(Presentacion.Referencia(dto, tipo));
-                }
-                total = datos.TotalResultados;
-                pagina++;
-            } while ((pagina - 1) * 12 < total);
-        }
-    }
-
-    public async Task AlternarSeguimiento(string tipo, int id)
-    {
-        if (!Sesion.RequerirAcceso())
-            return;
         string ruta = $"cuenta/seguimientos/{TipoSeguimiento(tipo)}/{id}";
-        if (Seguimientos.Contains($"{tipo}:{id}"))
+        if (seguido)
             await api.Delete(ruta);
         else
             await api.Put(ruta);
-        await CargarSeguimientos();
     }
 }

@@ -8,7 +8,6 @@ import java.time.ZoneId;
 import me.Business.exceptions.NegocioException;
 import me.Business.exceptions.ValidacionException;
 import me.Business.exceptions.PersistenciaException;
-import me.Business.Autorizacion;
 import me.DAO.usuario.UsuarioDAO;
 import me.DAO.usuario.UsuarioDAOImpl;
 import me.DAO.venta.CuponDAO;
@@ -17,8 +16,8 @@ import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.dto.compra.CuponDTO;
 
 public class CuponBOImpl implements CuponBO {
+
     private final CuponDAO cuponDAO;
-    private final Autorizacion autorizacion;
     private final Clock reloj;
 
     public CuponBOImpl() {
@@ -27,20 +26,22 @@ public class CuponBOImpl implements CuponBO {
 
     public CuponBOImpl(CuponDAO cuponDAO, UsuarioDAO usuarioDAO, Clock reloj) {
         this.cuponDAO = cuponDAO;
-        this.autorizacion = new Autorizacion(usuarioDAO);
+        this.usuarioDAO = usuarioDAO;
         this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
     }
 
     @Override
     public ResultadoPaginadoDTO<CuponDTO> listar(int idActor, int pagina, int tamanio) throws NegocioException {
-        Usuario usuario = autorizacion.usuarioActivo(idActor);
-        if (pagina < 1 || tamanio < 1)
-            throw new ValidacionException("pagina", "La pagina y su tamaño deben ser positivos.");
         try {
+            Usuario usuario = usuarioDAO.leer(idActor);
+            if (pagina < 1 || tamanio < 1)
+                throw new ValidacionException("pagina", "La pagina y su tamaño deben ser positivos.");
             cuponDAO.actualizarVigencias(LocalDateTime.now(reloj), usuario.getEmail());
             return cuponDAO.listarPorUsuario(idActor, LocalDateTime.now(reloj), pagina, tamanio);
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudieron consultar los cupones.", e);
         }
     }
+
+    private final UsuarioDAO usuarioDAO;
 }

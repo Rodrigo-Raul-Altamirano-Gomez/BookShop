@@ -23,33 +23,40 @@ import me.Business.exceptions.ProteccionDatosException;
 import me.Business.exceptions.ValidacionException;
 
 public final class ProteccionDatos {
+
     private static final SecureRandom AZAR = new SecureRandom();
     private static final int ITERACIONES = 120_000;
-    private ProteccionDatos() { }
+    private ProteccionDatos() {
+    }
 
     public static String hash(String contrasenia) throws NegocioException {
-        if (contrasenia == null) throw new ValidacionException("contrasenia", "Falta la contraseña.");
+        if (contrasenia == null)
+            throw new ValidacionException("contrasenia", "Falta la contraseña.");
         byte[] sal = new byte[16];
         AZAR.nextBytes(sal);
         try {
             byte[] resultado = derivar(contrasenia, sal, ITERACIONES);
-            return "PBKDF2$" + ITERACIONES + "$" + Base64.getEncoder().encodeToString(sal)
-                    + "$" + Base64.getEncoder().encodeToString(resultado);
+            return "PBKDF2$" + ITERACIONES + "$" + Base64.getEncoder().encodeToString(sal) + "$" +
+                Base64.getEncoder().encodeToString(resultado);
         } catch (GeneralSecurityException e) {
             throw new ProteccionDatosException("No se pudo proteger la contraseña.", e);
         }
     }
 
     public static boolean verificar(String contrasenia, String hash) throws NegocioException {
-        if (contrasenia == null || hash == null) return false;
+        if (contrasenia == null || hash == null)
+            return false;
         try {
             String[] partes = hash.split("\\$", -1);
-            if (partes.length != 4 || !partes[0].equals("PBKDF2")) return false;
+            if (partes.length != 4 || !partes[0].equals("PBKDF2"))
+                return false;
             int iteraciones = Integer.parseInt(partes[1]);
-            if (iteraciones < 10_000 || iteraciones > 1_000_000) return false;
+            if (iteraciones < 10_000 || iteraciones > 1_000_000)
+                return false;
             byte[] sal = Base64.getDecoder().decode(partes[2]);
             byte[] esperado = Base64.getDecoder().decode(partes[3]);
-            if (sal.length != 16 || esperado.length != 32) return false;
+            if (sal.length != 16 || esperado.length != 32)
+                return false;
             return MessageDigest.isEqual(esperado, derivar(contrasenia, sal, iteraciones));
         } catch (IllegalArgumentException e) {
             return false;
@@ -63,14 +70,14 @@ public final class ProteccionDatos {
         PBEKeySpec datos = new PBEKeySpec(clave.toCharArray(), sal, iteraciones, 256);
         try {
             return SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(datos).getEncoded();
-        }
-        finally {
+        } finally {
             datos.clearPassword();
         }
     }
 
     public static String cifrar(String numero) throws NegocioException {
-        if (numero == null) throw new ValidacionException("numero", "Falta el número del método.");
+        if (numero == null)
+            throw new ValidacionException("numero", "Falta el número del método.");
         try {
             // GCM necesita un número aleatorio por cifrado; también detecta datos modificados.
             byte[] nonce = new byte[12];
@@ -91,7 +98,8 @@ public final class ProteccionDatos {
             throw new ProteccionDatosException("El método tiene un formato de protección desconocido.");
         try {
             byte[] datos = Base64.getDecoder().decode(cifrado.substring(7));
-            if (datos.length < 28) throw new IllegalArgumentException("Cifrado incompleto");
+            if (datos.length < 28)
+                throw new IllegalArgumentException("Cifrado incompleto");
             Cipher descifrador = Cipher.getInstance("AES/GCM/NoPadding");
             descifrador.init(Cipher.DECRYPT_MODE, clave(), new GCMParameterSpec(128, datos, 0, 12));
             return new String(descifrador.doFinal(datos, 12, datos.length - 12), StandardCharsets.UTF_8);
@@ -116,8 +124,7 @@ public final class ProteccionDatos {
                 AZAR.nextBytes(nueva);
                 try {
                     Files.write(ruta, nueva, StandardOpenOption.CREATE_NEW);
-                }
-                catch (FileAlreadyExistsException e) {
+                } catch (FileAlreadyExistsException e) {
                     /* Otro proceso ya creó la clave. */
                 }
             }

@@ -26,7 +26,9 @@ public class ValoracionLibroDTO
     {
     }
 
-    public ValoracionLibroDTO(int idLibro, long cantidadUnaEstrella, long cantidadDosEstrellas, long cantidadTresEstrellas, long cantidadCuatroEstrellas, long cantidadCincoEstrellas)
+    public ValoracionLibroDTO(
+        int idLibro, long cantidadUnaEstrella, long cantidadDosEstrellas, long cantidadTresEstrellas,
+        long cantidadCuatroEstrellas, long cantidadCincoEstrellas)
     {
         IdLibro = idLibro;
         CantidadUnaEstrella = cantidadUnaEstrella;

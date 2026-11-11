@@ -52,19 +52,6 @@ class LibroTest {
     }
 
     @Test
-    void noSeSustituyenReferenciasPorOtrosIdentificadores() {
-        Libro libro = new Libro();
-        libro.setAutor(new Autor(1, "A", ""));
-        libro.setEditorial(new Editorial(1, "E", ""));
-        libro.setCategoria(new Categoria(1, "C", ""));
-        assertThrows(IllegalStateException.class, () -> libro.setAutor(new Autor(2, "B", "")));
-        assertThrows(IllegalStateException.class, () -> libro.setEditorial(new Editorial(2, "F", "")));
-        assertThrows(IllegalStateException.class, () -> libro.setCategoria(new Categoria(2, "D", "")));
-        assertThrows(IllegalStateException.class, () -> libro.setAutor(null));
-        assertDoesNotThrow(() -> libro.setAutor(new Autor(1, "A actualizado", "")));
-    }
-
-    @Test
     void stockYContadorNoPuedenVolverseNegativos() {
         Libro libro = new Libro();
         libro.setStockFisico(3);

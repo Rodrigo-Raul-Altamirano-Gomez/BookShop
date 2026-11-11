@@ -7,11 +7,16 @@ public class CatalogoServicio
 {
     private readonly HttpClientUtils api;
     private readonly SesionUsuario Sesion;
-    public List<Libro> Libros { get; } = [];
     public List<Referencia> Referencias { get; } = [];
     public List<string> Idiomas { get; } = [];
-    public bool Cargando { get; private set; }
-    public bool Inicializado { get; private set; }
+    public bool Cargando
+    {
+        get; private set;
+    }
+    public bool Inicializado
+    {
+        get; private set;
+    }
 
     public CatalogoServicio(HttpClientUtils api, SesionUsuario sesion)
     {
@@ -33,14 +38,15 @@ public class CatalogoServicio
                 long total;
                 do
                 {
-                    var resultado = await api.Post<ResultadoPaginadoDTO<TarjetaReferenciaDTO>>(tipo + "/busqueda", new FiltroReferenciaDTO
-                    {
-                        Nombre = "",
-                        SoloActivos = true,
-                        Orden = "NOMBRE_ASCENDENTE",
-                        Pagina = pagina,
-                        TamanioPagina = 12
-                    });
+                    var resultado = await api.Post<ResultadoPaginadoDTO<TarjetaReferenciaDTO>>(
+                        tipo + "/busqueda", new FiltroReferenciaDTO
+                        {
+                            Nombre = "",
+                            SoloActivos = true,
+                            Orden = "NOMBRE_ASCENDENTE",
+                            Pagina = pagina,
+                            TamanioPagina = 12
+                        });
                     Referencias.AddRange(resultado.Items.Select(dto => Presentacion.Referencia(dto, tipo)));
                     total = resultado.TotalResultados;
                     pagina++;
@@ -51,7 +57,8 @@ public class CatalogoServicio
             long totalIdiomas;
             do
             {
-                var resultado = await api.Get<ResultadoPaginadoDTO<string>>($"libros/idiomas?pagina={paginaIdiomas}&tamanioPagina=12");
+                var resultado = await api.Get<ResultadoPaginadoDTO<string>>(
+                    $"libros/idiomas?pagina={paginaIdiomas}&tamanioPagina=12");
                 Idiomas.AddRange(resultado.Items);
                 totalIdiomas = resultado.TotalResultados;
                 paginaIdiomas++;
@@ -61,19 +68,11 @@ public class CatalogoServicio
         }
         catch (InvalidOperationException e)
         {
-            Sesion.Error = e.Message; Sesion.Avisar(e.Message);
+            Sesion.Error = e.Message;
+            Sesion.Avisar(e.Message);
         }
         Cargando = false;
         Sesion.Notificar();
-    }
-
-    public void Recordar(Libro libro)
-    {
-        int indice = Libros.FindIndex(b => b.Id == libro.Id);
-        if (indice < 0)
-            Libros.Add(libro);
-        else
-            Libros[indice] = libro;
     }
 
 }

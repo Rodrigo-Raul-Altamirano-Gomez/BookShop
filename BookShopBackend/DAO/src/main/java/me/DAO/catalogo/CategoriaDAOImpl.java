@@ -21,12 +21,13 @@ import me.Model.dto.catalogo.TarjetaReferenciaDTO;
 import me.Model.entities.catalogo.Categoria;
 
 public class CategoriaDAOImpl implements CategoriaDAO {
+
     @Override
     public void insertar(Categoria categoria) throws SQLException {
-        String sql = "INSERT INTO CATEGORIA (nombre,descripcion,imagen,activo,usuario_creacion,fecha_creacion)"
-                + " VALUES (?,?,?,?,?,?)";
+        String sql = "INSERT INTO CATEGORIA" +
+            " (nombre,descripcion,imagen,activo,usuario_creacion,fecha_creacion)" + " VALUES (?,?,?,?,?,?)";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             sentencia.setString(1, categoria.getNombre());
             sentencia.setString(2, categoria.getDescripcion());
             sentencia.setString(3, categoria.getImagen());
@@ -35,7 +36,8 @@ public class CategoriaDAOImpl implements CategoriaDAO {
             sentencia.setTimestamp(6, Timestamp.valueOf(categoria.getFechaCreacion()));
             sentencia.executeUpdate();
             try (ResultSet claves = sentencia.getGeneratedKeys()) {
-                if (!claves.next()) throw new SQLException("No se obtuvo el id del categoria.");
+                if (!claves.next())
+                    throw new SQLException("No se obtuvo el id del categoria.");
                 categoria.setId(claves.getInt(1));
             }
         }
@@ -43,10 +45,10 @@ public class CategoriaDAOImpl implements CategoriaDAO {
 
     @Override
     public void modificar(Categoria categoria) throws SQLException {
-        String sql = "UPDATE CATEGORIA SET nombre=?,descripcion=?,usuario_actualizacion=?,"
-                + " fecha_actualizacion=CURRENT_TIMESTAMP WHERE id=? AND eliminado=FALSE";
+        String sql = "UPDATE CATEGORIA SET nombre=?,descripcion=?,usuario_actualizacion=?," +
+            " fecha_actualizacion=CURRENT_TIMESTAMP WHERE id=? AND eliminado=FALSE";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setString(1, categoria.getNombre());
             sentencia.setString(2, categoria.getDescripcion());
             sentencia.setString(3, categoria.getUsuarioActualizacion());
@@ -58,21 +60,24 @@ public class CategoriaDAOImpl implements CategoriaDAO {
     @Override
     public Categoria leer(int id) throws SQLException {
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement sentencia = conexion.prepareStatement("SELECT * FROM CATEGORIA WHERE id=?")) {
+            PreparedStatement sentencia = conexion.prepareStatement("SELECT * FROM CATEGORIA WHERE id=?")) {
             sentencia.setInt(1, id);
             try (ResultSet resultado = sentencia.executeQuery()) {
-                return resultado.next() ? mapearCategoria(resultado) : null;
-            }
-        }
-    }
-
-    @Override
-    public Categoria leerParaActualizar(int id) throws SQLException {
-        Connection conexion = TransactionContext.getConnection();
-        try (PreparedStatement sentencia = conexion.prepareStatement("SELECT * FROM CATEGORIA WHERE id=? FOR UPDATE")) {
-            sentencia.setInt(1, id);
-            try (ResultSet resultado = sentencia.executeQuery()) {
-                return resultado.next() ? mapearCategoria(resultado) : null;
+                if (!resultado.next())
+                    return null;
+                Categoria categoria = new Categoria();
+                categoria.setId(resultado.getInt("id"));
+                categoria.setNombre(resultado.getString("nombre"));
+                categoria.setDescripcion(resultado.getString("descripcion"));
+                categoria.setImagen(resultado.getString("imagen"));
+                categoria.setActivo(resultado.getBoolean("activo"));
+                categoria.setEliminado(resultado.getBoolean("eliminado"));
+                categoria.setUsuarioCreacion(resultado.getString("usuario_creacion"));
+                categoria.setFechaCreacion(resultado.getTimestamp("fecha_creacion").toLocalDateTime());
+                categoria.setUsuarioActualizacion(resultado.getString("usuario_actualizacion"));
+                Timestamp actualizacion = resultado.getTimestamp("fecha_actualizacion");
+                categoria.setFechaActualizacion(actualizacion == null ? null : actualizacion.toLocalDateTime());
+                return categoria;
             }
         }
     }
@@ -80,12 +85,13 @@ public class CategoriaDAOImpl implements CategoriaDAO {
     @Override
     public boolean eliminar(int id, String usuario) throws SQLException {
         Connection conexion = TransactionContext.getConnection();
-        String sql = "UPDATE CATEGORIA SET eliminado=TRUE,activo=FALSE,usuario_actualizacion=?,"
-                + " fecha_actualizacion=CURRENT_TIMESTAMP WHERE id=? AND eliminado=FALSE";
+        String sql = "UPDATE CATEGORIA SET eliminado=TRUE,activo=FALSE,usuario_actualizacion=?," +
+            " fecha_actualizacion=CURRENT_TIMESTAMP WHERE id=? AND eliminado=FALSE";
         try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setString(1, usuario);
             sentencia.setInt(2, id);
-            if (sentencia.executeUpdate() != 1) return false;
+            if (sentencia.executeUpdate() != 1)
+                return false;
         }
         new LibroDAOImpl().recalcularVetosPorCategoria(id, usuario);
         return true;
@@ -94,14 +100,16 @@ public class CategoriaDAOImpl implements CategoriaDAO {
     @Override
     public boolean cambiarActivo(int id, boolean activo, String usuario) throws SQLException {
         Connection conexion = TransactionContext.getConnection();
-        String sql = "UPDATE CATEGORIA SET activo=?,usuario_actualizacion=?,fecha_actualizacion=CURRENT_TIMESTAMP"
-                + " WHERE id=? AND eliminado=FALSE AND activo<>?";
+        String sql = "UPDATE CATEGORIA SET" +
+            " activo=?,usuario_actualizacion=?,fecha_actualizacion=CURRENT_TIMESTAMP" +
+            " WHERE id=? AND eliminado=FALSE AND activo<>?";
         try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setBoolean(1, activo);
             sentencia.setString(2, usuario);
             sentencia.setInt(3, id);
             sentencia.setBoolean(4, activo);
-            if (sentencia.executeUpdate() != 1) return false;
+            if (sentencia.executeUpdate() != 1)
+                return false;
         }
         new LibroDAOImpl().recalcularVetosPorCategoria(id, usuario);
         return true;
@@ -109,10 +117,10 @@ public class CategoriaDAOImpl implements CategoriaDAO {
 
     @Override
     public boolean cambiarImagen(int id, String imagen, String usuario) throws SQLException {
-        String sql = "UPDATE CATEGORIA SET imagen=?,usuario_actualizacion=?,"
-                + " fecha_actualizacion=CURRENT_TIMESTAMP WHERE id=? AND eliminado=FALSE";
+        String sql = "UPDATE CATEGORIA SET imagen=?,usuario_actualizacion=?," +
+            " fecha_actualizacion=CURRENT_TIMESTAMP WHERE id=? AND eliminado=FALSE";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setString(1, imagen);
             sentencia.setString(2, usuario);
             sentencia.setInt(3, id);
@@ -122,27 +130,26 @@ public class CategoriaDAOImpl implements CategoriaDAO {
 
     @Override
     public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscar(FiltroReferenciaDTO filtro) throws SQLException {
-        return buscar(filtro, true);
-    }
-
-    @Override
-    public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscarOpciones(FiltroReferenciaDTO filtro) throws SQLException {
-        return buscar(filtro, false);
-    }
-
-    private ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscar(FiltroReferenciaDTO filtro, boolean conImagen) throws SQLException {
         String nombre = filtro.nombre() == null ? "" : filtro.nombre().trim();
-        String condiciones = " WHERE eliminado=FALSE" + (filtro.soloActivos() ? " AND activo=TRUE" : "")
-                + (nombre.isEmpty() ? "" : " AND LOWER(nombre) LIKE LOWER(?) ESCAPE '!'");
-        String orden = filtro.orden() == OrdenReferencia.MAS_RECIENTES
-                ? "fecha_creacion DESC,id DESC" : "nombre ASC,id ASC";
-        String columnas = conImagen ? "id,nombre,imagen" : "id,nombre";
-        String sql = "SELECT " + columnas + " FROM CATEGORIA" + condiciones + " ORDER BY " + orden + " LIMIT ? OFFSET ?";
+        // En LIKE, estos caracteres deben buscarse como texto literal.
+        String textoBuscado = nombre.replace("!", "!!");
+        textoBuscado = textoBuscado.replace("%", "!%");
+        textoBuscado = textoBuscado.replace("_", "!_");
+        textoBuscado = "%" + textoBuscado + "%";
+        String condiciones = " WHERE eliminado=FALSE" + (filtro.soloActivos() ? " AND activo=TRUE" : "") +
+            (nombre.isEmpty() ? "" : " AND LOWER(nombre) LIKE LOWER(?) ESCAPE '!'");
+        String orden = filtro.orden() == OrdenReferencia.MAS_RECIENTES ? "fecha_creacion DESC,id DESC" :
+            "nombre ASC,id ASC";
+        String columnas = "id,nombre,imagen";
+        String sql = "SELECT " + columnas + " FROM CATEGORIA" + condiciones + " ORDER BY " + orden +
+            " LIMIT ? OFFSET ?";
         List<TarjetaReferenciaDTO> items = new ArrayList<>();
         long total;
         try (Connection conexion = DBManager.getConnection()) {
-            try (PreparedStatement contar = conexion.prepareStatement("SELECT COUNT(*) FROM CATEGORIA" + condiciones)) {
-                if (!nombre.isEmpty()) contar.setString(1, patron(nombre));
+            try (PreparedStatement contar = conexion.prepareStatement("SELECT COUNT(*) FROM CATEGORIA" +
+                condiciones)) {
+                if (!nombre.isEmpty())
+                    contar.setString(1, textoBuscado);
                 try (ResultSet resultado = contar.executeQuery()) {
                     resultado.next();
                     total = resultado.getLong(1);
@@ -150,13 +157,15 @@ public class CategoriaDAOImpl implements CategoriaDAO {
             }
             try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
                 int parametro = 1;
-                if (!nombre.isEmpty()) sentencia.setString(parametro++, patron(nombre));
+                if (!nombre.isEmpty())
+                    sentencia.setString(parametro++, textoBuscado);
                 sentencia.setInt(parametro++, filtro.tamanioPagina());
                 sentencia.setLong(parametro, (long) (filtro.pagina() - 1) * filtro.tamanioPagina());
                 try (ResultSet resultado = sentencia.executeQuery()) {
                     while (resultado.next()) {
-                        String imagen = conImagen ? resultado.getString("imagen") : null;
-                        items.add(new TarjetaReferenciaDTO(resultado.getInt("id"), resultado.getString("nombre"), imagen));
+                        String imagen = resultado.getString("imagen");
+                        items.add(new TarjetaReferenciaDTO(resultado.getInt("id"),
+                            resultado.getString("nombre"), imagen));
                     }
                 }
             }
@@ -166,45 +175,47 @@ public class CategoriaDAOImpl implements CategoriaDAO {
 
     @Override
     public DetalleReferenciaDTO obtenerDetalle(int id, int idUsuario) throws SQLException {
-        String sql = "SELECT a.*,EXISTS(SELECT 1 FROM SEGUIMIENTO s WHERE s.id_usuario=? AND s.id_categoria=a.id"
-                + " AND s.tipo_seguimiento='CATEGORIA' AND s.eliminado=FALSE) AS seguido"
-                + " FROM CATEGORIA a WHERE a.id=? AND a.eliminado=FALSE";
+        String sql = "SELECT a.*,EXISTS(SELECT 1 FROM SEGUIMIENTO s WHERE s.id_usuario=? AND" +
+            " s.id_categoria=a.id" + " AND s.tipo_seguimiento='CATEGORIA' AND s.eliminado=FALSE) AS seguido" +
+            " FROM CATEGORIA a WHERE a.id=? AND a.eliminado=FALSE";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setInt(1, idUsuario);
             sentencia.setInt(2, id);
             try (ResultSet resultado = sentencia.executeQuery()) {
-                if (!resultado.next()) return null;
+                if (!resultado.next())
+                    return null;
                 TarjetaReferenciaDTO tarjeta = new TarjetaReferenciaDTO(resultado.getInt("id"),
-                        resultado.getString("nombre"), resultado.getString("imagen"));
+                    resultado.getString("nombre"), resultado.getString("imagen"));
                 return new DetalleReferenciaDTO(tarjeta, resultado.getString("descripcion"),
-                        resultado.getBoolean("activo"), resultado.getBoolean("seguido"));
+                    resultado.getBoolean("activo"), resultado.getBoolean("seguido"));
             }
         }
     }
 
     @Override
-    public Map<Integer, TarjetaReferenciaDTO> obtenerMasCompradas(List<Integer> idsUsuarios, LocalDate inicio, LocalDate fin)
-            throws SQLException {
+    public Map<Integer, TarjetaReferenciaDTO> obtenerMasCompradas(List<Integer> idsUsuarios, LocalDate inicio,
+        LocalDate fin) throws SQLException {
         Map<Integer, TarjetaReferenciaDTO> referencias = new LinkedHashMap<>();
-        if (idsUsuarios.isEmpty()) return referencias;
+        if (idsUsuarios.isEmpty())
+            return referencias;
         String marcadores = String.join(",", java.util.Collections.nCopies(idsUsuarios.size(), "?"));
-        String sql = "SELECT p.id_usuario,a.id,a.nombre,SUM(i.cantidad) AS ejemplares FROM PEDIDO p"
-                + " JOIN ITEM_PEDIDO i ON i.id_pedido=p.id JOIN LIBRO l ON l.id=i.id_libro"
-                + " JOIN CATEGORIA a ON a.id=l.id_categoria WHERE p.eliminado=FALSE AND i.eliminado=FALSE"
-                + " AND p.estado NOT IN ('CANCELADO','DEVUELTO') AND p.fecha_pago>=? AND p.fecha_pago<?"
-                + " AND p.id_usuario IN (" + marcadores + ") GROUP BY p.id_usuario,a.id,a.nombre"
-                + " ORDER BY p.id_usuario,ejemplares DESC,a.nombre ASC,a.id ASC";
+        String sql = "SELECT p.id_usuario,a.id,a.nombre,SUM(i.cantidad) AS ejemplares FROM PEDIDO p" +
+            " JOIN ITEM_PEDIDO i ON i.id_pedido=p.id JOIN LIBRO l ON l.id=i.id_libro" +
+            " JOIN CATEGORIA a ON a.id=l.id_categoria WHERE p.eliminado=FALSE AND i.eliminado=FALSE" +
+            " AND p.estado NOT IN ('CANCELADO','DEVUELTO') AND p.fecha_pago>=? AND p.fecha_pago<?" +
+            " AND p.id_usuario IN (" + marcadores + ") GROUP BY p.id_usuario,a.id,a.nombre" +
+            " ORDER BY p.id_usuario,ejemplares DESC,a.nombre ASC,a.id ASC";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setTimestamp(1, Timestamp.valueOf(inicio.atStartOfDay()));
             sentencia.setTimestamp(2, Timestamp.valueOf(fin.plusDays(1).atStartOfDay()));
             int parametro = 3;
             for (Integer id : idsUsuarios) sentencia.setInt(parametro++, id);
             try (ResultSet resultado = sentencia.executeQuery()) {
                 while (resultado.next()) {
-                    referencias.putIfAbsent(resultado.getInt("id_usuario"), new TarjetaReferenciaDTO(
-                            resultado.getInt("id"), resultado.getString("nombre"), null));
+                    referencias.putIfAbsent(resultado.getInt("id_usuario"), new
+                        TarjetaReferenciaDTO(resultado.getInt("id"), resultado.getString("nombre"), null));
                 }
             }
         }
@@ -215,33 +226,12 @@ public class CategoriaDAOImpl implements CategoriaDAO {
     public boolean existeNombre(String nombre, int idExcluir) throws SQLException {
         String sql = "SELECT 1 FROM CATEGORIA WHERE nombre=? AND id<>? LIMIT 1";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setString(1, nombre);
             sentencia.setInt(2, idExcluir);
             try (ResultSet resultado = sentencia.executeQuery()) {
                 return resultado.next();
             }
         }
-    }
-
-    private Categoria mapearCategoria(ResultSet resultado) throws SQLException {
-        Categoria categoria = new Categoria();
-        categoria.setId(resultado.getInt("id"));
-        categoria.setNombre(resultado.getString("nombre"));
-        categoria.setDescripcion(resultado.getString("descripcion"));
-        categoria.setImagen(resultado.getString("imagen"));
-        categoria.setActivo(resultado.getBoolean("activo"));
-        categoria.setEliminado(resultado.getBoolean("eliminado"));
-        categoria.setUsuarioCreacion(resultado.getString("usuario_creacion"));
-        categoria.setFechaCreacion(resultado.getTimestamp("fecha_creacion").toLocalDateTime());
-        categoria.setUsuarioActualizacion(resultado.getString("usuario_actualizacion"));
-        Timestamp actualizacion = resultado.getTimestamp("fecha_actualizacion");
-        categoria.setFechaActualizacion(actualizacion == null ? null : actualizacion.toLocalDateTime());
-        return categoria;
-    }
-
-
-    private String patron(String nombre) {
-        return "%" + nombre.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
     }
 }

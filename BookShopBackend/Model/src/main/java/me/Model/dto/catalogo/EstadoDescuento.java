@@ -1,7 +1,6 @@
 package me.Model.dto.catalogo;
 
 public enum EstadoDescuento {
-    PROXIMO,
-    VIGENTE,
-    VENCIDO
+
+    PROXIMO, VIGENTE, VENCIDO
 }

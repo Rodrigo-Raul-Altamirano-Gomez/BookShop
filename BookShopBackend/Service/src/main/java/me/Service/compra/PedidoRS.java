@@ -22,8 +22,10 @@ import me.Service.Sesion;
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
 public class PedidoRS {
+
     @Inject
     private Servicios servicios;
+
     @Context
     private HttpServletRequest peticion;
 

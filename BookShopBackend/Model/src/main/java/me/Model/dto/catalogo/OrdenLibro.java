@@ -2,6 +2,7 @@ package me.Model.dto.catalogo;
 
 // Catalogo excluye RECOMENDADOS_PRIMERO; recomendaciones excluyen MAS_VENDIDOS.
 public enum OrdenLibro {
+
     MAS_RECIENTES,
     MAS_VENDIDOS,
     PRECIO_ASCENDENTE,

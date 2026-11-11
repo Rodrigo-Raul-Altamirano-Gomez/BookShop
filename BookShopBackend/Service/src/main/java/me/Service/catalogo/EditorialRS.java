@@ -24,8 +24,10 @@ import me.Service.Sesion;
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
 public class EditorialRS {
+
     @Inject
     private Servicios servicios;
+
     @Context
     private HttpServletRequest peticion;
 
@@ -37,9 +39,9 @@ public class EditorialRS {
 
     @POST
     @Path("opciones")
-    public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscarOpciones(
-            FiltroReferenciaDTO filtro) throws NegocioException {
-        return servicios.getEditorialBO().buscarOpciones(Sesion.obtenerIdUsuario(peticion), filtro);
+    public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscarOpciones(FiltroReferenciaDTO filtro) throws
+        NegocioException {
+        return servicios.getEditorialBO().buscar(Sesion.obtenerIdUsuario(peticion), filtro);
     }
 
     @GET

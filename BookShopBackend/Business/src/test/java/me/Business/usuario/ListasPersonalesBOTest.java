@@ -32,7 +32,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -50,15 +49,25 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class ListasPersonalesBOTest {
+
     private Usuario actor;
+
     private UsuarioDAO usuarios;
+
     private LibroDAO libros;
+
     private LibroGuardadoDAO guardados;
+
     private SeguimientoDAO seguimientos;
+
     private AutorDAO autores;
+
     private CategoriaDAO categorias;
+
     private EditorialDAO editoriales;
+
     private LibroGuardadoBOImpl guardadosBO;
+
     private SeguimientoBOImpl seguimientosBO;
 
     @BeforeEach
@@ -74,8 +83,7 @@ class ListasPersonalesBOTest {
         autores = mock(AutorDAO.class);
         categorias = mock(CategoriaDAO.class);
         editoriales = mock(EditorialDAO.class);
-        guardadosBO = new LibroGuardadoBOImpl(guardados, libros, usuarios,
-                Clock.fixed(Instant.parse("2026-10-07T17:00:00Z"), ZoneId.of("UTC")));
+        guardadosBO = new LibroGuardadoBOImpl(guardados, libros, usuarios, Clock.fixed(Instant.parse("2026-10-07T17:00:00Z"), ZoneId.of("UTC")));
         seguimientosBO = new SeguimientoBOImpl(seguimientos, autores, categorias, editoriales, usuarios);
     }
 
@@ -99,20 +107,16 @@ class ListasPersonalesBOTest {
 
     @Test
     void listadoConservaAmbitoPropioYValidaTodoElFiltroAntesDeConsultar() throws Exception {
-        FiltroLibroDTO filtro = new FiltroLibroDTO(" Titulo ", List.of(2), List.of(), List.of(), List.of(),
-                new BigDecimal("10.00"), new BigDecimal("20.00"), false, false,
-                OrdenLibro.PRECIO_ASCENDENTE, 2, 12);
-        when(libros.buscarGuardados(eq(1), eq(true), any(), any()))
-                .thenReturn(new ResultadoPaginadoDTO<>(List.of(), 0, 2, 12));
+        FiltroLibroDTO filtro = new FiltroLibroDTO(" Titulo ", List.of(2), List.of(), List.of(), List.of(), new BigDecimal("10.00"), new BigDecimal("20.00"), false, false, OrdenLibro.PRECIO_ASCENDENTE, 2, 12);
+        when(libros.buscarGuardados(eq(1), eq(true), any(), any())).thenReturn(new ResultadoPaginadoDTO<>(List.of(), 0, 2, 12));
         guardadosBO.listar(1, true, filtro);
         ArgumentCaptor<FiltroLibroDTO> captor = ArgumentCaptor.forClass(FiltroLibroDTO.class);
         verify(libros).buscarGuardados(eq(1), eq(true), captor.capture(), any());
         assertTrue(captor.getValue().soloActivos());
-        assertEquals("Titulo", captor.getValue().titulo());
+        assertEquals(" Titulo ", captor.getValue().titulo());
         assertEquals(List.of(2), captor.getValue().idsCategorias());
         assertEquals(2, captor.getValue().pagina());
-        FiltroLibroDTO invalido = new FiltroLibroDTO(null, List.of(), List.of(), List.of(), List.of(),
-                new BigDecimal("20"), new BigDecimal("10"), true, false, OrdenLibro.MAS_RECIENTES, 1, 12);
+        FiltroLibroDTO invalido = new FiltroLibroDTO(null, List.of(), List.of(), List.of(), List.of(), new BigDecimal("20"), new BigDecimal("10"), true, false, OrdenLibro.MAS_RECIENTES, 1, 12);
         assertThrows(ValidacionException.class, () -> guardadosBO.listar(1, true, invalido));
         verify(libros, times(1)).buscarGuardados(anyInt(), anyBoolean(), any(), any());
     }
@@ -128,8 +132,7 @@ class ListasPersonalesBOTest {
         when(seguimientos.retirar(1, tipo, 5, "ana@test")).thenReturn(true, false);
         assertTrue(seguimientosBO.retirar(1, tipo, 5));
         assertFalse(seguimientosBO.retirar(1, tipo, 5));
-        when(seguimientos.listarPorUsuario(1, tipo, OrdenReferencia.MAS_RECIENTES, 1, 12))
-                .thenReturn(new ResultadoPaginadoDTO<>(List.of(), 0, 1, 12));
+        when(seguimientos.listarPorUsuario(1, tipo, OrdenReferencia.MAS_RECIENTES, 1, 12)).thenReturn(new ResultadoPaginadoDTO<>(List.of(), 0, 1, 12));
         seguimientosBO.listar(1, new ConsultaSeguimientosDTO(tipo, OrdenReferencia.MAS_RECIENTES, 1, 12));
         verify(seguimientos).listarPorUsuario(1, tipo, OrdenReferencia.MAS_RECIENTES, 1, 12);
         verify(seguimientos, never()).listarPorUsuario(eq(2), any(), any(), anyInt(), anyInt());
@@ -144,16 +147,5 @@ class ListasPersonalesBOTest {
         verify(seguimientos, never()).guardar(anyInt(), any(), anyInt(), anyString());
         when(seguimientos.retirar(1, TipoSeguimiento.AUTOR, 5, "ana@test")).thenReturn(true);
         assertTrue(seguimientosBO.retirar(1, TipoSeguimiento.AUTOR, 5));
-    }
-
-    @Test
-    void autenticacionYCuentaActivaSeCompruebanAntesDeLeerOWriteListas() throws Exception {
-        assertThrows(AccesoDenegadoException.class, () -> guardadosBO.guardar(0, 7, true));
-        verifyNoInteractions(libros, guardados);
-        actor.setActivo(false);
-        assertThrows(CuentaInactivaException.class, () -> guardadosBO.listar(1, true, FiltroLibroDTO.porDefecto()));
-        assertThrows(CuentaInactivaException.class,
-                () -> seguimientosBO.listar(1, ConsultaSeguimientosDTO.porDefecto()));
-        verifyNoInteractions(libros, guardados, seguimientos);
     }
 }

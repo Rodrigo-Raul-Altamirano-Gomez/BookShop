@@ -12,11 +12,15 @@ import me.Model.dto.catalogo.TarjetaReferenciaDTO;
 import me.Model.entities.catalogo.Autor;
 
 public interface AutorDAO extends CrudDAO<Autor> {
-    Autor leerParaActualizar(int id) throws SQLException;
+
     ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscar(FiltroReferenciaDTO filtro) throws SQLException;
-    ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscarOpciones(FiltroReferenciaDTO filtro) throws SQLException;
+
     DetalleReferenciaDTO obtenerDetalle(int id, int idUsuario) throws SQLException;
+
     boolean cambiarImagen(int id, String imagen, String usuario) throws SQLException;
+
     boolean cambiarActivo(int id, boolean activo, String usuario) throws SQLException;
-    Map<Integer, TarjetaReferenciaDTO> obtenerMasCompradas(List<Integer> idsUsuarios, LocalDate inicio, LocalDate fin) throws SQLException;
+
+    Map<Integer, TarjetaReferenciaDTO> obtenerMasCompradas(List<Integer> idsUsuarios, LocalDate inicio,
+        LocalDate fin) throws SQLException;
 }

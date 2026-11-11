@@ -10,14 +10,21 @@ import me.Model.dto.usuario.ResumenActividadUsuarioDTO;
 import me.Model.entities.usuario.Usuario;
 
 public interface UsuarioDAO extends CrudDAO<Usuario> {
-    Usuario leerParaActualizar(int id) throws SQLException;
+
     Usuario obtenerPorEmail(String email) throws SQLException;
+
     PerfilUsuarioDTO obtenerPerfil(int id) throws SQLException;
+
     boolean cambiarImagen(int id, String imagen, String usuario) throws SQLException;
+
     boolean cambiarActivo(int id, boolean activo, String usuario) throws SQLException;
+
     boolean cambiarContrasenia(int id, String hash, String usuario) throws SQLException;
+
     void actualizarTiempoTotal(int id, Duration tiempo, String usuario) throws SQLException;
+
     boolean incrementarPedidosEntregados(int id, String usuario) throws SQLException;
+
     List<ResumenActividadUsuarioDTO> listarActividadUsuarios(LocalDate inicio, LocalDate fin, Integer maximo)
-            throws SQLException;
+        throws SQLException;
 }

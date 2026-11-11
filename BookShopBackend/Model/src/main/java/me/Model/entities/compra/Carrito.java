@@ -7,6 +7,7 @@ import me.Model.entities.catalogo.Libro;
 import me.Model.entities.usuario.Usuario;
 
 public class Carrito {
+
     private int id;
     private Usuario usuario;
     private List<Item> items;
@@ -53,7 +54,8 @@ public class Carrito {
     public BigDecimal getTotal() {
         BigDecimal total = BigDecimal.ZERO;
         for (Item item : items) {
-            if (!item.isEliminado()) total = total.add(item.getSubTotal());
+            if (!item.isEliminado())
+                total = total.add(item.getSubTotal());
         }
         return total;
     }
@@ -61,13 +63,15 @@ public class Carrito {
     public int getCantidad() {
         int cantidad = 0;
         for (Item item : items) {
-            if (!item.isEliminado()) cantidad = cantidad + item.getCantidad();
+            if (!item.isEliminado())
+                cantidad = cantidad + item.getCantidad();
         }
         return cantidad;
     }
 
     public void agregarItem(Libro libro, int cantidad) {
-        if (cantidad <= 0) return;
+        if (cantidad <= 0)
+            return;
         for (Item item : items) {
             if (item.getLibro().getId() == libro.getId()) {
                 if (item.isEliminado()) {

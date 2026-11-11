@@ -35,6 +35,7 @@ import me.DBManager.DBManager;
 // Conserva los BO con estado durante la vida de la aplicación.
 @ApplicationScoped
 public class Servicios {
+
     private final UsuarioBO usuarioBO;
     private final AutorBO autorBO;
     private final CategoriaBO categoriaBO;

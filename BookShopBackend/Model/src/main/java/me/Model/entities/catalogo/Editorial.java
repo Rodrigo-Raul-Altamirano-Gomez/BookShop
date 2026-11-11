@@ -3,6 +3,7 @@ package me.Model.entities.catalogo;
 import java.time.LocalDateTime;
 
 public class Editorial {
+
     private int id;
     private String nombre;
     private String imagen;

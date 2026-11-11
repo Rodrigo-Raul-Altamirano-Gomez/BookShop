@@ -25,5 +25,4 @@ public partial class Paginacion
         }
     }
 
-    private Task Ir(int pagina) => PaginaCambiada.InvokeAsync(pagina);
 }

@@ -17,5 +17,4 @@ public partial class Modal
     public RenderFragment? ChildContent { get; set; }
 
     private readonly string IdTitulo = "dialog-" + Guid.NewGuid().ToString("N");
-    private Task Cerrar() => AlCerrar.InvokeAsync();
 }

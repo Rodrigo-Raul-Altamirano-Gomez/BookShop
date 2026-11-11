@@ -28,9 +28,12 @@ public partial class DatosCompra
     {
         get
         {
-            if (Sesion.Usuario is null) return 0;
-            if (Pestana == "direcciones") return Cuenta.Direcciones.Count;
-            if (Pestana == "metodos") return Cuenta.Metodos.Count;
+            if (Sesion.Usuario is null)
+                return 0;
+            if (Pestana == "direcciones")
+                return Cuenta.Direcciones.Count;
+            if (Pestana == "metodos")
+                return Cuenta.Metodos.Count;
             return Cuenta.Cupones.Count;
         }
     }
@@ -38,8 +41,10 @@ public partial class DatosCompra
     {
         get
         {
-            if (Pestana == "direcciones") return "direcciones";
-            if (Pestana == "metodos") return "métodos";
+            if (Pestana == "direcciones")
+                return "direcciones";
+            if (Pestana == "metodos")
+                return "métodos";
             return "cupones";
         }
     }
@@ -55,8 +60,10 @@ public partial class DatosCompra
         : metodo.Tipo;
     private static string ClaseCupon(Cupon cupon)
     {
-        if (cupon.Estado == "Disponible") return "success";
-        if (cupon.Estado == "Vencido") return "danger";
+        if (cupon.Estado == "Disponible")
+            return "success";
+        if (cupon.Estado == "Vencido")
+            return "danger";
         return "neutral";
     }
 
@@ -139,7 +146,7 @@ public partial class DatosCompra
         try
         {
             await Api.Delete($"cuenta/direcciones/{direccion.Id}");
-            await Cuenta.CargarDatosCompra();
+            await Cuenta.CargarDirecciones();
             Pagina = Math.Min(Pagina, TotalPaginas);
             Sesion.Notificar();
         }
@@ -155,7 +162,7 @@ public partial class DatosCompra
         try
         {
             await Api.Delete($"cuenta/metodos/{metodo.Id}");
-            await Cuenta.CargarDatosCompra();
+            await Cuenta.CargarMetodos();
             Pagina = Math.Min(Pagina, TotalPaginas);
             Sesion.Notificar();
         }
@@ -171,7 +178,7 @@ public partial class DatosCompra
         try
         {
             await Api.Put($"cuenta/direcciones/{direccion.Id}/predeterminada");
-            await Cuenta.CargarDatosCompra();
+            await Cuenta.CargarDirecciones();
             Sesion.Notificar();
         }
         catch (InvalidOperationException e)
@@ -186,7 +193,7 @@ public partial class DatosCompra
         try
         {
             await Api.Put($"cuenta/metodos/{metodo.Id}/predeterminado");
-            await Cuenta.CargarDatosCompra();
+            await Cuenta.CargarMetodos();
             Sesion.Notificar();
         }
         catch (InvalidOperationException e)

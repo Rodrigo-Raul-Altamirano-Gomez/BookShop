@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.Locale;
 
 public class Usuario {
+
     private int id;
     private String email;
     private String contrasenia;
@@ -28,8 +29,8 @@ public class Usuario {
         this.fechaCreacion = LocalDateTime.now();
     }
 
-    public Usuario(int id, String email, String contrasenia, String nombre,
-                   LocalDateTime fechaNacimiento, Rol rol) {
+    public Usuario(int id, String email, String contrasenia, String nombre, LocalDateTime fechaNacimiento, Rol
+        rol) {
         this();
         this.id = id;
         this.email = email;
@@ -167,11 +168,12 @@ public class Usuario {
     }
 
     public boolean tieneCorreoAdministrador() {
-        if (email == null) return false;
+        if (email == null)
+            return false;
         String correo = email.trim().toLowerCase(Locale.ROOT);
         int separador = correo.indexOf('@');
-        return separador > 0 && separador == correo.lastIndexOf('@')
-                && correo.substring(separador + 1).equals("admin.bookshop");
+        return separador > 0 && separador == correo.lastIndexOf('@') && correo.substring(separador +
+            1).equals("admin.bookshop");
     }
 
     public void asignarRolPorCorreo() {

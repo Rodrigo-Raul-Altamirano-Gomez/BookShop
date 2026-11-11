@@ -21,8 +21,10 @@ public partial class Referencias : IDisposable
     {
         get
         {
-            if (Tipo == "autores") return "Autores";
-            if (Tipo == "editoriales") return "Editoriales";
+            if (Tipo == "autores")
+                return "Autores";
+            if (Tipo == "editoriales")
+                return "Editoriales";
             return "Categorías";
         }
     }
@@ -32,7 +34,6 @@ public partial class Referencias : IDisposable
     private List<Referencia> Resultados = [];
     private long totalResultados;
     private int TotalPaginas => Math.Max(1, (int)((totalResultados + 11) / 12));
-    private IEnumerable<Referencia> ReferenciasVisibles => Resultados;
     private async Task Consultar()
     {
         cargando = true;

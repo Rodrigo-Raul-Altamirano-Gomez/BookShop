@@ -3,6 +3,7 @@ package me.Model.entities.usuario;
 import me.Model.entities.catalogo.Autor;
 
 public class SeguimientoAutor extends Seguimiento {
+
     private Autor autor;
 
     public SeguimientoAutor() {

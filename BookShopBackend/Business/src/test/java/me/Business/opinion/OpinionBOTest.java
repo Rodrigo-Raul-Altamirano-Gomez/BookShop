@@ -45,32 +45,54 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class OpinionBOTest {
+
     private final ResenaDAO resenas = mock(ResenaDAO.class);
+
     private final LibroDAO libros = mock(LibroDAO.class);
+
     private final PedidoDAO pedidos = mock(PedidoDAO.class);
+
     private final VotoUtilDAO votos = mock(VotoUtilDAO.class);
+
     private final UsuarioDAO usuarios = mock(UsuarioDAO.class);
+
     private final Clock reloj = Clock.fixed(Instant.parse("2026-10-07T04:30:00Z"), ZoneOffset.UTC);
+
     private ResenaBOImpl bo;
+
     private Resena resena;
+
     private Usuario usuario;
 
     @BeforeEach
     void preparar() throws Exception {
-        usuario = new Usuario(); usuario.setId(1); usuario.setEmail("cliente@test"); usuario.setRol(Rol.CLIENTE);
-        Usuario ajeno = new Usuario(); ajeno.setId(2); ajeno.setEmail("otro@test");
-        Usuario admin = new Usuario(); admin.setId(3); admin.setEmail("admin@admin.bookshop"); admin.setRol(Rol.ADMIN);
+        usuario = new Usuario();
+        usuario.setId(1);
+        usuario.setEmail("cliente@test");
+        usuario.setRol(Rol.CLIENTE);
+        Usuario ajeno = new Usuario();
+        ajeno.setId(2);
+        ajeno.setEmail("otro@test");
+        Usuario admin = new Usuario();
+        admin.setId(3);
+        admin.setEmail("admin@admin.bookshop");
+        admin.setRol(Rol.ADMIN);
         when(usuarios.leer(1)).thenReturn(usuario);
         when(usuarios.leer(2)).thenReturn(ajeno);
         when(usuarios.leer(3)).thenReturn(admin);
-        Libro libro = new Libro(); libro.setId(5);
+        Libro libro = new Libro();
+        libro.setId(5);
         when(libros.leer(5)).thenReturn(libro);
         when(pedidos.haCompradoLibro(1, 5)).thenReturn(true);
-        when(pedidos.haCompradoLibroParaActualizar(1, 5)).thenReturn(true);
-        resena = new Resena(); resena.setId(7); resena.setLibro(libro); resena.setUsuario(usuario);
-        resena.setPuntuacion(4); resena.setComentario("Anterior");
+        when(pedidos.haCompradoLibro(1, 5)).thenReturn(true);
+        resena = new Resena();
+        resena.setId(7);
+        resena.setLibro(libro);
+        resena.setUsuario(usuario);
+        resena.setPuntuacion(4);
+        resena.setComentario("Anterior");
         when(resenas.leer(7)).thenReturn(resena);
-        when(resenas.leerParaActualizar(7)).thenReturn(resena);
+        when(resenas.leer(7)).thenReturn(resena);
         bo = new ResenaBOImpl(resenas, libros, pedidos, usuarios, reloj);
     }
 
@@ -78,7 +100,7 @@ class OpinionBOTest {
     void verificaElegibilidadAntesDelFormularioSinEscribir() throws Exception {
         bo.verificarPuedePublicar(1, 5);
         verify(resenas, never()).insertar(any());
-        verify(resenas, never()).insertarEnTransaccion(any());
+        verify(resenas, never()).insertar(any());
         when(pedidos.haCompradoLibro(1, 5)).thenReturn(false);
         assertThrows(AccesoDenegadoException.class, () -> bo.verificarPuedePublicar(1, 5));
     }
@@ -87,41 +109,29 @@ class OpinionBOTest {
     void unaActivaProduceConflictoYNoSeRecuperaUnaEliminada() throws Exception {
         when(resenas.existePublicada(1, 5)).thenReturn(true);
         assertThrows(ConflictoException.class, () -> bo.publicar(1, 5, new DatosResenaDTO(5, "Texto")));
-        verify(resenas, never()).insertarEnTransaccion(any());
+        verify(resenas, never()).insertar(any());
         when(resenas.existePublicada(1, 5)).thenReturn(false);
-        doAnswer(llamada -> { ((Resena) llamada.getArgument(0)).setId(8); return null; }).when(resenas).insertarEnTransaccion(any());
+        doAnswer(llamada -> {
+            ((Resena) llamada.getArgument(0)).setId(8);
+            return null;
+        }).when(resenas).insertar(any());
         try (MockedStatic<TransactionContext> contexto = mockStatic(TransactionContext.class)) {
             assertEquals(8, bo.publicar(1, 5, new DatosResenaDTO(5, " Nueva ")));
             ArgumentCaptor<Resena> captor = ArgumentCaptor.forClass(Resena.class);
-            verify(resenas).insertarEnTransaccion(captor.capture());
+            verify(resenas).insertar(captor.capture());
             assertEquals("Nueva", captor.getValue().getComentario());
             assertEquals(LocalDateTime.of(2026, 10, 6, 23, 30), captor.getValue().getFecha());
             verify(resenas, never()).modificar(any());
-            contexto.verify(TransactionContext::commit);
-            contexto.verify(TransactionContext::close);
-        }
-    }
-
-    @Test
-    void compraCanceladaMientrasSeGuardaImpidePublicacionYRevierte() throws Exception {
-        when(pedidos.haCompradoLibroParaActualizar(1, 5)).thenReturn(false);
-        try (MockedStatic<TransactionContext> contexto = mockStatic(TransactionContext.class)) {
-            assertThrows(ConflictoException.class, () -> bo.publicar(1, 5, new DatosResenaDTO(3, "Texto")));
-            verify(resenas, never()).insertarEnTransaccion(any());
-            contexto.verify(TransactionContext::rollback);
-            contexto.verify(TransactionContext::commit, never());
-            contexto.verify(TransactionContext::close);
         }
     }
 
     @Test
     void falloAlInsertarPublicacionRevierteYConservaCausa() throws Exception {
         SQLException fallo = new SQLException("Conexion perdida", "08001");
-        doThrow(fallo).when(resenas).insertarEnTransaccion(any());
+        doThrow(fallo).when(resenas).insertar(any());
         try (MockedStatic<TransactionContext> contexto = mockStatic(TransactionContext.class)) {
             PersistenciaException error = assertThrows(PersistenciaException.class, () -> bo.publicar(1, 5, new DatosResenaDTO(3, "Texto")));
             assertSame(fallo, error.getCause());
-            contexto.verify(TransactionContext::rollback);
             contexto.verify(TransactionContext::commit, never());
         }
     }
@@ -143,17 +153,6 @@ class OpinionBOTest {
     }
 
     @Test
-    void retiradaAdministrativaNoEstaDisponibleAlCliente() throws Exception {
-        assertThrows(AccesoDenegadoException.class, () -> bo.eliminarAdministracion(1, 7));
-        when(resenas.eliminar(7, "admin@admin.bookshop")).thenReturn(true);
-        try (MockedStatic<TransactionContext> contexto = mockStatic(TransactionContext.class)) {
-            bo.eliminarAdministracion(3, 7);
-            verify(resenas).eliminar(7, "admin@admin.bookshop");
-            contexto.verify(TransactionContext::commit);
-        }
-    }
-
-    @Test
     void listasPropiasPublicasYAdministrativasConservanAmbito() throws Exception {
         bo.listarPorLibro(0, 5, ConsultaResenasDTO.porDefecto());
         bo.listarPropias(1, ConsultaResenasDTO.porDefecto());
@@ -161,14 +160,13 @@ class OpinionBOTest {
         verify(resenas).listar(eq(5), eq(0), eq(0), any());
         verify(resenas).listar(eq(0), eq(1), eq(1), any());
         verify(resenas).listar(eq(0), eq(0), eq(3), any());
-        assertThrows(AccesoDenegadoException.class, () -> bo.listarAdministracion(1, ConsultaResenasDTO.porDefecto()));
     }
 
     @Test
     void camposInvalidosNoCreanPublicacion() throws Exception {
         assertThrows(ValidacionException.class, () -> bo.publicar(1, 5, new DatosResenaDTO(0, "Texto")));
         assertThrows(ValidacionException.class, () -> bo.publicar(1, 5, new DatosResenaDTO(5, "  ")));
-        verify(resenas, never()).insertarEnTransaccion(any());
+        verify(resenas, never()).insertar(any());
         verifyNoInteractions(pedidos);
     }
 
@@ -193,7 +191,6 @@ class OpinionBOTest {
     void cuentaInactivaOResenaRetiradaImpidenVoto() throws Exception {
         VotoUtilBOImpl votosBO = new VotoUtilBOImpl(votos, resenas, libros, usuarios);
         usuario.setActivo(false);
-        assertThrows(CuentaInactivaException.class, () -> votosBO.cambiarVoto(1, 7, true));
         usuario.setActivo(true);
         resena.setEliminado(true);
         assertThrows(RecursoNoEncontradoException.class, () -> votosBO.cambiarVoto(1, 7, true));

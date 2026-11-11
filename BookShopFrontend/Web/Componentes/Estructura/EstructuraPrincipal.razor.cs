@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Routing;
 using Web.Servicios;
 
 namespace Web.Componentes.Estructura;
@@ -21,10 +22,13 @@ public partial class EstructuraPrincipal : IDisposable
     private bool cuentaAbierta, accesoAbierto;
     private string? aviso, informacion;
     private CancellationTokenSource? temporizadorAviso;
-    private static readonly (string Etiqueta, string Icono, string Ruta)[] EnlacesCuenta = [("Mi perfil",
-         "user", "/mi-perfil"), ("Deseados y favoritos", "heart",
-              "/deseados"), ("Mis seguimientos", "follow",
-                   "/mis-seguimientos"), ("Datos de compra", "card", "/datos-compra")];
+    private static readonly (string Etiqueta, string Icono, string Ruta)[] EnlacesCuenta =
+    [
+        ("Mi perfil", "user", "/mi-perfil"),
+        ("Deseados y favoritos", "heart", "/deseados"),
+        ("Mis seguimientos", "follow", "/mis-seguimientos"),
+        ("Datos de compra", "card", "/datos-compra")
+    ];
     protected override async Task OnInitializedAsync()
     {
         Sesion.Cambiado += Actualizar;
@@ -35,8 +39,7 @@ public partial class EstructuraPrincipal : IDisposable
     }
 
     private void Actualizar() => _ = InvokeAsync(StateHasChanged);
-    private void CambioUbicacion(object? origen, Microsoft.AspNetCore.Components.Routing
-        .LocationChangedEventArgs e)
+    private void CambioUbicacion(object? origen, LocationChangedEventArgs e)
     {
         cuentaAbierta = false;
         Actualizar();
@@ -83,7 +86,7 @@ public partial class EstructuraPrincipal : IDisposable
 
     private void QuitarComparacion()
     {
-        Sesion.IdComparacion = null;
+        Sesion.LibroComparacion = null;
         Sesion.Notificar();
     }
 

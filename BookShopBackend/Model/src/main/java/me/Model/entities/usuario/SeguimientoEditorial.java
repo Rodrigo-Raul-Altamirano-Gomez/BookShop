@@ -3,6 +3,7 @@ package me.Model.entities.usuario;
 import me.Model.entities.catalogo.Editorial;
 
 public class SeguimientoEditorial extends Seguimiento {
+
     private Editorial editorial;
 
     public SeguimientoEditorial() {

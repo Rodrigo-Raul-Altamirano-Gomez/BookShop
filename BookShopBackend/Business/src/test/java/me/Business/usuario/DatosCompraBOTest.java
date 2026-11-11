@@ -31,7 +31,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
-
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -45,14 +44,24 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.spy;
 
 class DatosCompraBOTest {
+
     private static final Clock RELOJ = Clock.fixed(Instant.parse("2026-10-07T17:00:00Z"), ZoneId.of("America/Lima"));
+
     private static final LocalDate HOY = LocalDate.of(2026, 10, 7);
-    @TempDir Path temporal;
+
+    @TempDir
+    Path temporal;
+
     private String claveAnterior;
+
     private Connection conexion;
+
     private MockedStatic<DBManager> manager;
+
     private MetodoPagoDAOImpl metodos;
+
     private UsuarioDAOImpl usuarios;
+
     private MetodoPagoBOImpl bo;
 
     @BeforeEach
@@ -63,27 +72,12 @@ class DatosCompraBOTest {
         conexion = DriverManager.getConnection(url);
         manager = mockStatic(DBManager.class);
         manager.when(DBManager::getConnection).thenAnswer(inv -> DriverManager.getConnection(url));
-        String auditoria = ", usuario_creacion VARCHAR(254) NOT NULL, fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP, "
-                + "usuario_actualizacion VARCHAR(254), fecha_actualizacion DATETIME, eliminado BOOLEAN DEFAULT FALSE";
+        String auditoria = ", usuario_creacion VARCHAR(254) NOT NULL, fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP, " + "usuario_actualizacion VARCHAR(254), fecha_actualizacion DATETIME, eliminado BOOLEAN DEFAULT FALSE";
         try (var statement = conexion.createStatement()) {
-            statement.execute("CREATE TABLE USUARIO (id INT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(254) UNIQUE, "
-                    + "contrasenia VARCHAR(255), nombre VARCHAR(250), imagen VARCHAR(2048), "
-                    + "fecha_nacimiento DATETIME, activo BOOLEAN DEFAULT TRUE, rol VARCHAR(40) DEFAULT 'CLIENTE', "
-                    + "tiempo_total BIGINT DEFAULT 0, cantidad_pedidos_entregados INT DEFAULT 0" + auditoria + ")");
-            statement.execute("CREATE TABLE DIRECCION_ENVIO (id INT AUTO_INCREMENT PRIMARY KEY, id_usuario INT, "
-                    + "alias VARCHAR(100), calle VARCHAR(255), distrito VARCHAR(100), ciudad VARCHAR(100), "
-                    + "referencia VARCHAR(255), activo BOOLEAN DEFAULT TRUE, predeterminada BOOLEAN DEFAULT FALSE"
-                    + auditoria + ", marca INT GENERATED ALWAYS AS (CASE WHEN predeterminada THEN 1 ELSE NULL END), "
-                    + "UNIQUE(id_usuario, marca))");
-            statement.execute("CREATE TABLE METODO_PAGO (id INT AUTO_INCREMENT PRIMARY KEY, id_usuario INT, "
-                    + "titular VARCHAR(150), proveedor VARCHAR(100), alias VARCHAR(100), activo BOOLEAN DEFAULT TRUE, "
-                    + "tipo_metodo VARCHAR(40), numero_tarjeta_cifrado VARCHAR(512), numero_telefono_cifrado VARCHAR(512), "
-                    + "tipo_tarjeta VARCHAR(40), fecha_vencimiento DATE, predeterminado BOOLEAN DEFAULT FALSE"
-                    + auditoria + ", marca INT GENERATED ALWAYS AS (CASE WHEN predeterminado THEN 1 ELSE NULL END), "
-                    + "UNIQUE(id_usuario, marca))");
-            statement.execute("INSERT INTO USUARIO (id,email,contrasenia,nombre,fecha_nacimiento,usuario_creacion) "
-                    + "VALUES (1,'ana@test','hash','Ana','2000-01-01','ana@test'), "
-                    + "(2,'bea@test','hash','Bea','2000-01-01','bea@test')");
+            statement.execute("CREATE TABLE USUARIO (id INT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(254) UNIQUE, " + "contrasenia VARCHAR(255), nombre VARCHAR(250), imagen VARCHAR(2048), " + "fecha_nacimiento DATETIME, activo BOOLEAN DEFAULT TRUE, rol VARCHAR(40) DEFAULT 'CLIENTE', " + "tiempo_total BIGINT DEFAULT 0, cantidad_pedidos_entregados INT DEFAULT 0" + auditoria + ")");
+            statement.execute("CREATE TABLE DIRECCION_ENVIO (id INT AUTO_INCREMENT PRIMARY KEY, id_usuario INT, " + "alias VARCHAR(100), calle VARCHAR(255), distrito VARCHAR(100), ciudad VARCHAR(100), " + "referencia VARCHAR(255), activo BOOLEAN DEFAULT TRUE, predeterminada BOOLEAN DEFAULT FALSE" + auditoria + ", marca INT GENERATED ALWAYS AS (CASE WHEN predeterminada THEN 1 ELSE NULL END), " + "UNIQUE(id_usuario, marca))");
+            statement.execute("CREATE TABLE METODO_PAGO (id INT AUTO_INCREMENT PRIMARY KEY, id_usuario INT, " + "titular VARCHAR(150), proveedor VARCHAR(100), alias VARCHAR(100), activo BOOLEAN DEFAULT TRUE, " + "tipo_metodo VARCHAR(40), numero_tarjeta_cifrado VARCHAR(512), numero_telefono_cifrado VARCHAR(512), " + "tipo_tarjeta VARCHAR(40), fecha_vencimiento DATE, predeterminado BOOLEAN DEFAULT FALSE" + auditoria + ", marca INT GENERATED ALWAYS AS (CASE WHEN predeterminado THEN 1 ELSE NULL END), " + "UNIQUE(id_usuario, marca))");
+            statement.execute("INSERT INTO USUARIO (id,email,contrasenia,nombre,fecha_nacimiento,usuario_creacion) " + "VALUES (1,'ana@test','hash','Ana','2000-01-01','ana@test'), " + "(2,'bea@test','hash','Bea','2000-01-01','bea@test')");
         }
         metodos = new MetodoPagoDAOImpl();
         usuarios = new UsuarioDAOImpl();
@@ -99,13 +93,14 @@ class DatosCompraBOTest {
             statement.execute("DROP ALL OBJECTS");
         }
         conexion.close();
-        if (claveAnterior == null) System.clearProperty("bookshop.clave.file");
-        else System.setProperty("bookshop.clave.file", claveAnterior);
+        if (claveAnterior == null)
+            System.clearProperty("bookshop.clave.file");
+        else
+            System.setProperty("bookshop.clave.file", claveAnterior);
     }
 
     private DatosMetodoPagoDTO tarjeta(String numero, boolean predeterminado) {
-        return new DatosMetodoPagoDTO(true, "Ana", "Banco", "Tarjeta", numero, TipoTarjeta.CREDITO,
-                HOY.plusYears(1), predeterminado);
+        return new DatosMetodoPagoDTO(true, "Ana", "Banco", "Tarjeta", numero, TipoTarjeta.CREDITO, HOY.plusYears(1), predeterminado);
     }
 
     private DatosMetodoPagoDTO billetera(String proveedor, String numero, boolean predeterminado) {
@@ -114,8 +109,7 @@ class DatosCompraBOTest {
 
     @Test
     void altaDeTarjetaNormalizaCifraDevuelveMascaraYRespetaVencimientoInclusive() throws Exception {
-        var respuesta = bo.registrar(1, new DatosMetodoPagoDTO(true, " Ana ", " Banco ", " Tarjeta ",
-                "1234-5678 9012.3456", TipoTarjeta.DEBITO, HOY, true));
+        var respuesta = bo.registrar(1, new DatosMetodoPagoDTO(true, " Ana ", " Banco ", " Tarjeta ", "1234-5678 9012.3456", TipoTarjeta.DEBITO, HOY, true));
         TarjetaBancaria guardada = (TarjetaBancaria) metodos.leer(respuesta.id());
         assertEquals("1234567890123456", ProteccionDatos.descifrar(guardada.getNumeroTarjetaCifrado()));
         assertNotEquals("1234567890123456", guardada.getNumeroTarjetaCifrado());
@@ -134,8 +128,7 @@ class DatosCompraBOTest {
         bo.eliminar(1, propio.id());
         assertThrows(ConflictoException.class, () -> bo.registrar(2, tarjeta("1234567890123456", false)));
         var original = metodos.leer(propio.id());
-        var recuperado = bo.registrar(1, new DatosMetodoPagoDTO(true, "Nuevo titular", "Otro Banco", "Recuperada",
-                "1234567890123456", TipoTarjeta.DEBITO, HOY.plusYears(2), true));
+        var recuperado = bo.registrar(1, new DatosMetodoPagoDTO(true, "Nuevo titular", "Otro Banco", "Recuperada", "1234567890123456", TipoTarjeta.DEBITO, HOY.plusYears(2), true));
         assertEquals(propio.id(), recuperado.id());
         assertEquals(original.getFechaCreacion(), metodos.leer(propio.id()).getFechaCreacion());
         assertEquals(original.getUsuarioCreacion(), metodos.leer(propio.id()).getUsuarioCreacion());
@@ -188,8 +181,7 @@ class DatosCompraBOTest {
     void intentoPredeterminadoVencidoConservaAnteriorYDesmarcarNoEligeSustituto() throws Exception {
         var elegida = bo.registrar(1, tarjeta("1234567890123456", true));
         Usuario propietario = usuarios.leer(1);
-        TarjetaBancaria vencida = new TarjetaBancaria(0, "Ana", "Banco", propietario, "Vencida",
-                ProteccionDatos.cifrar("6543210987654321"), HOY.minusDays(1), TipoTarjeta.CREDITO);
+        TarjetaBancaria vencida = new TarjetaBancaria(0, "Ana", "Banco", propietario, "Vencida", ProteccionDatos.cifrar("6543210987654321"), HOY.minusDays(1), TipoTarjeta.CREDITO);
         vencida.setUsuarioCreacion("ana@test");
         metodos.insertar(vencida);
         TransactionContext.commit();
@@ -211,9 +203,7 @@ class DatosCompraBOTest {
             throw new SQLException("Fallo despues de retirar la marca");
         }).when(daoFallido).quitarPredeterminado(alta.id(), "ana@test");
         MetodoPagoBOImpl fallido = new MetodoPagoBOImpl(daoFallido, usuarios, RELOJ);
-        assertThrows(PersistenciaException.class, () -> fallido.modificar(1, alta.id(),
-                new DatosMetodoPagoDTO(true, "Titular modificado", "Banco", "Alias modificado", null,
-                        TipoTarjeta.DEBITO, HOY.plusYears(1), false)));
+        assertThrows(PersistenciaException.class, () -> fallido.modificar(1, alta.id(), new DatosMetodoPagoDTO(true, "Titular modificado", "Banco", "Alias modificado", null, TipoTarjeta.DEBITO, HOY.plusYears(1), false)));
         var conservado = bo.consultar(1, alta.id());
         assertEquals(alta.titular(), conservado.titular());
         assertEquals(alta.alias(), conservado.alias());
@@ -231,12 +221,10 @@ class DatosCompraBOTest {
         DireccionEnvioDAO fallo = spy(dao);
         doReturn(false).when(fallo).establecerPredeterminado(1, segunda.id(), "ana@test");
         var boFallido = new DireccionEnvioBOImpl(fallo, usuarios, RELOJ);
-        assertThrows(ConflictoException.class, () -> boFallido.modificar(1, segunda.id(),
-                new DatosDireccionEnvioDTO("Cambio fallido", "Calle distinta", "Distrito", "Lima", null, true)));
+        assertThrows(ConflictoException.class, () -> boFallido.modificar(1, segunda.id(), new DatosDireccionEnvioDTO("Cambio fallido", "Calle distinta", "Distrito", "Lima", null, true)));
         assertEquals("Trabajo", direcciones.consultar(1, segunda.id()).alias());
         assertTrue(direcciones.consultar(1, primera.id()).predeterminada());
-        var quitada = direcciones.modificar(1, primera.id(),
-                new DatosDireccionEnvioDTO("Casa editada", "Calle", "Distrito", "Lima", null, false));
+        var quitada = direcciones.modificar(1, primera.id(), new DatosDireccionEnvioDTO("Casa editada", "Calle", "Distrito", "Lima", null, false));
         assertFalse(quitada.predeterminada());
         assertFalse(direcciones.consultar(1, segunda.id()).predeterminada());
     }

@@ -5,40 +5,37 @@ namespace Web.Componentes.Paginas.Cuenta;
 
 public partial class MisSeguimientos
 {
-    [Inject] protected CuentaServicio Cuenta { get; set; } = default!;
-
-    [Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
+    [Inject] private HttpClientUtils Api { get; set; } = default!;
 
     protected override async Task CargarDatos()
     {
         if (Sesion.Usuario is null)
+        {
+            Referencias.Clear();
+            totalResultados = 0;
             return;
-        await Cuenta.CargarSeguimientos();
-        Sesion.Notificar();
+        }
+        var datos = await Api.Post<ResultadoPaginadoDTO<TarjetaReferenciaDTO>>(
+            "cuenta/seguimientos/busqueda", new ConsultaSeguimientosDTO
+            {
+                Tipo = CuentaServicio.TipoSeguimiento(Tipo),
+                Orden = Orden == "reciente" ? "MAS_RECIENTES" : "NOMBRE_ASCENDENTE",
+                Pagina = Pagina,
+                TamanioPagina = TamanoPagina
+            });
+        Referencias = datos.Items.Select(dto => Presentacion.Referencia(dto, Tipo)).ToList();
+        totalResultados = datos.TotalResultados;
     }
+
     private const string ClaveVista = "cuenta:mis-seguimientos";
     private string Tipo { get; set; } = "autores";
     private string Orden { get; set; } = "nombre";
     private int Pagina { get; set; } = 1;
 
     private const int TamanoPagina = 12;
-    private int TotalPaginas => Math.Max(1, (int)Math.Ceiling(Referencias.Count / (double)TamanoPagina));
-
-    private List<Referencia> Referencias
-    {
-        get
-        {
-            if (Sesion.Usuario is null)
-                return [];
-            var referencias = Catalogo.Referencias.Where(referencia => referencia.Tipo == Tipo && Cuenta.Seguimientos.Contains($"{referencia.Tipo}:{referencia.Id}"));
-            if (Orden == "reciente")
-                return referencias.OrderByDescending(referencia => Cuenta.OrdenSeguimientos[$"{referencia.Tipo}:{referencia.Id}"]).ToList();
-            return referencias.OrderBy(referencia => referencia.Nombre).ToList();
-        }
-    }
-
-    private IEnumerable<Referencia> ReferenciasPagina => Referencias.Skip((Pagina - 1) * TamanoPagina)
-        .Take(TamanoPagina);
+    private long totalResultados;
+    private int TotalPaginas => Math.Max(1, (int)((totalResultados + TamanoPagina - 1) / TamanoPagina));
+    private List<Referencia> Referencias = [];
 
     protected override void OnInitialized()
     {
@@ -48,7 +45,7 @@ public partial class MisSeguimientos
         {
             Tipo = vista.Tipo;
             Orden = vista.Orden;
-            Pagina = Sesion.Usuario is null ? vista.Pagina : Math.Min(vista.Pagina, TotalPaginas);
+            Pagina = vista.Pagina;
         }
     }
 
@@ -59,37 +56,42 @@ public partial class MisSeguimientos
         Pagina = Pagina
 
     };
-    private void MostrarAutores()
+    private async Task MostrarAutores()
     {
         Tipo = "autores";
         Pagina = 1;
         GuardarVista();
+        await ActualizarDatos();
     }
 
-    private void MostrarCategorias()
+    private async Task MostrarCategorias()
     {
         Tipo = "categorias";
         Pagina = 1;
         GuardarVista();
+        await ActualizarDatos();
     }
 
-    private void MostrarEditoriales()
+    private async Task MostrarEditoriales()
     {
         Tipo = "editoriales";
         Pagina = 1;
         GuardarVista();
+        await ActualizarDatos();
     }
 
-    private void ReiniciarPagina()
+    private async Task ReiniciarPagina()
     {
         Pagina = 1;
         GuardarVista();
+        await ActualizarDatos();
     }
 
-    private void CambiarPagina(int pagina)
+    private async Task CambiarPagina(int pagina)
     {
         Pagina = pagina;
         GuardarVista();
+        await ActualizarDatos();
     }
 
     private class VistaSeguimientos

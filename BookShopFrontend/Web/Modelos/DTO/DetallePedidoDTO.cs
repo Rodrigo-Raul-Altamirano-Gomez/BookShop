@@ -41,7 +41,11 @@ public class DetallePedidoDTO
     {
     }
 
-    public DetallePedidoDTO(ResumenPedidoDTO pedido, ResumenCompraDTO resumen, DireccionEnvioDTO direccionEnvio, MetodoPagoDTO metodoPago, string identificadorTransaccion, string codigoSeguimiento, DateTime? fechaEntregaEstimada, DateTime? fechaSalida, DateTime? fechaEntrega, bool puedeCancelar, bool puedeSolicitarDevolucion)
+    public DetallePedidoDTO(
+        ResumenPedidoDTO pedido, ResumenCompraDTO resumen, DireccionEnvioDTO direccionEnvio,
+        MetodoPagoDTO metodoPago, string identificadorTransaccion, string codigoSeguimiento,
+        DateTime? fechaEntregaEstimada, DateTime? fechaSalida, DateTime? fechaEntrega, bool puedeCancelar,
+        bool puedeSolicitarDevolucion)
     {
         Pedido = pedido;
         Resumen = resumen;

@@ -5,5 +5,6 @@ import me.Model.dto.ConfiguracionDTO;
 
 @FunctionalInterface
 public interface ProveedorConfiguracion {
+
     ConfiguracionDTO obtener() throws NegocioException;
 }

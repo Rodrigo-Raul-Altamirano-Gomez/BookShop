@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import me.Model.entities.usuario.Usuario;
 
 public class Cupon {
+
     private int id;
     private Usuario usuario;
     private BigDecimal porcentaje;
@@ -24,8 +25,8 @@ public class Cupon {
         this.fechaCreacion = LocalDateTime.now();
     }
 
-    public Cupon(int id, Usuario usuario, BigDecimal porcentaje, BigDecimal montoMinimo,
-                 LocalDateTime fechaInicio, LocalDateTime fechaFin) {
+    public Cupon(int id, Usuario usuario, BigDecimal porcentaje, BigDecimal montoMinimo, LocalDateTime
+        fechaInicio, LocalDateTime fechaFin) {
         this();
         this.id = id;
         this.usuario = usuario;
@@ -140,20 +141,21 @@ public class Cupon {
     }
 
     public boolean estaVigente(LocalDateTime fechaActual) {
-        return fechaActual != null && fechaInicio != null && fechaFin != null
-                && !fechaActual.isBefore(fechaInicio) && !fechaActual.isAfter(fechaFin);
+        return fechaActual != null && fechaInicio != null && fechaFin != null &&
+            !fechaActual.isBefore(fechaInicio) && !fechaActual.isAfter(fechaFin);
     }
 
     public boolean esAplicable(BigDecimal subtotal, LocalDateTime fechaActual) {
-        return activo && !eliminado && !consumido && estaVigente(fechaActual)
-                && subtotal != null && subtotal.signum() >= 0 && montoMinimo != null
-                && montoMinimo.signum() >= 0 && subtotal.compareTo(montoMinimo) >= 0
-                && porcentaje != null && porcentaje.signum() > 0
-                && porcentaje.compareTo(new BigDecimal("100")) <= 0;
+        if (!activo || eliminado || consumido)
+            return false;
+        if (!estaVigente(fechaActual))
+            return false;
+        return subtotal.compareTo(montoMinimo) >= 0;
     }
 
     public BigDecimal calcularDescuento(BigDecimal subtotal, LocalDateTime fechaActual) {
-        if (!esAplicable(subtotal, fechaActual)) return BigDecimal.ZERO;
+        if (!esAplicable(subtotal, fechaActual))
+            return BigDecimal.ZERO;
         return subtotal.multiply(porcentaje).divide(new BigDecimal("100"));
     }
 

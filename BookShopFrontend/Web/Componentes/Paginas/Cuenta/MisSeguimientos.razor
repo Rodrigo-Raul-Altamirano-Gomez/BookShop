@@ -14,7 +14,7 @@
     <div class="results-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
         <h1>
             Mis seguimientos
-            <span>@Referencias.Count @Tipo</span>
+            <span>@totalResultados @Tipo</span>
         </h1>
         @if (Sesion.Usuario is not null)
         {
@@ -72,7 +72,7 @@
         else
         {
             <div class="reference-grid row row-cols-2 row-cols-md-3 row-cols-xl-6 g-4">
-                @foreach (var referencia in ReferenciasPagina)
+                @foreach (var referencia in Referencias)
                 {
                     <TarjetaReferencia Referencia="referencia" />
                 }

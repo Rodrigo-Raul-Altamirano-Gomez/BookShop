@@ -3,6 +3,7 @@ package me.Model.entities.usuario;
 import java.time.LocalDateTime;
 
 public abstract class Seguimiento {
+
     private int id;
     private Usuario usuario;
     private boolean eliminado;

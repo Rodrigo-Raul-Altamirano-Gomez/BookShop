@@ -3,6 +3,7 @@ package me.Model.entities.catalogo;
 import java.time.LocalDateTime;
 
 public class Categoria {
+
     private int id;
     private String nombre;
     private String imagen;

@@ -8,12 +8,17 @@ import me.Model.dto.usuario.TipoSeguimiento;
 import me.Model.entities.usuario.Seguimiento;
 
 public interface SeguimientoDAO {
+
     void insertar(Seguimiento seguimiento) throws SQLException;
+
     Seguimiento leer(int id) throws SQLException;
+
     boolean eliminar(int id, String usuario) throws SQLException;
+
     void guardar(int idUsuario, TipoSeguimiento tipo, int idReferencia, String usuario) throws SQLException;
+
     boolean retirar(int idUsuario, TipoSeguimiento tipo, int idReferencia, String usuario) throws SQLException;
+
     ResultadoPaginadoDTO<TarjetaReferenciaDTO> listarPorUsuario(int idUsuario, TipoSeguimiento tipo,
-                                                             OrdenReferencia orden, int pagina, int tamanioPagina)
-            throws SQLException;
+        OrdenReferencia orden, int pagina, int tamanioPagina) throws SQLException;
 }

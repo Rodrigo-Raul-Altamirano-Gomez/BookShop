@@ -9,12 +9,10 @@ import java.util.ArrayList;
 import java.util.List;
 import me.Business.exceptions.AccesoDenegadoException;
 import me.Business.exceptions.ConflictoException;
-import me.Business.exceptions.CuentaInactivaException;
 import me.Business.exceptions.NegocioException;
 import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.RecursoNoEncontradoException;
 import me.Business.exceptions.ValidacionException;
-import me.Business.Autorizacion;
 import me.Business.ProteccionDatos;
 import me.DAO.usuario.MetodoPagoDAO;
 import me.DAO.usuario.MetodoPagoDAOImpl;
@@ -30,10 +28,10 @@ import me.Model.entities.compra.TarjetaBancaria;
 import me.Model.entities.usuario.Usuario;
 
 public class MetodoPagoBOImpl implements MetodoPagoBO {
+
     private final MetodoPagoDAO metodoPagoDAO;
     private final UsuarioDAO usuarioDAO;
     private final Clock reloj;
-    private final Autorizacion autorizacion;
 
     public MetodoPagoBOImpl() {
         this(new MetodoPagoDAOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")));
@@ -43,20 +41,23 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
         this.metodoPagoDAO = metodoPagoDAO;
         this.usuarioDAO = usuarioDAO;
         this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
-        this.autorizacion = new Autorizacion(usuarioDAO);
     }
 
     @Override
     public MetodoPagoDTO registrar(int idActor, DatosMetodoPagoDTO datos) throws NegocioException {
-        Usuario actor = autorizacion.usuarioActivo(idActor);
-        DatosMetodoPagoDTO validos = validarFormulario(datos, false);
-        LocalDate hoy = LocalDate.now(reloj);
         try {
-            bloquearUsuario(idActor);
+            Usuario actor = usuarioDAO.leer(idActor);
+            DatosMetodoPagoDTO validos = validarFormulario(datos, false);
+            LocalDate hoy = LocalDate.now(reloj);
             MetodoPago recuperado = null;
             List<MetodoPago> existentes = metodoPagoDAO.listarParaComprobarNumeros(validos.tarjetaBancaria());
             for (MetodoPago existente : existentes) {
-                if (!mismoNumero(existente, validos.numero(), validos.proveedor())) continue;
+                String numeroExistente = numeroCompleto(existente);
+                if (!numeroExistente.equals(validos.numero()))
+                    continue;
+                if (existente instanceof BilleteraDigital &&
+                    !existente.getProveedor().equalsIgnoreCase(validos.proveedor()))
+                    continue;
                 if (existente.getUsuario().getId() != idActor || !existente.isEliminado()) {
                     throw new ConflictoException("Ese metodo de pago ya esta registrado.");
                 }
@@ -100,12 +101,11 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
 
     @Override
     public MetodoPagoDTO modificar(int idActor, int idMetodo, DatosMetodoPagoDTO datos) throws NegocioException {
-        Usuario actor = autorizacion.usuarioActivo(idActor);
-        DatosMetodoPagoDTO validos = validarFormulario(datos, true);
-        LocalDate hoy = LocalDate.now(reloj);
         try {
-            bloquearUsuario(idActor);
-            MetodoPago metodo = metodoPagoDAO.leerParaActualizar(idMetodo);
+            Usuario actor = usuarioDAO.leer(idActor);
+            DatosMetodoPagoDTO validos = validarFormulario(datos, true);
+            LocalDate hoy = LocalDate.now(reloj);
+            MetodoPago metodo = metodoPagoDAO.leer(idMetodo);
             comprobarPropiedad(metodo, actor);
             boolean tarjeta = metodo instanceof TarjetaBancaria;
             if (tarjeta != validos.tarjetaBancaria()) {
@@ -113,9 +113,15 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
             }
             String numero = validos.numero() == null ? numeroCompleto(metodo) : validos.numero();
             for (MetodoPago existente : metodoPagoDAO.listarParaComprobarNumeros(tarjeta)) {
-                if (existente.getId() != idMetodo && mismoNumero(existente, numero, validos.proveedor())) {
-                    throw new ConflictoException("Ese metodo de pago ya esta registrado.");
-                }
+                if (existente.getId() == idMetodo)
+                    continue;
+                String numeroExistente = numeroCompleto(existente);
+                if (!numeroExistente.equals(numero))
+                    continue;
+                if (existente instanceof BilleteraDigital &&
+                    !existente.getProveedor().equalsIgnoreCase(validos.proveedor()))
+                    continue;
+                throw new ConflictoException("Ese metodo de pago ya esta registrado.");
             }
             boolean eraPredeterminado = metodo.isPredeterminado();
             asignarDatos(metodo, validos, numero, hoy);
@@ -148,8 +154,8 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
 
     @Override
     public MetodoPagoDTO consultar(int idActor, int idMetodo) throws NegocioException {
-        Usuario actor = autorizacion.usuarioActivo(idActor);
         try {
+            Usuario actor = usuarioDAO.leer(idActor);
             MetodoPago metodo = metodoPagoDAO.leer(idMetodo);
             comprobarPropiedad(metodo, actor);
             return MetodosPago.aDTO(metodo, LocalDate.now(reloj));
@@ -159,16 +165,17 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
     }
 
     @Override
-    public ResultadoPaginadoDTO<MetodoPagoDTO> listar(int idActor, int pagina, int tamanioPagina)
-            throws NegocioException {
-        Usuario actor = autorizacion.usuarioActivo(idActor);
-        if (pagina < 1 || tamanioPagina < 1)
-            throw new ValidacionException("pagina", "La página y su tamaño deben ser positivos.");
-        LocalDate hoy = LocalDate.now(reloj);
+    public ResultadoPaginadoDTO<MetodoPagoDTO> listar(int idActor, int pagina, int tamanioPagina) throws
+        NegocioException {
         try {
+            Usuario actor = usuarioDAO.leer(idActor);
+            if (pagina < 1 || tamanioPagina < 1)
+                throw new ValidacionException("pagina", "La página y su tamaño deben ser positivos.");
+            LocalDate hoy = LocalDate.now(reloj);
             // Entrar a Datos de compra es un evento explicito que actualiza las vigencias.
             metodoPagoDAO.desactivarVencidos(hoy, actor.getEmail());
-            ResultadoPaginadoDTO<MetodoPago> registros = metodoPagoDAO.listarPorUsuario(idActor, pagina, tamanioPagina);
+            ResultadoPaginadoDTO<MetodoPago> registros = metodoPagoDAO.listarPorUsuario(idActor, pagina,
+                tamanioPagina);
             List<MetodoPagoDTO> respuestas = new ArrayList<>();
             for (MetodoPago metodo : registros.items()) respuestas.add(MetodosPago.aDTO(metodo, hoy));
             return new ResultadoPaginadoDTO<>(respuestas, registros.totalResultados(), pagina, tamanioPagina);
@@ -179,8 +186,8 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
 
     @Override
     public void eliminar(int idActor, int idMetodo) throws NegocioException {
-        Usuario actor = autorizacion.usuarioActivo(idActor);
         try {
+            Usuario actor = usuarioDAO.leer(idActor);
             comprobarPropiedad(metodoPagoDAO.leer(idMetodo), actor);
             if (!metodoPagoDAO.eliminar(idMetodo, actor.getEmail())) {
                 throw new ConflictoException("El metodo ya se habia eliminado.");
@@ -192,11 +199,10 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
 
     @Override
     public void establecerPredeterminado(int idActor, int idMetodo) throws NegocioException {
-        Usuario actor = autorizacion.usuarioActivo(idActor);
-        LocalDate hoy = LocalDate.now(reloj);
         try {
-            bloquearUsuario(idActor);
-            MetodoPago metodo = metodoPagoDAO.leerParaActualizar(idMetodo);
+            Usuario actor = usuarioDAO.leer(idActor);
+            LocalDate hoy = LocalDate.now(reloj);
+            MetodoPago metodo = metodoPagoDAO.leer(idMetodo);
             comprobarPropiedad(metodo, actor);
             if (!metodo.validarEstado(hoy)) {
                 throw new ConflictoException("Un metodo vencido no puede elegirse como predeterminado.");
@@ -216,43 +222,51 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
         }
     }
 
-    private DatosMetodoPagoDTO validarFormulario(DatosMetodoPagoDTO datos, boolean edicion) throws ValidacionException {
-        if (datos == null) throw new ValidacionException("metodo", "Los datos del metodo de pago son obligatorios.");
+    private DatosMetodoPagoDTO validarFormulario(DatosMetodoPagoDTO datos, boolean edicion) throws
+        ValidacionException {
+        if (datos == null)
+            throw new ValidacionException("metodo", "Los datos del metodo de pago son obligatorios.");
         String numero = datos.numero();
         if (edicion && (numero == null || numero.isBlank())) {
             numero = null;
         } else {
-            if (numero == null) throw new ValidacionException("numero", "El numero es obligatorio.");
+            if (numero == null)
+                throw new ValidacionException("numero", "El numero es obligatorio.");
             numero = numero.replaceAll("[\\s().-]", "");
             String formato = datos.tarjetaBancaria() ? "[0-9]{16}" : "9[0-9]{8}";
             if (!numero.matches(formato)) {
-                throw new ValidacionException("numero", datos.tarjetaBancaria()
-                        ? "La tarjeta debe tener dieciseis digitos." : "El celular debe tener nueve digitos y comenzar por 9.");
+                throw new ValidacionException("numero", datos.tarjetaBancaria() ?
+                    "La tarjeta debe tener dieciseis digitos." :
+                    "El celular debe tener nueve digitos y comenzar por 9.");
             }
         }
         if (datos.tarjetaBancaria()) {
-            if (datos.tipoTarjeta() == null) throw new ValidacionException("tipoTarjeta", "Selecciona credito o debito.");
+            if (datos.tipoTarjeta() == null)
+                throw new ValidacionException("tipoTarjeta", "Selecciona credito o debito.");
             if (datos.fechaVencimiento() == null || datos.fechaVencimiento().isBefore(LocalDate.now(reloj))) {
                 throw new ValidacionException("fechaVencimiento", "La tarjeta debe tener un vencimiento vigente.");
             }
         } else if (datos.tipoTarjeta() != null || datos.fechaVencimiento() != null) {
-            throw new ValidacionException("fechaVencimiento", "La vigencia de la billetera se determina automaticamente.");
+            throw new ValidacionException("fechaVencimiento",
+                "La vigencia de la billetera se determina automaticamente.");
         }
         String titular = datos.titular() == null ? "" : datos.titular().strip();
-        if (titular.isEmpty()) throw new ValidacionException("titular", "Este campo es obligatorio.");
+        if (titular.isEmpty())
+            throw new ValidacionException("titular", "Este campo es obligatorio.");
         if (titular.length() > 150)
             throw new ValidacionException("titular", "El máximo es 150 caracteres.");
         String proveedor = datos.proveedor() == null ? "" : datos.proveedor().strip();
-        if (proveedor.isEmpty()) throw new ValidacionException("proveedor", "Este campo es obligatorio.");
+        if (proveedor.isEmpty())
+            throw new ValidacionException("proveedor", "Este campo es obligatorio.");
         if (proveedor.length() > 100)
             throw new ValidacionException("proveedor", "El máximo es 100 caracteres.");
         String alias = datos.alias() == null ? null : datos.alias().strip();
-        if (alias != null && alias.isEmpty()) alias = null;
+        if (alias != null && alias.isEmpty())
+            alias = null;
         if (alias != null && alias.length() > 100)
             throw new ValidacionException("alias", "El máximo es 100 caracteres.");
-        return new DatosMetodoPagoDTO(datos.tarjetaBancaria(), titular,
-                proveedor, alias,
-                numero, datos.tipoTarjeta(), datos.fechaVencimiento(), datos.predeterminado());
+        return new DatosMetodoPagoDTO(datos.tarjetaBancaria(), titular, proveedor, alias, numero,
+            datos.tipoTarjeta(), datos.fechaVencimiento(), datos.predeterminado());
     }
 
     private String numeroCompleto(MetodoPago metodo) throws NegocioException {
@@ -267,28 +281,19 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
         return ProteccionDatos.descifrar(cifrado);
     }
 
-    private boolean mismoNumero(MetodoPago existente, String numero, String proveedor) throws NegocioException {
-        if (!numero.equals(numeroCompleto(existente))) return false;
-        return existente instanceof TarjetaBancaria || existente.getProveedor().trim().equalsIgnoreCase(proveedor);
-    }
-
     private void asignarDatos(MetodoPago metodo, DatosMetodoPagoDTO datos, String numero, LocalDate hoy)
-            throws NegocioException {
+        throws NegocioException {
         metodo.setTitular(datos.titular());
         metodo.setProveedor(datos.proveedor());
         metodo.setAlias(datos.alias());
         if (metodo instanceof TarjetaBancaria) {
             TarjetaBancaria tarjeta = (TarjetaBancaria) metodo;
-            if (tarjeta.getNumeroTarjetaCifrado() == null || !numero.equals(numeroCompleto(tarjeta))) {
-                tarjeta.setNumeroTarjetaCifrado(ProteccionDatos.cifrar(numero));
-            }
+            tarjeta.setNumeroTarjetaCifrado(ProteccionDatos.cifrar(numero));
             tarjeta.setTipoTarjeta(datos.tipoTarjeta());
             tarjeta.setFechaVencimiento(datos.fechaVencimiento());
         } else {
             BilleteraDigital billetera = (BilleteraDigital) metodo;
-            if (billetera.getNumeroTelefonoCifrado() == null || !numero.equals(numeroCompleto(billetera))) {
-                billetera.setNumeroTelefonoCifrado(ProteccionDatos.cifrar(numero));
-            }
+            billetera.setNumeroTelefonoCifrado(ProteccionDatos.cifrar(numero));
             if (billetera.getFechaVencimiento() == null || billetera.getFechaVencimiento().isBefore(hoy)) {
                 billetera.setFechaVencimiento(hoy.plusDays(365));
             }
@@ -296,13 +301,9 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
         metodo.setActivo(!metodo.getFechaVencimiento().isBefore(hoy));
     }
 
-    private void bloquearUsuario(int idActor) throws SQLException, NegocioException {
-        Usuario usuario = usuarioDAO.leerParaActualizar(idActor);
-        if (usuario == null || !usuario.estaDisponible()) throw new CuentaInactivaException("La cuenta ya no esta activa.");
-    }
-
     private void comprobarPropiedad(MetodoPago metodo, Usuario actor) throws NegocioException {
-        if (metodo == null || metodo.isEliminado()) throw new RecursoNoEncontradoException("El metodo de pago no existe.");
+        if (metodo == null || metodo.isEliminado())
+            throw new RecursoNoEncontradoException("El metodo de pago no existe.");
         if (metodo.getUsuario().getId() != actor.getId()) {
             throw new AccesoDenegadoException("El metodo de pago pertenece a otro usuario.");
         }

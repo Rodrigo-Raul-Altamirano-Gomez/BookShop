@@ -27,8 +27,10 @@ import me.Service.Sesion;
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
 public class MetodoPagoRS {
+
     @Inject
     private Servicios servicios;
+
     @Context
     private HttpServletRequest peticion;
 
@@ -39,9 +41,8 @@ public class MetodoPagoRS {
 
     @PUT
     @Path("{idMetodo}")
-    public MetodoPagoDTO modificar(
-            @PathParam("idMetodo") int idMetodo,
-            DatosMetodoPagoDTO datos) throws NegocioException {
+    public MetodoPagoDTO modificar(@PathParam("idMetodo") int idMetodo, DatosMetodoPagoDTO datos) throws
+        NegocioException {
         return servicios.getMetodoPagoBO().modificar(Sesion.exigirIdUsuario(peticion), idMetodo, datos);
     }
 
@@ -52,9 +53,8 @@ public class MetodoPagoRS {
     }
 
     @GET
-    public ResultadoPaginadoDTO<MetodoPagoDTO> listar(
-            @DefaultValue("1") @QueryParam("pagina") int pagina,
-            @DefaultValue("10") @QueryParam("tamanioPagina") int tamanioPagina) throws NegocioException {
+    public ResultadoPaginadoDTO<MetodoPagoDTO> listar(@DefaultValue("1") @QueryParam("pagina") int pagina,
+        @DefaultValue("10") @QueryParam("tamanioPagina") int tamanioPagina) throws NegocioException {
         return servicios.getMetodoPagoBO().listar(Sesion.exigirIdUsuario(peticion), pagina, tamanioPagina);
     }
 

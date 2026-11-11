@@ -17,8 +17,6 @@ public partial class DetalleLibro : IDisposable
 
     [Inject] protected CuentaServicio Cuenta { get; set; } = default!;
 
-    [Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
-
     [Inject]
     private SesionUsuario Sesion { get; set; } = default!;
 
@@ -27,7 +25,7 @@ public partial class DetalleLibro : IDisposable
 
     [Parameter]
     public int Id { get; set; }
-    private Libro? Libro => Catalogo.Libros.FirstOrDefault(libro => libro.Id == Id);
+    private Libro? Libro;
 
     private int cantidad = 1, idAnterior, paginaResenas = 1;
     private bool sinopsisCompleta, fichaExpandida;
@@ -38,7 +36,8 @@ public partial class DetalleLibro : IDisposable
     {
         get
         {
-            if (totalResenas == 0) return 0;
+            if (totalResenas == 0)
+                return 0;
             long puntos = 0;
             for (int estrellas = 1; estrellas <= 5; estrellas++)
                 puntos += estrellas * CantidadEstrellas(estrellas);
@@ -68,7 +67,7 @@ public partial class DetalleLibro : IDisposable
 
             var detalle = await Api.Get<DetalleLibroDTO>($"libros/{Id}");
             detalleLibro = detalle;
-            Catalogo.Recordar(Presentacion.Libro(detalle));
+            Libro = Presentacion.Libro(detalle);
             valoracion = detalle.Valoracion;
             if (detalle.Favorito)
                 Cuenta.Favoritos.Add(Id);
@@ -78,7 +77,8 @@ public partial class DetalleLibro : IDisposable
                 Cuenta.Deseados.Add(Id);
             else
                 Cuenta.Deseados.Remove(Id);
-            LibrosSimilares = (await Api.Get<List<TarjetaLibroDTO>>($"recomendaciones/similares/{Id}")).Select(Presentacion.Libro).ToList();
+            var similares = await Api.Get<List<TarjetaLibroDTO>>($"recomendaciones/similares/{Id}");
+            LibrosSimilares = similares.Select(Presentacion.Libro).ToList();
             await CargarResenas();
             idAnterior = Id;
             Sesion.Notificar();
@@ -94,19 +94,20 @@ public partial class DetalleLibro : IDisposable
     }
     private async Task CargarResenas()
     {
-        var datos = await Api.Post<ResultadoPaginadoDTO<ResenaDTO>>($"resenas/libro/{Id}/busqueda", new ConsultaResenasDTO
-        {
-            Orden = "MAS_RECIENTES",
-            Pagina = paginaResenas,
-            TamanioPagina = 10
-        });
+        var datos = await Api.Post<ResultadoPaginadoDTO<ResenaDTO>>(
+            $"resenas/libro/{Id}/busqueda", new ConsultaResenasDTO
+            {
+                Orden = "MAS_RECIENTES",
+                Pagina = paginaResenas,
+                TamanioPagina = 10
+            });
         totalResenas = datos.TotalResultados;
         resenas = datos.Items.Where(dto => dto.Activo).Select(dto => new Resena
         {
             Id = dto.Id,
             IdLibro = dto.IdLibro,
             Usuario = dto.NombreUsuario,
-            FotoUsuario = Presentacion.Imagen(dto.ImagenUsuario, "/images/user-placeholder.svg"),
+            FotoUsuario = dto.ImagenUsuario ?? "/images/user-placeholder.svg",
             Fecha = dto.Fecha,
             Puntuacion = dto.Puntuacion,
             Comentario = dto.Comentario,
@@ -127,7 +128,12 @@ public partial class DetalleLibro : IDisposable
     public void Dispose() => Sesion.Cambiado -= ActualizarVista;
     private static string TextoEstrellas(int puntuacion) => new string('★', puntuacion) + new string('☆',
          5 - puntuacion);
-    private int PorcentajePuntuacion(int puntuacion) => totalResenas == 0 ? 0 : (int)(CantidadEstrellas(puntuacion) * 100 / totalResenas);
+    private int PorcentajePuntuacion(int puntuacion)
+    {
+        if (totalResenas == 0)
+            return 0;
+        return (int)(CantidadEstrellas(puntuacion) * 100 / totalResenas);
+    }
     private void Disminuir()
     {
         if (cantidad > 1)
@@ -182,15 +188,15 @@ public partial class DetalleLibro : IDisposable
 
     private void Comparar()
     {
-        if (Sesion.IdComparacion == Id)
+        if (Sesion.LibroComparacion?.Id == Id)
         {
             Sesion.Avisar("Selecciona otro libro para comparar");
             return;
         }
 
-        if (Sesion.IdComparacion is null)
+        if (Sesion.LibroComparacion is null)
         {
-            Sesion.IdComparacion = Id;
+            Sesion.LibroComparacion = Libro;
             Sesion.Notificar();
             Navegacion.NavigateTo("/catalogo");
         }

@@ -38,7 +38,8 @@
     </div>
 </header>
 <main id="main-content" class="site-main">
-    <Cargando EnCurso="@Catalogo.Cargando" Error="@(Catalogo.Inicializado ? null : Sesion.Error)" AlReintentar="Catalogo.Inicializar">
+    <Cargando EnCurso="@Catalogo.Cargando"
+        Error="@(Catalogo.Inicializado ? null : Sesion.Error)" AlReintentar="Catalogo.Inicializar">
         @if (Catalogo.Inicializado) { @Body }
     </Cargando>
 </main>
@@ -75,7 +76,8 @@
             <nav class="offcanvas-body d-flex flex-column gap-1" aria-label="Mi cuenta">
                 @foreach (var enlace in EnlacesCuenta)
                 {
-                    <button class="btn d-flex align-items-center gap-3" @onclick="() => NavegarCuenta(enlace.Ruta)">
+                    <button class="btn d-flex align-items-center gap-3"
+                        @onclick="() => NavegarCuenta(enlace.Ruta)">
                         <Icono Nombre="@enlace.Icono" />
                         @enlace.Etiqueta
                         <Icono Nombre="arrow" />
@@ -112,10 +114,10 @@
         </div>
     </Modal>
 }
-@if (Sesion.IdComparacion is int compareId && Catalogo.Libros.FirstOrDefault(libro => libro.Id == compareId) is Libro compareBook)
+@if (Sesion.LibroComparacion is Libro compareBook)
 {
     <div class="card comparison-dock d-flex flex-row align-items-center gap-3 p-3 shadow-sm">
-        <a class="d-flex align-items-center gap-2" href="/libros/@compareId">
+        <a class="d-flex align-items-center gap-2" href="/libros/@compareBook.Id">
             <img src="@compareBook.Portada" alt="@compareBook.Titulo" />
             <span>@compareBook.Titulo</span>
         </a>

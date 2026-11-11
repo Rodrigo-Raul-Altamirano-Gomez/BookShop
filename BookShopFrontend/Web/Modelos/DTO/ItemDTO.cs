@@ -38,7 +38,9 @@ public class ItemDTO
     {
     }
 
-    public ItemDTO(int idLibro, string titulo, string? portada, int cantidad, decimal precioOriginal, decimal precioUnitario, decimal porcentajeDescuento, decimal subtotal, bool? activo, int? stockDisponible)
+    public ItemDTO(
+        int idLibro, string titulo, string? portada, int cantidad, decimal precioOriginal, decimal precioUnitario,
+        decimal porcentajeDescuento, decimal subtotal, bool? activo, int? stockDisponible)
     {
         IdLibro = idLibro;
         Titulo = titulo;

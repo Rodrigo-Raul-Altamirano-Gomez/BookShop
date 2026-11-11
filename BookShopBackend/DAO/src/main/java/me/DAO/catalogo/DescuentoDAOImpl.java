@@ -18,14 +18,12 @@ import me.Model.entities.catalogo.Descuento;
 import me.Model.entities.catalogo.Libro;
 
 public class DescuentoDAOImpl implements DescuentoDAO {
+
     @Override
     public void insertar(Descuento descuento) throws SQLException {
         Connection conexion = TransactionContext.getConnection();
-        if (haySuperposicion(descuento.getLibro().getId(), 0, descuento.getFechaInicio(), descuento.getFechaFin())) {
-            throw new SQLException("El descuento se superpone con otro del libro.");
-        }
-        String sql = "INSERT INTO DESCUENTO (id_libro,porcentaje,fecha_inicio,fecha_fin,activo,"
-                + " usuario_creacion,fecha_creacion) VALUES (?,?,?,?,?,?,?)";
+        String sql = "INSERT INTO DESCUENTO (id_libro,porcentaje,fecha_inicio,fecha_fin,activo," +
+            " usuario_creacion,fecha_creacion) VALUES (?,?,?,?,?,?,?)";
         try (PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             sentencia.setInt(1, descuento.getLibro().getId());
             sentencia.setBigDecimal(2, descuento.getPorcentaje());
@@ -36,7 +34,8 @@ public class DescuentoDAOImpl implements DescuentoDAO {
             sentencia.setTimestamp(7, Timestamp.valueOf(descuento.getFechaCreacion()));
             sentencia.executeUpdate();
             try (ResultSet claves = sentencia.getGeneratedKeys()) {
-                if (!claves.next()) throw new SQLException("No se obtuvo el id del descuento.");
+                if (!claves.next())
+                    throw new SQLException("No se obtuvo el id del descuento.");
                 descuento.setId(claves.getInt(1));
             }
         }
@@ -45,20 +44,8 @@ public class DescuentoDAOImpl implements DescuentoDAO {
     @Override
     public void modificar(Descuento descuento) throws SQLException {
         Connection conexion = TransactionContext.getConnection();
-        int idLibro;
-        // La referencia persistida manda; editar datos nunca cambia el libro asociado.
-        try (PreparedStatement consulta = conexion.prepareStatement("SELECT id_libro FROM DESCUENTO WHERE id=? AND eliminado=FALSE")) {
-            consulta.setInt(1, descuento.getId());
-            try (ResultSet resultado = consulta.executeQuery()) {
-                if (!resultado.next()) throw new SQLException("El descuento no esta disponible.");
-                idLibro = resultado.getInt("id_libro");
-            }
-        }
-        if (haySuperposicion(idLibro, descuento.getId(), descuento.getFechaInicio(), descuento.getFechaFin())) {
-            throw new SQLException("El descuento se superpone con otro del libro.");
-        }
-        String sql = "UPDATE DESCUENTO SET porcentaje=?,fecha_inicio=?,fecha_fin=?,activo=?,"
-                + " usuario_actualizacion=?,fecha_actualizacion=CURRENT_TIMESTAMP WHERE id=? AND eliminado=FALSE";
+        String sql = "UPDATE DESCUENTO SET porcentaje=?,fecha_inicio=?,fecha_fin=?,activo=?," +
+            " usuario_actualizacion=?,fecha_actualizacion=CURRENT_TIMESTAMP WHERE id=? AND eliminado=FALSE";
         try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setBigDecimal(1, descuento.getPorcentaje());
             sentencia.setTimestamp(2, Timestamp.valueOf(descuento.getFechaInicio()));
@@ -73,18 +60,7 @@ public class DescuentoDAOImpl implements DescuentoDAO {
     @Override
     public Descuento leer(int id) throws SQLException {
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement sentencia = conexion.prepareStatement("SELECT * FROM DESCUENTO WHERE id=?")) {
-            sentencia.setInt(1, id);
-            try (ResultSet resultado = sentencia.executeQuery()) {
-                return resultado.next() ? mapearDescuento(resultado) : null;
-            }
-        }
-    }
-
-    @Override
-    public Descuento leerParaActualizar(int id) throws SQLException {
-        Connection conexion = TransactionContext.getConnection();
-        try (PreparedStatement sentencia = conexion.prepareStatement("SELECT * FROM DESCUENTO WHERE id=? FOR UPDATE")) {
+            PreparedStatement sentencia = conexion.prepareStatement("SELECT * FROM DESCUENTO WHERE id=?")) {
             sentencia.setInt(1, id);
             try (ResultSet resultado = sentencia.executeQuery()) {
                 return resultado.next() ? mapearDescuento(resultado) : null;
@@ -95,8 +71,8 @@ public class DescuentoDAOImpl implements DescuentoDAO {
     @Override
     public boolean eliminar(int id, String usuario) throws SQLException {
         Connection conexion = TransactionContext.getConnection();
-        String sql = "UPDATE DESCUENTO SET eliminado=TRUE,activo=FALSE,usuario_actualizacion=?,"
-                + " fecha_actualizacion=CURRENT_TIMESTAMP WHERE id=? AND eliminado=FALSE";
+        String sql = "UPDATE DESCUENTO SET eliminado=TRUE,activo=FALSE,usuario_actualizacion=?," +
+            " fecha_actualizacion=CURRENT_TIMESTAMP WHERE id=? AND eliminado=FALSE";
         try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setString(1, usuario);
             sentencia.setInt(2, id);
@@ -105,21 +81,21 @@ public class DescuentoDAOImpl implements DescuentoDAO {
     }
 
     @Override
-    public ResultadoPaginadoDTO<DescuentoDTO> listarPorLibro(int idLibro, LocalDateTime fecha, int pagina, int tamanioPagina)
-            throws SQLException {
+    public ResultadoPaginadoDTO<DescuentoDTO> listarPorLibro(int idLibro, LocalDateTime fecha, int pagina, int
+        tamanioPagina) throws SQLException {
         List<DescuentoDTO> items = new ArrayList<>();
         long total;
         try (Connection conexion = DBManager.getConnection()) {
-            try (PreparedStatement contar = conexion.prepareStatement(
-                    "SELECT COUNT(*) FROM DESCUENTO WHERE id_libro=? AND eliminado=FALSE")) {
+            try (PreparedStatement contar =
+                conexion.prepareStatement("SELECT COUNT(*) FROM DESCUENTO WHERE id_libro=? AND eliminado=FALSE")) {
                 contar.setInt(1, idLibro);
                 try (ResultSet resultado = contar.executeQuery()) {
                     resultado.next();
                     total = resultado.getLong(1);
                 }
             }
-            String sql = "SELECT id,porcentaje,fecha_inicio,fecha_fin FROM DESCUENTO"
-                    + " WHERE id_libro=? AND eliminado=FALSE ORDER BY fecha_inicio DESC,id DESC LIMIT ? OFFSET ?";
+            String sql = "SELECT id,porcentaje,fecha_inicio,fecha_fin FROM DESCUENTO" +
+                " WHERE id_libro=? AND eliminado=FALSE ORDER BY fecha_inicio DESC,id DESC LIMIT ? OFFSET ?";
             try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
                 sentencia.setInt(1, idLibro);
                 sentencia.setInt(2, tamanioPagina);
@@ -129,9 +105,12 @@ public class DescuentoDAOImpl implements DescuentoDAO {
                         LocalDateTime inicio = resultado.getTimestamp("fecha_inicio").toLocalDateTime();
                         LocalDateTime fin = resultado.getTimestamp("fecha_fin").toLocalDateTime();
                         EstadoDescuento estado = EstadoDescuento.VIGENTE;
-                        if (fecha.isBefore(inicio)) estado = EstadoDescuento.PROXIMO;
-                        else if (fecha.isAfter(fin)) estado = EstadoDescuento.VENCIDO;
-                        items.add(new DescuentoDTO(resultado.getInt("id"), resultado.getBigDecimal("porcentaje"), inicio, fin, estado));
+                        if (fecha.isBefore(inicio))
+                            estado = EstadoDescuento.PROXIMO;
+                        else if (fecha.isAfter(fin))
+                            estado = EstadoDescuento.VENCIDO;
+                        items.add(new DescuentoDTO(resultado.getInt("id"),
+                            resultado.getBigDecimal("porcentaje"), inicio, fin, estado));
                     }
                 }
             }
@@ -141,15 +120,16 @@ public class DescuentoDAOImpl implements DescuentoDAO {
 
     @Override
     public Descuento obtenerVigente(int idLibro, LocalDateTime fecha) throws SQLException {
-        String sql = "SELECT * FROM DESCUENTO WHERE id_libro=? AND eliminado=FALSE"
-                + " AND fecha_inicio<=? AND fecha_fin>=? ORDER BY fecha_inicio DESC,id DESC LIMIT 1";
+        String sql = "SELECT * FROM DESCUENTO WHERE id_libro=? AND eliminado=FALSE" +
+            " AND fecha_inicio<=? AND fecha_fin>=? ORDER BY fecha_inicio DESC,id DESC LIMIT 1";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setInt(1, idLibro);
             sentencia.setTimestamp(2, Timestamp.valueOf(fecha));
             sentencia.setTimestamp(3, Timestamp.valueOf(fecha));
             try (ResultSet resultado = sentencia.executeQuery()) {
-                if (!resultado.next()) return null;
+                if (!resultado.next())
+                    return null;
                 Descuento descuento = mapearDescuento(resultado);
                 descuento.setActivo(true);
                 return descuento;
@@ -160,9 +140,10 @@ public class DescuentoDAOImpl implements DescuentoDAO {
     @Override
     public void actualizarVigencias(LocalDateTime fecha, String usuario) throws SQLException {
         String sql = "UPDATE DESCUENTO SET activo=(fecha_inicio<=? AND fecha_fin>=?),usuario_actualizacion=?,"
-                + " fecha_actualizacion=CURRENT_TIMESTAMP WHERE eliminado=FALSE AND activo<>(fecha_inicio<=? AND fecha_fin>=?)";
+            + " fecha_actualizacion=CURRENT_TIMESTAMP WHERE eliminado=FALSE AND activo<>(fecha_inicio<=?" +
+            " AND fecha_fin>=?)";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setTimestamp(1, Timestamp.valueOf(fecha));
             sentencia.setTimestamp(2, Timestamp.valueOf(fecha));
             sentencia.setString(3, usuario);
@@ -173,19 +154,12 @@ public class DescuentoDAOImpl implements DescuentoDAO {
     }
 
     @Override
-    public boolean haySuperposicion(int idLibro, int idExcluir, LocalDateTime inicio, LocalDateTime fin) throws SQLException {
-        Connection conexion = TransactionContext.getConnection();
-
-        try (PreparedStatement sentencia = conexion.prepareStatement("SELECT id FROM LIBRO WHERE id=? AND eliminado=FALSE FOR UPDATE")) {
-            sentencia.setInt(1, idLibro);
-            try (ResultSet resultado = sentencia.executeQuery()) {
-                if (!resultado.next()) throw new SQLException("El libro no esta disponible.");
-            }
-        }
-        // El bloqueo tambien consulta datos actuales si la transaccion ya tenia una lectura previa.
-        String sql = "SELECT 1 FROM DESCUENTO WHERE id_libro=? AND id<>? AND eliminado=FALSE"
-                + " AND fecha_inicio<=? AND fecha_fin>=? LIMIT 1 FOR UPDATE";
-        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+    public boolean haySuperposicion(int idLibro, int idExcluir, LocalDateTime inicio, LocalDateTime fin)
+        throws SQLException {
+        String sql = "SELECT 1 FROM DESCUENTO WHERE id_libro=? AND id<>? AND eliminado=FALSE" +
+            " AND fecha_inicio<=? AND fecha_fin>=? LIMIT 1";
+        try (Connection conexion = DBManager.getConnection();
+            PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setInt(1, idLibro);
             sentencia.setInt(2, idExcluir);
             sentencia.setTimestamp(3, Timestamp.valueOf(fin));
@@ -195,8 +169,6 @@ public class DescuentoDAOImpl implements DescuentoDAO {
             }
         }
     }
-
-
 
     private Descuento mapearDescuento(ResultSet resultado) throws SQLException {
         Descuento descuento = new Descuento();

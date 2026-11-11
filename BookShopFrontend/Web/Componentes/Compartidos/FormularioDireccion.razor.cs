@@ -16,9 +16,19 @@ public partial class FormularioDireccion
     private Direccion Borrador { get; set; } = new();
     private string MensajeError { get; set; } = "";
     private bool Guardando { get; set; }
-    private bool Completo => !string.IsNullOrWhiteSpace(Borrador.Alias) && !string.IsNullOrWhiteSpace(
-        Borrador.Calle) && !string.IsNullOrWhiteSpace(Borrador.Distrito) && !string.IsNullOrWhiteSpace(
-            Borrador.Ciudad);
+    private bool Completo
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(Borrador.Alias))
+                return false;
+            if (string.IsNullOrWhiteSpace(Borrador.Calle))
+                return false;
+            if (string.IsNullOrWhiteSpace(Borrador.Distrito))
+                return false;
+            return !string.IsNullOrWhiteSpace(Borrador.Ciudad);
+        }
+    }
 
     protected override void OnInitialized()
     {

@@ -24,6 +24,7 @@ import me.Model.entities.usuario.SeguimientoEditorial;
 import me.Model.entities.usuario.Usuario;
 
 public class SeguimientoDAOImpl implements SeguimientoDAO {
+
     @Override
     public void insertar(Seguimiento seguimiento) throws SQLException {
         TipoSeguimiento tipo;
@@ -40,11 +41,12 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
         } else {
             throw new SQLException("El tipo de seguimiento no es valido.");
         }
-        String sql = "INSERT INTO SEGUIMIENTO (tipo_seguimiento, id_usuario, " + columnaReferencia(tipo)
-                + ", eliminado, usuario_creacion, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?)";
-        if (seguimiento.getFechaCreacion() == null) seguimiento.setFechaCreacion(LocalDateTime.now());
+        String sql = "INSERT INTO SEGUIMIENTO (tipo_seguimiento, id_usuario, " + columnaReferencia(tipo) +
+            ", eliminado, usuario_creacion, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?)";
+        if (seguimiento.getFechaCreacion() == null)
+            seguimiento.setFechaCreacion(LocalDateTime.now());
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             sentencia.setString(1, tipo.name());
             sentencia.setInt(2, seguimiento.getUsuario().getId());
             sentencia.setInt(3, idReferencia);
@@ -53,7 +55,8 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
             sentencia.setTimestamp(6, Timestamp.valueOf(seguimiento.getFechaCreacion()));
             sentencia.executeUpdate();
             try (ResultSet claves = sentencia.getGeneratedKeys()) {
-                if (!claves.next()) throw new SQLException("No se genero el identificador del seguimiento.");
+                if (!claves.next())
+                    throw new SQLException("No se genero el identificador del seguimiento.");
                 seguimiento.setId(claves.getInt(1));
             }
         }
@@ -63,34 +66,39 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
     public Seguimiento leer(int id) throws SQLException {
         String sql = "SELECT * FROM SEGUIMIENTO WHERE id = ?";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setInt(1, id);
             try (ResultSet resultado = sentencia.executeQuery()) {
-                if (!resultado.next()) return null;
+                if (!resultado.next())
+                    return null;
                 Seguimiento seguimiento;
-                switch (TipoSeguimiento.valueOf(resultado.getString("tipo_seguimiento"))) {
-                    case AUTOR -> {
-                        Autor autor = new Autor();
-                        autor.setId(resultado.getInt("id_autor"));
-                        SeguimientoAutor seguido = new SeguimientoAutor();
-                        seguido.setAutor(autor);
-                        seguimiento = seguido;
-                    }
-                    case CATEGORIA -> {
-                        Categoria categoria = new Categoria();
-                        categoria.setId(resultado.getInt("id_categoria"));
-                        SeguimientoCategoria seguido = new SeguimientoCategoria();
-                        seguido.setCategoria(categoria);
-                        seguimiento = seguido;
-                    }
-                    case EDITORIAL -> {
-                        Editorial editorial = new Editorial();
-                        editorial.setId(resultado.getInt("id_editorial"));
-                        SeguimientoEditorial seguido = new SeguimientoEditorial();
-                        seguido.setEditorial(editorial);
-                        seguimiento = seguido;
-                    }
-                    default -> throw new SQLException("El tipo de seguimiento almacenado no es valido.");
+                switch(TipoSeguimiento.valueOf(resultado.getString("tipo_seguimiento"))) {
+                    case AUTOR ->
+                        {
+                            Autor autor = new Autor();
+                            autor.setId(resultado.getInt("id_autor"));
+                            SeguimientoAutor seguido = new SeguimientoAutor();
+                            seguido.setAutor(autor);
+                            seguimiento = seguido;
+                        }
+                    case CATEGORIA ->
+                        {
+                            Categoria categoria = new Categoria();
+                            categoria.setId(resultado.getInt("id_categoria"));
+                            SeguimientoCategoria seguido = new SeguimientoCategoria();
+                            seguido.setCategoria(categoria);
+                            seguimiento = seguido;
+                        }
+                    case EDITORIAL ->
+                        {
+                            Editorial editorial = new Editorial();
+                            editorial.setId(resultado.getInt("id_editorial"));
+                            SeguimientoEditorial seguido = new SeguimientoEditorial();
+                            seguido.setEditorial(editorial);
+                            seguimiento = seguido;
+                        }
+                    default ->
+                        throw new SQLException("El tipo de seguimiento almacenado no es valido.");
                 }
                 seguimiento.setId(resultado.getInt("id"));
                 Usuario propietario = new Usuario();
@@ -108,10 +116,10 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
 
     @Override
     public boolean eliminar(int id, String usuario) throws SQLException {
-        String sql = "UPDATE SEGUIMIENTO SET eliminado = TRUE, usuario_actualizacion = ?, "
-                + "fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ? AND NOT eliminado";
+        String sql = "UPDATE SEGUIMIENTO SET eliminado = TRUE, usuario_actualizacion = ?, " +
+            "fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ? AND NOT eliminado";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setString(1, usuario);
             sentencia.setInt(2, id);
             return sentencia.executeUpdate() == 1;
@@ -119,14 +127,15 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
     }
 
     @Override
-    public void guardar(int idUsuario, TipoSeguimiento tipo, int idReferencia, String usuario) throws SQLException {
-        String sql = "INSERT INTO SEGUIMIENTO (tipo_seguimiento, id_usuario, " + columnaReferencia(tipo)
-                + ", usuario_creacion) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE "
-                + "usuario_actualizacion = CASE WHEN eliminado THEN ? ELSE usuario_actualizacion END, "
-                + "fecha_actualizacion = CASE WHEN eliminado THEN CURRENT_TIMESTAMP ELSE fecha_actualizacion END, "
-                + "eliminado = FALSE";
+    public void guardar(int idUsuario, TipoSeguimiento tipo, int idReferencia, String usuario) throws
+        SQLException {
+        String sql = "INSERT INTO SEGUIMIENTO (tipo_seguimiento, id_usuario, " + columnaReferencia(tipo) +
+            ", usuario_creacion) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE " +
+            "usuario_actualizacion = CASE WHEN eliminado THEN ? ELSE usuario_actualizacion END, " +
+            "fecha_actualizacion = CASE WHEN eliminado THEN CURRENT_TIMESTAMP ELSE fecha_actualizacion END, "
+            + "eliminado = FALSE";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setString(1, tipo.name());
             sentencia.setInt(2, idUsuario);
             sentencia.setInt(3, idReferencia);
@@ -137,12 +146,13 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
     }
 
     @Override
-    public boolean retirar(int idUsuario, TipoSeguimiento tipo, int idReferencia, String usuario) throws SQLException {
-        String sql = "UPDATE SEGUIMIENTO SET eliminado = TRUE, usuario_actualizacion = ?, "
-                + "fecha_actualizacion = CURRENT_TIMESTAMP WHERE tipo_seguimiento = ? "
-                + "AND id_usuario = ? AND " + columnaReferencia(tipo) + " = ? AND NOT eliminado";
+    public boolean retirar(int idUsuario, TipoSeguimiento tipo, int idReferencia, String usuario) throws
+        SQLException {
+        String sql = "UPDATE SEGUIMIENTO SET eliminado = TRUE, usuario_actualizacion = ?, " +
+            "fecha_actualizacion = CURRENT_TIMESTAMP WHERE tipo_seguimiento = ? " + "AND id_usuario = ? AND "
+            + columnaReferencia(tipo) + " = ? AND NOT eliminado";
         try (Connection conexion = DBManager.getConnection();
-             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setString(1, usuario);
             sentencia.setString(2, tipo.name());
             sentencia.setInt(3, idUsuario);
@@ -153,13 +163,12 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
 
     @Override
     public ResultadoPaginadoDTO<TarjetaReferenciaDTO> listarPorUsuario(int idUsuario, TipoSeguimiento tipo,
-                                                                     OrdenReferencia orden, int pagina, int tamanioPagina)
-            throws SQLException {
-        String condiciones = " FROM SEGUIMIENTO s JOIN " + tipo.name() + " r ON r.id = s."
-                + columnaReferencia(tipo) + " WHERE s.tipo_seguimiento = ? AND s.id_usuario = ? "
-                + "AND NOT s.eliminado AND r.activo AND NOT r.eliminado";
-        String ordenSQL = orden == OrdenReferencia.MAS_RECIENTES
-                ? "COALESCE(s.fecha_actualizacion, s.fecha_creacion) DESC, s.id DESC" : "r.nombre, r.id";
+        OrdenReferencia orden, int pagina, int tamanioPagina) throws SQLException {
+        String condiciones = " FROM SEGUIMIENTO s JOIN " + tipo.name() + " r ON r.id = s." +
+            columnaReferencia(tipo) + " WHERE s.tipo_seguimiento = ? AND s.id_usuario = ? " +
+            "AND NOT s.eliminado AND r.activo AND NOT r.eliminado";
+        String ordenSQL = orden == OrdenReferencia.MAS_RECIENTES ?
+            "COALESCE(s.fecha_actualizacion, s.fecha_creacion) DESC, s.id DESC" : "r.nombre, r.id";
         List<TarjetaReferenciaDTO> tarjetas = new ArrayList<>();
         long total;
         try (Connection conexion = DBManager.getConnection()) {
@@ -171,8 +180,8 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
                     total = resultado.getLong(1);
                 }
             }
-            String sql = "SELECT r.id, r.nombre, r.imagen" + condiciones
-                    + " ORDER BY " + ordenSQL + " LIMIT ? OFFSET ?";
+            String sql = "SELECT r.id, r.nombre, r.imagen" + condiciones + " ORDER BY " + ordenSQL +
+                " LIMIT ? OFFSET ?";
             try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
                 sentencia.setString(1, tipo.name());
                 sentencia.setInt(2, idUsuario);
@@ -182,7 +191,7 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
                     while (resultado.next()) {
                         String imagen = resultado.getString("imagen");
                         tarjetas.add(new TarjetaReferenciaDTO(resultado.getInt("id"),
-                                resultado.getString("nombre"), imagen));
+                            resultado.getString("nombre"), imagen));
                     }
                 }
             }
@@ -191,10 +200,13 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
     }
 
     private String columnaReferencia(TipoSeguimiento tipo) {
-        return switch (tipo) {
-            case AUTOR -> "id_autor";
-            case CATEGORIA -> "id_categoria";
-            case EDITORIAL -> "id_editorial";
+        return switch(tipo) {
+            case AUTOR ->
+                "id_autor";
+            case CATEGORIA ->
+                "id_categoria";
+            case EDITORIAL ->
+                "id_editorial";
         };
     }
 }
