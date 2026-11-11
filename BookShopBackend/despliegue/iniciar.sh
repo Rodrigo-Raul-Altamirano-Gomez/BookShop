@@ -17,7 +17,7 @@ sed -i '/<network-listener .*protocol="admin-listener"/s/ address="[^"]*"//g' "$
 sed -i '/<network-listener .*protocol="http-listener-2"/s/ address="[^"]*"//g' "$DOMINIO/config/domain.xml"
 sed -i '/<network-listener /s/protocol="admin-listener"/address="127.0.0.1" protocol="admin-listener"/' "$DOMINIO/config/domain.xml"
 sed -i '/<network-listener /s/protocol="http-listener-2"/address="127.0.0.1" protocol="http-listener-2"/' "$DOMINIO/config/domain.xml"
-sed -i '/<iiop-listener /s/address="[^"]*"/address="127.0.0.1"/g' "$DOMINIO/config/domain.xml"
+sed -i '/<iiop-listener /s/ enabled="[^"]*"//g; /<iiop-listener /s/<iiop-listener /<iiop-listener enabled="false" /; /<iiop-listener /s/lazy-init="true"/lazy-init="false"/g' "$DOMINIO/config/domain.xml"
 sed -i '/<jmx-connector /s/address="[^"]*"/address="127.0.0.1"/g' "$DOMINIO/config/domain.xml"
 cp /app/bookshop.war "$DOMINIO/autodeploy/bookshop.war"
 exec asadmin start-domain --verbose domain1
