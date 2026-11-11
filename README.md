@@ -6,6 +6,10 @@ El frontend consume la API desde el proyecto Web para los doce requisitos elegid
 
 El entregable abarca RF01, RF02, RF05, RF06, RF07, RF08, RF09, RF11, RF12, RF14, RF15 y RF16, además de los documentos PDF RF17, RF18 y RF19. Las funcionalidades fuera de este alcance muestran un aviso de pendiente.
 
+## Laboratorio
+
+[LABORATORIO.md](LABORATORIO.md) construye la tienda desde una base vacía con `me.App.LaboratorioDesdeCero` y explica el hash de contraseñas y el cifrado de tarjetas. `me.App.DemoProteccion` muestra esas técnicas sin base de datos.
+
 ## Documentos PDF (RF17, RF18 y RF19)
 
 Se generan con JasperReports 7.0.6 a partir de las plantillas de `BookShopBackend/Business/src/main/resources/reportes`. `GeneradorPDF` compila cada `.jrxml` la primera vez que se usa y conserva el resultado en memoria.

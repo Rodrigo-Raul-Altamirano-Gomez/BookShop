@@ -44,3 +44,6 @@ build/
 
 ### Clave de cifrado local del servidor ###
 **/clave-datos.key
+
+# PDF generados por me.App.LaboratorioDesdeCero
+laboratorio-pdf/
