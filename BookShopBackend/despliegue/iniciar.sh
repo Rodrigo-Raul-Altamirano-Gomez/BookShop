@@ -12,5 +12,8 @@ export JAVA_TOOL_OPTIONS="-Dbookshop.clave.file=/run/bookshop/clave-datos.key"
 # GlassFish despliega automáticamente el WAR al iniciar.
 DOMINIO=/opt/glassfish8/glassfish/domains/domain1
 sed -i "s/port=\"8080\"/port=\"${PORT:-8080}\"/g" "$DOMINIO/config/domain.xml"
+# Solo el puerto HTTP de la aplicación queda accesible desde Render.
+sed -i '/<network-listener /s/protocol="admin-listener"/address="127.0.0.1" protocol="admin-listener"/' "$DOMINIO/config/domain.xml"
+sed -i '/<network-listener /s/protocol="http-listener-2"/address="127.0.0.1" protocol="http-listener-2"/' "$DOMINIO/config/domain.xml"
 cp /app/bookshop.war "$DOMINIO/autodeploy/bookshop.war"
 exec asadmin start-domain --verbose domain1
