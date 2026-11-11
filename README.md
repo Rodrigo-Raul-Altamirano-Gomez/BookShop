@@ -17,7 +17,23 @@ El entregable abarca RF01, RF02, RF05, RF06, RF07, RF08, RF09, RF11, RF12, RF14,
 - `BookShopFrontend/Web`: interfaz, DTO y consumo REST.
 - `BookShopFrontend/Pruebas`: comprobaciones del frontend.
 
-## Ejecución local
+## Ejecutar el frontend con el backend desplegado
+
+El backend está en Render y la dirección ya está configurada en `BookShopFrontend/Web/appsettings.json`:
+
+https://bookshop-backend-0qyo.onrender.com/bookshop/webresources/
+
+Ejecutar el proyecto `BookShopFrontend/Web` con el perfil `http`, o usar desde la carpeta del proyecto:
+
+```powershell
+dotnet run --project BookShopFrontend/Web --launch-profile http
+```
+
+Abrir [BookShop local](http://localhost:5188). Para esta opción no se necesita iniciar GlassFish localmente. El servicio gratuito de Render puede tardar varios minutos en arrancar después de un período sin uso.
+
+El despliegue utiliza `BookShopBackend/Dockerfile` y `BookShopBackend/despliegue/iniciar.sh`. Las variables privadas `BOOKSHOP_DB_PROPERTIES_B64` y `BOOKSHOP_KEY_B64` contienen la configuración de MySQL y la clave de cifrado en Base64. No deben publicarse sus valores. El arranque restaura esos archivos dentro del servidor.
+
+## Ejecutar también el backend localmente
 
 Se requieren JDK 25, Maven, MySQL, GlassFish compatible con Jakarta EE y SDK .NET 10.
 
