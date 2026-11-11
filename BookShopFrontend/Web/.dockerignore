@@ -1,7 +1,10 @@
 **
 !Web.csproj
 !Program.cs
+!Usings.cs
 !appsettings.json
+!Servicios/
+!Servicios/**
 !Modelos/
 !Modelos/**
 !Demostracion/
