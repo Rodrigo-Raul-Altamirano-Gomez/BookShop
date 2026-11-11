@@ -5,7 +5,7 @@ RUN mvn -B -pl Service -am package -DskipTests
 
 FROM eclipse-temurin:25-jdk-jammy
 RUN apt-get update && apt-get install -y --no-install-recommends curl unzip \
-    && curl -fL https://repo.maven.apache.org/maven2/org/glassfish/main/distributions/glassfish/8.0.5/glassfish-8.0.5.zip -o /tmp/glassfish.zip \
+    && curl -fL https://repo.maven.apache.org/maven2/org/glassfish/main/distributions/web/8.0.5/web-8.0.5.zip -o /tmp/glassfish.zip \
     && unzip -q /tmp/glassfish.zip -d /opt \
     && rm /tmp/glassfish.zip \
     && rm -rf /var/lib/apt/lists/*
