@@ -43,11 +43,11 @@
                             <input class="form-control" type="url" @bind="urlFoto"
                                 placeholder="https://…/foto.jpg" aria-label="URL de la foto de perfil" />
                             <button class="btn btn-secondary" @onclick="GuardarFoto"
-                                disabled="@(CargandoImagen || string.IsNullOrWhiteSpace(urlFoto))">
+                                disabled="@(CargandoImagen || procesando || string.IsNullOrWhiteSpace(urlFoto))">
                                 <Icono Nombre="edit" />
                                 Guardar foto
                             </button>
-                            <button class="btn btn-secondary" @onclick="QuitarFoto" disabled="@CargandoImagen">
+                            <button class="btn btn-secondary" @onclick="QuitarFoto" disabled="@(CargandoImagen || procesando)">
                                 Quitar
                             </button>
                         </div>
@@ -104,7 +104,7 @@
 </div>
 @if (ModalAbierto == "perfil")
 {
-    <Modal Titulo="Editar datos personales" AlCerrar="Cerrar">
+    <Modal Titulo="Editar datos personales" AlCerrar="Cerrar" Ocupado="@procesando">
         <form @onsubmit="GuardarPerfil" @onsubmit:preventDefault novalidate>
             <label class="field form-label d-block mb-3">
                 Nombre completo *
@@ -120,8 +120,8 @@
                 <p class="alert alert-danger py-2" role="alert">@MensajeError</p>
             }
             <div class="modal-footer px-0 pb-0 d-flex flex-wrap gap-2 justify-content-end">
-                <button type="button" class="btn btn-secondary" @onclick="Cerrar">Cancelar</button>
-                <button class="btn btn-primary" type="submit" disabled="@(string.IsNullOrWhiteSpace(Nombre))">
+                <button type="button" class="btn btn-secondary" @onclick="Cerrar" disabled="@procesando">Cancelar</button>
+                <button class="btn btn-primary" type="submit" disabled="@(procesando || string.IsNullOrWhiteSpace(Nombre))">
                     Guardar cambios
                 </button>
             </div>
@@ -130,7 +130,7 @@
 }
 @if (ModalAbierto == "password")
 {
-    <Modal Titulo="Cambiar contraseña" AlCerrar="Cerrar">
+    <Modal Titulo="Cambiar contraseña" AlCerrar="Cerrar" Ocupado="@procesando">
         <form @onsubmit="GuardarContrasena" @onsubmit:preventDefault novalidate>
             <label class="field form-label d-block mb-3">
                 Contraseña actual *
@@ -173,8 +173,8 @@
                 <p class="alert alert-danger py-2" role="alert">@MensajeError</p>
             }
             <div class="modal-footer px-0 pb-0 d-flex flex-wrap gap-2 justify-content-end">
-                <button type="button" class="btn btn-secondary" @onclick="Cerrar">Cancelar</button>
-                <button type="submit" class="btn btn-primary" disabled="@(!ContrasenasCompletas)">
+                <button type="button" class="btn btn-secondary" @onclick="Cerrar" disabled="@procesando">Cancelar</button>
+                <button type="submit" class="btn btn-primary" disabled="@(procesando || !ContrasenasCompletas)">
                     Guardar cambios
                 </button>
             </div>
@@ -183,7 +183,7 @@
 }
 @if (ModalAbierto == "desactivar")
 {
-    <Modal Titulo="Desactivar cuenta" AlCerrar="Cerrar">
+    <Modal Titulo="Desactivar cuenta" AlCerrar="Cerrar" Ocupado="@procesando">
         <p>Tu cuenta quedará desactivada. Conservarás tus datos, pedidos y listas para cuando decidas volver.</p>
         <form @onsubmit="Desactivar" @onsubmit:preventDefault novalidate>
             <label class="field form-label d-block mb-3">
@@ -204,9 +204,13 @@
                     </button>
                 </div>
             </label>
+            @if (MensajeError.Length > 0)
+            {
+                <p class="alert alert-danger" role="alert">@MensajeError</p>
+            }
             <div class="modal-footer px-0 pb-0 d-flex flex-wrap gap-2 justify-content-end">
-                <button type="button" class="btn btn-secondary" @onclick="Cerrar">Cancelar</button>
-                <button type="submit" class="btn btn-danger" disabled="@(ContrasenaActual.Length == 0)">
+                <button type="button" class="btn btn-secondary" @onclick="Cerrar" disabled="@procesando">Cancelar</button>
+                <button type="submit" class="btn btn-danger" disabled="@(procesando || ContrasenaActual.Length == 0)">
                     Desactivar cuenta
                 </button>
             </div>

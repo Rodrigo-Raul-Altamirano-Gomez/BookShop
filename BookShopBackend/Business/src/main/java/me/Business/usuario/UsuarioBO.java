@@ -17,6 +17,8 @@ public interface UsuarioBO {
 
     AccesoUsuarioDTO reactivar(CredencialesDTO credenciales) throws NegocioException;
 
+    void comprobarActivo(int idActor) throws NegocioException;
+
     PerfilUsuarioDTO obtenerPerfil(int idActor) throws NegocioException;
 
     PerfilUsuarioDTO modificarPerfil(int idActor, DatosPerfilDTO datos) throws NegocioException;

@@ -4,20 +4,14 @@ using Web.Modelos;
 
 namespace Web.Componentes.Paginas.Compra;
 
-public partial class Compra : IDisposable
+public partial class Compra : Web.Componentes.Paginas.Cuenta.PaginaCuenta
 {
-    private string? errorCarga;
-
-    private bool cargando = true;
-
     [Inject] protected HttpClientUtils Api { get; set; } = default!;
 
     [Inject] protected CompraServicio Compras { get; set; } = default!;
 
     [Inject] protected CuentaServicio Cuenta { get; set; } = default!;
 
-    [Inject] private SesionUsuario Sesion { get; set; } = default!;
-    [Inject] private NavigationManager Navegacion { get; set; } = default!;
     private int? direccionId, metodoId, cuponId;
     private int indiceDireccion, indiceMetodo, indiceCupon;
     private bool formularioDireccion, formularioMetodo, procesando;
@@ -40,28 +34,12 @@ public partial class Compra : IDisposable
     }
     private IEnumerable<Cupon?> CuponesVisibles => Cupones.Skip(indiceCupon).Take(2);
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task CargarDatos()
     {
-        cargando = true;
-        errorCarga = null;
-        try
-        {
-            Sesion.Cambiado += Actualizar;
-            if (Sesion.Usuario is null)
-                return;
-
-            await Cuenta.CargarDatosCompra();
-            MostrarPreparacion(await Api.Post<PreparacionCompraDTO>("pedidos/preparacion"));
-            Sesion.Notificar();
-        }
-        catch (InvalidOperationException e)
-        {
-            errorCarga = e.Message;
-        }
-        finally
-        {
-            cargando = false;
-        }
+        if (Sesion.Usuario is null)
+            return;
+        await Cuenta.CargarDatosCompra();
+        MostrarPreparacion(await Api.Post<PreparacionCompraDTO>("pedidos/preparacion"));
     }
 
     private void MostrarPreparacion(PreparacionCompraDTO preparacion)
@@ -72,34 +50,20 @@ public partial class Compra : IDisposable
         cuponId = preparacion.Seleccion.IdCupon == 0 ? null : preparacion.Seleccion.IdCupon;
         Compras.MostrarCarrito(preparacion.Resumen);
     }
-    private void Actualizar() => _ = InvokeAsync(StateHasChanged);
     private async Task GuardarDireccion(Direccion direccion)
     {
-        try
-        {
-            await Cuenta.GuardarDireccion(direccion);
-            formularioDireccion = false;
-            Sesion.Notificar();
-        }
-        catch (InvalidOperationException e)
-        {
-            Sesion.Error = e.Message;
-            Sesion.Avisar(e.Message);
-        }
+        int id = await Cuenta.GuardarDireccion(direccion);
+        formularioDireccion = false;
+        indiceDireccion = Cuenta.Direcciones.FindIndex(d => d.Id == id);
+        await Seleccionar(id, metodoId, cuponId);
     }
+
     private async Task GuardarMetodo(MetodoPago metodo)
     {
-        try
-        {
-            await Cuenta.GuardarMetodo(metodo);
-            formularioMetodo = false;
-            Sesion.Notificar();
-        }
-        catch (InvalidOperationException e)
-        {
-            Sesion.Error = e.Message;
-            Sesion.Avisar(e.Message);
-        }
+        int id = await Cuenta.GuardarMetodo(metodo);
+        formularioMetodo = false;
+        indiceMetodo = Cuenta.Metodos.FindIndex(m => m.Id == id);
+        await Seleccionar(direccionId, id, cuponId);
     }
 
     private async Task Seleccionar(int? direccion, int? metodo, int? cupon)
@@ -137,7 +101,6 @@ public partial class Compra : IDisposable
         try
         {
             var detalle = await Api.Post<DetallePedidoDTO>("pedidos/confirmacion");
-            Compras.Pedidos.Insert(0, Presentacion.Pedido(detalle));
             // El pedido ya fue confirmado; no se envía otra confirmación ni se altera su detalle.
             Compras.MostrarCarrito(new ResumenCompraDTO());
             Compras.Preparacion = null;
@@ -153,7 +116,8 @@ public partial class Compra : IDisposable
                 {
                     MostrarPreparacion(await Api.Get<PreparacionCompraDTO>("pedidos/preparacion"));
                 }
-                catch (InvalidOperationException) { Compras.Preparacion = null; }
+                catch (InvalidOperationException)
+                { Compras.Preparacion = null; }
             }
         }
         finally
@@ -161,5 +125,4 @@ public partial class Compra : IDisposable
             procesando = false;
         }
     }
-    public void Dispose() => Sesion.Cambiado -= Actualizar;
 }

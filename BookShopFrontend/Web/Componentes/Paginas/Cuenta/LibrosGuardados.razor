@@ -40,7 +40,11 @@
                 Favoritos
             </button>
         </div>
-        <ExploradorCatalogo Titulo="Deseados y favoritos" Favoritos="PestanaFavoritos" />
+        <form class="input-group my-3" @onsubmit="Buscar" @onsubmit:preventDefault>
+            <input class="form-control" aria-label="Buscar en esta lista por título" @bind="TextoBusqueda" />
+            <button class="btn btn-primary" type="submit">Buscar</button>
+        </form>
+        <ExploradorCatalogo Titulo="Deseados y favoritos" Favoritos="PestanaFavoritos" Busqueda="Busqueda" />
     }
 </div>
 </Cargando>

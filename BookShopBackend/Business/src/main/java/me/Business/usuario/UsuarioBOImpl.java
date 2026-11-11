@@ -10,6 +10,7 @@ import java.util.Locale;
 import me.Business.exceptions.ConflictoException;
 import me.Business.exceptions.CredencialesInvalidasException;
 import me.Business.exceptions.NegocioException;
+import me.Business.exceptions.CuentaInactivaException;
 import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.RecursoNoEncontradoException;
 import me.Business.exceptions.ValidacionException;
@@ -114,6 +115,17 @@ public class UsuarioBOImpl implements UsuarioBO {
             return usuario;
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudieron comprobar las credenciales.", e);
+        }
+    }
+
+    @Override
+    public void comprobarActivo(int idActor) throws NegocioException {
+        try {
+            Usuario usuario = usuarioDAO.leer(idActor);
+            if (usuario == null || !usuario.estaDisponible())
+                throw new CuentaInactivaException("La cuenta está desactivada.");
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo comprobar la cuenta.", e);
         }
     }
 

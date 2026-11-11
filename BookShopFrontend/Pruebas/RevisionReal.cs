@@ -93,7 +93,6 @@ public static class RevisionReal
             if (pedido is null) throw new Exception("Tres pagos simulados rechazados.");
             var repetido = await api.Post<DetallePedidoDTO>("pedidos/confirmacion");
             if (repetido.Pedido.Id != pedido.Pedido.Id) throw new Exception("Pedido duplicado.");
-            compras.Pedidos.Add(Presentacion.Pedido(pedido));
             var persistido = repetido;
             if (persistido.Resumen.Total != pedido.Resumen.Total) throw new Exception("El pedido persistido cambió de importe.");
             var stockFinal = await api.Get<DetalleLibroDTO>($"libros/{idLibro}");

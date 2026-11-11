@@ -11,16 +11,6 @@
     min-width:0;
     width:100%
 }
-.price-sliders {
-    display:flex;
-    gap:2px;
-    margin:10px 0 13px
-}
-.price-sliders input {
-    width:50%;
-    min-width:0;
-    accent-color:var(--green)
-}
 .filter-action {
     width:100%;
     margin-top:8px

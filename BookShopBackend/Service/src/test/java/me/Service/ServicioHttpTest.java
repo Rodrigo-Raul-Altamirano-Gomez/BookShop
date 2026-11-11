@@ -232,8 +232,35 @@ class ServicioHttpTest {
     }
 
     @Test
+    void cuentaDesactivadaNoPuedeUsarUnaSesionAnterior() throws Exception {
+        when(request.getSession(false)).thenReturn(sesion);
+        atributos.put("bookshop.actor", 7);
+        UsuarioBO usuarios = servicios.getUsuarioBO();
+        doThrow(new CuentaInactivaException("Cuenta desactivada"))
+            .when(usuarios).comprobarActivo(7);
+        try (Response respuesta = http.target("carrito").request().get()) {
+            assertEquals(401, respuesta.getStatus());
+            verify(sesion).invalidate();
+            verifyNoInteractions(servicios.getCarritoBO());
+        }
+    }
+
+    @Test
+    void consultarConfirmacionExigeSesionYUsaSuPropietario() throws Exception {
+        try (Response respuesta = http.target("pedidos/123").request().get()) {
+            assertEquals(401, respuesta.getStatus());
+        }
+        when(request.getSession(false)).thenReturn(sesion);
+        atributos.put("bookshop.actor", 7);
+        try (Response respuesta = http.target("pedidos/123").request().get()) {
+            assertEquals(204, respuesta.getStatus());
+            verify(servicios.getPedidoBO()).consultar(7, 123);
+        }
+    }
+
+    @Test
     void noExponeRequisitosExcluidos() {
-        for (String ruta : List.of("solicitudes", "configuracion", "documentos/reportes/usuarios/datos", "pedidos/123", "libros/123/gestion", "recomendaciones/para-ti/disponibilidad")) {
+        for (String ruta : List.of("solicitudes", "configuracion", "documentos/reportes/usuarios/datos", "libros/123/gestion", "recomendaciones/para-ti/disponibilidad")) {
             try (Response respuesta = http.target(ruta).request().get()) {
                 assertEquals(404, respuesta.getStatus(), ruta);
             }

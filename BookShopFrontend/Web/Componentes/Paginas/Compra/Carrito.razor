@@ -1,6 +1,7 @@
+@inherits Web.Componentes.Paginas.Cuenta.PaginaCuenta
 @page "/carrito"
 <PageTitle>Carrito · BookShop</PageTitle>
-<Cargando EnCurso="@cargando" Error="@errorCarga">
+<Cargando EnCurso="@CargandoDatos" Error="@ErrorCarga">
 <div class="container py-4">
     <nav aria-label="Ruta de navegación">
         <ol class="breadcrumb">
@@ -16,7 +17,7 @@
         </div>
         @if (Compras.CantidadCarrito > 0)
         {
-            <button class="btn btn-secondary" @onclick="Vaciar">Vaciar carrito</button>
+            <button class="btn btn-secondary" @onclick="Vaciar" disabled="@procesando">Vaciar carrito</button>
         }
     </div>
     @if (Compras.CantidadCarrito == 0)
@@ -55,7 +56,13 @@
                                                     <img src="@(linea.Portada ?? "/images/book-placeholder.svg")"
                                                         alt="Portada de @linea.Titulo" />
                                                 </a>
-                                                <strong>@linea.Titulo</strong>
+                                                <div><strong>@linea.Titulo</strong>
+                                                @if (linea.Activo == false) {
+                                                    <p class="text-danger mb-0">Este libro ya no está disponible. Retíralo para continuar.</p>
+                                                } else if (linea.Cantidad > linea.StockDisponible) {
+                                                    <p class="text-danger mb-0">Solo quedan @linea.StockDisponible unidades. Reduce la cantidad.</p>
+                                                }
+                                                </div>
                                             </div>
                                         </td>
                                         <td>
@@ -74,13 +81,13 @@
                                             <div class="quantity btn-group">
                                                 <button class="btn btn-outline-secondary"
                                                     aria-label="Reducir cantidad de @linea.Titulo"
-                                                    @onclick="() => Cambiar(linea.IdLibro, linea.Cantidad - 1)">
+                                                    @onclick="() => Cambiar(linea.IdLibro, linea.Cantidad - 1)" disabled="@procesando">
                                                     −
                                                 </button>
                                                 <span>@linea.Cantidad</span>
                                                 <button class="btn btn-outline-secondary"
                                                     aria-label="Aumentar cantidad de @linea.Titulo"
-                                                    @onclick="() => Cambiar(linea.IdLibro, linea.Cantidad + 1)">
+                                                    @onclick="() => Cambiar(linea.IdLibro, linea.Cantidad + 1)" disabled="@(procesando || linea.Activo == false || linea.Cantidad >= linea.StockDisponible)">
                                                     +
                                                 </button>
                                             </div>
@@ -90,7 +97,7 @@
                                             <button
                                                 class="btn btn-outline-secondary icon-button"
                                                 aria-label="Retirar @linea.Titulo"
-                                                @onclick="() => Cambiar(linea.IdLibro, 0)">
+                                                @onclick="() => Cambiar(linea.IdLibro, 0)" disabled="@procesando">
                                                 <Icono Nombre="trash" />
                                             </button>
                                         </td>
@@ -127,7 +134,7 @@
                             <span>@Presentacion.Dinero(Compras.Resumen?.Total ?? 0)</span>
                         </div>
                     </div>
-                    <button class="btn btn-primary" @onclick="Continuar">
+                    <button class="btn btn-primary" @onclick="Continuar" disabled="@(procesando || Compras.Resumen!.Items.Any(l => l.Activo == false || l.Cantidad > l.StockDisponible))">
                         Continuar compra
                         <Icono Nombre="arrow" />
                     </button>

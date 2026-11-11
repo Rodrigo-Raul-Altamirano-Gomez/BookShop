@@ -4,28 +4,17 @@ using Web.Modelos;
 
 namespace Web.Componentes.Paginas.Compra;
 
-public partial class DetallePedido : IDisposable
+public partial class DetallePedido : Web.Componentes.Paginas.Cuenta.PaginaCuenta
 {
-    [Inject] protected CompraServicio Compras { get; set; } = default!;
-
-    [Inject]
-    private SesionUsuario Sesion { get; set; } = default!;
-
-    [Inject]
-    private NavigationManager Navegacion { get; set; } = default!;
-
-    [Parameter]
-    public int Id { get; set; }
-
+    [Inject] private HttpClientUtils Api { get; set; } = default!;
+    [Parameter] public int Id { get; set; }
     private Pedido? pedido;
-    private bool confirmacion;
-    protected override void OnInitialized() => Sesion.Cambiado += Actualizar;
-    protected override void OnParametersSet()
-    {
-        pedido = Compras.Pedidos.FirstOrDefault(o => o.Id == Id);
-        confirmacion = Navegacion.Uri.Contains("/confirmacion/");
-    }
+    private bool confirmacion = true;
 
-    private void Actualizar() => _ = InvokeAsync(StateHasChanged);
-    public void Dispose() => Sesion.Cambiado -= Actualizar;
+    protected override async Task CargarDatos()
+    {
+        pedido = null;
+        if (Sesion.Usuario is not null)
+            pedido = Presentacion.Pedido(await Api.Get<DetallePedidoDTO>($"pedidos/{Id}"));
+    }
 }

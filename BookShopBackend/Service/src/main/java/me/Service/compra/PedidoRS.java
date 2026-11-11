@@ -8,6 +8,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
@@ -29,28 +30,34 @@ public class PedidoRS {
     @Context
     private HttpServletRequest peticion;
 
+    @GET
+    @Path("{id}")
+    public DetallePedidoDTO consultar(@PathParam("id") int id) throws NegocioException {
+        return servicios.getPedidoBO().consultar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), id);
+    }
+
     @POST
     @Path("preparacion")
     public PreparacionCompraDTO preparar() throws NegocioException {
-        return servicios.getPedidoBO().preparar(Sesion.exigirIdUsuario(peticion));
+        return servicios.getPedidoBO().preparar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()));
     }
 
     @GET
     @Path("preparacion")
     public PreparacionCompraDTO consultarPreparacion() throws NegocioException {
-        return servicios.getPedidoBO().consultarPreparacion(Sesion.exigirIdUsuario(peticion));
+        return servicios.getPedidoBO().consultarPreparacion(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()));
     }
 
     @PUT
     @Path("preparacion")
     @Consumes(MediaType.APPLICATION_JSON)
     public PreparacionCompraDTO seleccionar(SeleccionCompraDTO seleccion) throws NegocioException {
-        return servicios.getPedidoBO().seleccionar(Sesion.exigirIdUsuario(peticion), seleccion);
+        return servicios.getPedidoBO().seleccionar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), seleccion);
     }
 
     @POST
     @Path("confirmacion")
     public DetallePedidoDTO pagar() throws NegocioException {
-        return servicios.getPedidoBO().pagar(Sesion.exigirIdUsuario(peticion));
+        return servicios.getPedidoBO().pagar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()));
     }
 }

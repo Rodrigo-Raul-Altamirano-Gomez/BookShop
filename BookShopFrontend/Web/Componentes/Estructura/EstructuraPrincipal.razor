@@ -1,5 +1,5 @@
 @inherits LayoutComponentBase
-<a class="visually-hidden-focusable skip-link" href="#main-content">Saltar al contenido</a>
+<a class="visually-hidden-focusable skip-link" href="@(new Uri(Navegacion.Uri).PathAndQuery + "#main-content")">Saltar al contenido</a>
 <header class="navbar sticky-top site-header">
     <div class="container d-flex flex-wrap align-items-center gap-3 header-inner">
         <a class="navbar-brand brand d-flex align-items-center gap-2" href="/" aria-label="BookShop, inicio">

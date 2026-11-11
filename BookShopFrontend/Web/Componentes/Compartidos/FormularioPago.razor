@@ -1,5 +1,5 @@
 @using Web.Modelos
-<Modal Titulo="@(Valor is null ? "Añadir método de pago" : "Editar método de pago")" AlCerrar="AlCerrar">
+<Modal Titulo="@(Valor is null ? "Añadir método de pago" : "Editar método de pago")" AlCerrar="AlCerrar" Ocupado="@Guardando">
     <div class="nav nav-tabs bookshop-tabs mb-4" role="tablist" aria-label="Tipo de método">
         <button
             type="button"
@@ -7,7 +7,7 @@
             aria-selected="@(Borrador.Tipo == "Tarjeta")"
             class="nav-link bookshop-tab @(Borrador.Tipo == "Tarjeta" ? "active" : "")"
             @onclick="MostrarTarjeta"
-            disabled="@(Valor is not null && Valor.Tipo != "Tarjeta")">
+            disabled="@(Guardando || Valor is not null && Valor.Tipo != "Tarjeta")">
             <Icono Nombre="card" />
             Tarjeta
         </button>
@@ -17,7 +17,7 @@
             aria-selected="@(Borrador.Tipo == "Billetera")"
             class="nav-link bookshop-tab @(Borrador.Tipo == "Billetera" ? "active" : "")"
             @onclick="MostrarBilletera"
-            disabled="@(Valor is not null && Valor.Tipo != "Billetera")">
+            disabled="@(Guardando || Valor is not null && Valor.Tipo != "Billetera")">
             <Icono Nombre="wallet" />
             Billetera
         </button>
@@ -85,7 +85,7 @@
             <p class="alert alert-danger form-error" role="alert">@MensajeError</p>
         }
         <div class="modal-footer px-0 pb-0 mt-4">
-            <button type="button" class="btn btn-secondary" @onclick="AlCerrar">Cancelar</button>
+            <button type="button" class="btn btn-secondary" @onclick="AlCerrar" disabled="@Guardando">Cancelar</button>
             <button type="submit" class="btn btn-primary" disabled="@(!Completo || Guardando)">
                 @(Valor is null ? "Guardar método" : "Guardar cambios")
             </button>

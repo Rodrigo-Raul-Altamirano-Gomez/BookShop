@@ -83,8 +83,19 @@ public partial class FormularioPago
         if (FechaVencimiento.HasValue && Borrador.Tipo == "Tarjeta")
             Borrador.Vencimiento = FechaVencimiento.Value;
         Guardando = true;
-        await AlGuardar.InvokeAsync(Borrador);
-        Numero = "";
-        Guardando = false;
+        MensajeError = "";
+        try
+        {
+            await AlGuardar.InvokeAsync(Borrador);
+            Numero = "";
+        }
+        catch (InvalidOperationException e)
+        {
+            MensajeError = e.Message;
+        }
+        finally
+        {
+            Guardando = false;
+        }
     }
 }

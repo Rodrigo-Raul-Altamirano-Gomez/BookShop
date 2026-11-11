@@ -56,7 +56,18 @@ public partial class FormularioDireccion
             return;
         }
         Guardando = true;
-        await AlGuardar.InvokeAsync(Borrador);
-        Guardando = false;
+        MensajeError = "";
+        try
+        {
+            await AlGuardar.InvokeAsync(Borrador);
+        }
+        catch (InvalidOperationException e)
+        {
+            MensajeError = e.Message;
+        }
+        finally
+        {
+            Guardando = false;
+        }
     }
 }

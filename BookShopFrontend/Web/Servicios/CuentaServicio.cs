@@ -97,7 +97,7 @@ public class CuentaServicio
         } while ((pagina - 1) * 10 < total);
     }
 
-    public async Task GuardarDireccion(Direccion direccion, int id = 0)
+    public async Task<int> GuardarDireccion(Direccion direccion, int id = 0)
     {
         var datos = new DatosDireccionEnvioDTO
         {
@@ -108,14 +108,14 @@ public class CuentaServicio
             Referencia = direccion.ReferenciaAdicional,
             Predeterminada = direccion.Predeterminada
         };
-        if (id == 0)
-            await api.Post("cuenta/direcciones", datos);
-        else
-            await api.Put($"cuenta/direcciones/{id}", datos);
+        var guardada = id == 0
+            ? await api.Post<DireccionEnvioDTO>("cuenta/direcciones", datos)
+            : await api.Put<DireccionEnvioDTO>($"cuenta/direcciones/{id}", datos);
         await CargarDirecciones();
+        return guardada.Id;
     }
 
-    public async Task GuardarMetodo(MetodoPago metodo, int id = 0)
+    public async Task<int> GuardarMetodo(MetodoPago metodo, int id = 0)
     {
         var datos = new DatosMetodoPagoDTO
         {
@@ -132,11 +132,11 @@ public class CuentaServicio
             datos.TipoTarjeta = metodo.TipoTarjeta == "Crédito" ? "CREDITO" : "DEBITO";
         try
         {
-            if (id == 0)
-                await api.Post("cuenta/metodos", datos);
-            else
-                await api.Put($"cuenta/metodos/{id}", datos);
+            var guardado = id == 0
+                ? await api.Post<MetodoPagoDTO>("cuenta/metodos", datos)
+                : await api.Put<MetodoPagoDTO>($"cuenta/metodos/{id}", datos);
             await CargarMetodos();
+            return guardado.Id;
         }
         finally
         {

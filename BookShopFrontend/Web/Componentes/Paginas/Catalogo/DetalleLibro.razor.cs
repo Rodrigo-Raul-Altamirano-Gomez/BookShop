@@ -27,6 +27,8 @@ public partial class DetalleLibro : IDisposable
     public int Id { get; set; }
     private Libro? Libro;
 
+    private string? correoCargado;
+    private bool procesando;
     private int cantidad = 1, idAnterior, paginaResenas = 1;
     private bool sinopsisCompleta, fichaExpandida;
     private bool Deseado => Cuenta.Deseados.Contains(Id);
@@ -56,6 +58,7 @@ public partial class DetalleLibro : IDisposable
     protected override void OnInitialized() => Sesion.Cambiado += ActualizarVista;
     protected override async Task OnParametersSetAsync()
     {
+        correoCargado = Sesion.Usuario?.Correo;
         if (idAnterior == Id)
             return;
         cargando = true;
@@ -124,7 +127,18 @@ public partial class DetalleLibro : IDisposable
         _ => valoracion?.CantidadCincoEstrellas ?? 0
     };
 
-    private void ActualizarVista() => InvokeAsync(StateHasChanged);
+    private async void ActualizarVista()
+    {
+        await InvokeAsync(async () =>
+        {
+            if (correoCargado != Sesion.Usuario?.Correo)
+            {
+                idAnterior = 0;
+                await OnParametersSetAsync();
+            }
+            StateHasChanged();
+        });
+    }
     public void Dispose() => Sesion.Cambiado -= ActualizarVista;
     private static string TextoEstrellas(int puntuacion) => new string('★', puntuacion) + new string('☆',
          5 - puntuacion);
@@ -140,13 +154,18 @@ public partial class DetalleLibro : IDisposable
             cantidad--;
     }
 
-    private void Aumentar() => cantidad++;
+    private void Aumentar()
+    {
+        if (cantidad < Libro?.Stock) cantidad++;
+    }
     private void AlternarSinopsis() => sinopsisCompleta = !sinopsisCompleta;
     private void AlternarFicha() => fichaExpandida = !fichaExpandida;
     private async Task AgregarCarrito()
     {
+        if (procesando) return;
         if (!Sesion.RequerirAcceso())
             return;
+        procesando = true;
         try
         {
             await Compras.AgregarLibro(Id, cantidad);
@@ -156,10 +175,16 @@ public partial class DetalleLibro : IDisposable
         {
             Sesion.Avisar(e.Message);
         }
+        finally
+        {
+            procesando = false;
+        }
     }
 
     private async Task AlternarDeseado()
     {
+        if (procesando) return;
+        procesando = true;
         try
         {
             await Cuenta.AlternarGuardado(Id, false);
@@ -170,10 +195,16 @@ public partial class DetalleLibro : IDisposable
             Sesion.Error = e.Message;
             Sesion.Avisar(e.Message);
         }
+        finally
+        {
+            procesando = false;
+        }
     }
 
     private async Task AlternarFavorito()
     {
+        if (procesando) return;
+        procesando = true;
         try
         {
             await Cuenta.AlternarGuardado(Id, true);
@@ -183,6 +214,10 @@ public partial class DetalleLibro : IDisposable
         {
             Sesion.Error = e.Message;
             Sesion.Avisar(e.Message);
+        }
+        finally
+        {
+            procesando = false;
         }
     }
 

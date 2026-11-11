@@ -87,6 +87,8 @@ public partial class FormularioAcceso
         catch (InvalidOperationException e)
         {
             error = e.Message;
+            if (!registro && !reactivacion)
+                correo = contrasena = "";
         }
         finally
         {

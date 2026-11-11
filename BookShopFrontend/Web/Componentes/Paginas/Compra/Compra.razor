@@ -1,6 +1,7 @@
+@inherits Web.Componentes.Paginas.Cuenta.PaginaCuenta
 @page "/compra"
 <PageTitle>Resumen de compra · BookShop</PageTitle>
-<Cargando EnCurso="@cargando" Error="@errorCarga">
+<Cargando EnCurso="@CargandoDatos" Error="@ErrorCarga">
 <div class="container py-4">
     <nav aria-label="Ruta de navegación">
         <ol class="breadcrumb">
@@ -39,7 +40,7 @@
                                 <Icono Nombre="pin" />
                                 Dirección de envío
                             </h2>
-                            <button class="btn btn-secondary" @onclick="() => formularioDireccion = true">
+                            <button class="btn btn-secondary" @onclick="() => formularioDireccion = true" disabled="@procesando">
                                 <Icono Nombre="plus" />
                                 Añadir dirección
                             </button>
@@ -66,7 +67,7 @@
                                                 class="selection-card btn btn-outline-secondary w-100 h-100
                                                     d-flex gap-3 text-start
                                                     @(direccionId == direccion.Id ? "selected" : "")"
-                                                @onclick="() => Seleccionar(direccion.Id, metodoId, cuponId)">
+                                                @onclick="() => Seleccionar(direccion.Id, metodoId, cuponId)" disabled="@procesando">
                                                 <span class="radio-mark">
                                                 </span>
                                                 <div>
@@ -112,7 +113,7 @@
                                 <Icono Nombre="card" />
                                 Método de pago
                             </h2>
-                            <button class="btn btn-secondary" @onclick="() => formularioMetodo = true">
+                            <button class="btn btn-secondary" @onclick="() => formularioMetodo = true" disabled="@procesando">
                                 <Icono Nombre="plus" />
                                 Añadir método
                             </button>
@@ -145,7 +146,7 @@
                                                 </span>
                                                 <div>
                                                     <h3>
-                                                        @metodo.Alias @if (metodo.Predeterminada)
+                                                        @(string.IsNullOrWhiteSpace(metodo.Alias) ? metodo.Tipo : metodo.Alias) @if (metodo.Predeterminada)
                                                         {
                                                             <span class="badge badge-bookshop">
                                                                 Predeterminado
@@ -157,14 +158,14 @@
                                                             Nombre="@(metodo.Tipo == "Tarjeta"
                                                                 ? "card" : "wallet")"
                                                             />
-                                                        @metodo.Proveedor · @metodo.TipoTarjeta
+                                                        @metodo.Proveedor · @(metodo.Tipo == "Tarjeta" ? metodo.TipoTarjeta : "Billetera")
                                                         <br />
                                                         @metodo.NumeroEnmascarado
                                                         <br />
                                                         @metodo.Titular
                                                         <br />
                                                         <span class="text-body-secondary small">
-                                                            Vence @metodo.Vencimiento.ToString("MM/yyyy")
+                                                            Vence @metodo.Vencimiento.ToString("dd/MM/yyyy")
                                                         </span>
                                                     </p>
                                                 </div>
@@ -210,7 +211,7 @@
                                             class="selection-card btn btn-outline-secondary w-100 h-100
                                                 d-flex gap-3 text-start
                                                 @(cuponId == cupon?.Id ? "selected" : "")"
-                                            @onclick="() => Seleccionar(direccionId, metodoId, cupon?.Id)">
+                                            @onclick="() => Seleccionar(direccionId, metodoId, cupon?.Id)" disabled="@procesando">
                                             <span class="radio-mark">
                                             </span>
                                             <div>

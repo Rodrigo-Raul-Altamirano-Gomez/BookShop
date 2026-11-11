@@ -42,6 +42,10 @@ servidor.Map("/{**ruta}", async contexto =>
         resultado = new AccesoUsuarioDTO(1, "Ana", "CLIENTE", false);
     }
     else if (ruta == "/webresources/cookie") resultado = contexto.Request.Cookies["JSESSIONID"] ?? "sin-sesion";
+    else if (ruta == "/webresources/clave-incorrecta") {
+        contexto.Response.StatusCode = 401;
+        await contexto.Response.WriteAsJsonAsync(new { codigo = "CredencialesInvalidas", mensaje = "Contraseña incorrecta." }); return;
+    }
     else if (ruta == "/webresources/error")
     {
         contexto.Response.StatusCode = 401;
@@ -59,12 +63,16 @@ servidor.Map("/{**ruta}", async contexto =>
         resultado = "https://example.test/imagen.png";
     }
     else if (ruta == "/webresources/cuenta") resultado = perfil;
-    else if (ruta == "/webresources/cuenta/direcciones") resultado = new ResultadoPaginadoDTO<DireccionEnvioDTO>([new(3, "Casa", "Calle 1", "Centro", "Lima", "", true)], 1, 1, 10);
+    else if (ruta == "/webresources/cuenta/direcciones") {
+        var direccion = new DireccionEnvioDTO(3, "Casa", "Calle 1", "Centro", "Lima", "", true);
+        resultado = contexto.Request.Method == "POST" ? direccion : new ResultadoPaginadoDTO<DireccionEnvioDTO>([direccion], 1, 1, 10);
+    }
     else if (ruta == "/webresources/cuenta/metodos")
     {
         if (contexto.Request.Method == "POST")
             ultimoMetodo = await contexto.Request.ReadFromJsonAsync<DatosMetodoPagoDTO>();
-        resultado = new ResultadoPaginadoDTO<MetodoPagoDTO>([new(4, true, "Ana", "Banco", "Tarjeta", "****1234", "DEBITO", new DateOnly(2030, 1, 1), true, true)], 1, 1, 10);
+        var metodo = new MetodoPagoDTO(4, true, "Ana", "Banco", "Tarjeta", "****1234", "DEBITO", new DateOnly(2030, 1, 1), true, true);
+        resultado = contexto.Request.Method == "POST" ? metodo : new ResultadoPaginadoDTO<MetodoPagoDTO>([metodo], 1, 1, 10);
     }
     else if (ruta == "/webresources/cuenta/cupones") resultado = new ResultadoPaginadoDTO<CuponDTO>([], 0, 1, 10);
     else if (ruta == "/webresources/cuenta/libros-guardados/busqueda")
@@ -80,7 +88,7 @@ servidor.Map("/{**ruta}", async contexto =>
         if (contexto.Request.Method == "PUT") seleccion = (await contexto.Request.ReadFromJsonAsync<SeleccionCompraDTO>())!;
         resultado = new PreparacionCompraDTO(resumen, seleccion, true);
     }
-    else if (ruta == "/webresources/pedidos/confirmacion")
+    else if (ruta == "/webresources/pedidos/confirmacion" || ruta == "/webresources/pedidos/21")
         resultado = new DetallePedidoDTO(new(21, new DateTime(2026, 11, 9, 10, 0, 0), "EN_ALMACEN", 2, 84), resumen,
             new(3, "Casa", "Calle 1", "Centro", "Lima", "", true),
             new(4, true, "Ana", "Banco", "Tarjeta", "****1234", "DEBITO", new DateOnly(2030, 1, 1), true, true), "SIM-21", "BS-21", null, null, null, false, false);
@@ -139,12 +147,16 @@ await api.Put<PerfilUsuarioDTO>("cuenta/imagen");
 var imagen = await api.Post<string>("imagen", "https://example.test/imagen.png");
 Verificar(imagen == "https://example.test/imagen.png", "URL JSON alterada");
 await api.Delete("sin-contenido");
+try { await api.Get<object>("clave-incorrecta"); }
+catch (InvalidOperationException) { }
+Verificar(estado.Usuario is not null && await api.Get<string>("cookie") == "sesion-ana", "Una contraseña incorrecta cerró la sesión");
 try { await api.Get<object>("error"); throw new Exception("No se informó el error HTTP"); }
 catch (InvalidOperationException e) { Verificar(e.Message == "Inicia sesión.", "Mensaje del backend perdido"); }
 Verificar(estado.Usuario is null && compraServicio.CantidadCarrito == 0 && cuentaServicio.Direcciones.Count == 0, "Sesión vencida conserva datos privados");
 Verificar(await api.Get<string>("cookie") == "sin-sesion", "Cookie vencida no retirada");
+Verificar(await cuentaServicio.GuardarDireccion(new Web.Modelos.Direccion()) == 3, "No se devuelve la dirección nueva para seleccionarla en compra");
 var tarjeta = new Web.Modelos.MetodoPago { Tipo = "Tarjeta", TipoTarjeta = "Crédito", Numero = "4111111111111111", Vencimiento = new DateOnly(2030, 1, 1) };
-await cuentaServicio.GuardarMetodo(tarjeta);
+Verificar(await cuentaServicio.GuardarMetodo(tarjeta) == 4, "No se devuelve el método nuevo para seleccionarlo en compra");
 Verificar(ultimoMetodo?.TipoTarjeta == "CREDITO" && ultimoMetodo.FechaVencimiento == tarjeta.Vencimiento, "Se perdieron el tipo o vencimiento de la tarjeta");
 Verificar(tarjeta.Numero is null, "Se conserva el número completo tras guardar");
 var billetera = new Web.Modelos.MetodoPago { Tipo = "Billetera", Numero = "999999999" };
@@ -159,6 +171,10 @@ await using var proveedor = servicios.BuildServiceProvider();
 await using var renderer = new HtmlRenderer(proveedor, proveedor.GetRequiredService<ILoggerFactory>());
 await renderer.Dispatcher.InvokeAsync(async () =>
 {
+    estado.MostrarPerfil(perfil);
+    var confirmacion = await renderer.RenderComponentAsync<Web.Componentes.Paginas.Compra.DetallePedido>(
+        ParameterView.FromDictionary(new Dictionary<string, object?> { ["Id"] = 21 }));
+    Verificar(confirmacion.ToHtmlString().Contains("SIM-21"), "La confirmación no recupera el pedido desde REST sin una copia en memoria");
     var inicio = await renderer.RenderComponentAsync<Web.Componentes.Paginas.Inicio>();
     Verificar(inicio.ToHtmlString().Contains("Libro real"), "Inicio no muestra datos REST");
     Verificar(catalogoServicio.Idiomas.Count == 13 && catalogoServicio.Idiomas.Contains("Español"), "No se cargaron todas las páginas de idiomas");
@@ -178,6 +194,7 @@ await renderer.Dispatcher.InvokeAsync(async () =>
     fallarBusqueda = false;
     var detalle = await renderer.RenderComponentAsync<Web.Componentes.Paginas.Catalogo.DetalleLibro>(ParameterView.FromDictionary(new Dictionary<string, object?> { ["Id"] = 7 }));
     var html = System.Net.WebUtility.HtmlDecode(detalle.ToHtmlString());
+    Verificar(html.Contains("/libros/7#resenas"), "Ver reseñas abandona la ruta del libro");
     Verificar(html.Contains("Sinopsis real") && html.Contains("Reseña real") && html.Contains("/referencias/categorias/1"), "Detalle no representa la respuesta REST");
 });
 await servidor.StopAsync();

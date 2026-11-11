@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.ws.rs.NotAuthorizedException;
 import me.Business.exceptions.NegocioException;
+import me.Business.exceptions.CuentaInactivaException;
 import me.Business.usuario.UsuarioBO;
 import me.Model.dto.usuario.AccesoUsuarioDTO;
 
@@ -24,10 +25,16 @@ public final class Sesion {
         return idUsuario == null ? 0 : idUsuario;
     }
 
-    public static int exigirIdUsuario(HttpServletRequest peticion) {
+    public static int exigirIdUsuario(HttpServletRequest peticion, UsuarioBO usuarios) throws NegocioException {
         int idUsuario = obtenerIdUsuario(peticion);
         if (idUsuario <= 0)
             throw new NotAuthorizedException("Se requiere iniciar sesión.", "Sesion");
+        try {
+            usuarios.comprobarActivo(idUsuario);
+        } catch (CuentaInactivaException e) {
+            cerrar(peticion);
+            throw new NotAuthorizedException("La cuenta está desactivada.", "Sesion");
+        }
         return idUsuario;
     }
 

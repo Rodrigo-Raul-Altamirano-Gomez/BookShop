@@ -7,7 +7,6 @@ public class CompraServicio
 {
     private readonly HttpClientUtils api;
     private readonly SesionUsuario Sesion;
-    public List<Pedido> Pedidos { get; } = [];
     public ResumenCompraDTO? Resumen
     {
         get; private set;
@@ -24,7 +23,6 @@ public class CompraServicio
 
     private void Limpiar()
     {
-        Pedidos.Clear();
         Resumen = null;
         Preparacion = null;
     }

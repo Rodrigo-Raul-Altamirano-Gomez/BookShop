@@ -43,8 +43,9 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
         this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
     }
 
+    // Servicios comparte este BO: altas y ediciones comprueban los números de una en una.
     @Override
-    public MetodoPagoDTO registrar(int idActor, DatosMetodoPagoDTO datos) throws NegocioException {
+    public synchronized MetodoPagoDTO registrar(int idActor, DatosMetodoPagoDTO datos) throws NegocioException {
         try {
             Usuario actor = usuarioDAO.leer(idActor);
             DatosMetodoPagoDTO validos = validarFormulario(datos, false);
@@ -100,7 +101,7 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
     }
 
     @Override
-    public MetodoPagoDTO modificar(int idActor, int idMetodo, DatosMetodoPagoDTO datos) throws NegocioException {
+    public synchronized MetodoPagoDTO modificar(int idActor, int idMetodo, DatosMetodoPagoDTO datos) throws NegocioException {
         try {
             Usuario actor = usuarioDAO.leer(idActor);
             DatosMetodoPagoDTO validos = validarFormulario(datos, true);

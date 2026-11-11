@@ -53,7 +53,7 @@
                     {
                         <span class="text-body-secondary">Sin reseñas</span>
                     }
-                    <a href="#resenas">Ver reseñas (@totalResenas)</a>
+                    <a href="/libros/@Id#resenas">Ver reseñas (@totalResenas)</a>
                 </div>
                 <div class="detail-price">
                     @if (Libro.Descuento > 0)
@@ -79,29 +79,29 @@
                             class="btn btn-outline-secondary"
                             @onclick="Disminuir"
                             aria-label="Reducir cantidad"
-                            disabled="@(cantidad <= 1)">
+                            disabled="@(cantidad <= 1 || procesando)">
                             −
                         </button>
                         <span>@cantidad</span>
                         <button
                             class="btn btn-outline-secondary"
                             @onclick="Aumentar"
-                            aria-label="Aumentar cantidad">+</button>
+                            aria-label="Aumentar cantidad" disabled="@(cantidad >= Libro.Stock || procesando)">+</button>
                     </div>
                     <button
                         class="btn btn-primary add-cart"
                         @onclick="AgregarCarrito"
-                        disabled="@(Libro.Stock == 0 || !Libro.Activo)">
+                        disabled="@(Libro.Stock == 0 || !Libro.Activo || procesando)">
                         <Icono Nombre="cart" />
                         Agregar al carrito
                     </button>
                 </div>
                 <div class="list-actions d-flex flex-wrap align-items-center gap-2">
-                    <button class="btn btn-secondary @(Deseado ? "selected" : "")" @onclick="AlternarDeseado">
+                    <button class="btn btn-secondary @(Deseado ? "selected" : "")" @onclick="AlternarDeseado" disabled="@procesando">
                         <Icono Nombre="heart" />
                         @(Deseado ? "En deseados" : "Deseados")
                     </button>
-                    <button class="btn btn-secondary @(Favorito ? "selected" : "")" @onclick="AlternarFavorito">
+                    <button class="btn btn-secondary @(Favorito ? "selected" : "")" @onclick="AlternarFavorito" disabled="@procesando">
                         <Icono Nombre="star" />
                         @(Favorito ? "En favoritos" : "Favoritos")
                     </button>

@@ -40,7 +40,7 @@ public class LibroGuardadoRS {
         if (!"true".equalsIgnoreCase(favorito) && !"false".equalsIgnoreCase(favorito))
             throw new BadRequestException("Selecciona Favoritos o Deseados.");
         boolean esFavorito = Boolean.parseBoolean(favorito);
-        servicios.getLibroGuardadoBO().guardar(Sesion.exigirIdUsuario(peticion), idLibro, esFavorito);
+        servicios.getLibroGuardadoBO().guardar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), idLibro, esFavorito);
     }
 
     @DELETE
@@ -50,7 +50,7 @@ public class LibroGuardadoRS {
         if (!"true".equalsIgnoreCase(favorito) && !"false".equalsIgnoreCase(favorito))
             throw new BadRequestException("Selecciona Favoritos o Deseados.");
         boolean esFavorito = Boolean.parseBoolean(favorito);
-        return servicios.getLibroGuardadoBO().retirar(Sesion.exigirIdUsuario(peticion), idLibro, esFavorito);
+        return servicios.getLibroGuardadoBO().retirar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), idLibro, esFavorito);
     }
 
     @POST
@@ -60,6 +60,6 @@ public class LibroGuardadoRS {
         if (!"true".equalsIgnoreCase(favorito) && !"false".equalsIgnoreCase(favorito))
             throw new BadRequestException("Selecciona Favoritos o Deseados.");
         boolean esFavorito = Boolean.parseBoolean(favorito);
-        return servicios.getLibroGuardadoBO().listar(Sesion.exigirIdUsuario(peticion), esFavorito, filtro);
+        return servicios.getLibroGuardadoBO().listar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), esFavorito, filtro);
     }
 }

@@ -47,11 +47,13 @@ public partial class DetalleReferencia : IDisposable
             return "categoría";
         }
     }
-    private bool seguido;
+    private bool seguido, procesando;
+    private string? correoCargado;
 
     protected override void OnInitialized() => Sesion.Cambiado += ActualizarVista;
     protected override async Task OnParametersSetAsync()
     {
+        correoCargado = Sesion.Usuario?.Correo;
         cargando = true;
         errorCarga = null;
         try
@@ -72,17 +74,22 @@ public partial class DetalleReferencia : IDisposable
             cargando = false;
         }
     }
-    private void ActualizarVista()
+    private async void ActualizarVista()
     {
-        if (Sesion.Usuario is null)
-            seguido = false;
-        _ = InvokeAsync(StateHasChanged);
+        await InvokeAsync(async () =>
+        {
+            if (correoCargado != Sesion.Usuario?.Correo)
+                await OnParametersSetAsync();
+            StateHasChanged();
+        });
     }
     public void Dispose() => Sesion.Cambiado -= ActualizarVista;
     private async Task AlternarSeguimiento()
     {
+        if (procesando) return;
         if (!Sesion.RequerirAcceso())
             return;
+        procesando = true;
         try
         {
             await Cuenta.AlternarSeguimiento(Tipo, Id, seguido);
@@ -92,6 +99,10 @@ public partial class DetalleReferencia : IDisposable
         {
             Sesion.Error = e.Message;
             Sesion.Avisar(e.Message);
+        }
+        finally
+        {
+            procesando = false;
         }
     }
 

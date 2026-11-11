@@ -114,31 +114,16 @@ public partial class DatosCompra
 
     private async Task GuardarDireccion(Direccion direccion)
     {
-        try
-        {
-            await Cuenta.GuardarDireccion(direccion, DireccionEnEdicion?.Id ?? 0);
-            Cerrar();
-            Sesion.Notificar();
-        }
-        catch (InvalidOperationException e)
-        {
-            Sesion.Avisar(e.Message);
-        }
+        await Cuenta.GuardarDireccion(direccion, DireccionEnEdicion?.Id ?? 0);
+        Cerrar();
+        Sesion.Notificar();
     }
 
     private async Task GuardarMetodo(MetodoPago metodo)
     {
-        try
-        {
-            await Cuenta.GuardarMetodo(metodo, MetodoEnEdicion?.Id ?? 0);
-            Cerrar();
-            Sesion.Notificar();
-        }
-        catch (InvalidOperationException e)
-        {
-            Sesion.Error = e.Message;
-            Sesion.Avisar(e.Message);
-        }
+        await Cuenta.GuardarMetodo(metodo, MetodoEnEdicion?.Id ?? 0);
+        Cerrar();
+        Sesion.Notificar();
     }
 
     private async Task EliminarDireccion(Direccion direccion)

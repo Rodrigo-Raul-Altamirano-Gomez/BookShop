@@ -236,18 +236,7 @@ public class LibroBOImpl implements LibroBO {
     @Override
     public ResultadoPaginadoDTO<TarjetaLibroDTO> buscar(int idActor, FiltroLibroDTO filtro) throws
         NegocioException {
-        if (filtro == null)
-            filtro = FiltroLibroDTO.porDefecto();
-        if (filtro.pagina() < 1 || filtro.tamanioPagina() < 1)
-            throw new ValidacionException("pagina", "La página y su tamaño deben ser positivos.");
-        if (filtro.precioMinimo() != null && filtro.precioMinimo().signum() < 0)
-            throw new ValidacionException("precioMinimo", "El precio no puede ser negativo.");
-        if (filtro.precioMaximo() != null && filtro.precioMaximo().signum() < 0)
-            throw new ValidacionException("precioMaximo", "El precio no puede ser negativo.");
-        if (filtro.precioMinimo() != null && filtro.precioMaximo() != null &&
-            filtro.precioMinimo().compareTo(filtro.precioMaximo()) > 0)
-            throw new ValidacionException("precioMaximo", "El máximo no puede ser menor que el mínimo.");
-        FiltroLibroDTO valido = filtro;
+        FiltroLibroDTO valido = validarFiltro(filtro);
         try {
             return libroDAO.buscar(valido, LocalDateTime.now(reloj));
         } catch (SQLException e) {
@@ -258,18 +247,7 @@ public class LibroBOImpl implements LibroBO {
     @Override
     public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorAutor(int idActor, int id, FiltroLibroDTO filtro)
         throws NegocioException {
-        if (filtro == null)
-            filtro = FiltroLibroDTO.porDefecto();
-        if (filtro.pagina() < 1 || filtro.tamanioPagina() < 1)
-            throw new ValidacionException("pagina", "La página y su tamaño deben ser positivos.");
-        if (filtro.precioMinimo() != null && filtro.precioMinimo().signum() < 0)
-            throw new ValidacionException("precioMinimo", "El precio no puede ser negativo.");
-        if (filtro.precioMaximo() != null && filtro.precioMaximo().signum() < 0)
-            throw new ValidacionException("precioMaximo", "El precio no puede ser negativo.");
-        if (filtro.precioMinimo() != null && filtro.precioMaximo() != null &&
-            filtro.precioMinimo().compareTo(filtro.precioMaximo()) > 0)
-            throw new ValidacionException("precioMaximo", "El máximo no puede ser menor que el mínimo.");
-        FiltroLibroDTO valido = filtro;
+        FiltroLibroDTO valido = validarFiltro(filtro);
         try {
             Autor autor = autorDAO.leer(id);
             if (autor == null || autor.isEliminado())
@@ -283,18 +261,7 @@ public class LibroBOImpl implements LibroBO {
     @Override
     public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorCategoria(int idActor, int id, FiltroLibroDTO
         filtro) throws NegocioException {
-        if (filtro == null)
-            filtro = FiltroLibroDTO.porDefecto();
-        if (filtro.pagina() < 1 || filtro.tamanioPagina() < 1)
-            throw new ValidacionException("pagina", "La página y su tamaño deben ser positivos.");
-        if (filtro.precioMinimo() != null && filtro.precioMinimo().signum() < 0)
-            throw new ValidacionException("precioMinimo", "El precio no puede ser negativo.");
-        if (filtro.precioMaximo() != null && filtro.precioMaximo().signum() < 0)
-            throw new ValidacionException("precioMaximo", "El precio no puede ser negativo.");
-        if (filtro.precioMinimo() != null && filtro.precioMaximo() != null &&
-            filtro.precioMinimo().compareTo(filtro.precioMaximo()) > 0)
-            throw new ValidacionException("precioMaximo", "El máximo no puede ser menor que el mínimo.");
-        FiltroLibroDTO valido = filtro;
+        FiltroLibroDTO valido = validarFiltro(filtro);
         try {
             Categoria categoria = categoriaDAO.leer(id);
             if (categoria == null || categoria.isEliminado())
@@ -308,18 +275,7 @@ public class LibroBOImpl implements LibroBO {
     @Override
     public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorEditorial(int idActor, int id, FiltroLibroDTO
         filtro) throws NegocioException {
-        if (filtro == null)
-            filtro = FiltroLibroDTO.porDefecto();
-        if (filtro.pagina() < 1 || filtro.tamanioPagina() < 1)
-            throw new ValidacionException("pagina", "La página y su tamaño deben ser positivos.");
-        if (filtro.precioMinimo() != null && filtro.precioMinimo().signum() < 0)
-            throw new ValidacionException("precioMinimo", "El precio no puede ser negativo.");
-        if (filtro.precioMaximo() != null && filtro.precioMaximo().signum() < 0)
-            throw new ValidacionException("precioMaximo", "El precio no puede ser negativo.");
-        if (filtro.precioMinimo() != null && filtro.precioMaximo() != null &&
-            filtro.precioMinimo().compareTo(filtro.precioMaximo()) > 0)
-            throw new ValidacionException("precioMaximo", "El máximo no puede ser menor que el mínimo.");
-        FiltroLibroDTO valido = filtro;
+        FiltroLibroDTO valido = validarFiltro(filtro);
         try {
             Editorial editorial = editorialDAO.leer(id);
             if (editorial == null || editorial.isEliminado())
@@ -376,6 +332,21 @@ public class LibroBOImpl implements LibroBO {
         if (primero < 1 || segundo < 1 || primero == segundo)
             throw new ValidacionException("libros", "Seleccione dos libros distintos.");
         return List.of(obtenerDetalle(idActor, primero), obtenerDetalle(idActor, segundo));
+    }
+
+    public static FiltroLibroDTO validarFiltro(FiltroLibroDTO filtro) throws ValidacionException {
+        if (filtro == null)
+            filtro = FiltroLibroDTO.porDefecto();
+        if (filtro.pagina() < 1 || filtro.tamanioPagina() < 1)
+            throw new ValidacionException("pagina", "La página y su tamaño deben ser positivos.");
+        if (filtro.precioMinimo() != null && filtro.precioMinimo().signum() < 0)
+            throw new ValidacionException("precioMinimo", "El precio no puede ser negativo.");
+        if (filtro.precioMaximo() != null && filtro.precioMaximo().signum() < 0)
+            throw new ValidacionException("precioMaximo", "El precio no puede ser negativo.");
+        if (filtro.precioMinimo() != null && filtro.precioMaximo() != null &&
+            filtro.precioMinimo().compareTo(filtro.precioMaximo()) > 0)
+            throw new ValidacionException("precioMaximo", "El máximo no puede ser menor que el mínimo.");
+        return filtro;
     }
 
     private DatosLibroDTO validarFormulario(DatosLibroDTO datos) throws ValidacionException {

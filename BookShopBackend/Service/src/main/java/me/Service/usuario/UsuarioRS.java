@@ -72,24 +72,24 @@ public class UsuarioRS {
 
     @GET
     public PerfilUsuarioDTO perfil() throws NegocioException {
-        return servicios.getUsuarioBO().obtenerPerfil(Sesion.exigirIdUsuario(peticion));
+        return servicios.getUsuarioBO().obtenerPerfil(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()));
     }
 
     @PUT
     public PerfilUsuarioDTO modificar(DatosPerfilDTO datos) throws NegocioException {
-        return servicios.getUsuarioBO().modificarPerfil(Sesion.exigirIdUsuario(peticion), datos);
+        return servicios.getUsuarioBO().modificarPerfil(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), datos);
     }
 
     @PUT
     @Path("imagen")
     public PerfilUsuarioDTO imagen(@QueryParam("url") String url) throws NegocioException {
-        return servicios.getUsuarioBO().cambiarImagen(Sesion.exigirIdUsuario(peticion), url);
+        return servicios.getUsuarioBO().cambiarImagen(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), url);
     }
 
     @PUT
     @Path("contrasenia")
     public void contrasenia(CambioContraseniaDTO datos) throws NegocioException {
-        servicios.getUsuarioBO().cambiarContrasenia(Sesion.exigirIdUsuario(peticion), datos);
+        servicios.getUsuarioBO().cambiarContrasenia(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), datos);
     }
 
     @DELETE
@@ -105,7 +105,7 @@ public class UsuarioRS {
     @POST
     @Path("desactivacion")
     public void desactivar(DesactivacionCuenta datos) throws NegocioException {
-        int idUsuario = Sesion.exigirIdUsuario(peticion);
+        int idUsuario = Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO());
         if (datos == null)
             throw new BadRequestException("Falta la contraseña actual.");
         // Verifica antes de contabilizar el tiempo; desactivar vuelve a comprobar la contraseña.

@@ -36,20 +36,20 @@ public class SeguimientoRS {
     @Path("{tipo}/{idReferencia}")
     public void guardar(@PathParam("tipo") TipoSeguimiento tipo, @PathParam("idReferencia") int idReferencia)
         throws NegocioException {
-        servicios.getSeguimientoBO().guardar(Sesion.exigirIdUsuario(peticion), tipo, idReferencia);
+        servicios.getSeguimientoBO().guardar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), tipo, idReferencia);
     }
 
     @DELETE
     @Path("{tipo}/{idReferencia}")
     public boolean retirar(@PathParam("tipo") TipoSeguimiento tipo, @PathParam("idReferencia") int
         idReferencia) throws NegocioException {
-        return servicios.getSeguimientoBO().retirar(Sesion.exigirIdUsuario(peticion), tipo, idReferencia);
+        return servicios.getSeguimientoBO().retirar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), tipo, idReferencia);
     }
 
     @POST
     @Path("busqueda")
     public ResultadoPaginadoDTO<TarjetaReferenciaDTO> listar(ConsultaSeguimientosDTO consulta) throws
         NegocioException {
-        return servicios.getSeguimientoBO().listar(Sesion.exigirIdUsuario(peticion), consulta);
+        return servicios.getSeguimientoBO().listar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), consulta);
     }
 }

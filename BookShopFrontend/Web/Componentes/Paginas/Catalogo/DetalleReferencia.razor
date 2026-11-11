@@ -31,7 +31,7 @@
                 align-items-start justify-content-center">
                 <h1>@Referencia.Nombre</h1>
                 <p>@Referencia.Descripcion</p>
-                <button class="btn btn-secondary" @onclick="AlternarSeguimiento">
+                <button class="btn btn-secondary" @onclick="AlternarSeguimiento" disabled="@procesando">
                     <Icono Nombre="follow" />
                     @(seguido ? "Dejar de seguir" : $"Seguir {Singular}")
                 </button>

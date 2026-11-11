@@ -36,37 +36,37 @@ public class MetodoPagoRS {
 
     @POST
     public MetodoPagoDTO registrar(DatosMetodoPagoDTO datos) throws NegocioException {
-        return servicios.getMetodoPagoBO().registrar(Sesion.exigirIdUsuario(peticion), datos);
+        return servicios.getMetodoPagoBO().registrar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), datos);
     }
 
     @PUT
     @Path("{idMetodo}")
     public MetodoPagoDTO modificar(@PathParam("idMetodo") int idMetodo, DatosMetodoPagoDTO datos) throws
         NegocioException {
-        return servicios.getMetodoPagoBO().modificar(Sesion.exigirIdUsuario(peticion), idMetodo, datos);
+        return servicios.getMetodoPagoBO().modificar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), idMetodo, datos);
     }
 
     @GET
     @Path("{idMetodo}")
     public MetodoPagoDTO consultar(@PathParam("idMetodo") int idMetodo) throws NegocioException {
-        return servicios.getMetodoPagoBO().consultar(Sesion.exigirIdUsuario(peticion), idMetodo);
+        return servicios.getMetodoPagoBO().consultar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), idMetodo);
     }
 
     @GET
     public ResultadoPaginadoDTO<MetodoPagoDTO> listar(@DefaultValue("1") @QueryParam("pagina") int pagina,
         @DefaultValue("10") @QueryParam("tamanioPagina") int tamanioPagina) throws NegocioException {
-        return servicios.getMetodoPagoBO().listar(Sesion.exigirIdUsuario(peticion), pagina, tamanioPagina);
+        return servicios.getMetodoPagoBO().listar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), pagina, tamanioPagina);
     }
 
     @DELETE
     @Path("{idMetodo}")
     public void eliminar(@PathParam("idMetodo") int idMetodo) throws NegocioException {
-        servicios.getMetodoPagoBO().eliminar(Sesion.exigirIdUsuario(peticion), idMetodo);
+        servicios.getMetodoPagoBO().eliminar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), idMetodo);
     }
 
     @PUT
     @Path("{idMetodo}/predeterminado")
     public void establecerPredeterminado(@PathParam("idMetodo") int idMetodo) throws NegocioException {
-        servicios.getMetodoPagoBO().establecerPredeterminado(Sesion.exigirIdUsuario(peticion), idMetodo);
+        servicios.getMetodoPagoBO().establecerPredeterminado(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), idMetodo);
     }
 }

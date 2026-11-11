@@ -30,6 +30,6 @@ public class CuponRS {
     @GET
     public ResultadoPaginadoDTO<CuponDTO> listar(@DefaultValue("1") @QueryParam("pagina") int pagina,
         @DefaultValue("10") @QueryParam("tamanioPagina") int tamanioPagina) throws NegocioException {
-        return servicios.getCuponBO().listar(Sesion.exigirIdUsuario(peticion), pagina, tamanioPagina);
+        return servicios.getCuponBO().listar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), pagina, tamanioPagina);
     }
 }

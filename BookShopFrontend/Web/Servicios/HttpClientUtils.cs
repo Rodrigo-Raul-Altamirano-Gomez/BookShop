@@ -52,14 +52,16 @@ public sealed class HttpClientUtils : IDisposable
         {
             if (!respuesta.IsSuccessStatusCode)
             {
-                if (respuesta.StatusCode == HttpStatusCode.Unauthorized)
-                    SesionVencida?.Invoke();
                 var texto = await respuesta.Content.ReadAsStringAsync();
                 string mensaje = "No se pudo completar la operación.";
+                ErrorRestDTO? error = null;
                 if (respuesta.Content.Headers.ContentType?.MediaType == "application/json")
                 {
-                    mensaje = JsonConvert.DeserializeObject<ErrorRestDTO>(texto)?.Mensaje ?? mensaje;
+                    error = JsonConvert.DeserializeObject<ErrorRestDTO>(texto);
+                    mensaje = error?.Mensaje ?? mensaje;
                 }
+                if (respuesta.StatusCode == HttpStatusCode.Unauthorized && error?.Codigo != "CredencialesInvalidas")
+                    SesionVencida?.Invoke();
                 throw new InvalidOperationException(mensaje);
             }
             if (respuesta.StatusCode == HttpStatusCode.NoContent)

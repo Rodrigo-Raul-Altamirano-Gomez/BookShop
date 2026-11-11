@@ -1,5 +1,7 @@
+@inherits Web.Componentes.Paginas.Cuenta.PaginaCuenta
 @page "/confirmacion/{Id:int}"
 <PageTitle>@(confirmacion ? "Pedido confirmado" : "Detalle del pedido") · BookShop</PageTitle>
+<Cargando EnCurso="@CargandoDatos" Error="@ErrorCarga">
 <div class="container py-4">
     <nav aria-label="Ruta de navegación">
         <ol class="breadcrumb">
@@ -45,3 +47,5 @@
         <div class="text-center mt-4"><a class="btn btn-primary" href="/catalogo">Seguir explorando</a></div>
     }
 </div>
+
+</Cargando>

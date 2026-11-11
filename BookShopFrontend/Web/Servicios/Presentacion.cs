@@ -32,7 +32,7 @@ public static class Presentacion
         libro.Paginas = dto.NumeroPaginas;
         libro.Stock = dto.StockDisponible;
         libro.Peso = dto.Peso is null ? "—" : $"{dto.Peso} kg";
-        libro.Dimensiones = $"{dto.Alto} × {dto.Ancho} cm";
+        libro.Dimensiones = dto.Alto is null || dto.Ancho is null ? "—" : $"{dto.Alto} × {dto.Ancho} cm";
         libro.Saga = dto.Saga ?? "";
         libro.Tomo = dto.NumeroTomo;
         return libro;
@@ -65,7 +65,7 @@ public static class Presentacion
         Alias = dto.Alias ?? "",
         Proveedor = dto.Proveedor,
         NumeroEnmascarado = dto.NumeroEnmascarado,
-        TipoTarjeta = dto.TipoTarjeta == "CREDITO" ? "Crédito" : "Débito",
+        TipoTarjeta = dto.TarjetaBancaria ? (dto.TipoTarjeta == "CREDITO" ? "Crédito" : "Débito") : "",
         Vencimiento = dto.FechaVencimiento,
         Predeterminada = dto.Predeterminado,
         Vigente = dto.Vigente

@@ -5,6 +5,7 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import me.Business.exceptions.ConflictoException;
+import me.Business.catalogo.LibroBOImpl;
 import me.Business.exceptions.NegocioException;
 import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.RecursoNoEncontradoException;
@@ -73,18 +74,7 @@ public class LibroGuardadoBOImpl implements LibroGuardadoBO {
     @Override
     public ResultadoPaginadoDTO<TarjetaLibroDTO> listar(int idActor, boolean favorito, FiltroLibroDTO filtro)
         throws NegocioException {
-        if (filtro == null)
-            filtro = FiltroLibroDTO.porDefecto();
-        if (filtro.pagina() < 1 || filtro.tamanioPagina() < 1)
-            throw new ValidacionException("pagina", "La página y su tamaño deben ser positivos.");
-        if (filtro.precioMinimo() != null && filtro.precioMinimo().signum() < 0)
-            throw new ValidacionException("precioMinimo", "El precio no puede ser negativo.");
-        if (filtro.precioMaximo() != null && filtro.precioMaximo().signum() < 0)
-            throw new ValidacionException("precioMaximo", "El precio no puede ser negativo.");
-        if (filtro.precioMinimo() != null && filtro.precioMaximo() != null &&
-            filtro.precioMinimo().compareTo(filtro.precioMaximo()) > 0)
-            throw new ValidacionException("precioMaximo", "El máximo no puede ser menor que el mínimo.");
-        FiltroLibroDTO validos = filtro;
+        FiltroLibroDTO validos = LibroBOImpl.validarFiltro(filtro);
         FiltroLibroDTO visibles = new FiltroLibroDTO(validos.titulo(), validos.idsCategorias(),
             validos.idsAutores(), validos.idsEditoriales(), validos.idiomas(), validos.precioMinimo(),
             validos.precioMaximo(), true, validos.soloNuevos(), validos.orden(), validos.pagina(),

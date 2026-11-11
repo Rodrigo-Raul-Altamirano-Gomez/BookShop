@@ -4,6 +4,7 @@ namespace Web.Componentes.Paginas.Cuenta;
 
 public partial class MiPerfil
 {
+    private bool procesando;
     [Inject] protected HttpClientUtils Api { get; set; } = default!;
 
     private string ModalAbierto { get; set; } = "";
@@ -55,6 +56,8 @@ public partial class MiPerfil
 
     private async Task GuardarPerfil()
     {
+        if (procesando) return;
+        procesando = true;
         try
         {
             Sesion.MostrarPerfil(await Api.Put<PerfilUsuarioDTO>("cuenta", new DatosPerfilDTO
@@ -69,10 +72,16 @@ public partial class MiPerfil
         {
             MensajeError = e.Message;
         }
+        finally
+        {
+            procesando = false;
+        }
     }
 
     private async Task GuardarContrasena()
     {
+        if (procesando) return;
+        procesando = true;
         try
         {
             await Api.Put("cuenta/contrasenia", new CambioContraseniaDTO
@@ -88,10 +97,16 @@ public partial class MiPerfil
         {
             MensajeError = e.Message;
         }
+        finally
+        {
+            procesando = false;
+        }
     }
 
     private async Task Desactivar()
     {
+        if (procesando) return;
+        procesando = true;
         try
         {
             await Api.Post("cuenta/desactivacion", new
@@ -106,12 +121,16 @@ public partial class MiPerfil
         {
             MensajeError = e.Message;
         }
+        finally
+        {
+            procesando = false;
+        }
     }
 
     private string urlFoto = "";
     private async Task GuardarFoto()
     {
-        if (Sesion.Usuario is null || CargandoImagen)
+        if (Sesion.Usuario is null || CargandoImagen || procesando)
             return;
         CargandoImagen = true;
         ErrorImagen = "";
@@ -136,6 +155,8 @@ public partial class MiPerfil
 
     private async Task QuitarFoto()
     {
+        if (procesando) return;
+        procesando = true;
         try
         {
             Sesion.MostrarPerfil(await Api.Put<PerfilUsuarioDTO>("cuenta/imagen"));
@@ -144,6 +165,10 @@ public partial class MiPerfil
         catch (InvalidOperationException e)
         {
             Sesion.Avisar(e.Message);
+        }
+        finally
+        {
+            procesando = false;
         }
     }
 }

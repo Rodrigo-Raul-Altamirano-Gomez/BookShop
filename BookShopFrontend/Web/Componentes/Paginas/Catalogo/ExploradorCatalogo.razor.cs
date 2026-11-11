@@ -48,7 +48,7 @@ public partial class ExploradorCatalogo : IDisposable
     private string orden = "MAS_RECIENTES";
     private int pagina = 1;
     private string contextoAnterior = "";
-    private const decimal LimitePrecio = 1000;
+    private decimal LimitePrecio => Math.Max(1000, Math.Max(minimo, maximo));
     private string EstiloRango
     {
         get
@@ -175,7 +175,7 @@ public partial class ExploradorCatalogo : IDisposable
                 editorialesAplicadas = [];
                 idiomasAplicados = [];
                 minimo = minimoAplicado = 0;
-                maximo = maximoAplicado = LimitePrecio;
+                maximo = maximoAplicado = 1000;
                 precioFiltrado = false;
                 pagina = 1;
                 orden = OrdenInicial;
@@ -256,7 +256,7 @@ public partial class ExploradorCatalogo : IDisposable
 
     private void AjustarMinimo()
     {
-        minimo = Math.Clamp(minimo, 0, LimitePrecio);
+        minimo = Math.Max(0, minimo);
         if (minimo > maximo)
             maximo = minimo;
     }
@@ -276,7 +276,7 @@ public partial class ExploradorCatalogo : IDisposable
         idiomasAplicados = [.. idiomas];
         minimoAplicado = minimo;
         maximoAplicado = maximo;
-        precioFiltrado = minimo != 0 || maximo != LimitePrecio;
+        precioFiltrado = minimo != 0 || maximo != 1000;
         pagina = 1;
         await Consultar();
     }
@@ -288,7 +288,7 @@ public partial class ExploradorCatalogo : IDisposable
         editoriales.Clear();
         idiomas.Clear();
         minimo = 0;
-        maximo = LimitePrecio;
+        maximo = 1000;
         await AplicarFiltros();
     }
 
@@ -327,7 +327,7 @@ public partial class ExploradorCatalogo : IDisposable
     private async Task QuitarPrecio()
     {
         minimo = minimoAplicado = 0;
-        maximo = maximoAplicado = LimitePrecio;
+        maximo = maximoAplicado = 1000;
         precioFiltrado = false;
         pagina = 1;
         await Consultar();

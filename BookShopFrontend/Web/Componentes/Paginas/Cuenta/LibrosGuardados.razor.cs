@@ -5,6 +5,8 @@ namespace Web.Componentes.Paginas.Cuenta;
 public partial class LibrosGuardados
 {
     private const string ClavePestana = "libros-guardados:pestana-favoritos";
+    private string TextoBusqueda = "", Busqueda = "";
+    private void Buscar() => Busqueda = TextoBusqueda.Trim();
     private bool PestanaFavoritos { get; set; }
 
     protected override void OnInitialized()

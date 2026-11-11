@@ -1,13 +1,13 @@
-<Modal Titulo="@(reactivacion ? "Reactivar cuenta" : "Bienvenido a BookShop")" AlCerrar="AlCerrar">
+<Modal Titulo="@(reactivacion ? "Reactivar cuenta" : "Bienvenido a BookShop")" AlCerrar="AlCerrar" Ocupado="@enviando">
     @if (!reactivacion)
     {
         <div class="nav nav-tabs bookshop-tabs mb-4" role="tablist">
             <button class="nav-link bookshop-tab @(!registro ? "active" : "")"
                 role="tab"
-                aria-selected="@(!registro)" @onclick="PestanaAcceso">Iniciar sesión</button>
+                aria-selected="@(!registro)" @onclick="PestanaAcceso" disabled="@enviando">Iniciar sesión</button>
             <button class="nav-link bookshop-tab @(registro ? "active" : "")"
                 role="tab"
-                aria-selected="@registro" @onclick="PestanaRegistro">Crear cuenta</button>
+                aria-selected="@registro" @onclick="PestanaRegistro" disabled="@enviando">Crear cuenta</button>
         </div>
     }
     <form @onsubmit="Enviar" @onsubmit:preventDefault>
@@ -96,7 +96,7 @@
             <p class="alert alert-danger form-error" role="alert">@error</p>
         }
         <div class="modal-footer px-0 pb-0 mt-4">
-            <button type="button" class="btn btn-secondary" @onclick="AlCerrar">Cancelar</button>
+            <button type="button" class="btn btn-secondary" @onclick="AlCerrar" disabled="@enviando">Cancelar</button>
             <button type="submit" class="btn btn-primary" disabled="@enviando">
                 @if (reactivacion)
                 {
