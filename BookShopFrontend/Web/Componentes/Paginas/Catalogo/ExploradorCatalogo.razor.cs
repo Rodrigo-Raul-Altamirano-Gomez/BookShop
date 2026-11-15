@@ -40,11 +40,9 @@ public partial class ExploradorCatalogo : IDisposable
     private List<Libro> resultados = [];
     private bool cargando = true;
     private HashSet<string> categorias = [], autores = [], editoriales = [], idiomas = [];
-    private HashSet<string> categoriasAplicadas = [], autoresAplicados = [], editorialesAplicadas = [],
-         idiomasAplicados = [];
-    private decimal minimo, minimoAplicado;
-    private decimal maximo, maximoAplicado;
-    private bool precioFiltrado;
+    private decimal minimo;
+    private decimal maximo;
+    private bool precioFiltrado => minimo != 0 || maximo != 1000;
     private string orden = "MAS_RECIENTES";
     private int pagina = 1;
     private string contextoAnterior = "";
@@ -66,8 +64,8 @@ public partial class ExploradorCatalogo : IDisposable
     private IEnumerable<string> OpcionesEditoriales =>
         Catalogo.Referencias.Where(r => r.Tipo == "editoriales").Select(r => r.Nombre);
     private IEnumerable<string> OpcionesIdiomas => Catalogo.Idiomas;
-    private bool HayFiltros => categoriasAplicadas.Count > 0 || autoresAplicados.Count > 0
-        || editorialesAplicadas.Count > 0 || idiomasAplicados.Count > 0 || precioFiltrado;
+    private bool HayFiltros => categorias.Count > 0 || autores.Count > 0
+        || editoriales.Count > 0 || idiomas.Count > 0 || precioFiltrado;
 
     public static readonly Dictionary<string, string> OpcionesOrden = new()
     {
@@ -93,9 +91,9 @@ public partial class ExploradorCatalogo : IDisposable
             var filtro = new FiltroLibroDTO
             {
                 Titulo = Busqueda,
-                Idiomas = idiomasAplicados.ToList(),
-                PrecioMinimo = precioFiltrado ? minimoAplicado : null,
-                PrecioMaximo = precioFiltrado ? maximoAplicado : null,
+                Idiomas = idiomas.ToList(),
+                PrecioMinimo = precioFiltrado ? minimo : null,
+                PrecioMaximo = precioFiltrado ? maximo : null,
                 SoloNuevos = SoloNuevos,
                 Orden = orden,
                 Pagina = pagina,
@@ -103,11 +101,11 @@ public partial class ExploradorCatalogo : IDisposable
             };
             foreach (var referencia in Catalogo.Referencias)
             {
-                if (referencia.Tipo == "categorias" && categoriasAplicadas.Contains(referencia.Nombre))
+                if (referencia.Tipo == "categorias" && categorias.Contains(referencia.Nombre))
                     filtro.IdsCategorias.Add(referencia.Id);
-                if (referencia.Tipo == "autores" && autoresAplicados.Contains(referencia.Nombre))
+                if (referencia.Tipo == "autores" && autores.Contains(referencia.Nombre))
                     filtro.IdsAutores.Add(referencia.Id);
-                if (referencia.Tipo == "editoriales" && editorialesAplicadas.Contains(referencia.Nombre))
+                if (referencia.Tipo == "editoriales" && editoriales.Contains(referencia.Nombre))
                     filtro.IdsEditoriales.Add(referencia.Id);
             }
             string ruta = "libros/busqueda";
@@ -152,15 +150,8 @@ public partial class ExploradorCatalogo : IDisposable
                 autores = [.. vista.Autores];
                 editoriales = [.. vista.Editoriales];
                 idiomas = [.. vista.Idiomas];
-                categoriasAplicadas = [.. vista.CategoriasAplicadas];
-                autoresAplicados = [.. vista.AutoresAplicados];
-                editorialesAplicadas = [.. vista.EditorialesAplicadas];
-                idiomasAplicados = [.. vista.IdiomasAplicados];
                 minimo = vista.Minimo;
                 maximo = vista.Maximo;
-                precioFiltrado = vista.PrecioFiltrado;
-                minimoAplicado = vista.MinimoAplicado;
-                maximoAplicado = vista.MaximoAplicado;
                 orden = vista.Orden;
                 pagina = vista.Pagina;
             }
@@ -170,13 +161,8 @@ public partial class ExploradorCatalogo : IDisposable
                 autores = [];
                 editoriales = [];
                 idiomas = [];
-                categoriasAplicadas = [];
-                autoresAplicados = [];
-                editorialesAplicadas = [];
-                idiomasAplicados = [];
-                minimo = minimoAplicado = 0;
-                maximo = maximoAplicado = 1000;
-                precioFiltrado = false;
+                minimo = 0;
+                maximo = 1000;
                 pagina = 1;
                 orden = OrdenInicial;
             }
@@ -194,15 +180,8 @@ public partial class ExploradorCatalogo : IDisposable
             Autores = [.. autores],
             Editoriales = [.. editoriales],
             Idiomas = [.. idiomas],
-            CategoriasAplicadas = [.. categoriasAplicadas],
-            AutoresAplicados = [.. autoresAplicados],
-            EditorialesAplicadas = [.. editorialesAplicadas],
-            IdiomasAplicados = [.. idiomasAplicados],
             Minimo = minimo,
             Maximo = maximo,
-            MinimoAplicado = minimoAplicado,
-            MaximoAplicado = maximoAplicado,
-            PrecioFiltrado = precioFiltrado,
             Orden = orden,
             Pagina = pagina
 
@@ -217,127 +196,69 @@ public partial class ExploradorCatalogo : IDisposable
         public HashSet<string> Autores { get; set; } = [];
         public HashSet<string> Editoriales { get; set; } = [];
         public HashSet<string> Idiomas { get; set; } = [];
-        public HashSet<string> CategoriasAplicadas { get; set; } = [];
-        public HashSet<string> AutoresAplicados { get; set; } = [];
-        public HashSet<string> EditorialesAplicadas { get; set; } = [];
-        public HashSet<string> IdiomasAplicados { get; set; } = [];
         public decimal Minimo { get; set; }
         public decimal Maximo { get; set; }
-        public decimal MinimoAplicado { get; set; }
-        public decimal MaximoAplicado { get; set; }
-        public bool PrecioFiltrado { get; set; }
         public string Orden { get; set; } = "MAS_RECIENTES";
         public int Pagina { get; set; } = 1;
     }
 
-    private void SeleccionarCategoria(string valor)
+    private async Task SeleccionarCategoria(string valor)
     {
         if (!categorias.Add(valor))
             categorias.Remove(valor);
+        await ActualizarResultados();
     }
 
-    private void SeleccionarAutor(string valor)
+    private async Task SeleccionarAutor(string valor)
     {
         if (!autores.Add(valor))
             autores.Remove(valor);
+        await ActualizarResultados();
     }
 
-    private void SeleccionarEditorial(string valor)
+    private async Task SeleccionarEditorial(string valor)
     {
         if (!editoriales.Add(valor))
             editoriales.Remove(valor);
+        await ActualizarResultados();
     }
 
-    private void SeleccionarIdioma(string valor)
+    private async Task SeleccionarIdioma(string valor)
     {
         if (!idiomas.Add(valor))
             idiomas.Remove(valor);
+        await ActualizarResultados();
     }
 
-    private void AjustarMinimo()
+    private async Task AjustarMinimo()
     {
         minimo = Math.Max(0, minimo);
         if (minimo > maximo)
             maximo = minimo;
+        await ActualizarResultados();
     }
 
-    private void AjustarMaximo()
+    private async Task AjustarMaximo()
     {
         maximo = Math.Max(0, maximo);
         if (maximo < minimo)
             minimo = maximo;
-    }
-
-    private async Task AplicarFiltros()
-    {
-        categoriasAplicadas = [.. categorias];
-        autoresAplicados = [.. autores];
-        editorialesAplicadas = [.. editoriales];
-        idiomasAplicados = [.. idiomas];
-        minimoAplicado = minimo;
-        maximoAplicado = maximo;
-        precioFiltrado = minimo != 0 || maximo != 1000;
-        pagina = 1;
-        await Consultar();
-    }
-
-    private async Task LimpiarFiltros()
-    {
-        categorias.Clear();
-        autores.Clear();
-        editoriales.Clear();
-        idiomas.Clear();
-        minimo = 0;
-        maximo = 1000;
-        await AplicarFiltros();
-    }
-
-    private async Task QuitarCategoria(string valor)
-    {
-        categorias.Remove(valor);
-        categoriasAplicadas.Remove(valor);
-        pagina = 1;
-        await Consultar();
-    }
-
-    private async Task QuitarAutor(string valor)
-    {
-        autores.Remove(valor);
-        autoresAplicados.Remove(valor);
-        pagina = 1;
-        await Consultar();
-    }
-
-    private async Task QuitarEditorial(string valor)
-    {
-        editoriales.Remove(valor);
-        editorialesAplicadas.Remove(valor);
-        pagina = 1;
-        await Consultar();
-    }
-
-    private async Task QuitarIdioma(string valor)
-    {
-        idiomas.Remove(valor);
-        idiomasAplicados.Remove(valor);
-        pagina = 1;
-        await Consultar();
+        await ActualizarResultados();
     }
 
     private async Task QuitarPrecio()
     {
-        minimo = minimoAplicado = 0;
-        maximo = maximoAplicado = 1000;
-        precioFiltrado = false;
-        pagina = 1;
-        await Consultar();
+        minimo = 0;
+        maximo = 1000;
+        await ActualizarResultados();
     }
 
-    private async Task CambiarOrden()
+    private async Task ActualizarResultados()
     {
         pagina = 1;
         await Consultar();
     }
+
     private async Task CambiarPagina(int valor)
     {
         pagina = valor;

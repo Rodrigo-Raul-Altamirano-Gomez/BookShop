@@ -11,10 +11,6 @@
     min-width:0;
     width:100%
 }
-.filter-action {
-    width:100%;
-    margin-top:8px
-}
 .active-filters {
     border-top:1px solid var(--line);
     padding-top:17px

@@ -19,6 +19,8 @@ builder.Logging.ClearProviders();
 await using var servidor = builder.Build();
 int verificaciones = 0;
 string? ultimoOrden = null;
+FiltroLibroDTO? ultimoFiltro = null;
+string? ultimaRutaLibros = null;
 DatosMetodoPagoDTO? ultimoMetodo = null;
 Task esperaBusqueda = Task.CompletedTask;
 bool fallarBusqueda = false;
@@ -77,6 +79,8 @@ servidor.Map("/{**ruta}", async contexto =>
     else if (ruta == "/webresources/cuenta/cupones") resultado = new ResultadoPaginadoDTO<CuponDTO>([], 0, 1, 10);
     else if (ruta == "/webresources/cuenta/libros-guardados/busqueda")
     {
+        ultimoFiltro = await contexto.Request.ReadFromJsonAsync<FiltroLibroDTO>();
+        ultimaRutaLibros = ruta + contexto.Request.QueryString;
         Verificar(contexto.Request.Query.ContainsKey("favorito"), "Falta elegir la lista personal");
         resultado = new ResultadoPaginadoDTO<TarjetaLibroDTO>([], 0, 1, 12);
     }
@@ -99,6 +103,12 @@ servidor.Map("/{**ruta}", async contexto =>
         int pagina = int.Parse(contexto.Request.Query["pagina"]!);
         resultado = new ResultadoPaginadoDTO<string>(pagina == 1 ? Enumerable.Range(1, 12).Select(n => $"Idioma {n}").ToList() : ["Español"], 13, pagina, 12);
     }
+    else if (ruta.StartsWith("/webresources/libros/por-"))
+    {
+        ultimoFiltro = await contexto.Request.ReadFromJsonAsync<FiltroLibroDTO>();
+        ultimaRutaLibros = ruta;
+        resultado = new ResultadoPaginadoDTO<TarjetaLibroDTO>([], 0, ultimoFiltro!.Pagina, 12);
+    }
     else if (ruta == "/webresources/libros/busqueda")
     {
         await esperaBusqueda;
@@ -109,6 +119,8 @@ servidor.Map("/{**ruta}", async contexto =>
             return;
         }
         var filtro = await contexto.Request.ReadFromJsonAsync<FiltroLibroDTO>(); ultimoOrden = filtro!.Orden;
+        ultimoFiltro = filtro;
+        ultimaRutaLibros = ruta;
         Verificar(filtro.SoloActivos && filtro.Pagina > 0 && filtro.TamanioPagina > 0, "El catálogo público debe enviar solo activos y paginación válida");
         resultado = new ResultadoPaginadoDTO<TarjetaLibroDTO>([new(7, "Libro real", null, "Autor real", 50, 40, 20, true)], 1, filtro.Pagina, filtro.TamanioPagina);
     }
@@ -165,6 +177,8 @@ Verificar(ultimoMetodo?.TarjetaBancaria == false && ultimoMetodo.TipoTarjeta is 
 
 // Renderizar componentes reales con respuestas REST, sin navegador ni datos de demostración.
 var servicios = new ServiceCollection();
+var componentes = new ComponentesPrueba();
+servicios.AddSingleton<IComponentActivator>(componentes);
 servicios.AddLogging(); servicios.AddSingleton(estado);
 servicios.AddSingleton(api); servicios.AddSingleton(catalogoServicio); servicios.AddSingleton(cuentaServicio); servicios.AddSingleton(compraServicio); servicios.AddSingleton<NavigationManager, NavegacionPrueba>();
 await using var proveedor = servicios.BuildServiceProvider();
@@ -180,6 +194,47 @@ await renderer.Dispatcher.InvokeAsync(async () =>
     Verificar(catalogoServicio.Idiomas.Count == 13 && catalogoServicio.Idiomas.Contains("Español"), "No se cargaron todas las páginas de idiomas");
     var catalogo = await renderer.RenderComponentAsync<Web.Componentes.Paginas.Catalogo.ExploradorCatalogo>(ParameterView.FromDictionary(new Dictionary<string, object?> { ["Busqueda"] = "historia", ["OrdenInicial"] = "MAS_VENDIDOS" }));
     Verificar(catalogo.ToHtmlString().Contains("Libro real") && ultimoOrden == "MAS_VENDIDOS", "Catálogo no envía el orden al servidor");
+    Verificar(!catalogo.ToHtmlString().Contains("Aplicar filtros") && !catalogo.ToHtmlString().Contains("Limpiar filtros"), "Aún aparecen acciones manuales de filtros");
+    var explorador = componentes.Explorador!;
+    // Ejecuta los mismos manejadores de las casillas, sin exponer métodos de prueba en Web.
+    async Task Cambiar(string metodo, params object[] argumentos)
+    {
+        var accion = typeof(Web.Componentes.Paginas.Catalogo.ExploradorCatalogo).GetMethod(metodo,
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+        await (Task)accion.Invoke(explorador, argumentos)!;
+    }
+    await Cambiar("CambiarPagina", 3);
+    await Cambiar("SeleccionarCategoria", "Referencia real");
+    Verificar(ultimoFiltro!.IdsCategorias.SequenceEqual(new[] { 1 }) && ultimoFiltro.Pagina == 1
+        && ultimoFiltro.Titulo == "historia" && ultimoFiltro.Orden == "MAS_VENDIDOS", "Seleccionar categoría no consulta inmediatamente conservando búsqueda y orden");
+    await Cambiar("SeleccionarAutor", "Referencia real");
+    await Cambiar("SeleccionarEditorial", "Referencia real");
+    await Cambiar("SeleccionarIdioma", "Español");
+    Verificar(ultimoFiltro!.IdsCategorias.Count == 1 && ultimoFiltro.IdsAutores.Count == 1
+        && ultimoFiltro.IdsEditoriales.Count == 1 && ultimoFiltro.Idiomas.Contains("Español"), "Los filtros automáticos no se combinan");
+    ((IDisposable)explorador).Dispose();
+    await renderer.RenderComponentAsync<Web.Componentes.Paginas.Catalogo.ExploradorCatalogo>(ParameterView.FromDictionary(
+        new Dictionary<string, object?> { ["Busqueda"] = "historia", ["OrdenInicial"] = "MAS_VENDIDOS" }));
+    explorador = componentes.Explorador!;
+    Verificar(ultimoFiltro!.IdsCategorias.Count == 1 && ultimoFiltro.Idiomas.Contains("Español"), "Se pierden los filtros al volver a la lista");
+    await Cambiar("SeleccionarCategoria", "Referencia real");
+    Verificar(ultimoFiltro!.IdsCategorias.Count == 0 && ultimoFiltro.IdsAutores.Count == 1, "Quitar una categoría borra otros filtros");
+    typeof(Web.Componentes.Paginas.Catalogo.ExploradorCatalogo).GetField("maximo",
+        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.SetValue(explorador, 45.50m);
+    await Cambiar("AjustarMaximo");
+    Verificar(ultimoFiltro!.PrecioMaximo == 45.50m && ultimoFiltro.Pagina == 1, "El precio no consulta inmediatamente con céntimos");
+    await Cambiar("QuitarPrecio");
+    Verificar(ultimoFiltro!.PrecioMinimo is null && ultimoFiltro.PrecioMaximo is null, "Quitar precio deja límites anteriores");
+    await renderer.RenderComponentAsync<Web.Componentes.Paginas.Catalogo.ExploradorCatalogo>(ParameterView.FromDictionary(
+        new Dictionary<string, object?> { ["TipoAmbito"] = "autores", ["IdAmbito"] = 9 }));
+    explorador = componentes.Explorador!;
+    await Cambiar("SeleccionarIdioma", "Español");
+    Verificar(ultimaRutaLibros == "/webresources/libros/por-autor/9", "Cambiar filtros abandona la referencia fija");
+    await renderer.RenderComponentAsync<Web.Componentes.Paginas.Catalogo.ExploradorCatalogo>(ParameterView.FromDictionary(
+        new Dictionary<string, object?> { ["Favoritos"] = true }));
+    explorador = componentes.Explorador!;
+    await Cambiar("SeleccionarIdioma", "Español");
+    Verificar(ultimaRutaLibros == "/webresources/cuenta/libros-guardados/busqueda?favorito=true", "Cambiar filtros abandona la lista personal");
     var bloqueo = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
     esperaBusqueda = bloqueo.Task;
     var pendiente = renderer.BeginRenderingComponent<Web.Componentes.Paginas.Catalogo.ExploradorCatalogo>();
@@ -204,4 +259,16 @@ class NavegacionPrueba : NavigationManager
 {
     public NavegacionPrueba() => Initialize("http://localhost/", "http://localhost/catalogo");
     protected override void NavigateToCore(string uri, bool forceLoad) { }
+}
+
+class ComponentesPrueba : IComponentActivator
+{
+    public Web.Componentes.Paginas.Catalogo.ExploradorCatalogo? Explorador { get; private set; }
+    public IComponent CreateInstance(Type tipo)
+    {
+        var componente = (IComponent)Activator.CreateInstance(tipo)!;
+        if (componente is Web.Componentes.Paginas.Catalogo.ExploradorCatalogo explorador)
+            Explorador = explorador;
+        return componente;
+    }
 }

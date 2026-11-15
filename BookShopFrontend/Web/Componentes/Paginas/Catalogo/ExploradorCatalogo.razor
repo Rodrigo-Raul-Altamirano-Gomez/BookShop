@@ -1,145 +1,142 @@
-<Cargando EnCurso="@cargando" Error="@errorCarga">
 <div class="row g-4">
     <aside class="filters col-12 col-lg-3">
-        <h2>Filtros</h2>
-        @if (TipoAmbito != "categorias")
-        {
-            <FiltroReferencias
-                Titulo="Categorías"
-                Singular="categoría"
-                Opciones="OpcionesCategorias"
-                Seleccionados="categorias"
-                SeleccionCambiada="SeleccionarCategoria"
-                />
-        }
-        @if (TipoAmbito != "autores")
-        {
-            <FiltroReferencias
-                Titulo="Autores"
-                Singular="autor"
-                Opciones="OpcionesAutores"
-                Seleccionados="autores"
-                SeleccionCambiada="SeleccionarAutor"
-                />
-        }
-        @if (TipoAmbito != "editoriales")
-        {
-            <FiltroReferencias
-                Titulo="Editoriales"
-                Singular="editorial"
-                Opciones="OpcionesEditoriales"
-                Seleccionados="editoriales"
-                SeleccionCambiada="SeleccionarEditorial"
-                />
-        }
-        <FiltroReferencias
-            Titulo="Idiomas"
-            Singular="idioma"
-            Opciones="OpcionesIdiomas"
-            Seleccionados="idiomas"
-            SeleccionCambiada="SeleccionarIdioma"
-            />
-        <div class="filter-group">
-            <h3>Precio</h3>
-            <div class="price-sliders" style="@EstiloRango">
-                <input class="form-range"
-                    type="range"
-                    min="0"
-                    max="@LimitePrecio"
-                    step="0.01"
-                    aria-label="Precio mínimo"
-                    @bind="minimo"
-                    @bind:after="AjustarMinimo"
+        <fieldset disabled="@cargando" class="border-0 p-0 m-0">
+            <h2>Filtros</h2>
+            @if (TipoAmbito != "categorias")
+            {
+                <FiltroReferencias
+                    Titulo="Categorías"
+                    Singular="categoría"
+                    Opciones="OpcionesCategorias"
+                    Seleccionados="categorias"
+                    SeleccionCambiada="SeleccionarCategoria"
                     />
-                <input class="form-range"
-                    type="range"
-                    min="0"
-                    max="@LimitePrecio"
-                    step="0.01"
-                    aria-label="Precio máximo"
-                    @bind="maximo"
-                    @bind:after="AjustarMaximo"
+            }
+            @if (TipoAmbito != "autores")
+            {
+                <FiltroReferencias
+                    Titulo="Autores"
+                    Singular="autor"
+                    Opciones="OpcionesAutores"
+                    Seleccionados="autores"
+                    SeleccionCambiada="SeleccionarAutor"
                     />
-            </div>
-            <div class="row g-2">
-                <label class="col-6 form-label">
-                    Mínimo
-                    <input class="form-control"
-                        type="number"
+            }
+            @if (TipoAmbito != "editoriales")
+            {
+                <FiltroReferencias
+                    Titulo="Editoriales"
+                    Singular="editorial"
+                    Opciones="OpcionesEditoriales"
+                    Seleccionados="editoriales"
+                    SeleccionCambiada="SeleccionarEditorial"
+                    />
+            }
+            <FiltroReferencias
+                Titulo="Idiomas"
+                Singular="idioma"
+                Opciones="OpcionesIdiomas"
+                Seleccionados="idiomas"
+                SeleccionCambiada="SeleccionarIdioma"
+                />
+            <div class="filter-group">
+                <h3>Precio</h3>
+                <div class="price-sliders" style="@EstiloRango">
+                    <input class="form-range"
+                        type="range"
                         min="0"
+                        max="@LimitePrecio"
                         step="0.01"
+                        aria-label="Precio mínimo"
                         @bind="minimo"
-                        @bind:event="oninput"
                         @bind:after="AjustarMinimo"
                         />
-                </label>
-                <label class="col-6 form-label">
-                    Máximo
-                    <input class="form-control"
-                        type="number"
+                    <input class="form-range"
+                        type="range"
                         min="0"
+                        max="@LimitePrecio"
                         step="0.01"
+                        aria-label="Precio máximo"
                         @bind="maximo"
-                        @bind:event="oninput"
                         @bind:after="AjustarMaximo"
                         />
-                </label>
+                </div>
+                <div class="row g-2">
+                    <label class="col-6 form-label">
+                        Mínimo
+                        <input class="form-control"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            @bind="minimo"
+                            @bind:after="AjustarMinimo"
+                            />
+                    </label>
+                    <label class="col-6 form-label">
+                        Máximo
+                        <input class="form-control"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            @bind="maximo"
+                            @bind:after="AjustarMaximo"
+                            />
+                    </label>
+                </div>
             </div>
-        </div>
-        <div class="filter-group active-filters border-top pt-3">
-            <h3>Filtros activos</h3>
-            <div class="d-flex flex-wrap gap-2">
-                @foreach (var item in categoriasAplicadas)
-                {
-                    <button
-                        class="btn btn-sm btn-outline-secondary rounded-pill"
-                        @onclick="() => QuitarCategoria(item)">
-                        @item
-                        <Icono Nombre="close" />
-                    </button>
-                }
-                @foreach (var item in autoresAplicados)
-                {
-                    <button
-                        class="btn btn-sm btn-outline-secondary rounded-pill"
-                        @onclick="() => QuitarAutor(item)">
-                        @item
-                        <Icono Nombre="close" />
-                    </button>
-                }
-                @foreach (var item in editorialesAplicadas)
-                {
-                    <button
-                        class="btn btn-sm btn-outline-secondary rounded-pill"
-                        @onclick="() => QuitarEditorial(item)">
-                        @item
-                        <Icono Nombre="close" />
-                    </button>
-                }
-                @foreach (var item in idiomasAplicados)
-                {
-                    <button
-                        class="btn btn-sm btn-outline-secondary rounded-pill"
-                        @onclick="() => QuitarIdioma(item)">
-                        @item
-                        <Icono Nombre="close" />
-                    </button>
-                }
-                @if (precioFiltrado)
-                {
-                    <button class="btn btn-sm btn-outline-secondary rounded-pill" @onclick="QuitarPrecio">
-                        S/ @minimoAplicado – S/ @maximoAplicado
-                        <Icono Nombre="close" />
-                    </button>
-                }
-                @if (!HayFiltros)
-                {
-                    <span class="text-body-secondary">Ninguno</span>
-                }
+            <div class="filter-group active-filters border-top pt-3">
+                <h3>Filtros activos</h3>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var item in categorias)
+                    {
+                        <button
+                            class="btn btn-sm btn-outline-secondary rounded-pill"
+                            @onclick="() => SeleccionarCategoria(item)">
+                            @item
+                            <Icono Nombre="close" />
+                        </button>
+                    }
+                    @foreach (var item in autores)
+                    {
+                        <button
+                            class="btn btn-sm btn-outline-secondary rounded-pill"
+                            @onclick="() => SeleccionarAutor(item)">
+                            @item
+                            <Icono Nombre="close" />
+                        </button>
+                    }
+                    @foreach (var item in editoriales)
+                    {
+                        <button
+                            class="btn btn-sm btn-outline-secondary rounded-pill"
+                            @onclick="() => SeleccionarEditorial(item)">
+                            @item
+                            <Icono Nombre="close" />
+                        </button>
+                    }
+                    @foreach (var item in idiomas)
+                    {
+                        <button
+                            class="btn btn-sm btn-outline-secondary rounded-pill"
+                            @onclick="() => SeleccionarIdioma(item)">
+                            @item
+                            <Icono Nombre="close" />
+                        </button>
+                    }
+                    @if (precioFiltrado)
+                    {
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill" @onclick="QuitarPrecio">
+                            S/ @minimo – S/ @maximo
+                            <Icono Nombre="close" />
+                        </button>
+                    }
+                    @if (!HayFiltros)
+                    {
+                        <span class="text-body-secondary">Ninguno</span>
+                    }
+                </div>
             </div>
-        </div>
-        <button class="btn btn-primary filter-action" @onclick="AplicarFiltros">Aplicar filtros</button>
-        <button class="btn btn-secondary filter-action" @onclick="LimpiarFiltros">Limpiar filtros</button>
+        </fieldset>
     </aside>
     <section class="catalog-results col-12 col-lg-9">
         <div class="results-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
@@ -150,7 +147,7 @@
 
             <label class="sort-label d-flex align-items-center gap-2">
                 Ordenar por:
-                <select class="form-select" aria-label="Ordenar libros" @bind="orden" @bind:after="CambiarOrden">
+                <select class="form-select" aria-label="Ordenar libros" disabled="@cargando" @bind="orden" @bind:after="ActualizarResultados">
                     @foreach (var order in OpcionesOrden)
                     {
                         <option value="@order.Key">@order.Value</option>
@@ -162,25 +159,25 @@
         {
             <p class="search-context">Resultados para “@Busqueda”</p>
         }
-        @if (totalResultados == 0)
-        {
-            <div class="empty-state">
-                <Icono Nombre="search" />
-                <h2>No encontramos libros</h2>
-                <p>Prueba con otros filtros o un título diferente.</p>
-                <button class="btn btn-secondary" @onclick="LimpiarFiltros">Limpiar filtros</button>
-            </div>
-        }
-        else
-        {
-            <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-4">
-                @foreach (var libro in resultados)
-                {
-                    <TarjetaLibro Libro="libro" />
-                }
-            </div>
-            <Paginacion Pagina="pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
-        }
+        <Cargando EnCurso="@cargando" Error="@errorCarga" AlReintentar="Consultar">
+            @if (totalResultados == 0)
+            {
+                <div class="empty-state">
+                    <Icono Nombre="search" />
+                    <h2>No encontramos libros</h2>
+                    <p>Prueba con otros filtros o un título diferente.</p>
+                </div>
+            }
+            else
+            {
+                <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-4">
+                    @foreach (var libro in resultados)
+                    {
+                        <TarjetaLibro Libro="libro" />
+                    }
+                </div>
+                <Paginacion Pagina="pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
+            }
+        </Cargando>
     </section>
 </div>
-</Cargando>
