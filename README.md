@@ -31,7 +31,7 @@ dotnet run --project BookShopFrontend/Web --launch-profile http
 
 Abrir [BookShop local](http://localhost:5188). Para esta opción no se necesita iniciar GlassFish localmente. El servicio gratuito de Render puede tardar varios minutos en arrancar después de un período sin uso.
 
-El despliegue utiliza `BookShopBackend/Dockerfile` y `BookShopBackend/despliegue/iniciar.sh`. Las variables privadas `BOOKSHOP_DB_PROPERTIES_B64` y `BOOKSHOP_KEY_B64` contienen la configuración de MySQL y la clave de cifrado en Base64. No deben publicarse sus valores. El arranque restaura esos archivos dentro del servidor.
+El despliegue utiliza `BookShopBackend/Dockerfile`. La variable privada `BOOKSHOP_DB_PROPERTIES_B64` contiene la configuración de MySQL en Base64. No debe publicarse su valor. El arranque restaura ese archivo dentro del servidor.
 
 ## Ejecutar también el backend localmente
 
@@ -48,7 +48,7 @@ dotnet run --project BookShopFrontend/Web --launch-profile http
 
 Abrir [BookShop local](http://localhost:5188). El backend y la base de datos deben estar disponibles.
 
-La clave de cifrado de los métodos de pago debe conservarse entre despliegues. Su ubicación se puede configurar mediante la propiedad JVM `bookshop.clave.file`. La configuración de BD se incluye al empaquetar el WAR: no publicar ese archivo compilado con credenciales.
+La clave de cifrado de los métodos de pago está definida en `ProteccionDatos.java` y debe conservarse para leer los datos ya guardados. La configuración de BD se incluye al empaquetar el WAR: no publicar ese archivo compilado con credenciales.
 
 ## Funcionamiento
 

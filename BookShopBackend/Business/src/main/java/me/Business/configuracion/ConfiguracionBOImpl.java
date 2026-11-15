@@ -20,7 +20,7 @@ public class ConfiguracionBOImpl implements ConfiguracionBO {
     private ConfiguracionDTO configuracion;
 
     public ConfiguracionBOImpl() throws NegocioException {
-        this(Path.of(System.getProperty("bookshop.config.file", "config/negocio.properties")));
+        this(Path.of(System.getProperty("bookshop.config.file", "negocio.properties")));
     }
 
     public ConfiguracionBOImpl(Path archivo) throws NegocioException {

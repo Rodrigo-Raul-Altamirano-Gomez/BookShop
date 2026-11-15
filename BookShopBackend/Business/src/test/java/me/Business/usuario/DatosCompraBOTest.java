@@ -1,6 +1,5 @@
 package me.Business.usuario;
 
-import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -29,7 +28,6 @@ import me.Model.entities.usuario.Usuario;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -49,11 +47,6 @@ class DatosCompraBOTest {
 
     private static final LocalDate HOY = LocalDate.of(2026, 10, 7);
 
-    @TempDir
-    Path temporal;
-
-    private String claveAnterior;
-
     private Connection conexion;
 
     private MockedStatic<DBManager> manager;
@@ -66,8 +59,6 @@ class DatosCompraBOTest {
 
     @BeforeEach
     void prepararBaseAislada() throws Exception {
-        claveAnterior = System.getProperty("bookshop.clave.file");
-        System.setProperty("bookshop.clave.file", temporal.resolve("clave.key").toString());
         String url = "jdbc:h2:mem:" + UUID.randomUUID() + ";MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1";
         conexion = DriverManager.getConnection(url);
         manager = mockStatic(DBManager.class);
@@ -93,10 +84,6 @@ class DatosCompraBOTest {
             statement.execute("DROP ALL OBJECTS");
         }
         conexion.close();
-        if (claveAnterior == null)
-            System.clearProperty("bookshop.clave.file");
-        else
-            System.setProperty("bookshop.clave.file", claveAnterior);
     }
 
     private DatosMetodoPagoDTO tarjeta(String numero, boolean predeterminado) {
