@@ -411,10 +411,10 @@ class CatalogoDAOTest {
 
     @Test
     void referenciasBuscanOrdenanPaginarYUsanSeguimientoEnUnaTabla() throws Exception {
-        var filtro = new FiltroReferenciaDTO("Autor 1", true, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 1);
+        var filtro = new FiltroReferenciaDTO("1", true, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 1);
         assertEquals(1, autores.buscar(filtro).totalResultados());
-        assertEquals(1, categorias.buscar(new FiltroReferenciaDTO("Categoria 1", true, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 1)).totalResultados());
-        assertEquals(1, editoriales.buscar(new FiltroReferenciaDTO("Editorial 1", true, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 1)).totalResultados());
+        assertEquals(1, categorias.buscar(filtro).totalResultados());
+        assertEquals(1, editoriales.buscar(filtro).totalResultados());
         ejecutar("INSERT INTO SEGUIMIENTO (id_usuario,tipo_seguimiento,id_autor,usuario_creacion)" + " VALUES (1,'AUTOR',1,'ana@test')");
         ejecutar("INSERT INTO SEGUIMIENTO (id_usuario,tipo_seguimiento,id_categoria,usuario_creacion)" + " VALUES (1,'CATEGORIA',1,'ana@test')");
         ejecutar("INSERT INTO SEGUIMIENTO (id_usuario,tipo_seguimiento,id_editorial,usuario_creacion)" + " VALUES (1,'EDITORIAL',1,'ana@test')");
@@ -885,36 +885,17 @@ class CatalogoDAOTest {
     }
 
     @Test
-    void referenciasBuscanDesdeElInicioSinDistinguirMayusculas() throws Exception {
-        for (String tabla : List.of("AUTOR", "CATEGORIA", "EDITORIAL")) {
-            ejecutar("UPDATE " + tabla + " SET nombre='Casa del Papel' WHERE id=1");
-            ejecutar("UPDATE " + tabla + " SET nombre='Ediciones Brújula' WHERE id=2");
-            ejecutar("INSERT INTO " + tabla + " (id,nombre,usuario_creacion) VALUES (3,'Editorial Horizonte','admin')");
-        }
-        var filtro = new FiltroReferenciaDTO("e", true, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 1);
-        var segundaPagina = new FiltroReferenciaDTO("E", true, OrdenReferencia.NOMBRE_ASCENDENTE, 2, 1);
-        for (var resultado : List.of(autores.buscar(filtro), categorias.buscar(filtro), editoriales.buscar(filtro))) {
-            assertEquals(2, resultado.totalResultados());
-            assertEquals("Ediciones Brújula", resultado.items().getFirst().nombre());
-        }
-        for (var resultado : List.of(autores.buscar(segundaPagina), categorias.buscar(segundaPagina), editoriales.buscar(segundaPagina))) {
-            assertEquals(2, resultado.totalResultados());
-            assertEquals("Editorial Horizonte", resultado.items().getFirst().nombre());
-        }
-    }
-
-    @Test
     void selectoresDeReferenciasTratanComodinesComoTexto() throws Exception {
         Autor autor = autores.leer(1);
-        autor.setNombre("%_! Autor");
+        autor.setNombre("Autor 10%_!");
         autor.setUsuarioActualizacion("admin");
         autores.modificar(autor);
         Categoria categoria = categorias.leer(1);
-        categoria.setNombre("%_! Categoria");
+        categoria.setNombre("Categoria 10%_!");
         categoria.setUsuarioActualizacion("admin");
         categorias.modificar(categoria);
         Editorial editorial = editoriales.leer(1);
-        editorial.setNombre("%_! Editorial");
+        editorial.setNombre("Editorial 10%_!");
         editorial.setUsuarioActualizacion("admin");
         editoriales.modificar(editorial);
         var literal = new FiltroReferenciaDTO("%_!", true, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 12);

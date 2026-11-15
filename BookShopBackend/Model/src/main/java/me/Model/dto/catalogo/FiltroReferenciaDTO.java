@@ -1,6 +1,6 @@
 package me.Model.dto.catalogo;
 
-// Nombre busca por el inicio del nombre en listados y opciones.
+// Nombre se usa para buscar opciones; el listado publico solo utiliza orden y paginacion.
 public record FiltroReferenciaDTO(String nombre, boolean soloActivos, OrdenReferencia orden, int pagina, int
     tamanioPagina) {
 
