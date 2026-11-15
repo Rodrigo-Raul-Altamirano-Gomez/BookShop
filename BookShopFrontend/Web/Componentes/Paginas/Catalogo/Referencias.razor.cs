@@ -30,6 +30,7 @@ public partial class Referencias : IDisposable
     }
 
     private string orden = "nombre", tipoAnterior = "";
+    private string textoBusqueda = "", nombre = "";
     private int pagina = 1;
     private List<Referencia> Resultados = [];
     private long totalResultados;
@@ -43,7 +44,7 @@ public partial class Referencias : IDisposable
             var datos = await Api.Post<ResultadoPaginadoDTO<TarjetaReferenciaDTO>>($"{Tipo}/busqueda",
                 new FiltroReferenciaDTO
                 {
-                    Nombre = "",
+                    Nombre = nombre,
                     SoloActivos = true,
                     Orden = orden == "reciente" ? "MAS_RECIENTES" : "NOMBRE_ASCENDENTE",
                     Pagina = pagina,
@@ -71,11 +72,13 @@ public partial class Referencias : IDisposable
             if (Sesion.EstadoVistas.TryGetValue($"referencias:{Tipo}", out var guardado)
                 && guardado is VistaReferencias vista)
             {
+                textoBusqueda = nombre = vista.Nombre;
                 orden = vista.Orden;
                 pagina = vista.Pagina;
             }
             else
             {
+                textoBusqueda = nombre = "";
                 orden = "nombre";
                 pagina = 1;
             }
@@ -90,6 +93,7 @@ public partial class Referencias : IDisposable
             return;
         Sesion.EstadoVistas[$"referencias:{tipoAnterior}"] = new VistaReferencias
         {
+            Nombre = nombre,
             Orden = orden,
             Pagina = pagina
 
@@ -99,11 +103,24 @@ public partial class Referencias : IDisposable
     public void Dispose() => GuardarVista();
     private class VistaReferencias
     {
+        public string Nombre { get; set; } = "";
         public string Orden { get; set; } = "nombre";
         public int Pagina { get; set; } = 1;
     }
 
-    private async Task CambiarOrden()
+    private async Task Buscar()
+    {
+        nombre = textoBusqueda.Trim();
+        await ActualizarResultados();
+    }
+
+    private async Task QuitarNombre()
+    {
+        textoBusqueda = nombre = "";
+        await ActualizarResultados();
+    }
+
+    private async Task ActualizarResultados()
     {
         pagina = 1;
         await Consultar();

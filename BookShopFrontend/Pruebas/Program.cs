@@ -22,6 +22,8 @@ string? ultimoOrden = null;
 FiltroLibroDTO? ultimoFiltro = null;
 string? ultimaRutaLibros = null;
 DatosMetodoPagoDTO? ultimoMetodo = null;
+FiltroReferenciaDTO? ultimoFiltroReferencia = null;
+string? ultimaRutaReferencia = null;
 Task esperaBusqueda = Task.CompletedTask;
 bool fallarBusqueda = false;
 void Verificar(bool condicion, string mensaje)
@@ -97,7 +99,14 @@ servidor.Map("/{**ruta}", async contexto =>
             new(3, "Casa", "Calle 1", "Centro", "Lima", "", true),
             new(4, true, "Ana", "Banco", "Tarjeta", "****1234", "DEBITO", new DateOnly(2030, 1, 1), true, true), "SIM-21", "BS-21", null, null, null, false, false);
     else if (ruta.EndsWith("/autores/busqueda") || ruta.EndsWith("/categorias/busqueda") || ruta.EndsWith("/editoriales/busqueda"))
-        resultado = new ResultadoPaginadoDTO<TarjetaReferenciaDTO>([new(1, "Referencia real", null)], 1, 1, 12);
+    {
+        ultimoFiltroReferencia = await contexto.Request.ReadFromJsonAsync<FiltroReferenciaDTO>();
+        ultimaRutaReferencia = ruta;
+        bool sinCoincidencias = ultimoFiltroReferencia!.Nombre == "inexistente";
+        resultado = new ResultadoPaginadoDTO<TarjetaReferenciaDTO>(
+            sinCoincidencias ? [] : [new(1, "Referencia real", null)],
+            sinCoincidencias ? 0 : (ultimoFiltroReferencia.Nombre.Length == 0 ? 1 : 25), ultimoFiltroReferencia.Pagina, 12);
+    }
     else if (ruta == "/webresources/libros/idiomas")
     {
         int pagina = int.Parse(contexto.Request.Query["pagina"]!);
@@ -252,6 +261,46 @@ await renderer.Dispatcher.InvokeAsync(async () =>
     Verificar(html.Contains("/libros/7#resenas"), "Ver reseñas abandona la ruta del libro");
     Verificar(html.Contains("Sinopsis real") && html.Contains("Reseña real") && html.Contains("/referencias/categorias/1"), "Detalle no representa la respuesta REST");
 });
+await renderer.Dispatcher.InvokeAsync(async () =>
+{
+    foreach (string tipo in new[] { "autores", "categorias", "editoriales" })
+    {
+        var parametros = ParameterView.FromDictionary(new Dictionary<string, object?> { ["Tipo"] = tipo });
+        var pantalla = await renderer.RenderComponentAsync<Web.Componentes.Paginas.Catalogo.Referencias>(parametros);
+        var referencia = componentes.Referencias!;
+        var clase = typeof(Web.Componentes.Paginas.Catalogo.Referencias);
+        async Task Ejecutar(string metodo, params object[] argumentos)
+        {
+            await (Task)clase.GetMethod(metodo, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+                .Invoke(referencia, argumentos)!;
+        }
+        void Escribir(string campo, string valor) => clase.GetField(campo,
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.SetValue(referencia, valor);
+        Verificar(pantalla.ToHtmlString().Contains("Buscar por nombre") && !pantalla.ToHtmlString().Contains("<aside"), "El buscador no aparece en la cabecera o añade una columna lateral");
+        await Ejecutar("CambiarPagina", 2);
+        Escribir("textoBusqueda", "  Referencia  ");
+        await Ejecutar("Buscar");
+        Verificar(ultimoFiltroReferencia!.Nombre == "Referencia" && ultimoFiltroReferencia.Pagina == 1
+            && ultimaRutaReferencia == $"/webresources/{tipo}/busqueda", "La búsqueda no se envía al listado correcto ni reinicia su página");
+        Escribir("orden", "reciente");
+        await Ejecutar("ActualizarResultados");
+        await Ejecutar("CambiarPagina", 2);
+        Verificar(ultimoFiltroReferencia!.Nombre == "Referencia" && ultimoFiltroReferencia.Pagina == 2
+            && ultimoFiltroReferencia.Orden == "MAS_RECIENTES", "Ordenar o paginar pierde la búsqueda");
+        referencia.Dispose();
+        await renderer.RenderComponentAsync<Web.Componentes.Paginas.Catalogo.Referencias>(parametros);
+        referencia = componentes.Referencias!;
+        Verificar(ultimoFiltroReferencia!.Nombre == "Referencia" && ultimoFiltroReferencia.Pagina == 2
+            && ultimoFiltroReferencia.Orden == "MAS_RECIENTES", "Volver al listado pierde la búsqueda, orden o página");
+        await Ejecutar("QuitarNombre");
+        Verificar(ultimoFiltroReferencia!.Nombre == "" && ultimoFiltroReferencia.Pagina == 1, "Quitar la búsqueda no recupera el listado");
+        Escribir("textoBusqueda", "inexistente");
+        await Ejecutar("Buscar");
+        referencia.Dispose();
+        var vacia = await renderer.RenderComponentAsync<Web.Componentes.Paginas.Catalogo.Referencias>(parametros);
+        Verificar(vacia.ToHtmlString().Contains("No encontramos coincidencias") && vacia.ToHtmlString().Contains("Buscar por nombre"), "No se puede corregir una búsqueda sin coincidencias");
+    }
+});
 await servidor.StopAsync();
 Console.WriteLine($"Correcto: {verificaciones} comprobaciones de contrato HTTP, JSON, cookies y compra.");
 
@@ -264,11 +313,14 @@ class NavegacionPrueba : NavigationManager
 class ComponentesPrueba : IComponentActivator
 {
     public Web.Componentes.Paginas.Catalogo.ExploradorCatalogo? Explorador { get; private set; }
+    public Web.Componentes.Paginas.Catalogo.Referencias? Referencias { get; private set; }
     public IComponent CreateInstance(Type tipo)
     {
         var componente = (IComponent)Activator.CreateInstance(tipo)!;
         if (componente is Web.Componentes.Paginas.Catalogo.ExploradorCatalogo explorador)
             Explorador = explorador;
+        if (componente is Web.Componentes.Paginas.Catalogo.Referencias referencias)
+            Referencias = referencias;
         return componente;
     }
 }
