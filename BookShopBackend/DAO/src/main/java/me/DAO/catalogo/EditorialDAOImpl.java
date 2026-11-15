@@ -135,7 +135,7 @@ public class EditorialDAOImpl implements EditorialDAO {
         String textoBuscado = nombre.replace("!", "!!");
         textoBuscado = textoBuscado.replace("%", "!%");
         textoBuscado = textoBuscado.replace("_", "!_");
-        textoBuscado = textoBuscado + "%";
+        textoBuscado = "%" + textoBuscado + "%";
         String condiciones = " WHERE eliminado=FALSE" + (filtro.soloActivos() ? " AND activo=TRUE" : "") +
             (nombre.isEmpty() ? "" : " AND LOWER(nombre) LIKE LOWER(?) ESCAPE '!'");
         String orden = filtro.orden() == OrdenReferencia.MAS_RECIENTES ? "fecha_creacion DESC,id DESC" :
