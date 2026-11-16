@@ -62,35 +62,6 @@ Abrir [BookShop local](http://localhost:5188). El backend y la base de datos deb
 
 La clave de cifrado de los métodos de pago está definida en `ProteccionDatos.java` y debe conservarse para leer los datos ya guardados. La configuración de BD se incluye al empaquetar el WAR: no publicar ese archivo compilado con credenciales.
 
-## Funcionamiento
-
-La [guía para recorrer y explicar el código](docs/Guia_codigo.md) sigue los flujos principales y explica las piezas compartidas.
-
-Los recursos REST delegan las reglas en Business, que utiliza los DAO para acceder a MySQL. El servidor convierte los DTO Java a JSON con JSON-B. Web consume ese JSON con Newtonsoft.Json y clases DTO en `Modelos/DTO`.
-
-Las pantallas Blazor están en `Componentes`, con marcado `.razor`, lógica `.razor.cs` y estilos `.razor.css`. Los servicios de Web gestionan las llamadas REST, la sesión y los datos compartidos. El componente `Cargando` muestra la espera o el error mientras se consultan datos.
-
-DAO y Business conservan una interfaz y su implementación por responsabilidad. Business coordina las operaciones: cambiar una referencia y sus vetos, guardar un pedido y sus líneas, o registrar un voto y actualizar su contador. Los DAO ejecutan las consultas SQL y convierten sus resultados en entidades o DTO. Business confirma o revierte las operaciones que deben guardarse juntas mediante DBManager.
-
-En Web, la pantalla de compra conserva la preparación recibida del backend y utiliza su selección directamente. Los filtros guardados en la sesión son los mismos que utiliza la pantalla, para volver del detalle sin copiar su estado. Favorito y Deseado pertenecen al detalle del libro. Las reseñas y la confirmación del pedido muestran los DTO recibidos, sin modelos intermedios que repitan los mismos datos.
-
-Los formularios utilizan los campos obligatorios del navegador. El esquema define los límites y las restricciones de los datos; Business conserva reglas de operación como ISBN único, stock, importes y vigencia para pagar, sin repetir validadores completos de los formularios de catálogo y direcciones. Los avisos se cierran con la X. Al perder la conexión, Blazor intenta reconectar y el diálogo permite recargar la página.
-
-La autenticación utiliza una cookie de sesión por circuito Blazor. Una recarga completa requiere iniciar sesión nuevamente. Las operaciones con sesión usan HTTPS.
-
-Los datos sensibles se protegen en `ProteccionDatos` (Business) antes de llegar a la base:
-
-| Dato | Técnica | ¿Se puede recuperar? | Formato guardado |
-|---|---|---|---|
-| Contraseña | Hash PBKDF2-SHA256 con sal aleatoria y 120 000 iteraciones | No; solo se verifica al iniciar sesión | `PBKDF2$120000$<sal>$<huella>` |
-| Tarjeta o número de billetera | Cifrado AES-GCM con una clave de 32 bytes | Sí, con la clave del servidor | `AESGCM$<nonce + cifrado>` |
-
-La sal y el nonce son aleatorios, así que el mismo dato produce un texto distinto cada vez. AES-GCM detecta si el texto cifrado fue modificado y rechaza el descifrado. La aplicación nunca devuelve el número completo: muestra solo una máscara como `**** 1111`. Como estos textos los genera Java, no pueden escribirse a mano en un script `.sql`. `me.App.DemoProteccion` muestra ambas técnicas sin base de datos.
-
-El rol de administrador se asigna a las cuentas con correo `@admin.bookshop`, y el backend lo comprueba antes de generar los reportes RF18 y RF19.
-
-Las imágenes se reciben y devuelven como texto en los DTO, por ejemplo `"portada": "https://ejemplo.com/libro.jpg"`. Registro y perfil permiten ingresar una URL HTTP/HTTPS o retirar la imagen. La BD guarda texto de hasta 2048 caracteres; las imágenes nuevas deben estar alojadas previamente.
-
 ## Conceptos del curso en el proyecto
 
 Las entidades de Model muestran encapsulamiento y relaciones entre objetos; los métodos de pago utilizan herencia y polimorfismo. Business y DAO conservan interfaces e implementaciones, organizadas en paquetes y módulos. Los DTO transportan datos entre Java y Blazor mediante REST. Los componentes de la interfaz reúnen HTML, CSS y eventos de C#.
