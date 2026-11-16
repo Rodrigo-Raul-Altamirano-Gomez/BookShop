@@ -14,7 +14,7 @@ public static class RevisionReal
         var configuracion = new ConfigurationBuilder().AddJsonFile(Path.GetFullPath("BookShopFrontend/Web/appsettings.json")).Build();
         using var api = new HttpClientUtils(configuracion);
         var sesion = new SesionUsuario(api);
-        var catalogo = new CatalogoServicio(api, sesion);
+        var catalogo = new CatalogoServicio(api);
         var cuenta = new CuentaServicio(api, sesion);
         var compras = new CompraServicio(api, sesion);
         await catalogo.Inicializar();
@@ -42,8 +42,8 @@ public static class RevisionReal
             var perfilConFoto = await api.Put<PerfilUsuarioDTO>("cuenta/imagen?url=" + Uri.EscapeDataString("/images/catalogo/libro-20.png"));
             if (perfilConFoto.Usuario.Imagen != "/images/catalogo/libro-20.png") throw new Exception("La URL de perfil no se conservó.");
             Console.WriteLine("RF01 y RF02: registro, sesión, edición de perfil e imagen correctos.");
-            await cuenta.GuardarDireccion(new Direccion { Alias = "Revision frontend", Calle = "Calle de prueba 123", Distrito = "San Miguel", Ciudad = "Lima", Predeterminada = true });
-            await cuenta.GuardarMetodo(new MetodoPago { Tipo = "Tarjeta", Alias = "Revision frontend", Titular = "Usuario de prueba", Proveedor = "Banco de prueba", Numero = "411" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), TipoTarjeta = "Débito", Vencimiento = new DateOnly(2030, 12, 31), Predeterminada = true });
+            await cuenta.GuardarDireccion(new DatosDireccionEnvioDTO { Alias = "Revision frontend", Calle = "Calle de prueba 123", Distrito = "San Miguel", Ciudad = "Lima", Predeterminada = true });
+            await cuenta.GuardarMetodo(new DatosMetodoPagoDTO { TarjetaBancaria = true, Alias = "Revision frontend", Titular = "Usuario de prueba", Proveedor = "Banco de prueba", Numero = "411" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), TipoTarjeta = "DEBITO", FechaVencimiento = new DateOnly(2030, 12, 31), Predeterminado = true });
             await cuenta.CambiarGuardado(idLibro, false, true);
             var deseados = await api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>("cuenta/libros-guardados/busqueda?favorito=false", new FiltroLibroDTO());
             if (!deseados.Items.Any(libro => libro.Id == idLibro)) throw new Exception("No se guardó el libro.");

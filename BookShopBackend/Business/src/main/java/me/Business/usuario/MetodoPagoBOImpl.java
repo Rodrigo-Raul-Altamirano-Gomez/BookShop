@@ -106,7 +106,7 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
             DatosMetodoPagoDTO validos = validarFormulario(datos, true);
             LocalDate hoy = LocalDate.now(reloj);
             MetodoPago metodo = metodoPagoDAO.leer(idMetodo);
-            comprobarPropiedad(metodo, actor);
+            comprobarPropiedad(metodo, idActor);
             boolean tarjeta = metodo instanceof TarjetaBancaria;
             if (tarjeta != validos.tarjetaBancaria()) {
                 throw new ValidacionException("tarjetaBancaria", "El subtipo del metodo no puede cambiarse.");
@@ -155,9 +155,8 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
     @Override
     public MetodoPagoDTO consultar(int idActor, int idMetodo) throws NegocioException {
         try {
-            Usuario actor = usuarioDAO.leer(idActor);
             MetodoPago metodo = metodoPagoDAO.leer(idMetodo);
-            comprobarPropiedad(metodo, actor);
+            comprobarPropiedad(metodo, idActor);
             return MetodosPago.aDTO(metodo, LocalDate.now(reloj));
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo consultar el metodo de pago.", e);
@@ -188,7 +187,7 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
     public void eliminar(int idActor, int idMetodo) throws NegocioException {
         try {
             Usuario actor = usuarioDAO.leer(idActor);
-            comprobarPropiedad(metodoPagoDAO.leer(idMetodo), actor);
+            comprobarPropiedad(metodoPagoDAO.leer(idMetodo), idActor);
             if (!metodoPagoDAO.eliminar(idMetodo, actor.getEmail())) {
                 throw new ConflictoException("El metodo ya se habia eliminado.");
             }
@@ -203,7 +202,7 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
             Usuario actor = usuarioDAO.leer(idActor);
             LocalDate hoy = LocalDate.now(reloj);
             MetodoPago metodo = metodoPagoDAO.leer(idMetodo);
-            comprobarPropiedad(metodo, actor);
+            comprobarPropiedad(metodo, idActor);
             if (!metodo.validarEstado(hoy)) {
                 throw new ConflictoException("Un metodo vencido no puede elegirse como predeterminado.");
             }
@@ -276,10 +275,10 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
         metodo.setActivo(!metodo.getFechaVencimiento().isBefore(hoy));
     }
 
-    private void comprobarPropiedad(MetodoPago metodo, Usuario actor) throws NegocioException {
+    private void comprobarPropiedad(MetodoPago metodo, int idActor) throws NegocioException {
         if (metodo == null || metodo.isEliminado())
             throw new RecursoNoEncontradoException("El metodo de pago no existe.");
-        if (metodo.getUsuario().getId() != actor.getId()) {
+        if (metodo.getUsuario().getId() != idActor) {
             throw new AccesoDenegadoException("El metodo de pago pertenece a otro usuario.");
         }
     }

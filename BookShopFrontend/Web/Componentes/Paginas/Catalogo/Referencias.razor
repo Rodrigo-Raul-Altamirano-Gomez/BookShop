@@ -12,17 +12,6 @@
             <h1>@Titulo</h1>
             <span>@totalResultados @Tipo</span>
         </div>
-        <form class="reference-search input-group" @onsubmit="Buscar" @onsubmit:preventDefault>
-            <input class="form-control" type="search"
-                placeholder="Buscar por nombre" aria-label="Buscar por nombre"
-                @bind="textoBusqueda" @bind:event="oninput" disabled="@cargando" />
-            <button class="btn btn-primary" type="submit" disabled="@cargando">Buscar</button>
-            @if (vista.Nombre.Length > 0)
-            {
-                <button class="btn btn-outline-secondary" type="button" aria-label="Quitar búsqueda"
-                    @onclick="QuitarNombre" disabled="@cargando"><Icono Nombre="close" /></button>
-            }
-        </form>
         <label class="sort-label d-flex align-items-center gap-2">
             Ordenar por:
             <select class="form-select" aria-label="Ordenar referencias" @bind="vista.Orden" @bind:after="ActualizarResultados" disabled="@cargando">

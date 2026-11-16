@@ -27,12 +27,26 @@ public class ConfiguracionBOImpl implements ConfiguracionBO {
     }
 
     public static ConfiguracionDTO actual() throws NegocioException {
-        return new ConfiguracionBOImpl().cargar();
+        return new ConfiguracionBOImpl().obtener();
     }
 
     @Override
     public ConfiguracionDTO obtener() throws NegocioException {
-        return cargar();
+        if (!Files.exists(archivo))
+            return inicial();
+        Properties valores = new Properties();
+        try (Reader entrada = Files.newBufferedReader(archivo, StandardCharsets.UTF_8)) {
+            valores.load(entrada);
+            return validar(new ConfiguracionDTO(new BigDecimal(valores.getProperty("porcentajeEnvio")),
+                Integer.parseInt(valores.getProperty("plazoDiasDevolucion")),
+                Integer.parseInt(valores.getProperty("maximoIntentosDevolucion")),
+                Integer.parseInt(valores.getProperty("pedidosEntregadosPorCupon")), new
+                BigDecimal(valores.getProperty("porcentajeCupon")), new
+                BigDecimal(valores.getProperty("montoMinimoCupon")),
+                Integer.parseInt(valores.getProperty("vigenciaDiasCupon"))));
+        } catch (Exception e) {
+            throw new ConfiguracionException("El archivo de configuración no es válido; no se sobrescribió.", e);
+        }
     }
 
     @Override
@@ -53,24 +67,6 @@ public class ConfiguracionBOImpl implements ConfiguracionBO {
             }
         } catch (IOException e) {
             throw new ConfiguracionException("No se pudo guardar la configuración.", e);
-        }
-    }
-
-    private ConfiguracionDTO cargar() throws NegocioException {
-        if (!Files.exists(archivo))
-            return inicial();
-        Properties valores = new Properties();
-        try (Reader entrada = Files.newBufferedReader(archivo, StandardCharsets.UTF_8)) {
-            valores.load(entrada);
-            return validar(new ConfiguracionDTO(new BigDecimal(valores.getProperty("porcentajeEnvio")),
-                Integer.parseInt(valores.getProperty("plazoDiasDevolucion")),
-                Integer.parseInt(valores.getProperty("maximoIntentosDevolucion")),
-                Integer.parseInt(valores.getProperty("pedidosEntregadosPorCupon")), new
-                BigDecimal(valores.getProperty("porcentajeCupon")), new
-                BigDecimal(valores.getProperty("montoMinimoCupon")),
-                Integer.parseInt(valores.getProperty("vigenciaDiasCupon"))));
-        } catch (Exception e) {
-            throw new ConfiguracionException("El archivo de configuración no es válido; no se sobrescribió.", e);
         }
     }
 

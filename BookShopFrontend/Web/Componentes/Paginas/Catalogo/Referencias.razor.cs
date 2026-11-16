@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Components;
-using Web.Servicios;
 using Web.Modelos;
 
 namespace Web.Componentes.Paginas.Catalogo;
 
-public partial class Referencias
+public partial class Referencias : IDisposable
 {
     private string? errorCarga;
 
@@ -29,7 +28,7 @@ public partial class Referencias
         }
     }
 
-    private string tipoAnterior = "", textoBusqueda = "";
+    private string tipoAnterior = "";
     private VistaReferencias vista = new();
     private List<Referencia> Resultados = [];
     private long totalResultados;
@@ -72,9 +71,18 @@ public partial class Referencias
                 vista = new VistaReferencias();
                 Sesion.EstadoVistas[clave] = vista;
             }
-            textoBusqueda = vista.Nombre;
         }
+        Sesion.MostrarBusqueda(vista.Nombre, "Buscar " + Titulo.ToLowerInvariant(), BuscarPrincipal);
         await Consultar();
+    }
+    private async Task BuscarPrincipal(string texto)
+    {
+        vista.Nombre = texto.Trim();
+        await InvokeAsync(async () => { await ActualizarResultados(); StateHasChanged(); });
+    }
+    public void Dispose()
+    {
+        if (Sesion.BuscarEnListado == BuscarPrincipal) Sesion.BuscarEnListado = null;
     }
 
     private class VistaReferencias
@@ -82,18 +90,6 @@ public partial class Referencias
         public string Nombre { get; set; } = "";
         public string Orden { get; set; } = "nombre";
         public int Pagina { get; set; } = 1;
-    }
-
-    private async Task Buscar()
-    {
-        vista.Nombre = textoBusqueda.Trim();
-        await ActualizarResultados();
-    }
-
-    private async Task QuitarNombre()
-    {
-        textoBusqueda = vista.Nombre = "";
-        await ActualizarResultados();
     }
 
     private async Task ActualizarResultados()

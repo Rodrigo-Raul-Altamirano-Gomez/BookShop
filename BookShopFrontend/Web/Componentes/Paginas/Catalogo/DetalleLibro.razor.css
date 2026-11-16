@@ -165,7 +165,7 @@
 
 .technical-data dt {
     width:44%;
-    color:var(--text-body-secondary)
+    color:var(--muted)
 }
 .technical-data dd {
     margin:0

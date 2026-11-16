@@ -8,7 +8,7 @@
 }
 .search-context {
     font-size:13px;
-    color:var(--text-body-secondary);
+    color:var(--muted);
     margin:0 0 20px
 }
 .price-sliders {

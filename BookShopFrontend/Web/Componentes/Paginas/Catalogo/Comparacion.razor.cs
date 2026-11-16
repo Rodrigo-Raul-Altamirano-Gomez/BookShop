@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Components;
-using Web.Servicios;
 using Web.Modelos;
 
 namespace Web.Componentes.Paginas.Catalogo;

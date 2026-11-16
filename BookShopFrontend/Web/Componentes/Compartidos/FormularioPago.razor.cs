@@ -1,63 +1,51 @@
 using Microsoft.AspNetCore.Components;
-using Web.Modelos;
 
 namespace Web.Componentes.Compartidos;
 
 public partial class FormularioPago
 {
     [Parameter]
-    public MetodoPago? Valor { get; set; }
+    public MetodoPagoDTO? Valor { get; set; }
 
     [Parameter]
-    public EventCallback<MetodoPago> AlGuardar { get; set; }
+    public EventCallback<DatosMetodoPagoDTO> AlGuardar { get; set; }
 
     [Parameter]
     public EventCallback AlCerrar { get; set; }
-    private MetodoPago Borrador { get; set; } = new();
-    private DateOnly? FechaVencimiento { get; set; }
+    private DatosMetodoPagoDTO Borrador { get; set; } = new() { TarjetaBancaria = true, TipoTarjeta = "DEBITO" };
     private string MensajeError { get; set; } = "";
     private bool Guardando { get; set; }
     protected override void OnInitialized()
     {
         if (Valor is not null)
         {
-            Borrador = new MetodoPago
+            Borrador = new DatosMetodoPagoDTO
             {
-                Id = Valor.Id,
-                Tipo = Valor.Tipo,
+                TarjetaBancaria = Valor.TarjetaBancaria,
                 Alias = Valor.Alias,
                 Titular = Valor.Titular,
                 Proveedor = Valor.Proveedor,
                 TipoTarjeta = Valor.TipoTarjeta,
-                NumeroEnmascarado = Valor.NumeroEnmascarado,
-                Vencimiento = Valor.Vencimiento,
-                Predeterminada = Valor.Predeterminada
+                FechaVencimiento = Valor.TarjetaBancaria ? Valor.FechaVencimiento : null,
+                Predeterminado = Valor.Predeterminado
 
             };
-            FechaVencimiento = Valor.Vencimiento;
         }
     }
 
-    private void MostrarTarjeta()
+    private void CambiarTipo(bool tarjeta)
     {
-        Borrador.Tipo = "Tarjeta";
-        Borrador.Numero = "";
-        MensajeError = "";
-    }
-
-    private void MostrarBilletera()
-    {
-        Borrador.Tipo = "Billetera";
+        if (Borrador.TarjetaBancaria == tarjeta)
+            return;
+        Borrador.TarjetaBancaria = tarjeta;
+        Borrador.TipoTarjeta = tarjeta ? "DEBITO" : null;
+        Borrador.FechaVencimiento = null;
         Borrador.Numero = "";
         MensajeError = "";
     }
 
     private async Task Guardar()
     {
-        if (Guardando)
-            return;
-        if (FechaVencimiento.HasValue && Borrador.Tipo == "Tarjeta")
-            Borrador.Vencimiento = FechaVencimiento.Value;
         Guardando = true;
         MensajeError = "";
         try

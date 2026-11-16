@@ -1,32 +1,30 @@
 using Microsoft.AspNetCore.Components;
-using Web.Modelos;
 
 namespace Web.Componentes.Compartidos;
 
 public partial class FormularioDireccion
 {
     [Parameter]
-    public Direccion? Valor { get; set; }
+    public DireccionEnvioDTO? Valor { get; set; }
 
     [Parameter]
-    public EventCallback<Direccion> AlGuardar { get; set; }
+    public EventCallback<DatosDireccionEnvioDTO> AlGuardar { get; set; }
 
     [Parameter]
     public EventCallback AlCerrar { get; set; }
-    private Direccion Borrador { get; set; } = new();
+    private DatosDireccionEnvioDTO Borrador { get; set; } = new() { Ciudad = "Lima" };
     private string MensajeError { get; set; } = "";
     private bool Guardando { get; set; }
     protected override void OnInitialized()
     {
         if (Valor is not null)
-            Borrador = new Direccion
+            Borrador = new DatosDireccionEnvioDTO
             {
-                Id = Valor.Id,
                 Alias = Valor.Alias,
                 Calle = Valor.Calle,
                 Distrito = Valor.Distrito,
                 Ciudad = Valor.Ciudad,
-                ReferenciaAdicional = Valor.ReferenciaAdicional,
+                Referencia = Valor.Referencia,
                 Predeterminada = Valor.Predeterminada
 
             };
@@ -34,8 +32,6 @@ public partial class FormularioDireccion
 
     private async Task Guardar()
     {
-        if (Guardando)
-            return;
         Guardando = true;
         MensajeError = "";
         try

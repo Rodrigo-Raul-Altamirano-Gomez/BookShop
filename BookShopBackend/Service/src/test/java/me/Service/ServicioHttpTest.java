@@ -162,18 +162,23 @@ class ServicioHttpTest {
     @Test
     void popularesAbreUnConjuntoYConsultaConservaElIdentificador() throws Exception {
         var pagina = new ResultadoPaginadoDTO<TarjetaLibroDTO>(List.of(), 0, 1, 12);
-        var consulta = new ConsultaRecomendacionesDTO(OrdenLibro.RECOMENDADOS_PRIMERO, 1, 12);
+        var consulta = new ConsultaRecomendacionesDTO(1, 12);
         when(servicios.getRecomendacionBO().abrirPopulares(consulta)).thenReturn(new RecomendacionesDTO("conjunto", pagina));
-        when(servicios.getRecomendacionBO().consultar(eq(0), eq("conjunto"), any())).thenReturn(pagina);
-        try (Response respuesta = http.target("recomendaciones/populares").request().post(Entity.json("{\"orden\":\"RECOMENDADOS_PRIMERO\",\"pagina\":1,\"tamanioPagina\":12}"))) {
+        when(servicios.getRecomendacionBO().filtrar(eq(0), eq("conjunto"), any())).thenReturn(pagina);
+        try (Response respuesta = http.target("recomendaciones/populares").request().post(Entity.json("{\"pagina\":1,\"tamanioPagina\":12}"))) {
             assertEquals(200, respuesta.getStatus());
             var json = Json.createReader(new StringReader(respuesta.readEntity(String.class))).readObject();
             assertEquals("conjunto", json.getString("idConsulta"));
             assertTrue(json.containsKey("resultados"));
         }
-        try (Response respuesta = http.target("recomendaciones/consultas/conjunto").request().post(Entity.json("{\"orden\":\"PRECIO_ASCENDENTE\",\"pagina\":2,\"tamanioPagina\":12}"))) {
+        try (Response respuesta = http.target("recomendaciones/consultas/conjunto/busqueda").request().post(Entity.json("{\"titulo\":\"aventura\",\"idsCategorias\":[3],\"precioMaximo\":50,\"pagina\":2,\"tamanioPagina\":12}"))) {
             assertEquals(200, respuesta.getStatus());
-            verify(servicios.getRecomendacionBO()).consultar(0, "conjunto", new ConsultaRecomendacionesDTO(OrdenLibro.PRECIO_ASCENDENTE, 2, 12));
+            var captor = org.mockito.ArgumentCaptor.forClass(FiltroLibroDTO.class);
+            verify(servicios.getRecomendacionBO()).filtrar(eq(0), eq("conjunto"), captor.capture());
+            assertEquals("aventura", captor.getValue().titulo());
+            assertEquals(List.of(3), captor.getValue().idsCategorias());
+            assertEquals(2, captor.getValue().pagina());
+            assertEquals(new BigDecimal("50"), captor.getValue().precioMaximo());
         }
         try (Response respuesta = http.target("recomendaciones/consultas/conjunto").request().delete()) {
             assertEquals(204, respuesta.getStatus());
@@ -194,9 +199,9 @@ class ServicioHttpTest {
             assertEquals(200, respuesta.getStatus());
             assertEquals("true", respuesta.readEntity(String.class));
         }
-        var consulta = new ConsultaRecomendacionesDTO(OrdenLibro.RECOMENDADOS_PRIMERO, 1, 12);
+        var consulta = new ConsultaRecomendacionesDTO(1, 12);
         when(servicios.getRecomendacionBO().abrirParaTi(7, consulta)).thenReturn(new RecomendacionesDTO("propio", new ResultadoPaginadoDTO<>(List.of(), 0, 1, 12)));
-        try (Response respuesta = http.target("recomendaciones/para-ti").request().post(Entity.json("{\"orden\":\"RECOMENDADOS_PRIMERO\",\"pagina\":1,\"tamanioPagina\":12}"))) {
+        try (Response respuesta = http.target("recomendaciones/para-ti").request().post(Entity.json("{\"pagina\":1,\"tamanioPagina\":12}"))) {
             assertEquals(200, respuesta.getStatus());
             verify(servicios.getRecomendacionBO()).abrirParaTi(7, consulta);
         }

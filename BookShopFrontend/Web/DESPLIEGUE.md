@@ -50,12 +50,12 @@ paso para incluir los scripts `_framework` que activan la interacción.
 
 1. Confirmar que el despliegue termina en estado Live.
 2. Abrir la URL HTTPS asignada y `/salud`, que debe devolver `ok`.
-3. Comprobar búsqueda, acceso de ejemplo, carrito y navegación sin recargar.
+3. Comprobar búsqueda, registro e inicio de sesión, carrito y navegación sin recargar.
 4. Confirmar que estilos e imágenes cargan y que la interacción permanece conectada.
 
 El plan gratuito puede suspenderse después de 15 minutos sin actividad; al volver
-a abrirlo, el arranque puede tardar alrededor de un minuto. Los datos de prueba
-se restablecen al iniciar otro circuito o reiniciar el servicio.
+a abrirlo, el arranque puede tardar alrededor de un minuto. La sesión de la interfaz
+pertenece al circuito Blazor; los datos de la cuenta y pedidos permanecen en la base de datos del backend.
 
 Documentación: [Docker](https://render.com/docs/docker),
 [Web Services](https://render.com/docs/web-services),

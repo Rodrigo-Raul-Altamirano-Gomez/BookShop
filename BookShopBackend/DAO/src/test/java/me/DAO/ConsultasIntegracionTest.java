@@ -258,7 +258,7 @@ class ConsultasIntegracionTest {
         assertNull(leido.getItems().getFirst().getLibro().getTitulo());
         libro.setPrecioBase(new BigDecimal("99"));
         new LibroDAOImpl().cambiarPrecio(libro.getId(), libro.getPrecioBase(), "admin");
-        var items = dao.obtenerItemsDTO(pedido.getId());
+        var items = new ItemPedidoDAOImpl().obtenerItemsDTO(pedido.getId());
         assertEquals(0, new BigDecimal("50").compareTo(items.getFirst().precioOriginal()));
         assertEquals(0, new BigDecimal("30").compareTo(items.getFirst().precioUnitario()));
         assertEquals(1, dao.listarPorUsuario(1, FiltroPedidoDTO.porDefecto()).items().getFirst().portadas().size());
@@ -550,7 +550,7 @@ class ConsultasIntegracionTest {
         SeguimientoDAO seguidos = new SeguimientoDAOImpl();
         seguidos.guardar(1, TipoSeguimiento.AUTOR, 1, "ana@test");
         seguidos.guardar(1, TipoSeguimiento.AUTOR, 1, "ana@test");
-        assertEquals(1, seguidos.listarPorUsuario(1, TipoSeguimiento.AUTOR, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 12).totalResultados());
+        assertEquals(1, seguidos.listarPorUsuario(1, TipoSeguimiento.AUTOR, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 12, "").totalResultados());
         assertTrue(new AutorDAOImpl().obtenerDetalle(1, 1).seguido());
     }
 
@@ -645,7 +645,7 @@ class ConsultasIntegracionTest {
         assertNull(new PedidoDAOImpl().leer(pedido.getId()));
         TransactionContext.rollback();
         assertNull(new PedidoDAOImpl().leer(pedido.getId()));
-        assertTrue(new PedidoDAOImpl().obtenerItemsDTO(pedido.getId()).isEmpty());
+        assertTrue(new ItemPedidoDAOImpl().obtenerItemsDTO(pedido.getId()).isEmpty());
         assertEquals(10, new LibroDAOImpl().leer(libro.getId()).getStockFisico());
         assertFalse(cupones.leer(cupon.getId()).isConsumido());
     }
@@ -837,11 +837,11 @@ class ConsultasIntegracionTest {
         seguidos.guardar(1, TipoSeguimiento.CATEGORIA, categoria.getId(), "ana@test");
         assertTrue(seguidos.retirar(1, TipoSeguimiento.CATEGORIA, categoria.getId(), "ana@test"));
         seguidos.guardar(1, TipoSeguimiento.CATEGORIA, categoria.getId(), "ana@test");
-        assertEquals(1, seguidos.listarPorUsuario(1, TipoSeguimiento.CATEGORIA, OrdenReferencia.MAS_RECIENTES, 1, 12).totalResultados());
+        assertEquals(1, seguidos.listarPorUsuario(1, TipoSeguimiento.CATEGORIA, OrdenReferencia.MAS_RECIENTES, 1, 12, "").totalResultados());
         SeguimientoDAO editoriales = new SeguimientoDAOImpl();
         editoriales.guardar(1, TipoSeguimiento.EDITORIAL, 1, "ana@test");
         editoriales.guardar(1, TipoSeguimiento.EDITORIAL, 1, "ana@test");
-        assertEquals(1, editoriales.listarPorUsuario(1, TipoSeguimiento.EDITORIAL, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 12).totalResultados());
+        assertEquals(1, editoriales.listarPorUsuario(1, TipoSeguimiento.EDITORIAL, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 12, "").totalResultados());
         UsuarioDAO usuarios = new UsuarioDAOImpl();
         Usuario usuario = usuarios.leer(1);
         usuario.setNombre("Nombre completo");
@@ -930,7 +930,6 @@ class ConsultasIntegracionTest {
         assertEquals(2, detalle.cantidad());
         assertNull(detalle.activo());
         assertNull(detalle.stockDisponible());
-        assertEquals(detalle, new PedidoDAOImpl().obtenerItemsDTO(pedido.getId()).getFirst());
         Item entidad = items.listarPorPedido(pedido.getId()).getFirst();
         assertNull(entidad.getLibro().getTitulo());
         assertEquals(libro.getId(), entidad.getLibro().getId());

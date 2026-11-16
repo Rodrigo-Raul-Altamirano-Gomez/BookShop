@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Components;
-using Web.Servicios;
 
 namespace Web.Componentes.Paginas.Cuenta;
 // Las pantallas personales actualizan su contenido al cambiar la sesión.
@@ -52,5 +51,5 @@ public class PaginaCuenta : ComponentBase, IDisposable
             StateHasChanged();
         });
     }
-    public void Dispose() => Sesion.Cambiado -= Actualizar;
+    public virtual void Dispose() => Sesion.Cambiado -= Actualizar;
 }

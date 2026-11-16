@@ -132,10 +132,10 @@ class ListasPersonalesBOTest {
         when(seguimientos.retirar(1, tipo, 5, "ana@test")).thenReturn(true, false);
         assertTrue(seguimientosBO.retirar(1, tipo, 5));
         assertFalse(seguimientosBO.retirar(1, tipo, 5));
-        when(seguimientos.listarPorUsuario(1, tipo, OrdenReferencia.MAS_RECIENTES, 1, 12)).thenReturn(new ResultadoPaginadoDTO<>(List.of(), 0, 1, 12));
-        seguimientosBO.listar(1, new ConsultaSeguimientosDTO(tipo, OrdenReferencia.MAS_RECIENTES, 1, 12));
-        verify(seguimientos).listarPorUsuario(1, tipo, OrdenReferencia.MAS_RECIENTES, 1, 12);
-        verify(seguimientos, never()).listarPorUsuario(eq(2), any(), any(), anyInt(), anyInt());
+        when(seguimientos.listarPorUsuario(1, tipo, OrdenReferencia.MAS_RECIENTES, 1, 12, "")).thenReturn(new ResultadoPaginadoDTO<>(List.of(), 0, 1, 12));
+        seguimientosBO.listar(1, new ConsultaSeguimientosDTO(tipo, OrdenReferencia.MAS_RECIENTES, 1, 12, ""));
+        verify(seguimientos).listarPorUsuario(1, tipo, OrdenReferencia.MAS_RECIENTES, 1, 12, "");
+        verify(seguimientos, never()).listarPorUsuario(eq(2), any(), any(), anyInt(), anyInt(), anyString());
     }
 
     @Test

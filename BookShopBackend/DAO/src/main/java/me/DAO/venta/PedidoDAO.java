@@ -17,8 +17,6 @@ public interface PedidoDAO {
     ResultadoPaginadoDTO<TarjetaPedidoDTO> listarPorUsuario(int idUsuario, FiltroPedidoDTO filtro) throws
         SQLException;
 
-    List<ItemDTO> obtenerItemsDTO(int idPedido) throws SQLException;
-
     boolean actualizarEstado(Pedido pedido, EstadoPedido estadoAnterior) throws SQLException;
 
     boolean incrementarIntentos(int id, int maximoIntentos, String actor) throws SQLException;

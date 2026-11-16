@@ -92,11 +92,11 @@
                                 <div class="card-details flex-grow-1 py-3">
                                     <p class="mb-2">@direccion.Calle</p>
                                     <p class="mb-2">@direccion.Distrito, @direccion.Ciudad</p>
-                                    @if (direccion.ReferenciaAdicional.Length > 0)
+                                    @if (!string.IsNullOrEmpty(direccion.Referencia))
                                     {
                                         <p class="mb-2">
                                             <span class="text-body-secondary">Referencia:</span>
-                                            @direccion.ReferenciaAdicional
+                                            @direccion.Referencia
                                         </p>
                                     }
                                 </div>
@@ -134,17 +134,17 @@
                                     <span
                                         class="data-icon d-inline-flex align-items-center
                                             justify-content-center rounded-circle">
-                                        <Icono Nombre="@(metodo.Tipo == "Tarjeta" ? "card" : "wallet")" />
+                                        <Icono Nombre="@(metodo.TarjetaBancaria ? "card" : "wallet")" />
                                     </span>
-                                    <h2>@TituloMetodo(metodo)</h2>
-                                    @if (metodo.Predeterminada)
+                                    <h2>@Presentacion.NombreMetodo(metodo)</h2>
+                                    @if (metodo.Predeterminado)
                                     {
                                         <span class="badge badge-bookshop">Predeterminado</span>
                                     }
                                 </div>
                                 <div class="card-details flex-grow-1 py-3">
                                     <p class="mb-2">
-                                        @metodo.Proveedor @(metodo.Tipo == "Tarjeta" ? "· " + metodo.TipoTarjeta :
+                                        @metodo.Proveedor @(metodo.TarjetaBancaria ? "· " + Presentacion.TipoMetodo(metodo) :
                                         "")
                                     </p>
                                     <p class="masked">@metodo.NumeroEnmascarado</p>
@@ -155,7 +155,7 @@
                                         </div>
                                         <div>
                                             <dt class="text-body-secondary">Vence:</dt>
-                                            <dd class="mb-0">@metodo.Vencimiento.ToString("dd/MM/yyyy")</dd>
+                                            <dd class="mb-0">@metodo.FechaVencimiento.ToString("dd/MM/yyyy")</dd>
                                         </div>
                                     </dl>
                                 </div>
@@ -171,7 +171,7 @@
                                         Eliminar
                                     </button>
                                 </div>
-                                @if (!metodo.Predeterminada)
+                                @if (!metodo.Predeterminado)
                                 {
                                     <button
                                         class="btn btn-secondary default-button w-100 mt-2"
@@ -195,15 +195,15 @@
                                     <Icono Nombre="tag" />
                                 </span>
                                 <h2 class="my-3">@cupon.Porcentaje% de descuento</h2>
-                                <span class="badge bookshop-status @ClaseCupon(cupon)">@cupon.Estado</span>
+                                <span class="badge bookshop-status @ClaseCupon(cupon)">@Presentacion.EstadoCupon(cupon.Estado)</span>
                                 <dl class="border-top pt-3 mb-0">
                                     <div>
                                         <dt class="text-body-secondary">Compra mínima</dt>
-                                        <dd class="mb-0">@Presentacion.Dinero(cupon.Minimo)</dd>
+                                        <dd class="mb-0">@Presentacion.Dinero(cupon.MontoMinimo)</dd>
                                     </div>
                                     <div>
                                         <dt class="text-body-secondary">Vencimiento</dt>
-                                        <dd class="mb-0">@cupon.Vencimiento.ToString("dd/MM/yyyy")</dd>
+                                        <dd class="mb-0">@cupon.FechaFin.ToString("dd/MM/yyyy")</dd>
                                     </div>
                                 </dl>
                             </article>

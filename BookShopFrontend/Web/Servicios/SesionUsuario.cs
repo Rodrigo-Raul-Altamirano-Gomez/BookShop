@@ -1,10 +1,14 @@
 using Web.Modelos;
-using Web.Modelos.DTO;
 
 namespace Web.Servicios;
 
 public class SesionUsuario
 {
+    // El encabezado delega la búsqueda en el listado visible.
+    public Func<string, Task>? BuscarEnListado { get; set; }
+    public string TextoBusqueda { get; set; } = "";
+    public string IndicacionBusqueda { get; set; } = "Buscar por título";
+    public event Action? BusquedaCambiada;
     private readonly HttpClientUtils api;
     public Perfil? Usuario { get; set; }
     public bool EsAdministrador => Usuario?.EsAdministrador == true;
@@ -44,6 +48,16 @@ public class SesionUsuario
     }
 
     public void Notificar() => Cambiado?.Invoke();
+
+    public void MostrarBusqueda(string texto, string indicacion, Func<string, Task> buscar)
+    {
+        BuscarEnListado = buscar;
+        if (TextoBusqueda == texto && IndicacionBusqueda == indicacion)
+            return;
+        TextoBusqueda = texto;
+        IndicacionBusqueda = indicacion;
+        BusquedaCambiada?.Invoke();
+    }
 
     public void Avisar(string mensaje) => AvisoSolicitado?.Invoke(mensaje);
 

@@ -1,5 +1,4 @@
 using Web.Componentes;
-using Web.Servicios;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<HttpClientUtils>();

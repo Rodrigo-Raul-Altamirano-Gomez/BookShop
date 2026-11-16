@@ -1,6 +1,7 @@
 package me.Business.recomendacion;
 
 import me.Model.dto.catalogo.RecomendacionesDTO;
+import me.Model.dto.catalogo.FiltroLibroDTO;
 import java.util.List;
 import me.Business.exceptions.NegocioException;
 import me.Model.dto.ResultadoPaginadoDTO;
@@ -19,8 +20,8 @@ public interface RecomendacionBO {
 
     RecomendacionesDTO abrirParaTi(int idActor, ConsultaRecomendacionesDTO consulta) throws NegocioException;
 
-    ResultadoPaginadoDTO<TarjetaLibroDTO> consultar(int idActor, String idConsulta, ConsultaRecomendacionesDTO
-        consulta) throws NegocioException;
+    ResultadoPaginadoDTO<TarjetaLibroDTO> filtrar(int idActor, String idConsulta,
+        FiltroLibroDTO filtro) throws NegocioException;
 
     void descartar(int idActor, String idConsulta) throws NegocioException;
 }

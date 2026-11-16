@@ -32,8 +32,6 @@ public interface LibroDAO extends CrudDAO<Libro> {
 
     DetalleLibroDTO obtenerDetalle(int idLibro, int idUsuario, LocalDateTime fecha) throws SQLException;
 
-    TarjetaLibroDTO obtenerTarjeta(int idLibro, LocalDateTime fecha) throws SQLException;
-
     GestionLibroDTO obtenerGestion(int idLibro) throws SQLException;
 
     boolean existeIsbn(String isbn, int idExcluir) throws SQLException;

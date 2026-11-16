@@ -53,6 +53,8 @@ DatosCancelacionDTO? ultimaCancelacion = null;
 DatosDevolucionDTO? ultimaDevolucion = null;
 int consultasPedidos = 0, lecturasPedido = 0, actualizacionesSeguimiento = 0, permisosDevolucion = 0;
 bool avanzarSeguimiento = false, rechazarCancelacion = true, devolucionPendiente = false;
+bool ampliarDatosCompra = false;
+int consultasDatosCompra = 0;
 FiltroSolicitudDTO? ultimoFiltroSolicitud = null;
 string? ultimoAmbitoSolicitud = null;
 int consultasSolicitudes = 0;
@@ -201,16 +203,47 @@ servidor.Map("/{**ruta}", async contexto =>
     else if (ruta == "/webresources/cuenta") resultado = perfil;
     else if (ruta == "/webresources/cuenta/direcciones") {
         var direccion = new DireccionEnvioDTO(3, "Casa", "Calle 1", "Centro", "Lima", "", true);
-        resultado = contexto.Request.Method == "POST" ? direccion : new ResultadoPaginadoDTO<DireccionEnvioDTO>([direccion], 1, 1, 10);
+        if (contexto.Request.Method == "POST")
+            resultado = direccion;
+        else
+        {
+            consultasDatosCompra++;
+            int pagina = int.Parse(contexto.Request.Query["pagina"]!);
+            int tamanio = int.Parse(contexto.Request.Query["tamanioPagina"]!);
+            var direcciones = ampliarDatosCompra
+                ? Enumerable.Range(1, 13).Select(id => new DireccionEnvioDTO(id, $"Casa {id}", "Calle 1", "Centro", "Lima", "Frente al parque", id == 3)).ToList()
+                : new List<DireccionEnvioDTO> { direccion };
+            resultado = new ResultadoPaginadoDTO<DireccionEnvioDTO>(direcciones.Skip((pagina - 1) * tamanio).Take(tamanio).ToList(), direcciones.Count, pagina, tamanio);
+        }
     }
     else if (ruta == "/webresources/cuenta/metodos")
     {
         if (contexto.Request.Method == "POST")
             ultimoMetodo = await contexto.Request.ReadFromJsonAsync<DatosMetodoPagoDTO>();
         var metodo = new MetodoPagoDTO(4, true, "Ana", "Banco", "Tarjeta", "****1234", "DEBITO", new DateOnly(2030, 1, 1), true, true);
-        resultado = contexto.Request.Method == "POST" ? metodo : new ResultadoPaginadoDTO<MetodoPagoDTO>([metodo], 1, 1, 10);
+        if (contexto.Request.Method == "POST")
+            resultado = metodo;
+        else
+        {
+            consultasDatosCompra++;
+            int pagina = int.Parse(contexto.Request.Query["pagina"]!);
+            int tamanio = int.Parse(contexto.Request.Query["tamanioPagina"]!);
+            var metodos = ampliarDatosCompra
+                ? Enumerable.Range(1, 13).Select(id => new MetodoPagoDTO(id, true, "Ana", "Banco", $"Tarjeta {id}", "****1234", "DEBITO", new DateOnly(2030, 1, 1), id == 4, true)).ToList()
+                : new List<MetodoPagoDTO> { metodo };
+            resultado = new ResultadoPaginadoDTO<MetodoPagoDTO>(metodos.Skip((pagina - 1) * tamanio).Take(tamanio).ToList(), metodos.Count, pagina, tamanio);
+        }
     }
-    else if (ruta == "/webresources/cuenta/cupones") resultado = new ResultadoPaginadoDTO<CuponDTO>([], 0, 1, 10);
+    else if (ruta == "/webresources/cuenta/cupones")
+    {
+        consultasDatosCompra++;
+        int pagina = int.Parse(contexto.Request.Query["pagina"]!);
+        int tamanio = int.Parse(contexto.Request.Query["tamanioPagina"]!);
+        var cupones = ampliarDatosCompra
+            ? Enumerable.Range(1, 13).Select(id => new CuponDTO(id, 10, 100, DateTime.Today.AddDays(5), "DISPONIBLE")).ToList()
+            : new List<CuponDTO>();
+        resultado = new ResultadoPaginadoDTO<CuponDTO>(cupones.Skip((pagina - 1) * tamanio).Take(tamanio).ToList(), cupones.Count, pagina, tamanio);
+    }
     else if (ruta == "/webresources/cuenta/libros-guardados/busqueda")
     {
         ultimoFiltro = await contexto.Request.ReadFromJsonAsync<FiltroLibroDTO>();
@@ -333,7 +366,9 @@ servidor.Map("/{**ruta}", async contexto =>
     else if (ruta == "/webresources/libros/idiomas")
     {
         int pagina = int.Parse(contexto.Request.Query["pagina"]!);
-        resultado = new ResultadoPaginadoDTO<string>(pagina == 1 ? Enumerable.Range(1, 12).Select(n => $"Idioma {n}").ToList() : ["Español"], 13, pagina, 12);
+        int tamanio = int.Parse(contexto.Request.Query["tamanioPagina"]!);
+        var idiomas = Enumerable.Range(1, 12).Select(n => $"Idioma {n}").Append("Español").ToList();
+        resultado = new ResultadoPaginadoDTO<string>(idiomas.Skip((pagina - 1) * tamanio).Take(tamanio).ToList(), 13, pagina, tamanio);
     }
     else if (ruta.StartsWith("/webresources/libros/por-"))
     {
@@ -396,6 +431,12 @@ servidor.Map("/{**ruta}", async contexto =>
             Resultados = new ResultadoPaginadoDTO<TarjetaLibroDTO>(
                 [new(9, "Recomendación " + tipo, null, "Autor", 50, 40, 20, true)], 25, consulta.Pagina, consulta.TamanioPagina)
         };
+    }
+    else if (ruta.StartsWith("/webresources/recomendaciones/consultas/") && ruta.EndsWith("/busqueda"))
+    {
+        ultimoFiltro = (await contexto.Request.ReadFromJsonAsync<FiltroLibroDTO>())!;
+        ultimaConsultaRecomendaciones = ruta.Split('/')[4];
+        resultado = new ResultadoPaginadoDTO<TarjetaLibroDTO>([new(7, ruta.Contains("personal") ? "Recomendación personal" : "Recomendación popular", null, "Autor", 50, 40, 20, true)], 25, ultimoFiltro.Pagina, 12);
     }
     else if (ruta.StartsWith("/webresources/recomendaciones/consultas/"))
     {
@@ -509,7 +550,7 @@ var archivoPdf = await api.GetArchivo("documentos/comprobantes/21");
 Verificar(archivoPdf.SequenceEqual(pdfPrueba) && cookieDocumento == "sesion-ana",
     "La descarga binaria altera el PDF o pierde la cookie del usuario");
 var estado = new SesionUsuario(api);
-var catalogoServicio = new CatalogoServicio(api, estado);
+var catalogoServicio = new CatalogoServicio(api);
 var cuentaServicio = new CuentaServicio(api, estado);
 var compraServicio = new CompraServicio(api, estado);
 estado.MostrarPerfil(await api.Get<PerfilUsuarioDTO>("cuenta"));
@@ -534,17 +575,17 @@ try { await api.Get<object>("error"); throw new Exception("No se informó el err
 catch (InvalidOperationException e) { Verificar(e.Message == "Inicia sesión.", "Mensaje del backend perdido"); }
 Verificar(estado.Usuario is null && compraServicio.CantidadCarrito == 0 && cuentaServicio.Direcciones.Count == 0, "Sesión vencida conserva datos privados");
 Verificar(await api.Get<string>("cookie") == "sin-sesion", "Cookie vencida no retirada");
-Verificar(await cuentaServicio.GuardarDireccion(new Web.Modelos.Direccion()) == 3, "No se devuelve la dirección nueva para seleccionarla en compra");
-var tarjeta = new Web.Modelos.MetodoPago { Tipo = "Tarjeta", TipoTarjeta = "Crédito", Numero = "4111111111111111", Vencimiento = new DateOnly(2030, 1, 1) };
+Verificar(await cuentaServicio.GuardarDireccion(new DatosDireccionEnvioDTO()) == 3, "No se devuelve la dirección nueva para seleccionarla en compra");
+var tarjeta = new DatosMetodoPagoDTO { TarjetaBancaria = true, TipoTarjeta = "CREDITO", Numero = "4111111111111111", FechaVencimiento = new DateOnly(2030, 1, 1) };
 Verificar(await cuentaServicio.GuardarMetodo(tarjeta) == 4, "No se devuelve el método nuevo para seleccionarlo en compra");
-Verificar(ultimoMetodo?.TipoTarjeta == "CREDITO" && ultimoMetodo.FechaVencimiento == tarjeta.Vencimiento, "Se perdieron el tipo o vencimiento de la tarjeta");
-Verificar(cuentaServicio.Metodos.Single().Numero is null
+Verificar(ultimoMetodo?.TipoTarjeta == "CREDITO" && ultimoMetodo.FechaVencimiento == tarjeta.FechaVencimiento, "Se perdieron el tipo o vencimiento de la tarjeta");
+Verificar(!Newtonsoft.Json.JsonConvert.SerializeObject(cuentaServicio.Metodos).Contains("4111111111111111")
     && cuentaServicio.Metodos.Single().NumeroEnmascarado == "****1234", "La lista de métodos muestra el número completo");
-var billetera = new Web.Modelos.MetodoPago { Tipo = "Billetera", Numero = "999999999" };
+var billetera = new DatosMetodoPagoDTO { TarjetaBancaria = false, Numero = "999999999" };
 await cuentaServicio.GuardarMetodo(billetera);
 Verificar(ultimoMetodo?.TarjetaBancaria == false && ultimoMetodo.TipoTarjeta is null && ultimoMetodo.FechaVencimiento is null, "Billetera enviada como tarjeta");
 
-var catalogoFallido = new CatalogoServicio(api, estado);
+var catalogoFallido = new CatalogoServicio(api);
 fallarReferencias = true;
 await catalogoFallido.Inicializar();
 Verificar(!catalogoFallido.Inicializado && catalogoFallido.Error == "No se pudieron cargar las referencias.", "Se oculta el error al cargar el catálogo");
@@ -700,7 +741,7 @@ await renderer.Dispatcher.InvokeAsync(async () =>
     await renderer.RenderComponentAsync<Web.Componentes.Paginas.Catalogo.ExploradorCatalogo>(ParameterView.FromDictionary(
         new Dictionary<string, object?> { ["Busqueda"] = "historia", ["OrdenInicial"] = "MAS_VENDIDOS" }));
     explorador = componentes.Explorador!;
-    Verificar(ultimoFiltro!.IdsCategorias.Count == 1 && ultimoFiltro.Idiomas.Contains("Español"), "Se pierden los filtros al volver a la lista");
+    Verificar(ultimoFiltro!.IdsCategorias.Count == 1 && ultimoFiltro.Idiomas.Contains("Español") && ultimoFiltro.Titulo == "historia", "Se pierden los filtros al volver a la lista");
     await SeleccionarFiltro("Categorias", "Referencia real");
     Verificar(ultimoFiltro!.IdsCategorias.Count == 0 && ultimoFiltro.IdsAutores.Count == 1, "Quitar una categoría borra otros filtros");
     var vistaCatalogo = typeof(Web.Componentes.Paginas.Catalogo.ExploradorCatalogo).GetField("vista",
@@ -708,12 +749,24 @@ await renderer.Dispatcher.InvokeAsync(async () =>
     vistaCatalogo.GetType().GetProperty("Maximo")!.SetValue(vistaCatalogo, 45.50m);
     await Cambiar("AjustarMaximo");
     Verificar(ultimoFiltro!.PrecioMaximo == 45.50m && ultimoFiltro.Pagina == 1, "El precio no consulta inmediatamente con céntimos");
+    await estado.BuscarEnListado!("novela");
+    Verificar(ultimoFiltro!.Titulo == "novela" && ultimoFiltro.PrecioMaximo == 45.50m
+        && ultimoFiltro.IdsAutores.Count == 1 && ultimoFiltro.Orden == "MAS_VENDIDOS",
+        "La búsqueda principal pierde filtros u orden");
+    await Cambiar("CambiarPagina", 2);
+    await renderer.RenderComponentAsync<Web.Componentes.Paginas.Catalogo.ExploradorCatalogo>(ParameterView.FromDictionary(
+        new Dictionary<string, object?> { ["Busqueda"] = "historia", ["OrdenInicial"] = "MAS_VENDIDOS" }));
+    explorador = componentes.Explorador!;
+    Verificar(ultimoFiltro!.Titulo == "novela" && ultimoFiltro.Pagina == 2 && ultimoFiltro.PrecioMaximo == 45.50m,
+        "Volver del detalle pierde la búsqueda del encabezado, la página o el precio");
     await Cambiar("QuitarPrecio");
     Verificar(ultimoFiltro!.PrecioMinimo is null && ultimoFiltro.PrecioMaximo is null, "Quitar precio deja límites anteriores");
     await renderer.RenderComponentAsync<Web.Componentes.Paginas.Catalogo.ExploradorCatalogo>(ParameterView.FromDictionary(
         new Dictionary<string, object?> { ["TipoAmbito"] = "autores", ["IdAmbito"] = 9 }));
     explorador = componentes.Explorador!;
     await SeleccionarFiltro("Idiomas", "Español");
+    await estado.BuscarEnListado!("cuento");
+    Verificar(ultimoFiltro!.Titulo == "cuento" && ultimoFiltro.Idiomas.Contains("Español"), "Buscar pierde los filtros de la referencia");
     Verificar(ultimaRutaLibros == "/webresources/libros/por-autor/9", "Cambiar filtros abandona la referencia fija");
     await renderer.RenderComponentAsync<Web.Componentes.Paginas.Catalogo.ExploradorCatalogo>(ParameterView.FromDictionary(
         new Dictionary<string, object?> { ["Favoritos"] = true }));
@@ -763,12 +816,9 @@ await renderer.Dispatcher.InvokeAsync(async () =>
             await (Task)clase.GetMethod(metodo, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
                 .Invoke(referencia, argumentos)!;
         }
-        void Escribir(string campo, string valor) => clase.GetField(campo,
-            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.SetValue(referencia, valor);
-        Verificar(pantalla.ToHtmlString().Contains("Buscar por nombre") && !pantalla.ToHtmlString().Contains("<aside"), "El buscador no aparece en la cabecera o añade una columna lateral");
+        Verificar(!pantalla.ToHtmlString().Contains("reference-search") && estado.IndicacionBusqueda == "Buscar " + (tipo == "categorias" ? "categorías" : tipo), "Referencias duplica el buscador o no configura la búsqueda principal");
         await Ejecutar("CambiarPagina", 2);
-        Escribir("textoBusqueda", "  Referencia  ");
-        await Ejecutar("Buscar");
+        await estado.BuscarEnListado!("Referencia");
         Verificar(ultimoFiltroReferencia!.Nombre == "Referencia" && ultimoFiltroReferencia.Pagina == 1
             && ultimaRutaReferencia == $"/webresources/{tipo}/busqueda", "La búsqueda no se envía al listado correcto ni reinicia su página");
         var vistaReferencias = clase.GetField("vista", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
@@ -782,12 +832,11 @@ await renderer.Dispatcher.InvokeAsync(async () =>
         referencia = componentes.Referencias!;
         Verificar(ultimoFiltroReferencia!.Nombre == "Referencia" && ultimoFiltroReferencia.Pagina == 2
             && ultimoFiltroReferencia.Orden == "MAS_RECIENTES", "Volver al listado pierde la búsqueda, orden o página");
-        await Ejecutar("QuitarNombre");
+        await estado.BuscarEnListado!("");
         Verificar(ultimoFiltroReferencia!.Nombre == "" && ultimoFiltroReferencia.Pagina == 1, "Quitar la búsqueda no recupera el listado");
-        Escribir("textoBusqueda", "inexistente");
-        await Ejecutar("Buscar");
+        await estado.BuscarEnListado!("inexistente");
         var vacia = await renderer.RenderComponentAsync<Web.Componentes.Paginas.Catalogo.Referencias>(parametros);
-        Verificar(vacia.ToHtmlString().Contains("No encontramos coincidencias") && vacia.ToHtmlString().Contains("Buscar por nombre"), "No se puede corregir una búsqueda sin coincidencias");
+        Verificar(vacia.ToHtmlString().Contains("No encontramos coincidencias") && estado.BuscarEnListado is not null, "No se puede corregir una búsqueda sin coincidencias");
     }
 });
 await renderer.Dispatcher.InvokeAsync(async () =>
@@ -856,20 +905,18 @@ await renderer.Dispatcher.InvokeAsync(async () =>
     var tipo = pantalla.GetType();
     string id = (string)tipo.GetField("idConsulta", privados)!.GetValue(pantalla)!;
     int aperturas = aperturasRecomendaciones;
-    var consulta = (ConsultaRecomendacionesDTO)tipo.GetField("consulta", privados)!.GetValue(pantalla)!;
-    Verificar(consulta.Orden == "RECOMENDADOS_PRIMERO" && consulta.TamanioPagina == 12,
-        "Recomendaciones no abre con su orden y tamaño propios");
     string html = System.Net.WebUtility.HtmlDecode(populares.ToHtmlString());
-    Verificar(html.Contains("Recomendación popular") && html.Contains("25 libros")
-        && !html.Contains("Buscar") && !html.Contains("MAS_VENDIDOS"), "Recomendaciones usa filtros o el catálogo general");
-    await (Task)tipo.GetMethod("CambiarPagina", privados)!.Invoke(pantalla, [2])!;
-    Verificar(ultimaConsultaRecomendaciones == id && ultimoOrdenRecomendaciones?.Pagina == 2
-        && aperturasRecomendaciones == aperturas, "Paginar recalcula el algoritmo o cambia el conjunto");
-    consulta.Orden = "PRECIO_ASCENDENTE";
-    await (Task)tipo.GetMethod("Ordenar", privados)!.Invoke(pantalla, null)!;
-    Verificar(ultimaConsultaRecomendaciones == id && ultimoOrdenRecomendaciones?.Pagina == 1
-        && ultimoOrdenRecomendaciones.Orden == "PRECIO_ASCENDENTE" && aperturasRecomendaciones == aperturas,
-        "Ordenar no reutiliza la consulta completa o no vuelve a la primera página");
+    Verificar(html.Contains("25 libros") && html.Contains("Filtros") && !html.Contains("Ordenar libros"),
+        "Las recomendaciones deben ofrecer filtros y un solo orden");
+    await estado.BuscarEnListado!("historia");
+    Verificar(ultimoFiltro!.Titulo == "historia" && ultimoFiltro.Pagina == 1
+        && ultimaConsultaRecomendaciones == id && aperturasRecomendaciones == aperturas,
+        "Buscar cambia el conjunto recomendado o repite el algoritmo");
+    var explorador = componentes.Explorador!;
+    var claseExplorador = explorador.GetType();
+    await (Task)claseExplorador.GetMethod("CambiarPagina", privados)!.Invoke(explorador, [2])!;
+    Verificar(ultimoFiltro.Pagina == 2 && ultimoFiltro.Titulo == "historia" && aperturasRecomendaciones == aperturas,
+        "Paginar pierde la búsqueda o recalcula las recomendaciones");
 
     navegacion.Ir("/");
     historialSuficiente = false;
@@ -1240,6 +1287,114 @@ await renderer.Dispatcher.InvokeAsync(async () =>
     Verificar(ultimoAmbitoSolicitud == "/webresources/solicitudes/propias/busqueda",
         "Volver desde moderación conserva el ámbito administrativo");
 });
+await renderer.Dispatcher.InvokeAsync(async () =>
+{
+    var cabecera = await renderer.RenderComponentAsync<Web.Componentes.Estructura.EstructuraPrincipal>();
+    var layout = componentes.Estructura!;
+    var buscar = layout.GetType().GetMethod("Buscar", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+    var fijo = await renderer.RenderComponentAsync<Web.Componentes.Paginas.Catalogo.ExploradorCatalogo>(
+        ParameterView.FromDictionary(new Dictionary<string, object?> { ["TipoAmbito"] = "categorias", ["IdAmbito"] = 8, ["OrdenFijo"] = true }));
+    Verificar(!fijo.ToHtmlString().Contains("Ordenar libros"), "Una vista de orden fijo permite cambiarlo");
+    estado.TextoBusqueda = "aventura";
+    await (Task)buscar.Invoke(layout, null)!;
+    Verificar(ultimaRutaLibros == "/webresources/libros/por-categoria/8" && ultimoFiltro!.Titulo == "aventura",
+        "El buscador del encabezado abandona la categoría abierta");
+    await renderer.RenderComponentAsync<Web.Componentes.Paginas.Catalogo.Referencias>(
+        ParameterView.FromDictionary(new Dictionary<string, object?> { ["Tipo"] = "autores" }));
+    estado.TextoBusqueda = "Referencia";
+    await (Task)buscar.Invoke(layout, null)!;
+    Verificar(ultimaRutaReferencia == "/webresources/autores/busqueda" && ultimoFiltroReferencia!.Nombre == "Referencia",
+        "El encabezado busca libros cuando está mostrando autores");
+});
+await renderer.Dispatcher.InvokeAsync(async () =>
+{
+    var privados = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+    var redibujar = typeof(ComponentBase).GetMethod("StateHasChanged", privados)!;
+    estado.MostrarPerfil(perfil, false);
+    ampliarDatosCompra = true;
+    int antesDeCargar = consultasDatosCompra;
+    await cuentaServicio.CargarDatosCompra();
+    Verificar(consultasDatosCompra == antesDeCargar + 3 && cuentaServicio.Direcciones.Count == 13
+        && cuentaServicio.Metodos.Count == 13 && cuentaServicio.Cupones.Count == 13,
+        "Los datos compartidos requieren consultas auxiliares o pierden registros después del décimo");
+    var datosCompra = await renderer.RenderComponentAsync<Web.Componentes.Paginas.Cuenta.DatosCompra>();
+    var pantallaDatos = componentes.DatosCompra!;
+    var tipoDatos = pantallaDatos.GetType();
+    tipoDatos.GetMethod("CambiarPagina", privados)!.Invoke(pantallaDatos, [2]);
+    redibujar.Invoke(pantallaDatos, null);
+    string htmlDatos = System.Net.WebUtility.HtmlDecode(datosCompra.ToHtmlString());
+    Verificar(htmlDatos.Contains("Casa 11") && htmlDatos.Contains("Casa 13") && !htmlDatos.Contains(">Casa 1</h2>"),
+        "Pedir todos los datos altera la paginación de diez direcciones de la pantalla");
+
+    DatosMetodoPagoDTO? metodoEnviado = null;
+    var metodoOriginal = new MetodoPagoDTO(4, true, "Ana", "Banco", "Mi tarjeta", "****1234", "CREDITO",
+        new DateOnly(2030, 7, 31), true, true);
+    var editarPago = await renderer.RenderComponentAsync<Web.Componentes.Compartidos.FormularioPago>(
+        ParameterView.FromDictionary(new Dictionary<string, object?>
+        {
+            ["Valor"] = metodoOriginal,
+            ["AlGuardar"] = EventCallback.Factory.Create<DatosMetodoPagoDTO>(new object(), datos => { metodoEnviado = datos; })
+        }));
+    var formularioPago = componentes.FormularioPago!;
+    var tipoPago = formularioPago.GetType();
+    var pago = (DatosMetodoPagoDTO)tipoPago.GetProperty("Borrador", privados)!.GetValue(formularioPago)!;
+    tipoPago.GetMethod("CambiarTipo", privados)!.Invoke(formularioPago, [true]);
+    Verificar(pago.TarjetaBancaria && pago.TipoTarjeta == "CREDITO" && pago.Predeterminado
+        && pago.FechaVencimiento == new DateOnly(2030, 7, 31) && pago.Numero is null
+        && editarPago.ToHtmlString().Contains("****1234"),
+        "Editar pago pierde tipo, fecha, marca predeterminada o usa la máscara como número completo");
+    pago.Alias = "Cambio nuevo";
+    Verificar(metodoOriginal.Alias == "Mi tarjeta", "El borrador de pago modifica el DTO consultado antes de guardar");
+    await (Task)tipoPago.GetMethod("Guardar", privados)!.Invoke(formularioPago, null)!;
+    Verificar(metodoEnviado?.Alias == "Cambio nuevo" && metodoEnviado.Numero is null
+        && metodoEnviado.Proveedor == "Banco", "El formulario no entrega directamente los datos editables del método");
+    await renderer.RenderComponentAsync<Web.Componentes.Compartidos.FormularioPago>(
+        ParameterView.FromDictionary(new Dictionary<string, object?>
+        {
+            ["AlGuardar"] = EventCallback.Factory.Create<DatosMetodoPagoDTO>(new object(), datos => { metodoEnviado = datos; })
+        }));
+    formularioPago = componentes.FormularioPago!;
+    tipoPago.GetMethod("CambiarTipo", privados)!.Invoke(formularioPago, [false]);
+    pago = (DatosMetodoPagoDTO)tipoPago.GetProperty("Borrador", privados)!.GetValue(formularioPago)!;
+    pago.Numero = "999999999";
+    await (Task)tipoPago.GetMethod("Guardar", privados)!.Invoke(formularioPago, null)!;
+    Verificar(metodoEnviado?.TarjetaBancaria == false && metodoEnviado.TipoTarjeta is null
+        && metodoEnviado.FechaVencimiento is null && metodoEnviado.Numero == "999999999",
+        "Cambiar a billetera conserva campos de tarjeta en los datos enviados");
+
+    var direccionOriginal = new DireccionEnvioDTO(3, "Casa", "Calle 1", "Centro", "Lima", "Frente al parque", true);
+    DatosDireccionEnvioDTO? direccionEnviada = null;
+    await renderer.RenderComponentAsync<Web.Componentes.Compartidos.FormularioDireccion>(
+        ParameterView.FromDictionary(new Dictionary<string, object?>
+        {
+            ["Valor"] = direccionOriginal,
+            ["AlGuardar"] = EventCallback.Factory.Create<DatosDireccionEnvioDTO>(new object(), datos => { direccionEnviada = datos; })
+        }));
+    var formularioDireccion = componentes.FormularioDireccion!;
+    var tipoDireccion = formularioDireccion.GetType();
+    var direccion = (DatosDireccionEnvioDTO)tipoDireccion.GetProperty("Borrador", privados)!.GetValue(formularioDireccion)!;
+    direccion.Calle = "Calle nueva";
+    await (Task)tipoDireccion.GetMethod("Guardar", privados)!.Invoke(formularioDireccion, null)!;
+    Verificar(direccionOriginal.Calle == "Calle 1" && direccionEnviada?.Calle == "Calle nueva"
+        && direccionEnviada.Referencia == "Frente al parque" && direccionEnviada.Predeterminada,
+        "El formulario de dirección modifica el original o pierde referencia y predeterminada al enviar el DTO");
+
+    int cambiosSesion = 0, cambiosBusqueda = 0;
+    estado.Cambiado += () => cambiosSesion++;
+    estado.BusquedaCambiada += () => cambiosBusqueda++;
+    var explorador = await renderer.RenderComponentAsync<Web.Componentes.Paginas.Catalogo.ExploradorCatalogo>(
+        ParameterView.FromDictionary(new Dictionary<string, object?> { ["TipoAmbito"] = "categorias", ["IdAmbito"] = 91, ["Busqueda"] = "texto de URL" }));
+    var pantallaCatalogo = componentes.Explorador!;
+    await estado.BuscarEnListado!("texto del encabezado");
+    await pantallaCatalogo.SetParametersAsync(ParameterView.FromDictionary(new Dictionary<string, object?>
+        { ["TipoAmbito"] = "categorias", ["IdAmbito"] = 91, ["Busqueda"] = "texto de URL" }));
+    Verificar(cambiosSesion == 0 && cambiosBusqueda > 0 && ultimoFiltro?.Titulo == "texto del encabezado",
+        "Configurar la búsqueda dispara cambios de sesión o un q anterior reemplaza el texto guardado");
+    Verificar(!explorador.ToHtmlString().Contains('}'), "Los filtros muestran una llave de código suelta");
+    var guardados = await renderer.RenderComponentAsync<Web.Componentes.Paginas.Cuenta.LibrosGuardados>();
+    Verificar(!guardados.ToHtmlString().Contains("Buscar en esta lista por título") && estado.BuscarEnListado is not null,
+        "Deseados duplica el buscador principal o pierde el ámbito de búsqueda del encabezado");
+});
 await servidor.StopAsync();
 Console.WriteLine($"Correcto: {verificaciones} comprobaciones de contrato HTTP, JSON, cookies, compra y documentos.");
 
@@ -1265,6 +1420,9 @@ class ComponentesPrueba : IComponentActivator
     public Web.Componentes.Paginas.Cuenta.MisResenas? MisResenas { get; private set; }
     public Web.Componentes.Paginas.Cuenta.MisPedidos? MisPedidos { get; private set; }
     public Web.Componentes.Paginas.Cuenta.Solicitudes? Solicitudes { get; private set; }
+    public Web.Componentes.Paginas.Cuenta.DatosCompra? DatosCompra { get; private set; }
+    public Web.Componentes.Compartidos.FormularioPago? FormularioPago { get; private set; }
+    public Web.Componentes.Compartidos.FormularioDireccion? FormularioDireccion { get; private set; }
     public Web.Componentes.Compartidos.FormularioResena? FormularioResena { get; private set; }
     public Web.Componentes.Compartidos.FormularioReporteResena? FormularioReporteResena { get; private set; }
     public Web.Componentes.Compartidos.FormularioDevolucion? FormularioDevolucion { get; private set; }
@@ -1300,6 +1458,12 @@ class ComponentesPrueba : IComponentActivator
             MisPedidos = misPedidos;
         if (componente is Web.Componentes.Paginas.Cuenta.Solicitudes solicitudes)
             Solicitudes = solicitudes;
+        if (componente is Web.Componentes.Paginas.Cuenta.DatosCompra datosCompra)
+            DatosCompra = datosCompra;
+        if (componente is Web.Componentes.Compartidos.FormularioPago formularioPago)
+            FormularioPago = formularioPago;
+        if (componente is Web.Componentes.Compartidos.FormularioDireccion formularioDireccion)
+            FormularioDireccion = formularioDireccion;
         if (componente is Web.Componentes.Compartidos.FormularioResena formularioResena)
             FormularioResena = formularioResena;
         if (componente is Web.Componentes.Compartidos.FormularioReporteResena formularioReporteResena)

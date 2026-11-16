@@ -33,6 +33,9 @@ public static class Presentacion
     public static Libro Libro(DetalleLibroDTO dto)
     {
         var libro = Libro(dto.Libro);
+        libro.IdAutor = dto.IdAutor;
+        libro.IdCategoria = dto.IdCategoria;
+        libro.IdEditorial = dto.IdEditorial;
         libro.Categoria = dto.NombreCategoria;
         libro.Editorial = dto.NombreEditorial;
         libro.Idioma = dto.Idioma;
@@ -57,28 +60,24 @@ public static class Presentacion
         Imagen = dto.Imagen ?? "/images/reference-placeholder.svg"
     };
 
-    public static Direccion Direccion(DireccionEnvioDTO dto) => new()
+    public static string TipoMetodo(MetodoPagoDTO metodo)
     {
-        Id = dto.Id,
-        Alias = dto.Alias,
-        Calle = dto.Calle,
-        Distrito = dto.Distrito,
-        Ciudad = dto.Ciudad,
-        ReferenciaAdicional = dto.Referencia ?? "",
-        Predeterminada = dto.Predeterminada
-    };
+        if (!metodo.TarjetaBancaria)
+            return "Billetera";
+        return metodo.TipoTarjeta == "CREDITO" ? "Crédito" : "Débito";
+    }
 
-    public static MetodoPago Metodo(MetodoPagoDTO dto) => new()
+    public static string NombreMetodo(MetodoPagoDTO metodo)
     {
-        Id = dto.Id,
-        Tipo = dto.TarjetaBancaria ? "Tarjeta" : "Billetera",
-        Titular = dto.Titular,
-        Alias = dto.Alias ?? "",
-        Proveedor = dto.Proveedor,
-        NumeroEnmascarado = dto.NumeroEnmascarado,
-        TipoTarjeta = dto.TarjetaBancaria ? (dto.TipoTarjeta == "CREDITO" ? "Crédito" : "Débito") : "",
-        Vencimiento = dto.FechaVencimiento,
-        Predeterminada = dto.Predeterminado,
-        Vigente = dto.Vigente
+        if (!string.IsNullOrWhiteSpace(metodo.Alias))
+            return metodo.Alias;
+        return metodo.TarjetaBancaria ? "Tarjeta" : "Billetera";
+    }
+
+    public static string EstadoCupon(string estado) => estado switch
+    {
+        "DISPONIBLE" => "Disponible",
+        "VENCIDO" => "Vencido",
+        _ => "Usado"
     };
 }

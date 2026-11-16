@@ -1,14 +1,11 @@
-using Web.Modelos;
-using Web.Modelos.DTO;
-
 namespace Web.Servicios;
 
 public class CuentaServicio
 {
     private readonly HttpClientUtils api;
-    public List<Direccion> Direcciones { get; } = [];
-    public List<MetodoPago> Metodos { get; } = [];
-    public List<Cupon> Cupones { get; } = [];
+    public List<DireccionEnvioDTO> Direcciones { get; } = [];
+    public List<MetodoPagoDTO> Metodos { get; } = [];
+    public List<CuponDTO> Cupones { get; } = [];
 
     public CuentaServicio(HttpClientUtils api, SesionUsuario sesion)
     {
@@ -32,75 +29,30 @@ public class CuentaServicio
 
     public async Task CargarDirecciones()
     {
+        var datos = await api.Get<ResultadoPaginadoDTO<DireccionEnvioDTO>>(
+            $"cuenta/direcciones?pagina=1&tamanioPagina={int.MaxValue}");
         Direcciones.Clear();
-        int pagina = 1;
-        long total;
-        do
-        {
-            var datos = await api.Get<ResultadoPaginadoDTO<DireccionEnvioDTO>>(
-                $"cuenta/direcciones?pagina={pagina}&tamanioPagina=10");
-            Direcciones.AddRange(datos.Items.Select(Presentacion.Direccion));
-            total = datos.TotalResultados;
-            pagina++;
-        } while ((pagina - 1) * 10 < total);
+        Direcciones.AddRange(datos.Items);
     }
 
     public async Task CargarMetodos()
     {
+        var datos = await api.Get<ResultadoPaginadoDTO<MetodoPagoDTO>>(
+            $"cuenta/metodos?pagina=1&tamanioPagina={int.MaxValue}");
         Metodos.Clear();
-        int pagina = 1;
-        long total;
-        do
-        {
-            var datos = await api.Get<ResultadoPaginadoDTO<MetodoPagoDTO>>(
-                $"cuenta/metodos?pagina={pagina}&tamanioPagina=10");
-            Metodos.AddRange(datos.Items.Select(Presentacion.Metodo));
-            total = datos.TotalResultados;
-            pagina++;
-        } while ((pagina - 1) * 10 < total);
+        Metodos.AddRange(datos.Items);
     }
 
     public async Task CargarCupones()
     {
+        var datos = await api.Get<ResultadoPaginadoDTO<CuponDTO>>(
+            $"cuenta/cupones?pagina=1&tamanioPagina={int.MaxValue}");
         Cupones.Clear();
-        int pagina = 1;
-        long total;
-        do
-        {
-            var datos = await api.Get<ResultadoPaginadoDTO<CuponDTO>>(
-                $"cuenta/cupones?pagina={pagina}&tamanioPagina=10");
-            foreach (var cupon in datos.Items)
-            {
-                string estado = "Usado";
-                if (cupon.Estado == "DISPONIBLE")
-                    estado = "Disponible";
-                else if (cupon.Estado == "VENCIDO")
-                    estado = "Vencido";
-                Cupones.Add(new Cupon
-                {
-                    Id = cupon.Id,
-                    Porcentaje = cupon.Porcentaje,
-                    Minimo = cupon.MontoMinimo,
-                    Vencimiento = DateOnly.FromDateTime(cupon.FechaFin),
-                    Estado = estado
-                });
-            }
-            total = datos.TotalResultados;
-            pagina++;
-        } while ((pagina - 1) * 10 < total);
+        Cupones.AddRange(datos.Items);
     }
 
-    public async Task<int> GuardarDireccion(Direccion direccion, int id = 0)
+    public async Task<int> GuardarDireccion(DatosDireccionEnvioDTO datos, int id = 0)
     {
-        var datos = new DatosDireccionEnvioDTO
-        {
-            Alias = direccion.Alias,
-            Calle = direccion.Calle,
-            Distrito = direccion.Distrito,
-            Ciudad = direccion.Ciudad,
-            Referencia = direccion.ReferenciaAdicional,
-            Predeterminada = direccion.Predeterminada
-        };
         var guardada = id == 0
             ? await api.Post<DireccionEnvioDTO>("cuenta/direcciones", datos)
             : await api.Put<DireccionEnvioDTO>($"cuenta/direcciones/{id}", datos);
@@ -108,21 +60,8 @@ public class CuentaServicio
         return guardada.Id;
     }
 
-    public async Task<int> GuardarMetodo(MetodoPago metodo, int id = 0)
+    public async Task<int> GuardarMetodo(DatosMetodoPagoDTO datos, int id = 0)
     {
-        var datos = new DatosMetodoPagoDTO
-        {
-            TarjetaBancaria = metodo.Tipo == "Tarjeta",
-            Titular = metodo.Titular,
-            Proveedor = metodo.Proveedor,
-            Alias = metodo.Alias,
-            Numero = metodo.Numero,
-            TipoTarjeta = null,
-            FechaVencimiento = metodo.Tipo == "Tarjeta" ? metodo.Vencimiento : null,
-            Predeterminado = metodo.Predeterminada
-        };
-        if (metodo.Tipo == "Tarjeta")
-            datos.TipoTarjeta = metodo.TipoTarjeta == "Crédito" ? "CREDITO" : "DEBITO";
         var guardado = id == 0
             ? await api.Post<MetodoPagoDTO>("cuenta/metodos", datos)
             : await api.Put<MetodoPagoDTO>($"cuenta/metodos/{id}", datos);

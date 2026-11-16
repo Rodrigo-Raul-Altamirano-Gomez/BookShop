@@ -160,7 +160,7 @@ class CatalogoDAOTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = OrdenLibro.class, names = "RECOMENDADOS_PRIMERO", mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(OrdenLibro.class)
     void ordenaTodoElConjuntoAntesDePaginar(OrdenLibro orden) throws Exception {
         registrarDescuento(promocion(primero, "50", FECHA.minusDays(1), FECHA.plusDays(1)));
         registrarVenta(primero, 1, "EN_ALMACEN", 2, "40.00", FECHA.minusDays(2));
@@ -481,6 +481,27 @@ class CatalogoDAOTest {
     }
 
     @Test
+    void catalogoUsaSoloElDescuentoVigenteSinDuplicarLibros() throws Exception {
+        registrarDescuento(promocion(primero, "10", FECHA.minusDays(3), FECHA.minusDays(2)));
+        registrarDescuento(promocion(primero, "25", FECHA.minusDays(1), FECHA.plusDays(1)));
+        registrarDescuento(promocion(primero, "75", FECHA.plusDays(2), FECHA.plusDays(3)));
+        Descuento retirado = promocion(primero, "90", FECHA.minusDays(1), FECHA.plusDays(1));
+        registrarDescuento(retirado);
+        descuentos.eliminar(retirado.getId(), "admin");
+        TransactionContext.commit();
+        TransactionContext.close();
+
+        var pagina = libros.buscar(filtro(OrdenLibro.TITULO_ASCENDENTE, true, 1, 12), FECHA);
+        assertEquals(3, pagina.totalResultados());
+        assertEquals(List.of(1, 2, 3), ids(pagina));
+        assertEquals(new BigDecimal("75.01"), pagina.items().getFirst().precioConDescuento());
+        assertEquals(new BigDecimal("75.01"), libros.obtenerDetalle(1, 0, FECHA).libro().precioConDescuento());
+        var tarjetas = libros.listarTarjetasPorIds(List.of(1, 2, 3), FECHA);
+        assertEquals(3, tarjetas.size());
+        assertEquals(new BigDecimal("75.01"), tarjetas.getFirst().precioConDescuento());
+    }
+
+    @Test
     void solapamientoConsideraFuturosLimitesYExclusionDelPropio() throws Exception {
         Descuento descuento = promocion(primero, "25", FECHA, FECHA.plusDays(1));
         registrarDescuento(descuento);
@@ -543,11 +564,6 @@ class CatalogoDAOTest {
         // Los autores sí pueden compartir nombre; el identificador resuelve ese empate.
         ejecutar("UPDATE AUTOR SET nombre='Alfa' WHERE id=1");
         assertEquals(1, autores.obtenerMasComprada(1, dia, dia).id());
-    }
-
-    @Test
-    void ordenDeRecomendacionesNoSeUsaComoOrdenSql() {
-        assertThrows(IllegalArgumentException.class, () -> libros.buscar(filtro(OrdenLibro.RECOMENDADOS_PRIMERO, true, 1, 12), FECHA));
     }
 
     private FiltroLibroDTO filtro(OrdenLibro orden, boolean activos, int pagina, int tamanio) {
@@ -658,13 +674,13 @@ class CatalogoDAOTest {
     }
 
     @Test
-    void tarjetaConservaLibrosNoDisponiblesParaCorregirCarrito() throws Exception {
+    void lecturaConservaLibrosNoDisponiblesParaCorregirCarrito() throws Exception {
         libros.cambiarVetoDirecto(1, true, "admin");
         libros.eliminar(2, "admin");
-        assertFalse(libros.obtenerTarjeta(1, FECHA).activo());
-        assertFalse(libros.obtenerTarjeta(2, FECHA).activo());
-        assertEquals("Beta", libros.obtenerTarjeta(2, FECHA).titulo());
-        assertNull(libros.obtenerTarjeta(999, FECHA));
+        assertFalse(libros.leer(1).isActivo());
+        assertFalse(libros.leer(2).isActivo());
+        assertEquals("Beta", libros.leer(2).getTitulo());
+        assertNull(libros.leer(999));
         assertTrue(libros.listarTarjetasPorIds(List.of(1, 2), FECHA).isEmpty());
     }
 
@@ -686,12 +702,11 @@ class CatalogoDAOTest {
         assertNotNull(descuentos.obtenerVigente(1, inicio));
         assertTrue(descuentos.obtenerVigente(1, inicio).estaVigente(inicio));
         assertEquals(new BigDecimal("50.01"), libros.obtenerDetalle(1, 0, inicio).libro().precioConDescuento());
-        assertEquals(new BigDecimal("50.01"), libros.obtenerTarjeta(1, inicio).precioConDescuento());
         assertEquals(new BigDecimal("50.01"), libros.listarTarjetasPorIds(List.of(1), inicio).getFirst().precioConDescuento());
         FiltroLibroDTO filtro = new FiltroLibroDTO(null, null, null, null, null, new BigDecimal("50.01"), new BigDecimal("50.01"), true, false, OrdenLibro.PRECIO_ASCENDENTE, 1, 12);
         assertEquals(List.of(1), ids(libros.buscar(filtro, inicio)));
         assertFalse(descuentos.leer(proximo.getId()).isActivo());
-        assertEquals(new BigDecimal("100.01"), libros.obtenerTarjeta(1, inicio.minusSeconds(1)).precioConDescuento());
+        assertEquals(new BigDecimal("100.01"), libros.obtenerDetalle(1, 0, inicio.minusSeconds(1)).libro().precioConDescuento());
     }
 
     @Test
@@ -714,7 +729,6 @@ class CatalogoDAOTest {
             libros.buscar(FiltroLibroDTO.porDefecto(), FECHA);
             libros.obtenerDetalle(1, 1, FECHA);
             libros.obtenerGestion(1);
-            libros.obtenerTarjeta(1, FECHA);
             libros.listarTarjetasPorIds(List.of(1), FECHA);
             libros.listarParaRecomendaciones();
             libros.buscarIdiomas(null, true, 1, 12);
@@ -863,7 +877,7 @@ class CatalogoDAOTest {
         assertEquals(FECHA.minusDays(4), guardado.getFechaCreacion());
         TransactionContext.commit();
         TransactionContext.close();
-        assertEquals(new BigDecimal("0.00"), libros.obtenerTarjeta(1, FECHA).precioConDescuento());
+        assertEquals(new BigDecimal("0.00"), libros.obtenerDetalle(1, 0, FECHA).libro().precioConDescuento());
         assertNull(descuentos.obtenerVigente(2, FECHA));
     }
 

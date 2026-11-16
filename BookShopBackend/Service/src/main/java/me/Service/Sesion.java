@@ -41,14 +41,9 @@ public final class Sesion {
 
     public static void registrarTiempoDeUso(HttpServletRequest peticion, UsuarioBO usuarioBO) throws
         NegocioException {
+        int idUsuario = exigirIdUsuario(peticion);
         HttpSession sesion = peticion.getSession(false);
-        if (sesion == null)
-            throw new NotAuthorizedException("Se requiere iniciar sesión.", "Sesion");
-        Integer idUsuario = (Integer) sesion.getAttribute(ID_USUARIO);
         Instant inicioSesion = (Instant) sesion.getAttribute(INICIO_SESION);
-        if (idUsuario == null || inicioSesion == null) {
-            throw new NotAuthorizedException("Se requiere iniciar sesión.", "Sesion");
-        }
         Duration tiempoDeUso = Duration.between(inicioSesion, Instant.now());
         usuarioBO.cerrarSesion(idUsuario, tiempoDeUso);
     }

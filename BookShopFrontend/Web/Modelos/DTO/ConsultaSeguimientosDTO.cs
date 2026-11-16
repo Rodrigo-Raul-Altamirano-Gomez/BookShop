@@ -4,6 +4,8 @@ namespace Web.Modelos.DTO;
 
 public class ConsultaSeguimientosDTO
 {
+    [JsonProperty("nombre")]
+    public string Nombre { get; set; } = "";
     [JsonProperty("tipo")]
     public string Tipo { get; set; } = "";
 

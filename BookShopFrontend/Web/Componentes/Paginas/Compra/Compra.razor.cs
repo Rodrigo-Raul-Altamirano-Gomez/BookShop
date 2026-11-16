@@ -1,6 +1,4 @@
 using Microsoft.AspNetCore.Components;
-using Web.Servicios;
-using Web.Modelos;
 
 namespace Web.Componentes.Paginas.Compra;
 
@@ -13,27 +11,21 @@ public partial class Compra : Web.Componentes.Paginas.Cuenta.PaginaCuenta
     [Inject] protected CuentaServicio Cuenta { get; set; } = default!;
 
     private PreparacionCompraDTO? preparacion;
-    private SeleccionCompraDTO Seleccion => preparacion?.Seleccion ?? new SeleccionCompraDTO();
+    private SeleccionCompraDTO Seleccion => preparacion!.Seleccion;
     private int indiceDireccion, indiceMetodo, indiceCupon;
     private bool formularioDireccion, formularioMetodo, procesando;
     private string? errorPago;
-    private ResumenCompraDTO? Resumen => preparacion?.Resumen;
-    private decimal Productos => Resumen?.SubtotalProductos ?? 0;
-    private decimal Subtotal => Productos - (Resumen?.DescuentoLibros ?? 0);
-    private decimal DescuentoCupon => Resumen?.DescuentoCupon ?? 0;
-    private decimal CostoEnvio => Resumen?.CostoEnvio ?? 0;
-    private decimal Total => Resumen?.Total ?? 0;
-    private List<Cupon?> Cupones
+    private List<CuponDTO?> Cupones
     {
         get
         {
             // La primera opción permite comprar sin cupón.
-            var cupones = new List<Cupon?> { null };
-            cupones.AddRange(Cuenta.Cupones.Where(cupon => cupon.Estado == "Disponible"));
+            var cupones = new List<CuponDTO?> { null };
+            cupones.AddRange(Cuenta.Cupones.Where(cupon => cupon.Estado == "DISPONIBLE"));
             return cupones;
         }
     }
-    private IEnumerable<Cupon?> CuponesVisibles => Cupones.Skip(indiceCupon).Take(2);
+    private IEnumerable<CuponDTO?> CuponesVisibles => Cupones.Skip(indiceCupon).Take(2);
 
     protected override async Task CargarDatos()
     {
@@ -49,7 +41,7 @@ public partial class Compra : Web.Componentes.Paginas.Cuenta.PaginaCuenta
         this.preparacion = preparacion;
         Compras.MostrarCarrito(preparacion.Resumen);
     }
-    private async Task GuardarDireccion(Direccion direccion)
+    private async Task GuardarDireccion(DatosDireccionEnvioDTO direccion)
     {
         int id = await Cuenta.GuardarDireccion(direccion);
         formularioDireccion = false;
@@ -57,7 +49,7 @@ public partial class Compra : Web.Componentes.Paginas.Cuenta.PaginaCuenta
         await Seleccionar(id, Seleccion.IdMetodoPago, Seleccion.IdCupon);
     }
 
-    private async Task GuardarMetodo(MetodoPago metodo)
+    private async Task GuardarMetodo(DatosMetodoPagoDTO metodo)
     {
         int id = await Cuenta.GuardarMetodo(metodo);
         formularioMetodo = false;
@@ -67,8 +59,6 @@ public partial class Compra : Web.Componentes.Paginas.Cuenta.PaginaCuenta
 
     private async Task Seleccionar(int direccion, int metodo, int cupon)
     {
-        if (procesando)
-            return;
         procesando = true;
         errorPago = null;
         try
@@ -90,7 +80,7 @@ public partial class Compra : Web.Componentes.Paginas.Cuenta.PaginaCuenta
 
     private async Task Confirmar()
     {
-        if (procesando || preparacion?.PuedePagar != true)
+        if (preparacion?.PuedePagar != true)
             return;
         procesando = true;
         errorPago = null;

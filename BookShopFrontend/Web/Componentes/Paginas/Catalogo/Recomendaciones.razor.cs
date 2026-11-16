@@ -9,10 +9,7 @@ public partial class Recomendaciones : IAsyncDisposable
     [Inject] private NavigationManager Navegacion { get; set; } = default!;
     private bool personal, cargando;
     private string? tipoCargado, correoCargado, idConsulta, error;
-    private ConsultaRecomendacionesDTO consulta = new();
-    private ResultadoPaginadoDTO<TarjetaLibroDTO> resultados = new();
     private string Titulo => personal ? "Para ti" : "Más populares";
-    private int TotalPaginas => Math.Max(1, (int)((resultados.TotalResultados + 11) / 12));
 
     protected override void OnInitialized() => Sesion.Cambiado += ActualizarSesion;
 
@@ -30,8 +27,6 @@ public partial class Recomendaciones : IAsyncDisposable
     {
         cargando = true;
         error = null;
-        resultados = new();
-        consulta = new();
         correoCargado = Sesion.Usuario?.Correo;
         await Descartar();
         if (!personal || Sesion.Usuario is not null)
@@ -39,9 +34,8 @@ public partial class Recomendaciones : IAsyncDisposable
             try
             {
                 var datos = await Api.Post<RecomendacionesDTO>(
-                    personal ? "recomendaciones/para-ti" : "recomendaciones/populares", consulta);
+                    personal ? "recomendaciones/para-ti" : "recomendaciones/populares", new ConsultaRecomendacionesDTO());
                 idConsulta = datos.IdConsulta;
-                resultados = datos.Resultados;
             }
             catch (InvalidOperationException e)
             {
@@ -49,34 +43,6 @@ public partial class Recomendaciones : IAsyncDisposable
             }
         }
         cargando = false;
-    }
-
-    private async Task Consultar()
-    {
-        cargando = true;
-        error = null;
-        try
-        {
-            resultados = await Api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>(
-                $"recomendaciones/consultas/{idConsulta}", consulta);
-        }
-        catch (InvalidOperationException e)
-        {
-            error = e.Message;
-        }
-        cargando = false;
-    }
-
-    private async Task Ordenar()
-    {
-        consulta.Pagina = 1;
-        await Consultar();
-    }
-
-    private async Task CambiarPagina(int pagina)
-    {
-        consulta.Pagina = pagina;
-        await Consultar();
     }
 
     private async void ActualizarSesion()

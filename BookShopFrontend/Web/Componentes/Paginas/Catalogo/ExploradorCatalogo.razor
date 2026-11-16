@@ -145,19 +145,22 @@
                 <span>@totalResultados libros</span>
             </div>
 
-            <label class="sort-label d-flex align-items-center gap-2">
-                Ordenar por:
-                <select class="form-select" aria-label="Ordenar libros" disabled="@cargando" @bind="vista.Orden" @bind:after="ActualizarResultados">
-                    @foreach (var order in OpcionesOrden)
-                    {
-                        <option value="@order.Key">@order.Value</option>
-                    }
-                </select>
-            </label>
+            @if (!OrdenFijo)
+            {
+                <label class="sort-label d-flex align-items-center gap-2">
+                    Ordenar por:
+                    <select class="form-select" aria-label="Ordenar libros" disabled="@cargando" @bind="vista.Orden" @bind:after="ActualizarResultados">
+                        @foreach (var order in OpcionesOrden)
+                        {
+                            <option value="@order.Key">@order.Value</option>
+                        }
+                    </select>
+                </label>
+            }
         </div>
-        @if (!string.IsNullOrWhiteSpace(Busqueda))
+        @if (!string.IsNullOrWhiteSpace(vista.Busqueda))
         {
-            <p class="search-context">Resultados para “@Busqueda”</p>
+            <p class="search-context">Resultados para “@vista.Busqueda”</p>
         }
         <Cargando EnCurso="@cargando" Error="@errorCarga" AlReintentar="Consultar">
             @if (totalResultados == 0)

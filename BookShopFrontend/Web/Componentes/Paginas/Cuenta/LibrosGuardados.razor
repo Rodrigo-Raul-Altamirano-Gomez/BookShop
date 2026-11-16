@@ -40,11 +40,25 @@
                 Favoritos
             </button>
         </div>
-        <form class="input-group my-3" @onsubmit="Buscar" @onsubmit:preventDefault>
-            <input class="form-control" aria-label="Buscar en esta lista por título" @bind="TextoBusqueda" />
-            <button class="btn btn-primary" type="submit">Buscar</button>
-        </form>
-        <ExploradorCatalogo Titulo="Deseados y favoritos" Favoritos="PestanaFavoritos" Busqueda="Busqueda" />
+        <ExploradorCatalogo Titulo="Deseados y favoritos" Favoritos="PestanaFavoritos" />
     }
 </div>
 </Cargando>
+
+@code {
+    private const string ClavePestana = "libros-guardados:pestana-favoritos";
+    private bool PestanaFavoritos { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        if (Sesion.EstadoVistas.TryGetValue(ClavePestana, out var pestana) && pestana is bool favoritos)
+            PestanaFavoritos = favoritos;
+    }
+
+    private void MostrarLista(bool favoritos)
+    {
+        PestanaFavoritos = favoritos;
+        Sesion.EstadoVistas[ClavePestana] = favoritos;
+    }
+}

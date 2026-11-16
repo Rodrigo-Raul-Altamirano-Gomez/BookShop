@@ -51,10 +51,10 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
 
     @Override
     public ResultadoPaginadoDTO<TarjetaReferenciaDTO> listarPorUsuario(int idUsuario, TipoSeguimiento tipo,
-        OrdenReferencia orden, int pagina, int tamanioPagina) throws SQLException {
+        OrdenReferencia orden, int pagina, int tamanioPagina, String nombre) throws SQLException {
         String condiciones = " FROM SEGUIMIENTO s JOIN " + tipo.name() + " r ON r.id = s." +
             columnaReferencia(tipo) + " WHERE s.tipo_seguimiento = ? AND s.id_usuario = ? " +
-            "AND NOT s.eliminado AND r.activo AND NOT r.eliminado";
+            "AND NOT s.eliminado AND r.activo AND NOT r.eliminado AND LOCATE(LOWER(?),LOWER(r.nombre))>0";
         String ordenSQL = orden == OrdenReferencia.MAS_RECIENTES ?
             "COALESCE(s.fecha_actualizacion, s.fecha_creacion) DESC, s.id DESC" : "r.nombre, r.id";
         List<TarjetaReferenciaDTO> tarjetas = new ArrayList<>();
@@ -63,6 +63,7 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
             try (PreparedStatement sentencia = conexion.prepareStatement("SELECT COUNT(*)" + condiciones)) {
                 sentencia.setString(1, tipo.name());
                 sentencia.setInt(2, idUsuario);
+                sentencia.setString(3, nombre);
                 try (ResultSet resultado = sentencia.executeQuery()) {
                     resultado.next();
                     total = resultado.getLong(1);
@@ -73,8 +74,9 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
             try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
                 sentencia.setString(1, tipo.name());
                 sentencia.setInt(2, idUsuario);
-                sentencia.setInt(3, tamanioPagina);
-                sentencia.setLong(4, (long) (pagina - 1) * tamanioPagina);
+                sentencia.setString(3, nombre);
+                sentencia.setInt(4, tamanioPagina);
+                sentencia.setLong(5, (long) (pagina - 1) * tamanioPagina);
                 try (ResultSet resultado = sentencia.executeQuery()) {
                     while (resultado.next()) {
                         String imagen = resultado.getString("imagen");

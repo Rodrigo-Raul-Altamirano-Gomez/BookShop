@@ -372,7 +372,7 @@ public class PedidoBOImpl implements PedidoBO {
     }
 
     private DetallePedidoDTO detalle(Pedido pedido, boolean acciones) throws SQLException, NegocioException {
-        List<ItemDTO> items = pedidoDAO.obtenerItemsDTO(pedido.getId());
+        List<ItemDTO> items = itemPedidoDAO.obtenerItemsDTO(pedido.getId());
         ResumenCompraDTO resumen = new ResumenCompraDTO(items, pedido.getSubtotalProductos(),
             pedido.getDescuentoLibros(), pedido.getCupon() == null ? 0 : pedido.getCupon().getId(),
             pedido.getPorcentajeCupon(), pedido.getDescuentoCupon(), pedido.getPorcentajeEnvio(),

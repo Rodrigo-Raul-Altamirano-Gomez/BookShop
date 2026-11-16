@@ -298,14 +298,10 @@ public class LibroDAOImpl implements LibroDAO {
     private ResultadoPaginadoDTO<TarjetaLibroDTO> consultarLibros(FiltroLibroDTO filtro, LocalDateTime fecha,
         int idUsuario, boolean favorito) throws SQLException {
         String titulo = filtro.titulo() == null ? "" : filtro.titulo().trim();
-        // En LIKE, estos caracteres deben buscarse como texto literal.
-        String textoBuscado = titulo.replace("!", "!!");
-        textoBuscado = textoBuscado.replace("%", "!%");
-        textoBuscado = textoBuscado.replace("_", "!_");
-        textoBuscado = "%" + textoBuscado + "%";
+        // Business impide que un libro tenga dos descuentos vigentes a la vez.
         String tablas = " FROM LIBRO l JOIN AUTOR a ON a.id=l.id_autor" +
-            " LEFT JOIN (SELECT id_libro,MAX(porcentaje) AS porcentaje FROM DESCUENTO WHERE eliminado=FALSE" +
-            " AND fecha_inicio<=? AND fecha_fin>=? GROUP BY id_libro) d ON d.id_libro=l.id";
+            " LEFT JOIN DESCUENTO d ON d.id_libro=l.id AND d.eliminado=FALSE" +
+            " AND d.fecha_inicio<=? AND d.fecha_fin>=?";
         if (filtro.orden() == OrdenLibro.MAS_VENDIDOS) {
             tablas += " LEFT JOIN (SELECT i.id_libro,SUM(i.cantidad) AS cantidad FROM ITEM_PEDIDO i" +
                 " JOIN PEDIDO p ON p.id=i.id_pedido WHERE i.eliminado=FALSE AND p.eliminado=FALSE" +
@@ -316,7 +312,7 @@ public class LibroDAOImpl implements LibroDAO {
         if (filtro.soloActivos())
             condiciones += " AND l.activo=TRUE";
         if (!titulo.isEmpty())
-            condiciones += " AND LOWER(l.titulo) LIKE LOWER(?) ESCAPE '!'";
+            condiciones += " AND LOCATE(LOWER(?),LOWER(l.titulo))>0";
         if (!filtro.idsAutores().isEmpty())
             condiciones += " AND l.id_autor IN (" + String.join(",",
                 Collections.nCopies(filtro.idsAutores().size(), "?")) + ")";
@@ -357,7 +353,7 @@ public class LibroDAOImpl implements LibroDAO {
                     sentencia.setTimestamp(parametro++, Timestamp.valueOf(fecha));
                 }
                 if (!titulo.isEmpty())
-                    sentencia.setString(parametro++, textoBuscado);
+                    sentencia.setString(parametro++, titulo);
                 for (Integer idAutor : filtro.idsAutores()) sentencia.setInt(parametro++, idAutor);
                 for (Integer idCategoria : filtro.idsCategorias()) sentencia.setInt(parametro++, idCategoria);
                 for (Integer idEditorial : filtro.idsEditoriales()) sentencia.setInt(parametro++, idEditorial);
@@ -408,25 +404,7 @@ public class LibroDAOImpl implements LibroDAO {
                 "l.stock_fisico DESC,l.id ASC";
             case ANIO_EDICION_DESCENDENTE ->
                 "l.anio_edicion DESC,l.id ASC";
-            case RECOMENDADOS_PRIMERO ->
-                throw new IllegalArgumentException("Business proporciona el orden de recomendaciones.");
         };
-    }
-
-    @Override
-    public TarjetaLibroDTO obtenerTarjeta(int id, LocalDateTime fecha) throws SQLException {
-        String sql = "SELECT " + COLUMNAS_TARJETA + " FROM LIBRO l JOIN AUTOR a ON a.id=l.id_autor" +
-            " LEFT JOIN (SELECT id_libro,MAX(porcentaje) AS porcentaje FROM DESCUENTO WHERE eliminado=FALSE" +
-            " AND fecha_inicio<=? AND fecha_fin>=? GROUP BY id_libro) d ON d.id_libro=l.id" + " WHERE l.id=?";
-        try (Connection conexion = DBManager.getConnection();
-            PreparedStatement sentencia = conexion.prepareStatement(sql)) {
-            sentencia.setTimestamp(1, Timestamp.valueOf(fecha));
-            sentencia.setTimestamp(2, Timestamp.valueOf(fecha));
-            sentencia.setInt(3, id);
-            try (ResultSet resultado = sentencia.executeQuery()) {
-                return resultado.next() ? mapearTarjeta(resultado) : null;
-            }
-        }
     }
 
     @Override
@@ -440,8 +418,8 @@ public class LibroDAOImpl implements LibroDAO {
             " EXISTS(SELECT 1 FROM LIBRO_GUARDADO g WHERE g.id_libro=l.id AND g.id_usuario=?" +
             " AND g.favorito=FALSE AND g.eliminado=FALSE) AS deseado" +
             " FROM LIBRO l JOIN AUTOR a ON a.id=l.id_autor" +
-            " LEFT JOIN (SELECT id_libro,MAX(porcentaje) AS porcentaje FROM DESCUENTO WHERE eliminado=FALSE" +
-            " AND fecha_inicio<=? AND fecha_fin>=? GROUP BY id_libro) d ON d.id_libro=l.id" +
+            " LEFT JOIN DESCUENTO d ON d.id_libro=l.id AND d.eliminado=FALSE" +
+            " AND d.fecha_inicio<=? AND d.fecha_fin>=?" +
             " JOIN CATEGORIA c ON c.id=l.id_categoria JOIN EDITORIAL e ON e.id=l.id_editorial" +
             " WHERE l.id=? AND l.eliminado=FALSE";
         try (Connection conexion = DBManager.getConnection();
@@ -516,20 +494,14 @@ public class LibroDAOImpl implements LibroDAO {
     public ResultadoPaginadoDTO<String> buscarIdiomas(String nombre, boolean soloActivos, int pagina, int
         tamanioPagina) throws SQLException {
         String texto = nombre == null ? "" : nombre.strip();
-        // En LIKE, estos caracteres deben buscarse como texto literal.
-        String textoBuscado = texto.replace("!", "!!");
-        textoBuscado = textoBuscado.replace("%", "!%");
-        textoBuscado = textoBuscado.replace("_", "!_");
-        textoBuscado = "%" + textoBuscado + "%";
         String condiciones = " WHERE eliminado=FALSE" + (soloActivos ? " AND activo=TRUE" : "") +
-            (texto.isEmpty() ? "" : " AND LOWER(idioma) LIKE LOWER(?) ESCAPE '!'");
+            " AND LOCATE(LOWER(?),LOWER(idioma))>0";
         List<String> items = new ArrayList<>();
         long total;
         try (Connection conexion = DBManager.getConnection()) {
             try (PreparedStatement contar =
                 conexion.prepareStatement("SELECT COUNT(DISTINCT idioma) FROM LIBRO" + condiciones)) {
-                if (!texto.isEmpty())
-                    contar.setString(1, textoBuscado);
+                contar.setString(1, texto);
                 try (ResultSet resultado = contar.executeQuery()) {
                     resultado.next();
                     total = resultado.getLong(1);
@@ -538,11 +510,9 @@ public class LibroDAOImpl implements LibroDAO {
             String sql = "SELECT DISTINCT idioma FROM LIBRO" + condiciones +
                 " ORDER BY idioma ASC LIMIT ? OFFSET ?";
             try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
-                int parametro = 1;
-                if (!texto.isEmpty())
-                    sentencia.setString(parametro++, textoBuscado);
-                sentencia.setInt(parametro++, tamanioPagina);
-                sentencia.setLong(parametro, (long) (pagina - 1) * tamanioPagina);
+                sentencia.setString(1, texto);
+                sentencia.setInt(2, tamanioPagina);
+                sentencia.setLong(3, (long) (pagina - 1) * tamanioPagina);
                 try (ResultSet resultado = sentencia.executeQuery()) {
                     while (resultado.next()) items.add(resultado.getString("idioma"));
                 }
@@ -572,10 +542,9 @@ public class LibroDAOImpl implements LibroDAO {
         }
         if (unicos.isEmpty())
             return List.of();
-        String columnas = COLUMNAS_TARJETA;
-        String sql = "SELECT " + columnas + " FROM LIBRO l JOIN AUTOR a ON a.id=l.id_autor" +
-            " LEFT JOIN (SELECT id_libro,MAX(porcentaje) AS porcentaje FROM DESCUENTO WHERE eliminado=FALSE" +
-            " AND fecha_inicio<=? AND fecha_fin>=? GROUP BY id_libro) d ON d.id_libro=l.id" +
+        String sql = "SELECT " + COLUMNAS_TARJETA + " FROM LIBRO l JOIN AUTOR a ON a.id=l.id_autor" +
+            " LEFT JOIN DESCUENTO d ON d.id_libro=l.id AND d.eliminado=FALSE" +
+            " AND d.fecha_inicio<=? AND d.fecha_fin>=?" +
             " WHERE l.activo=TRUE AND l.id IN (" + String.join(",", Collections.nCopies(unicos.size(), "?")) + ")";
         Map<Integer, TarjetaLibroDTO> tarjetas = new LinkedHashMap<>();
         try (Connection conexion = DBManager.getConnection();

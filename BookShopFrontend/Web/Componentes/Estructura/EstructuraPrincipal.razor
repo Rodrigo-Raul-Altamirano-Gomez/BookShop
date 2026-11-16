@@ -12,10 +12,10 @@
             </span>
             <input
                 class="form-control border-start-0 border-end-0"
-                @bind="textoBusqueda"
+                @bind="Sesion.TextoBusqueda"
                 @bind:event="oninput"
-                placeholder="Buscar por título"
-                aria-label="Buscar libros por título"
+                placeholder="@Sesion.IndicacionBusqueda"
+                aria-label="@Sesion.IndicacionBusqueda"
                 />
             <button class="btn btn-outline-secondary border-start-0" type="submit" aria-label="Buscar">
                 <Icono Nombre="arrow" />

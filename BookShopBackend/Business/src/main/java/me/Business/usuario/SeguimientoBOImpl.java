@@ -118,7 +118,7 @@ public class SeguimientoBOImpl implements SeguimientoBO {
             throw new ValidacionException("pagina", "La página y su tamaño deben ser positivos.");
         try {
             return seguimientoDAO.listarPorUsuario(idActor, consulta.tipo(), consulta.orden(),
-                consulta.pagina(), consulta.tamanioPagina());
+                consulta.pagina(), consulta.tamanioPagina(), consulta.nombre() == null ? "" : consulta.nombre().strip());
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudieron consultar los seguimientos.", e);
         }

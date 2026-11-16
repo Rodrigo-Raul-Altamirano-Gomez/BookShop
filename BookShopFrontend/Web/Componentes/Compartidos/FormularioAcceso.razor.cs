@@ -1,6 +1,4 @@
 using Microsoft.AspNetCore.Components;
-using Web.Servicios;
-using Web.Modelos;
 
 namespace Web.Componentes.Compartidos;
 
@@ -37,8 +35,6 @@ public partial class FormularioAcceso
 
     private async Task Enviar()
     {
-        if (enviando)
-            return;
         enviando = true;
         try
         {
@@ -76,7 +72,6 @@ public partial class FormularioAcceso
             }
             Sesion.MostrarPerfil(await Api.Get<PerfilUsuarioDTO>("cuenta"), acceso.Rol == "ADMIN");
             Compras.MostrarCarrito(await Api.Get<ResumenCompraDTO>("carrito"));
-            Sesion.Notificar();
             await AlCerrar.InvokeAsync();
         }
         catch (InvalidOperationException e)

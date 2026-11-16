@@ -1,6 +1,7 @@
 package me.Business.recomendacion;
 
 import me.Model.dto.catalogo.RecomendacionesDTO;
+import me.Model.dto.catalogo.FiltroLibroDTO;
 import java.sql.SQLException;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import me.Business.catalogo.LibroBOImpl;
 import me.Business.exceptions.ConflictoException;
 import me.Business.exceptions.NegocioException;
 import me.Business.exceptions.PersistenciaException;
@@ -158,18 +160,32 @@ public class RecomendacionBOImpl implements RecomendacionBO {
     }
 
     @Override
-    public synchronized ResultadoPaginadoDTO<TarjetaLibroDTO> consultar(int idActor, String idConsulta,
-        ConsultaRecomendacionesDTO consulta) throws NegocioException {
-        validarConsulta(consulta);
+    public synchronized ResultadoPaginadoDTO<TarjetaLibroDTO> filtrar(int idActor, String idConsulta,
+        FiltroLibroDTO filtro) throws NegocioException {
         ConsultaGuardada conjunto = consultas.get(idConsulta);
         if (conjunto == null)
             throw new RecursoNoEncontradoException("Vuelve a abrir las recomendaciones.");
         if (conjunto.propietario() != 0 && conjunto.propietario() != idActor)
             throw new AccesoDenegadoException("Las recomendaciones pertenecen a otra cuenta.");
+        filtro = LibroBOImpl.validarFiltro(filtro);
         try {
-            return consultarPagina(conjunto, consulta);
+            // El catálogo aplica los criterios; el conjunto guardado conserva su orden.
+            var completo = new FiltroLibroDTO(filtro.titulo(), filtro.idsCategorias(),
+                filtro.idsAutores(), filtro.idsEditoriales(), filtro.idiomas(), filtro.precioMinimo(),
+                filtro.precioMaximo(), true, false, OrdenLibro.MAS_RECIENTES, 1, Integer.MAX_VALUE);
+            Map<Integer, TarjetaLibroDTO> disponibles = new HashMap<>();
+            for (TarjetaLibroDTO libro : libroDAO.buscar(completo, LocalDateTime.now(reloj)).items())
+                disponibles.put(libro.id(), libro);
+            List<TarjetaLibroDTO> resultados = new ArrayList<>();
+            for (int id : conjunto.ids()) {
+                if (disponibles.containsKey(id)) resultados.add(disponibles.get(id));
+            }
+            int inicio = Math.min((filtro.pagina() - 1) * filtro.tamanioPagina(), resultados.size());
+            int fin = Math.min(inicio + filtro.tamanioPagina(), resultados.size());
+            return new ResultadoPaginadoDTO<>(resultados.subList(inicio, fin), resultados.size(),
+                filtro.pagina(), filtro.tamanioPagina());
         } catch (SQLException e) {
-            throw new PersistenciaException("No se pudo consultar la página de recomendaciones.", e);
+            throw new PersistenciaException("No se pudieron filtrar las recomendaciones.", e);
         }
     }
 
@@ -185,64 +201,17 @@ public class RecomendacionBOImpl implements RecomendacionBO {
 
     private ResultadoPaginadoDTO<TarjetaLibroDTO> consultarPagina(ConsultaGuardada conjunto,
         ConsultaRecomendacionesDTO consulta) throws SQLException {
-        LocalDateTime fecha = LocalDateTime.now(reloj);
-        Map<Integer, TarjetaLibroDTO> tarjetasPorId = new HashMap<>();
-        for (TarjetaLibroDTO tarjeta : libroDAO.listarTarjetasPorIds(conjunto.ids, fecha))
-            tarjetasPorId.put(tarjeta.id(), tarjeta);
-        Map<Integer, Libro> atributos = new HashMap<>();
-        for (Libro libro : libroDAO.listarParaRecomendaciones()) {
-            atributos.put(libro.getId(), libro);
-        }
-        // Refresca atributos del conjunto original; no repite el algoritmo ni incorpora otros libros.
-        List<Integer> ids = new ArrayList<>();
-        for (Integer id : conjunto.ids) {
-            if (tarjetasPorId.containsKey(id) && atributos.containsKey(id))
-                ids.add(id);
-        }
-        // sort conserva el orden anterior cuando dos libros empatan.
-        ids.sort((primero, segundo) -> {
-            Libro libroPrimero = atributos.get(primero);
-            Libro libroSegundo = atributos.get(segundo);
-            switch(consulta.orden()) {
-                case MAS_RECIENTES:
-                    return libroSegundo.getFechaCreacion().compareTo(libroPrimero.getFechaCreacion());
-                case PRECIO_ASCENDENTE:
-                    return tarjetasPorId.get(primero).precioConDescuento().compareTo(tarjetasPorId.get(
-                        segundo).precioConDescuento());
-                case PRECIO_DESCENDENTE:
-                    return tarjetasPorId.get(segundo).precioConDescuento().compareTo(tarjetasPorId.get(
-                        primero).precioConDescuento());
-                case TITULO_ASCENDENTE:
-                    return tarjetasPorId.get(primero).titulo().compareToIgnoreCase(tarjetasPorId.get(segundo).titulo());
-                case PAGINAS_ASCENDENTE:
-                    return Integer.compare(libroPrimero.getNumeroPaginas(), libroSegundo.getNumeroPaginas());
-                case PAGINAS_DESCENDENTE:
-                    return Integer.compare(libroSegundo.getNumeroPaginas(), libroPrimero.getNumeroPaginas());
-                case STOCK_DESCENDENTE:
-                    return Integer.compare(libroSegundo.getStockFisico(), libroPrimero.getStockFisico());
-                case ANIO_EDICION_DESCENDENTE:
-                    return Integer.compare(libroSegundo.getAnioEdicion(), libroPrimero.getAnioEdicion());
-                default:
-                    return 0;
-            }
-        });
-        int inicio = (consulta.pagina() - 1) * consulta.tamanioPagina();
-        if (inicio > ids.size())
-            inicio = ids.size();
-        int fin = inicio + consulta.tamanioPagina();
-        if (fin > ids.size())
-            fin = ids.size();
-        List<TarjetaLibroDTO> tarjetas = new ArrayList<>();
-        for (int i = inicio; i < fin; i++)
-            tarjetas.add(tarjetasPorId.get(ids.get(i)));
-        return new ResultadoPaginadoDTO<>(tarjetas, ids.size(), consulta.pagina(), consulta.tamanioPagina());
+        // El DAO devuelve las tarjetas disponibles en el orden de los identificadores recibidos.
+        List<TarjetaLibroDTO> tarjetas = libroDAO.listarTarjetasPorIds(conjunto.ids, LocalDateTime.now(reloj));
+        int inicio = Math.min((consulta.pagina() - 1) * consulta.tamanioPagina(), tarjetas.size());
+        int fin = Math.min(inicio + consulta.tamanioPagina(), tarjetas.size());
+        return new ResultadoPaginadoDTO<>(tarjetas.subList(inicio, fin), tarjetas.size(),
+            consulta.pagina(), consulta.tamanioPagina());
     }
 
     private void validarConsulta(ConsultaRecomendacionesDTO consulta) throws ValidacionException {
-        if (consulta == null || consulta.orden() == null)
-            throw new ValidacionException("consulta", "Selecciona un orden de recomendaciones.");
-        if (consulta.orden() == OrdenLibro.MAS_VENDIDOS)
-            throw new ValidacionException("orden", "Más vendidos corresponde al catálogo.");
+        if (consulta == null)
+            throw new ValidacionException("consulta", "Indica la página de recomendaciones.");
         if (consulta.pagina() < 1 || consulta.tamanioPagina() < 1)
             throw new ValidacionException("pagina", "La pagina y su tamaño deben ser positivos.");
     }

@@ -122,36 +122,27 @@ public class AutorDAOImpl implements AutorDAO {
     @Override
     public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscar(FiltroReferenciaDTO filtro) throws SQLException {
         String nombre = filtro.nombre() == null ? "" : filtro.nombre().strip();
-        // En LIKE, estos caracteres deben buscarse como texto literal.
-        String textoBuscado = nombre.replace("!", "!!");
-        textoBuscado = textoBuscado.replace("%", "!%");
-        textoBuscado = textoBuscado.replace("_", "!_");
-        textoBuscado = "%" + textoBuscado + "%";
         String condiciones = " WHERE eliminado=FALSE" + (filtro.soloActivos() ? " AND activo=TRUE" : "") +
-            (nombre.isEmpty() ? "" : " AND LOWER(nombre) LIKE LOWER(?) ESCAPE '!'");
+            " AND LOCATE(LOWER(?),LOWER(nombre))>0";
         String orden = filtro.orden() == OrdenReferencia.MAS_RECIENTES ? "fecha_creacion DESC,id DESC" :
             "nombre ASC,id ASC";
-        String columnas = "id,nombre,imagen";
-        String sql = "SELECT " + columnas + " FROM AUTOR" + condiciones + " ORDER BY " + orden +
+        String sql = "SELECT id,nombre,imagen FROM AUTOR" + condiciones + " ORDER BY " + orden +
             " LIMIT ? OFFSET ?";
         List<TarjetaReferenciaDTO> items = new ArrayList<>();
         long total;
         try (Connection conexion = DBManager.getConnection()) {
             try (PreparedStatement contar = conexion.prepareStatement("SELECT COUNT(*) FROM AUTOR" +
                 condiciones)) {
-                if (!nombre.isEmpty())
-                    contar.setString(1, textoBuscado);
+                contar.setString(1, nombre);
                 try (ResultSet resultado = contar.executeQuery()) {
                     resultado.next();
                     total = resultado.getLong(1);
                 }
             }
             try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
-                int parametro = 1;
-                if (!nombre.isEmpty())
-                    sentencia.setString(parametro++, textoBuscado);
-                sentencia.setInt(parametro++, filtro.tamanioPagina());
-                sentencia.setLong(parametro, (long) (filtro.pagina() - 1) * filtro.tamanioPagina());
+                sentencia.setString(1, nombre);
+                sentencia.setInt(2, filtro.tamanioPagina());
+                sentencia.setLong(3, (long) (filtro.pagina() - 1) * filtro.tamanioPagina());
                 try (ResultSet resultado = sentencia.executeQuery()) {
                     while (resultado.next()) {
                         String imagen = resultado.getString("imagen");

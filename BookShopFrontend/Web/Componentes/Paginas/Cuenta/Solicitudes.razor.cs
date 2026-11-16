@@ -7,7 +7,7 @@ public partial class Solicitudes
     [Inject] private HttpClientUtils Api { get; set; } = default!;
     private FiltroSolicitudDTO consulta = new();
     private ResultadoPaginadoDTO<ResumenSolicitudDTO> resultado = new();
-    private ResumenSolicitudDTO? seleccionada;
+    private ResumenSolicitudDTO? seleccionada => devolucion?.Solicitud ?? reporte?.Solicitud;
     private DetalleDevolucionDTO? devolucion;
     private DetalleReporteResenaDTO? reporte;
     private DetallePedidoDTO? pedidoReferencia;
@@ -72,12 +72,10 @@ public partial class Solicitudes
             if (solicitud.Tipo == "DEVOLUCION")
             {
                 devolucion = await Api.Get<DetalleDevolucionDTO>($"solicitudes/devoluciones/{solicitud.Id}");
-                seleccionada = devolucion.Solicitud;
             }
             else
             {
                 reporte = await Api.Get<DetalleReporteResenaDTO>($"solicitudes/reportes/{solicitud.Id}");
-                seleccionada = reporte.Solicitud;
             }
             errorOperacion = null;
         }
@@ -96,7 +94,6 @@ public partial class Solicitudes
 
     private void CerrarDetalle()
     {
-        seleccionada = null;
         devolucion = null;
         reporte = null;
         pedidoReferencia = null;

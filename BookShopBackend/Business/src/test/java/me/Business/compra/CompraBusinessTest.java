@@ -140,7 +140,7 @@ class CompraBusinessTest {
         }).when(pedidos).insertar(any());
         when(pedidos.leer(20)).thenAnswer(inv -> registrado.get());
         when(pedidos.actualizarEstado(any(), any())).thenReturn(true);
-        when(pedidos.obtenerItemsDTO(20)).thenAnswer(inv -> registrado.get().getItems().stream().map(item -> new ItemDTO(item.getLibro().getId(), libro.getTitulo(), null, item.getCantidad(), item.getPrecioBase(), item.getPrecioUnitario(), item.getPorcentajeDescuento(), item.getSubTotal(), null, null)).toList());
+        when(items.obtenerItemsDTO(20)).thenAnswer(inv -> registrado.get().getItems().stream().map(item -> new ItemDTO(item.getLibro().getId(), libro.getTitulo(), null, item.getCantidad(), item.getPrecioBase(), item.getPrecioUnitario(), item.getPorcentajeDescuento(), item.getSubTotal(), null, null)).toList());
         carrito = new CarritoBOImpl(libros, descuentos, reloj, () -> parametros);
         negocio = new PedidoBOImpl(pedidos, items, libros, usuarios, direcciones, metodos, cupones, solicitudes, carrito, reloj, () -> azar.get(), () -> parametros);
     }

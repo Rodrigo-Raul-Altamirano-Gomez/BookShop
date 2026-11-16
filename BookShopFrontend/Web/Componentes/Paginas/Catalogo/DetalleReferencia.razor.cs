@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Components;
-using Web.Servicios;
 using Web.Modelos;
 
 namespace Web.Componentes.Paginas.Catalogo;
@@ -51,7 +50,9 @@ public partial class DetalleReferencia : IDisposable
     private string? correoCargado;
 
     protected override void OnInitialized() => Sesion.Cambiado += ActualizarVista;
-    protected override async Task OnParametersSetAsync()
+    protected override Task OnParametersSetAsync() => CargarReferencia();
+
+    private async Task CargarReferencia()
     {
         correoCargado = Sesion.Usuario?.Correo;
         cargando = true;
@@ -76,14 +77,13 @@ public partial class DetalleReferencia : IDisposable
         await InvokeAsync(async () =>
         {
             if (correoCargado != Sesion.Usuario?.Correo)
-                await OnParametersSetAsync();
+                await CargarReferencia();
             StateHasChanged();
         });
     }
     public void Dispose() => Sesion.Cambiado -= ActualizarVista;
     private async Task AlternarSeguimiento()
     {
-        if (procesando) return;
         if (!Sesion.RequerirAcceso())
             return;
         procesando = true;

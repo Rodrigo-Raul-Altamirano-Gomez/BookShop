@@ -76,7 +76,7 @@ public class DireccionEnvioBOImpl implements DireccionEnvioBO {
             Usuario actor = usuarioDAO.leer(idActor);
 
             DireccionEnvio direccion = direccionEnvioDAO.leer(idDireccion);
-            comprobarPropiedad(direccion, actor);
+            comprobarPropiedad(direccion, idActor);
             direccion.setAlias(datos.alias());
             direccion.setCalle(datos.calle());
             direccion.setDistrito(datos.distrito());
@@ -114,9 +114,8 @@ public class DireccionEnvioBOImpl implements DireccionEnvioBO {
     @Override
     public DireccionEnvioDTO consultar(int idActor, int idDireccion) throws NegocioException {
         try {
-            Usuario actor = usuarioDAO.leer(idActor);
             DireccionEnvio direccion = direccionEnvioDAO.leer(idDireccion);
-            comprobarPropiedad(direccion, actor);
+            comprobarPropiedad(direccion, idActor);
             return new DireccionEnvioDTO(direccion.getId(), direccion.getAlias(), direccion.getCalle(),
                 direccion.getDistrito(), direccion.getCiudad(), direccion.getReferencia(),
                 direccion.isPredeterminada());
@@ -141,7 +140,7 @@ public class DireccionEnvioBOImpl implements DireccionEnvioBO {
     public void eliminar(int idActor, int idDireccion) throws NegocioException {
         try {
             Usuario actor = usuarioDAO.leer(idActor);
-            comprobarPropiedad(direccionEnvioDAO.leer(idDireccion), actor);
+            comprobarPropiedad(direccionEnvioDAO.leer(idDireccion), idActor);
             if (!direccionEnvioDAO.eliminar(idDireccion, actor.getEmail())) {
                 throw new ConflictoException("La direccion ya se habia eliminado.");
             }
@@ -154,7 +153,7 @@ public class DireccionEnvioBOImpl implements DireccionEnvioBO {
     public void establecerPredeterminado(int idActor, int idDireccion) throws NegocioException {
         try {
             Usuario actor = usuarioDAO.leer(idActor);
-            comprobarPropiedad(direccionEnvioDAO.leer(idDireccion), actor);
+            comprobarPropiedad(direccionEnvioDAO.leer(idDireccion), idActor);
             if (!direccionEnvioDAO.establecerPredeterminado(idActor, idDireccion, actor.getEmail())) {
                 throw new ConflictoException("La direccion no puede elegirse como predeterminada.");
             }
@@ -171,11 +170,11 @@ public class DireccionEnvioBOImpl implements DireccionEnvioBO {
     }
 
 
-    private void comprobarPropiedad(DireccionEnvio direccion, Usuario actor) throws NegocioException {
+    private void comprobarPropiedad(DireccionEnvio direccion, int idActor) throws NegocioException {
         if (direccion == null || direccion.isEliminado()) {
             throw new RecursoNoEncontradoException("La direccion no existe.");
         }
-        if (direccion.getUsuario().getId() != actor.getId()) {
+        if (direccion.getUsuario().getId() != idActor) {
             throw new AccesoDenegadoException("La direccion pertenece a otro usuario.");
         }
         if (!direccion.isActivo())

@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Components;
-using Web.Servicios;
 using Web.Modelos;
 
 namespace Web.Componentes.Paginas.Catalogo;
 
-public partial class ExploradorCatalogo
+public partial class ExploradorCatalogo : IDisposable
 {
     private string? errorCarga;
 
@@ -36,6 +35,8 @@ public partial class ExploradorCatalogo
     public bool? Favoritos { get; set; }
     [Parameter]
     public bool SoloNuevos { get; set; }
+    [Parameter] public bool OrdenFijo { get; set; }
+    [Parameter] public string? IdConsulta { get; set; }
     private long totalResultados;
     private List<Libro> resultados = [];
     private bool cargando = true;
@@ -85,12 +86,12 @@ public partial class ExploradorCatalogo
         {
             var filtro = new FiltroLibroDTO
             {
-                Titulo = Busqueda,
+                Titulo = vista.Busqueda,
                 Idiomas = vista.Idiomas.ToList(),
                 PrecioMinimo = precioFiltrado ? vista.Minimo : null,
                 PrecioMaximo = precioFiltrado ? vista.Maximo : null,
                 SoloNuevos = SoloNuevos,
-                Orden = vista.Orden,
+                Orden = OrdenFijo ? OrdenInicial : vista.Orden,
                 Pagina = vista.Pagina,
                 TamanioPagina = 12
             };
@@ -116,6 +117,8 @@ public partial class ExploradorCatalogo
             if (Favoritos.HasValue)
                 ruta = "cuenta/libros-guardados/busqueda?favorito="
                     + Favoritos.Value.ToString().ToLowerInvariant();
+            if (IdConsulta is not null)
+                ruta = $"recomendaciones/consultas/{IdConsulta}/busqueda";
             var datos = await Api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>(ruta, filtro);
             resultados = datos.Items.Select(Presentacion.Libro).ToList();
             totalResultados = datos.TotalResultados;
@@ -130,7 +133,7 @@ public partial class ExploradorCatalogo
     protected override async Task OnParametersSetAsync()
     {
         await Catalogo.Inicializar();
-        var contexto = Navegacion.ToBaseRelativePath(Navegacion.Uri).Split('#')[0] + "|" + Busqueda + "|"
+        var contexto = new Uri(Navegacion.Uri).AbsolutePath + "|" + OrdenInicial + "|"
             + TipoAmbito + "|" + Titulo + "|" + Favoritos + "|" + IdAmbito;
         if (Sesion.EstadoVistas.TryGetValue(contexto, out var guardado) && guardado is VistaCatalogo almacenada)
             vista = almacenada;
@@ -139,12 +142,32 @@ public partial class ExploradorCatalogo
             vista = new VistaCatalogo { Orden = OrdenInicial };
             Sesion.EstadoVistas[contexto] = vista;
         }
+        if (vista.BusquedaUrl != Busqueda)
+        {
+            vista.Busqueda = Busqueda;
+            vista.BusquedaUrl = Busqueda;
+            vista.Pagina = 1;
+        }
+        Sesion.MostrarBusqueda(vista.Busqueda, "Buscar por título", Buscar);
         await Consultar();
+    }
+
+    private async Task Buscar(string texto)
+    {
+        vista.Busqueda = texto;
+        await InvokeAsync(async () => { await ActualizarResultados(); StateHasChanged(); });
+    }
+    public void Dispose()
+    {
+        if (Sesion.BuscarEnListado == Buscar) Sesion.BuscarEnListado = null;
     }
 
     // Conserva únicamente los controles de pantalla al volver desde un libro.
     private class VistaCatalogo
     {
+        // Permite volver del detalle sin reemplazar la búsqueda del encabezado por un q anterior de la URL.
+        public string BusquedaUrl { get; set; } = "";
+        public string Busqueda { get; set; } = "";
         public HashSet<string> Categorias { get; set; } = [];
         public HashSet<string> Autores { get; set; } = [];
         public HashSet<string> Editoriales { get; set; } = [];

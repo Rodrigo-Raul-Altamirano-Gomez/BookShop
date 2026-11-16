@@ -5,11 +5,3 @@
     margin-top:25px;
     row-gap:30px
 }
-
-.reference-search {
-    flex:1;
-    width:auto;
-    min-width:220px;
-    max-width:600px;
-    margin:0 auto;
-}

@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
-using Web.Servicios;
 
 namespace Web.Componentes.Estructura;
 
@@ -18,7 +17,6 @@ public partial class EstructuraPrincipal : IDisposable
     [Inject]
     private NavigationManager Navegacion { get; set; } = default!;
 
-    private string textoBusqueda = "";
     private bool cuentaAbierta, accesoAbierto;
     private string? aviso, informacion;
     private static readonly (string Etiqueta, string Icono, string Ruta)[] EnlacesCuenta =
@@ -34,6 +32,7 @@ public partial class EstructuraPrincipal : IDisposable
     protected override async Task OnInitializedAsync()
     {
         Sesion.Cambiado += Actualizar;
+        Sesion.BusquedaCambiada += Actualizar;
         Sesion.AccesoSolicitado += AbrirAcceso;
         Sesion.AvisoSolicitado += MostrarAviso;
         Navegacion.LocationChanged += CambioUbicacion;
@@ -43,11 +42,20 @@ public partial class EstructuraPrincipal : IDisposable
     private void Actualizar() => _ = InvokeAsync(StateHasChanged);
     private void CambioUbicacion(object? origen, LocationChangedEventArgs e)
     {
+        Sesion.BuscarEnListado = null;
+        Sesion.TextoBusqueda = "";
+        Sesion.IndicacionBusqueda = "Buscar por título";
         cuentaAbierta = false;
         Actualizar();
     }
 
-    private void Buscar() => Navegacion.NavigateTo("/catalogo?q=" + Uri.EscapeDataString(textoBusqueda));
+    private async Task Buscar()
+    {
+        if (Sesion.BuscarEnListado is not null)
+            await Sesion.BuscarEnListado(Sesion.TextoBusqueda.Trim());
+        else
+            Navegacion.NavigateTo("/catalogo?q=" + Uri.EscapeDataString(Sesion.TextoBusqueda.Trim()));
+    }
     private void AbrirCuenta()
     {
         if (Sesion.Usuario is null)
@@ -117,6 +125,7 @@ public partial class EstructuraPrincipal : IDisposable
     public void Dispose()
     {
         Sesion.Cambiado -= Actualizar;
+        Sesion.BusquedaCambiada -= Actualizar;
         Sesion.AccesoSolicitado -= AbrirAcceso;
         Sesion.AvisoSolicitado -= MostrarAviso;
         Navegacion.LocationChanged -= CambioUbicacion;

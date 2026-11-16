@@ -18,6 +18,7 @@ public partial class MisSeguimientos
         var datos = await Api.Post<ResultadoPaginadoDTO<TarjetaReferenciaDTO>>(
             "cuenta/seguimientos/busqueda", new ConsultaSeguimientosDTO
             {
+                Nombre = vista.Nombre,
                 Tipo = CuentaServicio.TipoSeguimiento(vista.Tipo),
                 Orden = vista.Orden == "reciente" ? "MAS_RECIENTES" : "NOMBRE_ASCENDENTE",
                 Pagina = vista.Pagina,
@@ -27,6 +28,19 @@ public partial class MisSeguimientos
         totalResultados = datos.TotalResultados;
     }
 
+    protected override void OnParametersSet() => MostrarBusqueda();
+
+    private void MostrarBusqueda() => Sesion.MostrarBusqueda(vista.Nombre, "Buscar " + vista.Tipo, Buscar);
+    private async Task Buscar(string texto)
+    {
+        vista.Nombre = texto;
+        await InvokeAsync(async () => { await ReiniciarPagina(); StateHasChanged(); });
+    }
+    public override void Dispose()
+    {
+        if (Sesion.BuscarEnListado == Buscar) Sesion.BuscarEnListado = null;
+        base.Dispose();
+    }
     private const string ClaveVista = "cuenta:mis-seguimientos";
     private VistaSeguimientos vista = new();
 
@@ -46,6 +60,8 @@ public partial class MisSeguimientos
     private async Task MostrarTipo(string tipo)
     {
         vista.Tipo = tipo;
+        vista.Nombre = "";
+        MostrarBusqueda();
         await ReiniciarPagina();
     }
     private async Task ReiniciarPagina()
@@ -62,6 +78,7 @@ public partial class MisSeguimientos
 
     private class VistaSeguimientos
     {
+        public string Nombre { get; set; } = "";
         public string Tipo { get; set; } = "autores";
         public string Orden { get; set; } = "nombre";
         public int Pagina { get; set; } = 1;

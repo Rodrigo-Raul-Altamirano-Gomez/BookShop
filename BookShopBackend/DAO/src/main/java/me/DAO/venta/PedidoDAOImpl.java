@@ -191,11 +191,6 @@ public class PedidoDAOImpl implements PedidoDAO {
     }
 
     @Override
-    public List<ItemDTO> obtenerItemsDTO(int idPedido) throws SQLException {
-        return new ItemPedidoDAOImpl().obtenerItemsDTO(idPedido);
-    }
-
-    @Override
     public boolean actualizarEstado(Pedido pedido, EstadoPedido estadoAnterior) throws SQLException {
         if (pedido.getEstado() == estadoAnterior)
             return false;

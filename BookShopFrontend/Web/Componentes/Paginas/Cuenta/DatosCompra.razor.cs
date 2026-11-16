@@ -1,6 +1,4 @@
 using Microsoft.AspNetCore.Components;
-using Web.Servicios;
-using Web.Modelos;
 
 namespace Web.Componentes.Paginas.Cuenta;
 
@@ -15,12 +13,11 @@ public partial class DatosCompra
         if (Sesion.Usuario is null)
             return;
         await Cuenta.CargarDatosCompra();
-        Sesion.Notificar();
     }
     private string Pestana { get; set; } = "direcciones";
     private string ModalAbierto { get; set; } = "";
-    private Direccion? DireccionEnEdicion { get; set; }
-    private MetodoPago? MetodoEnEdicion { get; set; }
+    private DireccionEnvioDTO? DireccionEnEdicion { get; set; }
+    private MetodoPagoDTO? MetodoEnEdicion { get; set; }
     private int Pagina { get; set; } = 1;
 
     private const int TamanoPagina = 10;
@@ -49,20 +46,18 @@ public partial class DatosCompra
         }
     }
     private int TotalPaginas => Math.Max(1, (int)Math.Ceiling(Cantidad / (double)TamanoPagina));
-    private IEnumerable<Direccion> DireccionesPagina => Cuenta.Direcciones.Skip((
+    private IEnumerable<DireccionEnvioDTO> DireccionesPagina => Cuenta.Direcciones.Skip((
         Pagina - 1) * TamanoPagina).Take(TamanoPagina);
-    private IEnumerable<MetodoPago> MetodosPagina => Cuenta.Metodos.Skip((Pagina - 1) * TamanoPagina).Take(
+    private IEnumerable<MetodoPagoDTO> MetodosPagina => Cuenta.Metodos.Skip((Pagina - 1) * TamanoPagina).Take(
         TamanoPagina);
-    private IEnumerable<Cupon> CuponesPagina => Cuenta.Cupones.Skip((Pagina - 1) * TamanoPagina).Take(
+    private IEnumerable<CuponDTO> CuponesPagina => Cuenta.Cupones.Skip((Pagina - 1) * TamanoPagina).Take(
         TamanoPagina);
 
-    private static string TituloMetodo(MetodoPago metodo) => metodo.Alias.Length > 0 ? metodo.Alias
-        : metodo.Tipo;
-    private static string ClaseCupon(Cupon cupon)
+    private static string ClaseCupon(CuponDTO cupon)
     {
-        if (cupon.Estado == "Disponible")
+        if (cupon.Estado == "DISPONIBLE")
             return "success";
-        if (cupon.Estado == "Vencido")
+        if (cupon.Estado == "VENCIDO")
             return "danger";
         return "neutral";
     }
@@ -81,13 +76,13 @@ public partial class DatosCompra
         ModalAbierto = Pestana == "direcciones" ? "direccion" : "metodo";
     }
 
-    private void EditarDireccion(Direccion direccion)
+    private void EditarDireccion(DireccionEnvioDTO direccion)
     {
         DireccionEnEdicion = direccion;
         ModalAbierto = "direccion";
     }
 
-    private void EditarMetodo(MetodoPago metodo)
+    private void EditarMetodo(MetodoPagoDTO metodo)
     {
         MetodoEnEdicion = metodo;
         ModalAbierto = "metodo";
@@ -100,28 +95,25 @@ public partial class DatosCompra
         MetodoEnEdicion = null;
     }
 
-    private async Task GuardarDireccion(Direccion direccion)
+    private async Task GuardarDireccion(DatosDireccionEnvioDTO direccion)
     {
         await Cuenta.GuardarDireccion(direccion, DireccionEnEdicion?.Id ?? 0);
         Cerrar();
-        Sesion.Notificar();
     }
 
-    private async Task GuardarMetodo(MetodoPago metodo)
+    private async Task GuardarMetodo(DatosMetodoPagoDTO metodo)
     {
         await Cuenta.GuardarMetodo(metodo, MetodoEnEdicion?.Id ?? 0);
         Cerrar();
-        Sesion.Notificar();
     }
 
-    private async Task EliminarDireccion(Direccion direccion)
+    private async Task EliminarDireccion(DireccionEnvioDTO direccion)
     {
         try
         {
             await Api.Delete($"cuenta/direcciones/{direccion.Id}");
             await Cuenta.CargarDirecciones();
             Pagina = Math.Min(Pagina, TotalPaginas);
-            Sesion.Notificar();
         }
         catch (InvalidOperationException e)
         {
@@ -129,14 +121,13 @@ public partial class DatosCompra
         }
     }
 
-    private async Task EliminarMetodo(MetodoPago metodo)
+    private async Task EliminarMetodo(MetodoPagoDTO metodo)
     {
         try
         {
             await Api.Delete($"cuenta/metodos/{metodo.Id}");
             await Cuenta.CargarMetodos();
             Pagina = Math.Min(Pagina, TotalPaginas);
-            Sesion.Notificar();
         }
         catch (InvalidOperationException e)
         {
@@ -144,13 +135,12 @@ public partial class DatosCompra
         }
     }
 
-    private async Task PredeterminarDireccion(Direccion direccion)
+    private async Task PredeterminarDireccion(DireccionEnvioDTO direccion)
     {
         try
         {
             await Api.Put($"cuenta/direcciones/{direccion.Id}/predeterminada");
             await Cuenta.CargarDirecciones();
-            Sesion.Notificar();
         }
         catch (InvalidOperationException e)
         {
@@ -158,13 +148,12 @@ public partial class DatosCompra
         }
     }
 
-    private async Task PredeterminarMetodo(MetodoPago metodo)
+    private async Task PredeterminarMetodo(MetodoPagoDTO metodo)
     {
         try
         {
             await Api.Put($"cuenta/metodos/{metodo.Id}/predeterminado");
             await Cuenta.CargarMetodos();
-            Sesion.Notificar();
         }
         catch (InvalidOperationException e)
         {

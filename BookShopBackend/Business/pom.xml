@@ -12,7 +12,6 @@
     <artifactId>Business</artifactId>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jasperreports.version>7.0.6</jasperreports.version>
     </properties>
 

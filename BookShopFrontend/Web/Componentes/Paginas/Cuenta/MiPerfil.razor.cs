@@ -17,7 +17,6 @@ public partial class MiPerfil
     private string TipoContrasena => MostrarContrasenas ? "text" : "password";
     private string MensajeError { get; set; } = "";
     private string ErrorImagen { get; set; } = "";
-    private bool CargandoImagen { get; set; }
 
     private void EditarPerfil()
     {
@@ -54,7 +53,6 @@ public partial class MiPerfil
 
     private async Task GuardarPerfil()
     {
-        if (procesando) return;
         procesando = true;
         try
         {
@@ -75,7 +73,6 @@ public partial class MiPerfil
 
     private async Task GuardarContrasena()
     {
-        if (procesando) return;
         procesando = true;
         try
         {
@@ -97,7 +94,6 @@ public partial class MiPerfil
 
     private async Task Desactivar()
     {
-        if (procesando) return;
         procesando = true;
         try
         {
@@ -119,10 +115,9 @@ public partial class MiPerfil
     private string urlFoto = "";
     private async Task GuardarFoto(bool quitar)
     {
-        if (Sesion.Usuario is null || procesando)
+        if (Sesion.Usuario is null)
             return;
         procesando = true;
-        CargandoImagen = true;
         ErrorImagen = "";
         try
         {
@@ -138,7 +133,6 @@ public partial class MiPerfil
         {
             ErrorImagen = e.Message;
         }
-        CargandoImagen = false;
         procesando = false;
     }
 }

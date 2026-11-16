@@ -5,10 +5,8 @@
     --ink: #172332;
     --muted: #66717e;
     --line: #dfe5e0;
-    --cream: #fafbf7;
     --soft: #eef3ec;
     --danger: #b43d3d;
-    --shadow: 0 8px 28px #17382b12;
     --bs-body-font-family: 'Segoe UI', Arial, sans-serif;
     --bs-body-font-size: .9375rem;
     --bs-body-line-height: 1.55;
@@ -215,23 +213,6 @@
     }
     .bookshop-toast {
         top: 9rem;
-    }
-}
-@media print {
-    .site-header, .site-footer, .modal-header button, .modal-footer, .toast, .comparison-dock,
-    .modal-backdrop {
-        display: none !important;
-    }
-    .bookshop-modal, .bookshop-modal .modal-dialog, .bookshop-modal .modal-content {
-        position: static;
-        width: 100%;
-        max-width: none;
-        max-height: none;
-        overflow: visible;
-        box-shadow: none;
-    }
-    .site-main {
-        display: none;
     }
 }
 
@@ -854,24 +835,8 @@ hr {
     text-align:center;
     margin:12px 0 36px;
 }
-.order-detail-heading h1 {
-    font-size:39px;
-    margin-bottom:12px;
-}
 .order-detail-heading p {
     margin:8px 0;
-}
-.success-circle {
-    width:65px;
-    height:65px;
-    background:#e5f1df;
-    color:var(--green);
-    border-radius:50%;
-    margin-bottom:19px;
-}
-.success-circle .icon {
-    width:35px;
-    height:35px;
 }
 .bookshop-status.success {
     background:#e3f1e3;

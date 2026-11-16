@@ -40,6 +40,9 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 class DatosCompraBOTest {
 
@@ -106,6 +109,22 @@ class DatosCompraBOTest {
         assertTrue(respuesta.predeterminado());
         assertTrue(guardada.isPredeterminado());
         assertEquals("**** 3456", bo.listar(1, 1, 10).items().getFirst().numeroEnmascarado());
+    }
+
+    @Test
+    void consultarDatosPropiosCompruebaElIdDelDuenoSinRecargarLaCuenta() throws Exception {
+        var metodo = bo.registrar(1, tarjeta("1234567890123456", false));
+        var direcciones = new DireccionEnvioBOImpl(new DireccionEnvioDAOImpl(), usuarios, RELOJ);
+        var direccion = direcciones.registrar(1,
+            new DatosDireccionEnvioDTO("Casa", "Calle", "Distrito", "Lima", null, false));
+        UsuarioDAOImpl cuentas = spy(usuarios);
+        var consultaMetodos = new MetodoPagoBOImpl(metodos, cuentas, RELOJ);
+        var consultaDirecciones = new DireccionEnvioBOImpl(new DireccionEnvioDAOImpl(), cuentas, RELOJ);
+        assertEquals("**** 3456", consultaMetodos.consultar(1, metodo.id()).numeroEnmascarado());
+        assertEquals("Casa", consultaDirecciones.consultar(1, direccion.id()).alias());
+        assertThrows(AccesoDenegadoException.class, () -> consultaMetodos.consultar(2, metodo.id()));
+        assertThrows(AccesoDenegadoException.class, () -> consultaDirecciones.consultar(2, direccion.id()));
+        verify(cuentas, never()).leer(anyInt());
     }
 
     @Test

@@ -13,5 +13,5 @@ public interface SeguimientoDAO {
     boolean retirar(int idUsuario, TipoSeguimiento tipo, int idReferencia, String usuario) throws SQLException;
 
     ResultadoPaginadoDTO<TarjetaReferenciaDTO> listarPorUsuario(int idUsuario, TipoSeguimiento tipo,
-        OrdenReferencia orden, int pagina, int tamanioPagina) throws SQLException;
+        OrdenReferencia orden, int pagina, int tamanioPagina, String nombre) throws SQLException;
 }

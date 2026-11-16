@@ -1,6 +1,6 @@
 package me.Model.dto.catalogo;
 
-// Catalogo excluye RECOMENDADOS_PRIMERO; recomendaciones excluyen MAS_VENDIDOS.
+// Órdenes del catálogo y las listas de libros.
 public enum OrdenLibro {
 
     MAS_RECIENTES,
@@ -11,6 +11,5 @@ public enum OrdenLibro {
     PAGINAS_ASCENDENTE,
     PAGINAS_DESCENDENTE,
     STOCK_DESCENDENTE,
-    ANIO_EDICION_DESCENDENTE,
-    RECOMENDADOS_PRIMERO
+    ANIO_EDICION_DESCENDENTE
 }

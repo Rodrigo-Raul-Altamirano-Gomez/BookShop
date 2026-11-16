@@ -1,6 +1,5 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Components;
-using Web.Servicios;
 using Web.Modelos;
 
 namespace Web.Componentes.Paginas.Catalogo;
@@ -39,7 +38,6 @@ public partial class DetalleLibro : IDisposable
     private string EstiloPromedio => $"--relleno:{(Promedio * 20).ToString(CultureInfo.InvariantCulture)}%";
     private int PaginasResenas => Math.Max(1, (int)((totalResenas + 9) / 10));
     private List<Libro> LibrosSimilares = [];
-    private DetalleLibroDTO? detalleLibro;
     private long totalResenas;
 
     private static readonly int[] Puntuaciones = [5, 4, 3, 2, 1];
@@ -47,9 +45,13 @@ public partial class DetalleLibro : IDisposable
     protected override void OnInitialized() => Sesion.Cambiado += ActualizarVista;
     protected override async Task OnParametersSetAsync()
     {
+        if (idAnterior != Id)
+            await CargarLibro();
+    }
+
+    private async Task CargarLibro()
+    {
         correoCargado = Sesion.Usuario?.Correo;
-        if (idAnterior == Id)
-            return;
         cargando = true;
         errorCarga = null;
         try
@@ -60,7 +62,6 @@ public partial class DetalleLibro : IDisposable
             resenaAReportar = null;
 
             var detalle = await Api.Get<DetalleLibroDTO>($"libros/{Id}");
-            detalleLibro = detalle;
             Libro = Presentacion.Libro(detalle);
             Favorito = detalle.Favorito;
             Deseado = detalle.Deseado;
@@ -68,7 +69,6 @@ public partial class DetalleLibro : IDisposable
             LibrosSimilares = similares.Select(Presentacion.Libro).ToList();
             await CargarResenas();
             idAnterior = Id;
-            Sesion.Notificar();
         }
         catch (InvalidOperationException e)
         {
@@ -103,8 +103,7 @@ public partial class DetalleLibro : IDisposable
         {
             if (correoCargado != Sesion.Usuario?.Correo)
             {
-                idAnterior = 0;
-                await OnParametersSetAsync();
+                await CargarLibro();
             }
             StateHasChanged();
         });
@@ -132,7 +131,6 @@ public partial class DetalleLibro : IDisposable
     private void AlternarFicha() => fichaExpandida = !fichaExpandida;
     private async Task AgregarCarrito()
     {
-        if (procesando) return;
         if (!Sesion.RequerirAcceso())
             return;
         procesando = true;
@@ -150,7 +148,6 @@ public partial class DetalleLibro : IDisposable
 
     private async Task AlternarGuardado(bool favorito)
     {
-        if (procesando) return;
         if (!Sesion.RequerirAcceso())
             return;
         procesando = true;
@@ -197,8 +194,6 @@ public partial class DetalleLibro : IDisposable
             paginaResenas = pagina;
 
             await CargarResenas();
-            idAnterior = Id;
-            Sesion.Notificar();
         }
         catch (InvalidOperationException e)
         {

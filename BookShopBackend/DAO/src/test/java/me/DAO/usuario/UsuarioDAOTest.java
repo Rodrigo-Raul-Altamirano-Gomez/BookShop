@@ -239,10 +239,10 @@ class UsuarioDAOTest {
             assertNotNull(resultado.getTimestamp("fecha_actualizacion"));
             assertFalse(resultado.getBoolean("eliminado"));
         }
-        assertEquals(1, dao.listarPorUsuario(1, TipoSeguimiento.AUTOR, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 12).totalResultados());
-        assertEquals(1, dao.listarPorUsuario(1, TipoSeguimiento.CATEGORIA, OrdenReferencia.MAS_RECIENTES, 1, 12).items().getFirst().id());
-        assertEquals(1, dao.listarPorUsuario(1, TipoSeguimiento.EDITORIAL, OrdenReferencia.MAS_RECIENTES, 1, 12).items().getFirst().id());
-        assertEquals(0, dao.listarPorUsuario(2, TipoSeguimiento.AUTOR, OrdenReferencia.MAS_RECIENTES, 1, 12).totalResultados());
+        assertEquals(1, dao.listarPorUsuario(1, TipoSeguimiento.AUTOR, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 12, "").totalResultados());
+        assertEquals(1, dao.listarPorUsuario(1, TipoSeguimiento.CATEGORIA, OrdenReferencia.MAS_RECIENTES, 1, 12, "").items().getFirst().id());
+        assertEquals(1, dao.listarPorUsuario(1, TipoSeguimiento.EDITORIAL, OrdenReferencia.MAS_RECIENTES, 1, 12, "").items().getFirst().id());
+        assertEquals(0, dao.listarPorUsuario(2, TipoSeguimiento.AUTOR, OrdenReferencia.MAS_RECIENTES, 1, 12, "").totalResultados());
     }
 
     @Test
@@ -253,12 +253,34 @@ class UsuarioDAOTest {
             statement.executeUpdate("UPDATE SEGUIMIENTO SET fecha_creacion = '2020-01-01' WHERE id_autor = 2");
         }
         dao.guardar(1, TipoSeguimiento.AUTOR, 1, "ana@test");
-        var pagina = dao.listarPorUsuario(1, TipoSeguimiento.AUTOR, OrdenReferencia.MAS_RECIENTES, 1, 1);
+        var pagina = dao.listarPorUsuario(1, TipoSeguimiento.AUTOR, OrdenReferencia.MAS_RECIENTES, 1, 1, "");
         assertEquals(2, pagina.totalResultados());
         assertEquals(1, pagina.items().getFirst().id());
-        assertEquals(2, dao.listarPorUsuario(1, TipoSeguimiento.AUTOR, OrdenReferencia.MAS_RECIENTES, 2, 1).items().getFirst().id());
+        assertEquals(2, dao.listarPorUsuario(1, TipoSeguimiento.AUTOR, OrdenReferencia.MAS_RECIENTES, 2, 1, "").items().getFirst().id());
+        var filtrada = dao.listarPorUsuario(1, TipoSeguimiento.AUTOR, OrdenReferencia.MAS_RECIENTES, 1, 1, "autor b");
+        assertEquals(1, filtrada.totalResultados());
+        assertEquals(2, filtrada.items().getFirst().id());
+        assertEquals(0, dao.listarPorUsuario(1, TipoSeguimiento.AUTOR, OrdenReferencia.MAS_RECIENTES, 1, 12, "inexistente").totalResultados());
         assertTrue(dao.retirar(1, TipoSeguimiento.AUTOR, 2, "ana@test"));
         assertFalse(dao.retirar(1, TipoSeguimiento.AUTOR, 2, "ana@test"));
+    }
+
+    @Test
+    void busquedaDeSeguimientosTrataPorcentajeYGuionBajoComoTexto() throws Exception {
+        try (var statement = conexion.createStatement()) {
+            statement.executeUpdate("UPDATE AUTOR SET nombre='Autor 10%_especial!' WHERE id=1");
+        }
+        SeguimientoDAO dao = new SeguimientoDAOImpl();
+        dao.guardar(1, TipoSeguimiento.AUTOR, 1, "ana@test");
+        dao.guardar(1, TipoSeguimiento.AUTOR, 2, "ana@test");
+        var pagina = dao.listarPorUsuario(1, TipoSeguimiento.AUTOR,
+            OrdenReferencia.NOMBRE_ASCENDENTE, 1, 12, "%_");
+        assertEquals(1, pagina.totalResultados());
+        assertEquals(1, pagina.items().getFirst().id());
+        assertEquals(1, dao.listarPorUsuario(1, TipoSeguimiento.AUTOR,
+            OrdenReferencia.NOMBRE_ASCENDENTE, 1, 12, "ESPECIAL!").totalResultados());
+        assertEquals(0, dao.listarPorUsuario(1, TipoSeguimiento.AUTOR,
+            OrdenReferencia.NOMBRE_ASCENDENTE, 1, 12, "_inexistente").totalResultados());
     }
 
     @Test

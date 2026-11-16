@@ -1,5 +1,6 @@
 -- BookShop: esquema de creacion para MySQL 8.0.16 o posterior.
 -- Las columnas generadas refuerzan restricciones; no son atributos adicionales de Model.
+-- MySQL crea los índices necesarios para las claves foráneas.
 SET NAMES utf8mb4;
 SET SESSION time_zone = '-05:00';
 -- Este archivo recrea las tablas; no es una migración de datos existentes.
@@ -77,7 +78,6 @@ CREATE TABLE DIRECCION_ENVIO (
     PRIMARY KEY (id),
     UNIQUE KEY uk_direccion_propietario (id, id_usuario),
     UNIQUE KEY uk_direccion_predeterminada (id_usuario, marca_predeterminada),
-    KEY idx_direccion_usuario (id_usuario),
     CONSTRAINT fk_direccion_usuario FOREIGN KEY (id_usuario)
         REFERENCES USUARIO (id),
     CONSTRAINT ck_direccion_datos CHECK (
@@ -115,7 +115,6 @@ CREATE TABLE AUTOR (
     fecha_actualizacion DATETIME NULL,
     eliminado BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY (id),
-    KEY idx_autor_nombre (nombre),
     CONSTRAINT ck_autor_nombre CHECK (CHAR_LENGTH(TRIM(nombre)) > 0)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -167,13 +166,6 @@ CREATE TABLE LIBRO (
     eliminado BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY (id),
     UNIQUE KEY uk_libro_isbn (isbn),
-    KEY idx_libro_categoria (id_categoria),
-    KEY idx_libro_titulo (titulo),
-    KEY idx_libro_autor (id_autor),
-    KEY idx_libro_precio (precio_base),
-    KEY idx_libro_editorial (id_editorial),
-    KEY idx_libro_idioma (idioma),
-    KEY idx_libro_creacion (fecha_creacion),
     CONSTRAINT fk_libro_editorial FOREIGN KEY (id_editorial) REFERENCES EDITORIAL (id),
     CONSTRAINT fk_libro_categoria FOREIGN KEY (id_categoria)
         REFERENCES CATEGORIA (id),
@@ -209,8 +201,6 @@ CREATE TABLE LIBRO_GUARDADO (
     eliminado BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY (id),
     UNIQUE KEY uk_libro_guardado_usuario_libro_favorito (id_usuario, id_libro, favorito),
-    KEY idx_libro_guardado_usuario_favorito (id_usuario, favorito, fecha_creacion),
-    KEY idx_libro_guardado_libro (id_libro),
     CONSTRAINT fk_libro_guardado_usuario FOREIGN KEY (id_usuario)
         REFERENCES USUARIO (id),
     CONSTRAINT fk_libro_guardado_libro FOREIGN KEY (id_libro)
@@ -236,7 +226,6 @@ CREATE TABLE RESENA (
     ) VIRTUAL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_resena_publicada (id_libro, id_usuario, marca_publicada),
-    KEY idx_resena_usuario (id_usuario),
     CONSTRAINT fk_resena_libro FOREIGN KEY (id_libro)
         REFERENCES LIBRO (id),
     CONSTRAINT fk_resena_usuario FOREIGN KEY (id_usuario)
@@ -270,7 +259,6 @@ CREATE TABLE METODO_PAGO (
     PRIMARY KEY (id),
     UNIQUE KEY uk_metodo_propietario (id, id_usuario),
     UNIQUE KEY uk_metodo_predeterminado (id_usuario, marca_predeterminado),
-    KEY idx_metodo_usuario_activo (id_usuario, activo),
     CONSTRAINT fk_metodo_usuario FOREIGN KEY (id_usuario)
         REFERENCES USUARIO (id),
     CONSTRAINT ck_metodo_datos CHECK (CHAR_LENGTH(TRIM(titular)) > 0 AND CHAR_LENGTH(TRIM(proveedor)) > 0),
@@ -298,7 +286,6 @@ CREATE TABLE DESCUENTO (
     fecha_actualizacion DATETIME NULL,
     eliminado BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY (id),
-    KEY idx_descuento_libro_vigencia (id_libro, activo, fecha_inicio, fecha_fin),
     CONSTRAINT fk_descuento_libro FOREIGN KEY (id_libro)
         REFERENCES LIBRO (id),
     CONSTRAINT ck_descuento_porcentaje CHECK (porcentaje > 0 AND porcentaje <= 100),
@@ -321,7 +308,6 @@ CREATE TABLE CUPON (
     consumido BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY (id),
     UNIQUE KEY uk_cupon_propietario (id, id_usuario),
-    KEY idx_cupon_usuario_vigencia (id_usuario, activo, fecha_inicio, fecha_fin),
     CONSTRAINT fk_cupon_usuario FOREIGN KEY (id_usuario)
         REFERENCES USUARIO (id),
     CONSTRAINT ck_cupon_porcentaje CHECK (porcentaje > 0 AND porcentaje <= 100),
@@ -366,11 +352,6 @@ CREATE TABLE PEDIDO (
     UNIQUE KEY uk_pedido_cupon_en_uso (cupon_en_uso),
     UNIQUE KEY uk_pedido_seguimiento (codigo_seguimiento),
     UNIQUE KEY uk_pedido_transaccion (identificador_transaccion),
-    KEY idx_pedido_usuario_fecha (id_usuario, fecha_pago),
-    KEY idx_pedido_direccion (id_direccion_envio, id_usuario),
-    KEY idx_pedido_metodo (id_metodo_pago, id_usuario),
-    KEY idx_pedido_cupon (id_cupon, id_usuario),
-    KEY idx_pedido_fecha (fecha_pago, estado),
     CONSTRAINT fk_pedido_usuario FOREIGN KEY (id_usuario)
         REFERENCES USUARIO (id),
     CONSTRAINT fk_pedido_direccion FOREIGN KEY (id_direccion_envio, id_usuario)
@@ -414,7 +395,6 @@ CREATE TABLE ITEM_PEDIDO (
     eliminado BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY (id),
     UNIQUE KEY uk_item_pedido_libro (id_pedido, id_libro),
-    KEY idx_item_pedido_libro (id_libro),
     CONSTRAINT fk_item_pedido FOREIGN KEY (id_pedido)
         REFERENCES PEDIDO (id),
     CONSTRAINT fk_item_pedido_libro FOREIGN KEY (id_libro)
@@ -445,10 +425,6 @@ CREATE TABLE SEGUIMIENTO (
     UNIQUE KEY uk_seguimiento_autor (id_usuario, id_autor),
     UNIQUE KEY uk_seguimiento_categoria (id_usuario, id_categoria),
     UNIQUE KEY uk_seguimiento_editorial (id_usuario, id_editorial),
-    KEY idx_seguimiento_usuario_tipo_fecha (id_usuario, tipo_seguimiento, eliminado, fecha_creacion),
-    KEY idx_seguimiento_autor_referencia (id_autor),
-    KEY idx_seguimiento_categoria_referencia (id_categoria),
-    KEY idx_seguimiento_editorial_referencia (id_editorial),
     CONSTRAINT fk_seguimiento_usuario FOREIGN KEY (id_usuario) REFERENCES USUARIO (id),
     CONSTRAINT fk_seguimiento_autor FOREIGN KEY (id_autor) REFERENCES AUTOR (id),
     CONSTRAINT fk_seguimiento_categoria FOREIGN KEY (id_categoria) REFERENCES CATEGORIA (id),
@@ -474,7 +450,6 @@ CREATE TABLE VOTO_UTIL (
     fecha_actualizacion DATETIME NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_voto_util (id_usuario, id_resena),
-    KEY idx_voto_resena (id_resena, eliminado),
     CONSTRAINT fk_voto_usuario FOREIGN KEY (id_usuario) REFERENCES USUARIO (id),
     CONSTRAINT fk_voto_resena FOREIGN KEY (id_resena) REFERENCES RESENA (id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
@@ -504,10 +479,6 @@ CREATE TABLE SOLICITUD (
     PRIMARY KEY (id),
     UNIQUE KEY uk_devolucion_pendiente (id_pedido, marca_pendiente),
     UNIQUE KEY uk_reporte_pendiente (id_usuario, id_resena, marca_pendiente),
-    KEY idx_solicitud_usuario_tipo_fecha (id_usuario, tipo_solicitud, eliminado, fecha_creacion),
-    KEY idx_solicitud_tipo_estado_fecha (tipo_solicitud, estado, eliminado, fecha_creacion),
-    KEY idx_solicitud_pedido_usuario (id_pedido, id_usuario),
-    KEY idx_solicitud_resena (id_resena),
     CONSTRAINT fk_solicitud_usuario FOREIGN KEY (id_usuario) REFERENCES USUARIO (id),
     CONSTRAINT fk_solicitud_pedido FOREIGN KEY (id_pedido, id_usuario) REFERENCES PEDIDO (id, id_usuario),
     CONSTRAINT fk_solicitud_resena FOREIGN KEY (id_resena) REFERENCES RESENA (id),

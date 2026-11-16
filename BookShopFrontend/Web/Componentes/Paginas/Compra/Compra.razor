@@ -30,6 +30,7 @@
     }
     else
     {
+        var resumen = preparacion!.Resumen;
         <div class="checkout-layout row g-4 align-items-start">
             <div class="col-12 col-xl-7">
                 <div class="selection-groups d-flex flex-column gap-4">
@@ -84,7 +85,7 @@
                                                         <br />
                                                         @direccion.Distrito, @direccion.Ciudad
                                                         <br />
-                                                        @direccion.ReferenciaAdicional
+                                                        @direccion.Referencia
                                                     </p>
                                                 </div>
                                             </button>
@@ -146,7 +147,7 @@
                                                 </span>
                                                 <div>
                                                     <h3>
-                                                        @(string.IsNullOrWhiteSpace(metodo.Alias) ? metodo.Tipo : metodo.Alias) @if (metodo.Predeterminada)
+                                                        @Presentacion.NombreMetodo(metodo) @if (metodo.Predeterminado)
                                                         {
                                                             <span class="badge badge-bookshop">
                                                                 Predeterminado
@@ -155,17 +156,17 @@
                                                     </h3>
                                                     <p>
                                                         <Icono
-                                                            Nombre="@(metodo.Tipo == "Tarjeta"
+                                                            Nombre="@(metodo.TarjetaBancaria
                                                                 ? "card" : "wallet")"
                                                             />
-                                                        @metodo.Proveedor · @(metodo.Tipo == "Tarjeta" ? metodo.TipoTarjeta : "Billetera")
+                                                        @metodo.Proveedor · @(Presentacion.TipoMetodo(metodo))
                                                         <br />
                                                         @metodo.NumeroEnmascarado
                                                         <br />
                                                         @metodo.Titular
                                                         <br />
                                                         <span class="text-body-secondary small">
-                                                            Vence @metodo.Vencimiento.ToString("dd/MM/yyyy")
+                                                            Vence @metodo.FechaVencimiento.ToString("dd/MM/yyyy")
                                                         </span>
                                                     </p>
                                                 </div>
@@ -223,9 +224,9 @@
                                                 {
                                                     <h3>@cupon.Porcentaje% de descuento</h3>
                                                     <p>
-                                                        Mínimo @Presentacion.Dinero(cupon.Minimo)
+                                                        Mínimo @Presentacion.Dinero(cupon.MontoMinimo)
                                                         <br />
-                                                        Vence @cupon.Vencimiento.ToString("dd/MM/yyyy")
+                                                        Vence @cupon.FechaFin.ToString("dd/MM/yyyy")
                                                     </p>
                                                 }
                                             </div>
@@ -261,7 +262,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var linea in Compras.Resumen!.Items)
+                                @foreach (var linea in resumen.Items)
                                 {
                                     <tr>
                                         <td>
@@ -290,28 +291,28 @@
                     <div class="summary-lines d-flex flex-column gap-2">
                         <div class="d-flex justify-content-between gap-3">
                             <span>Productos</span>
-                            <span>@Presentacion.Dinero(Productos)</span>
+                            <span>@Presentacion.Dinero(resumen.SubtotalProductos)</span>
                         </div>
                         <div class="discount d-flex justify-content-between gap-3">
                             <span>Descuentos de libros</span>
-                            <span>− @Presentacion.Dinero(Productos - Subtotal)</span>
+                            <span>− @Presentacion.Dinero(resumen.DescuentoLibros)</span>
                         </div>
                         <div class="d-flex justify-content-between gap-3">
                             <span>Subtotal</span>
-                            <span>@Presentacion.Dinero(Subtotal)</span>
+                            <span>@Presentacion.Dinero(resumen.SubtotalProductos - resumen.DescuentoLibros)</span>
                         </div>
                         <hr />
                         <div class="discount d-flex justify-content-between gap-3">
                             <span>Cupón</span>
-                            <span>− @Presentacion.Dinero(DescuentoCupon)</span>
+                            <span>− @Presentacion.Dinero(resumen.DescuentoCupon)</span>
                         </div>
                         <div class="d-flex justify-content-between gap-3">
                             <span>Envío</span>
-                            <span>@Presentacion.Dinero(CostoEnvio)</span>
+                            <span>@Presentacion.Dinero(resumen.CostoEnvio)</span>
                         </div>
                         <div class="total d-flex justify-content-between gap-3">
                             <span>Total a pagar</span>
-                            <span>@Presentacion.Dinero(Total)</span>
+                            <span>@Presentacion.Dinero(resumen.Total)</span>
                         </div>
                     </div>
                     @if (errorPago is not null)

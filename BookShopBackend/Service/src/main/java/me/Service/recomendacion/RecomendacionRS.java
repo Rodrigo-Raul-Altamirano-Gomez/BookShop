@@ -17,6 +17,7 @@ import me.Business.exceptions.NegocioException;
 import me.Model.dto.catalogo.TarjetaLibroDTO;
 import me.Model.dto.catalogo.ConsultaRecomendacionesDTO;
 import me.Model.dto.catalogo.RecomendacionesDTO;
+import me.Model.dto.catalogo.FiltroLibroDTO;
 import me.Model.dto.ResultadoPaginadoDTO;
 import me.Service.Servicios;
 import me.Service.Sesion;
@@ -52,10 +53,10 @@ public class RecomendacionRS {
     }
 
     @POST
-    @Path("consultas/{id}")
-    public ResultadoPaginadoDTO<TarjetaLibroDTO> consultar(@PathParam("id") String id,
-        ConsultaRecomendacionesDTO consulta) throws NegocioException {
-        return servicios.getRecomendacionBO().consultar(Sesion.obtenerIdUsuario(peticion), id, consulta);
+    @Path("consultas/{id}/busqueda")
+    public ResultadoPaginadoDTO<TarjetaLibroDTO> filtrar(@PathParam("id") String id,
+        FiltroLibroDTO filtro) throws NegocioException {
+        return servicios.getRecomendacionBO().filtrar(Sesion.obtenerIdUsuario(peticion), id, filtro);
     }
 
     @DELETE
