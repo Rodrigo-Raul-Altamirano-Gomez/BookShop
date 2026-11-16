@@ -78,6 +78,17 @@ Los formularios utilizan los campos obligatorios del navegador. El esquema defin
 
 La autenticación utiliza una cookie de sesión por circuito Blazor. Una recarga completa requiere iniciar sesión nuevamente. Las operaciones con sesión usan HTTPS.
 
+Los datos sensibles se protegen en `ProteccionDatos` (Business) antes de llegar a la base:
+
+| Dato | Técnica | ¿Se puede recuperar? | Formato guardado |
+|---|---|---|---|
+| Contraseña | Hash PBKDF2-SHA256 con sal aleatoria y 120 000 iteraciones | No; solo se verifica al iniciar sesión | `PBKDF2$120000$<sal>$<huella>` |
+| Tarjeta o número de billetera | Cifrado AES-GCM con una clave de 32 bytes | Sí, con la clave del servidor | `AESGCM$<nonce + cifrado>` |
+
+La sal y el nonce son aleatorios, así que el mismo dato produce un texto distinto cada vez. AES-GCM detecta si el texto cifrado fue modificado y rechaza el descifrado. La aplicación nunca devuelve el número completo: muestra solo una máscara como `**** 1111`. Como estos textos los genera Java, no pueden escribirse a mano en un script `.sql`. `me.App.DemoProteccion` muestra ambas técnicas sin base de datos.
+
+El rol de administrador se asigna a las cuentas con correo `@admin.bookshop`, y el backend lo comprueba antes de generar los reportes RF18 y RF19.
+
 Las imágenes se reciben y devuelven como texto en los DTO, por ejemplo `"portada": "https://ejemplo.com/libro.jpg"`. Registro y perfil permiten ingresar una URL HTTP/HTTPS o retirar la imagen. La BD guarda texto de hasta 2048 caracteres; las imágenes nuevas deben estar alojadas previamente.
 
 ## Conceptos del curso en el proyecto
