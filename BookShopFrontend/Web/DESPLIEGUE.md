@@ -5,15 +5,15 @@ Publicado en [BookShop](https://bookshop-demo.onrender.com), mediante un
 Esta versión consume el backend Java. Configurar `Backend__Url` con la URL HTTPS
 pública o accesible desde el servidor C#, terminada en `/bookshop/webresources/`.
 El backend debe estar desplegado y tener acceso a MySQL antes de usar la web.
-La publicación anterior de demostración no se actualiza al modificar este repositorio.
+Backend y frontend se despliegan desde la rama main del mismo repositorio BookShop.
 
-Repositorio privado: [BookShop-Web](https://github.com/Rodrigo-Raul-Altamirano-Gomez/BookShop-Web).
+Repositorio privado: [BookShop](https://github.com/Rodrigo-Raul-Altamirano-Gomez/BookShop).
 Servicio: [panel de Render](https://dashboard.render.com/web/srv-db3gso7avr4c739oakog).
 
 ## Fuente del servicio
 
-Subir el contenido de esta carpeta a la raíz de un repositorio de GitHub,
-preferiblemente privado. No subir las otras carpetas del proyecto. Los archivos
+Conservar esta carpeta dentro del repositorio BookShop,
+junto a BookShopBackend. Los archivos
 `.gitignore` y `.dockerignore` excluyen los resultados de compilación y limitan
 el contenido de la imagen a los archivos de Web.
 
@@ -24,8 +24,8 @@ Render necesita acceso a ese repositorio. Se puede crear un Blueprint usando
 | --- | --- |
 | Runtime | Docker |
 | Plan | Free |
-| Dockerfile Path | `./Dockerfile` |
-| Docker Build Context | `.` |
+| Dockerfile Path | `BookShopFrontend/Web/Dockerfile` |
+| Docker Build Context | `BookShopFrontend/Web` |
 | Health Check Path | `/salud` |
 | Variable de entorno | `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` |
 | Backend REST | `Backend__Url=https://HOST/bookshop/webresources/` |
