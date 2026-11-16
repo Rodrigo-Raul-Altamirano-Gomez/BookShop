@@ -60,6 +60,29 @@ class DatosDocumentoBOTest {
     }
 
     @Test
+    void clienteNoPuedeGenerarReportesNiConsultarDatos() throws Exception {
+        LibroDAO libros = mock(LibroDAO.class);
+        UsuarioDAO usuarios = mock(UsuarioDAO.class);
+        when(usuarios.leer(2)).thenReturn(usuario(2, Rol.CLIENTE));
+        var bo = new ReporteBOImpl(libros, usuarios, reloj);
+        var consulta = new ConsultaReporteLibrosDTO(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 31), 10);
+        assertThrows(AccesoDenegadoException.class, () -> bo.generarLibrosPDF(2, consulta));
+        assertThrows(AccesoDenegadoException.class, () -> bo.generarUsuariosPDF(2, YearMonth.of(2026, 1), null));
+        verifyNoInteractions(libros);
+        verify(usuarios, never()).listarActividadUsuarios(any(), any(), any());
+    }
+
+    @Test
+    void administradorGeneraReporteDeUsuarios() throws Exception {
+        LibroDAO libros = mock(LibroDAO.class);
+        UsuarioDAO usuarios = mock(UsuarioDAO.class);
+        when(usuarios.leer(1)).thenReturn(usuario(1, Rol.ADMIN));
+        when(usuarios.listarActividadUsuarios(any(), any(), any())).thenReturn(List.of());
+        byte[] pdf = new ReporteBOImpl(libros, usuarios, reloj).generarUsuariosPDF(1, YearMonth.of(2026, 1), null);
+        assertEquals("%PDF", new String(pdf, 0, 4));
+    }
+
+    @Test
     void comprobanteSoloPreparaIdentidadSinFotoYConsultaPropia() throws Exception {
         PedidoBO pedidos = mock(PedidoBO.class);
         UsuarioDAO usuarios = mock(UsuarioDAO.class);

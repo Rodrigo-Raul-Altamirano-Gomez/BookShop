@@ -134,9 +134,9 @@ public class LaboratorioDesdeCero {
                 new ComprobanteBOImpl().generarPDF(cliente.id(), pedido.pedido().id()));
         var reportes = new ReporteBOImpl();
         LocalDate hoy = LocalDate.now();
-        guardar(carpetaPdf, "RF18-ventas-libros.pdf", reportes.generarLibrosPDF(
+        guardar(carpetaPdf, "RF18-ventas-libros.pdf", reportes.generarLibrosPDF(admin.id(),
                 new ConsultaReporteLibrosDTO(hoy.withDayOfMonth(1), hoy, 10)));
-        guardar(carpetaPdf, "RF19-usuarios.pdf", reportes.generarUsuariosPDF(YearMonth.from(hoy), 10));
+        guardar(carpetaPdf, "RF19-usuarios.pdf", reportes.generarUsuariosPDF(admin.id(), YearMonth.from(hoy), 10));
 
         System.out.println("\n=== Listo. Puedes entrar a la web con estas cuentas ===");
         System.out.println("Administrador: " + correoAdmin + " / " + CLAVE_ADMIN + "  (Cuenta -> Reportes)");

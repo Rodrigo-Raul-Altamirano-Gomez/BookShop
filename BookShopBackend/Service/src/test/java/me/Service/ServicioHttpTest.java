@@ -145,18 +145,18 @@ class ServicioHttpTest {
     void reportesRF18YRF19ConviertenParametros() throws Exception {
         when(request.getSession(false)).thenReturn(sesion);
         atributos.put("bookshop.actor", 1);
-        when(servicios.getReporteBO().generarLibrosPDF(any())).thenReturn(new byte[] {1});
-        when(servicios.getReporteBO().generarUsuariosPDF(any(), any())).thenReturn(new byte[] {2});
+        when(servicios.getReporteBO().generarLibrosPDF(eq(1), any())).thenReturn(new byte[] {1});
+        when(servicios.getReporteBO().generarUsuariosPDF(eq(1), any(), any())).thenReturn(new byte[] {2});
         try (Response respuesta = http.target("documentos/ventas-libros").queryParam("inicio", "2026-10-01")
                 .queryParam("fin", "2026-10-31").queryParam("cantidad", 5).request("application/pdf").get()) {
             assertEquals(200, respuesta.getStatus());
-            verify(servicios.getReporteBO()).generarLibrosPDF(new ConsultaReporteLibrosDTO(
+            verify(servicios.getReporteBO()).generarLibrosPDF(1, new ConsultaReporteLibrosDTO(
                     LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 31), 5));
         }
         try (Response respuesta = http.target("documentos/usuarios").queryParam("mes", "2026-10")
                 .request("application/pdf").get()) {
             assertEquals(200, respuesta.getStatus());
-            verify(servicios.getReporteBO()).generarUsuariosPDF(YearMonth.of(2026, 10), null);
+            verify(servicios.getReporteBO()).generarUsuariosPDF(1, YearMonth.of(2026, 10), null);
         }
         try (Response respuesta = http.target("documentos/usuarios").queryParam("mes", "octubre")
                 .request("application/pdf").get()) {

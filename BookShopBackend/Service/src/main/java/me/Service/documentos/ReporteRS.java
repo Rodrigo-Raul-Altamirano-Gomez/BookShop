@@ -43,8 +43,7 @@ public class ReporteRS {
     public Response ventasLibros(@QueryParam("inicio") String inicio, @QueryParam("fin") String fin,
             @QueryParam("cantidad") Integer cantidad) throws NegocioException {
         var consulta = new ConsultaReporteLibrosDTO(fecha("inicio", inicio), fecha("fin", fin), cantidad);
-        Sesion.exigirIdUsuario(peticion);
-        byte[] pdf = servicios.getReporteBO().generarLibrosPDF(consulta);
+        byte[] pdf = servicios.getReporteBO().generarLibrosPDF(Sesion.exigirIdUsuario(peticion), consulta);
         return pdf(pdf, "reporte-ventas-libros-" + inicio + "-" + fin + ".pdf");
     }
 
@@ -59,8 +58,7 @@ public class ReporteRS {
         } catch (DateTimeParseException e) {
             throw new ValidacionException("mes", "Selecciona un mes y año válidos.");
         }
-        Sesion.exigirIdUsuario(peticion);
-        byte[] pdf = servicios.getReporteBO().generarUsuariosPDF(periodo, cantidad);
+        byte[] pdf = servicios.getReporteBO().generarUsuariosPDF(Sesion.exigirIdUsuario(peticion), periodo, cantidad);
         return pdf(pdf, "reporte-usuarios-" + mes + ".pdf");
     }
 

@@ -14,7 +14,8 @@ public interface ReporteBO {
     ReporteUsuariosDTO prepararUsuarios(YearMonth mes, Integer cantidadMaxima) throws
         NegocioException;
 
-    byte[] generarLibrosPDF(ConsultaReporteLibrosDTO consulta) throws NegocioException;
+    // Solo una cuenta administradora (correo @admin.bookshop) puede generar los PDF.
+    byte[] generarLibrosPDF(int idActor, ConsultaReporteLibrosDTO consulta) throws NegocioException;
 
-    byte[] generarUsuariosPDF(YearMonth mes, Integer cantidadMaxima) throws NegocioException;
+    byte[] generarUsuariosPDF(int idActor, YearMonth mes, Integer cantidadMaxima) throws NegocioException;
 }
