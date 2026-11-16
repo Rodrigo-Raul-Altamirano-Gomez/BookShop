@@ -7,7 +7,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import me.Business.exceptions.AccesoDenegadoException;
+import me.Business.exceptions.ProteccionDatosException;
 import me.Business.exceptions.ConflictoException;
 import me.Business.exceptions.CuentaInactivaException;
 import me.Business.exceptions.NegocioException;
@@ -30,6 +33,7 @@ import me.Model.entities.compra.TarjetaBancaria;
 import me.Model.entities.usuario.Usuario;
 
 public class MetodoPagoBOImpl implements MetodoPagoBO {
+    private static final Logger LOG = Logger.getLogger(MetodoPagoBOImpl.class.getName());
     private final MetodoPagoDAO metodoPagoDAO;
     private final UsuarioDAO usuarioDAO;
     private final Clock reloj;
@@ -268,7 +272,17 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
     }
 
     private boolean mismoNumero(MetodoPago existente, String numero, String proveedor) throws NegocioException {
-        if (!numero.equals(numeroCompleto(existente))) return false;
+        String guardado;
+        try {
+            guardado = numeroCompleto(existente);
+        } catch (ProteccionDatosException e) {
+            // Un registro ilegible (marcador sin reemplazar, otra clave o dato alterado) no debe impedir
+            // que los demás usuarios registren sus métodos; se omite de la comparación y queda en el log.
+            LOG.log(Level.WARNING, "Se omitió el método {0} al comprobar duplicados: {1}",
+                    new Object[] {existente.getId(), e.getMessage()});
+            return false;
+        }
+        if (!numero.equals(guardado)) return false;
         return existente instanceof TarjetaBancaria || existente.getProveedor().trim().equalsIgnoreCase(proveedor);
     }
 
