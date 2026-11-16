@@ -7,7 +7,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import me.Business.exceptions.AccesoDenegadoException;
+import me.Business.exceptions.ProteccionDatosException;
 import me.Business.exceptions.ConflictoException;
 import me.Business.exceptions.NegocioException;
 import me.Business.exceptions.PersistenciaException;
@@ -29,6 +32,7 @@ import me.Model.entities.usuario.Usuario;
 
 public class MetodoPagoBOImpl implements MetodoPagoBO {
 
+    private static final Logger LOG = Logger.getLogger(MetodoPagoBOImpl.class.getName());
     private final MetodoPagoDAO metodoPagoDAO;
     private final UsuarioDAO usuarioDAO;
     private final Clock reloj;
@@ -52,8 +56,8 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
             MetodoPago recuperado = null;
             List<MetodoPago> existentes = metodoPagoDAO.listarParaComprobarNumeros(validos.tarjetaBancaria());
             for (MetodoPago existente : existentes) {
-                String numeroExistente = MetodosPago.numeroCompleto(existente);
-                if (!numeroExistente.equals(validos.numero()))
+                String numeroExistente = numeroParaComparar(existente);
+                if (numeroExistente == null || !numeroExistente.equals(validos.numero()))
                     continue;
                 if (existente instanceof BilleteraDigital &&
                     !existente.getProveedor().equalsIgnoreCase(validos.proveedor()))
@@ -115,8 +119,8 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
             for (MetodoPago existente : metodoPagoDAO.listarParaComprobarNumeros(tarjeta)) {
                 if (existente.getId() == idMetodo)
                     continue;
-                String numeroExistente = MetodosPago.numeroCompleto(existente);
-                if (!numeroExistente.equals(numero))
+                String numeroExistente = numeroParaComparar(existente);
+                if (numeroExistente == null || !numeroExistente.equals(numero))
                     continue;
                 if (existente instanceof BilleteraDigital &&
                     !existente.getProveedor().equalsIgnoreCase(validos.proveedor()))
@@ -254,6 +258,18 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
             alias = null;
         return new DatosMetodoPagoDTO(datos.tarjetaBancaria(), titular, proveedor, alias, numero,
             datos.tipoTarjeta(), datos.fechaVencimiento(), datos.predeterminado());
+    }
+
+    // Un registro ilegible (marcador sin reemplazar, otra clave o dato alterado) no debe impedir que los
+    // demás usuarios registren sus métodos: se omite de la comparación de duplicados y queda en el log.
+    private static String numeroParaComparar(MetodoPago existente) throws NegocioException {
+        try {
+            return MetodosPago.numeroCompleto(existente);
+        } catch (ProteccionDatosException e) {
+            LOG.log(Level.WARNING, "Se omitió el método {0} al comprobar duplicados: {1}",
+                new Object[] {existente.getId(), e.getMessage()});
+            return null;
+        }
     }
 
     private void asignarDatos(MetodoPago metodo, DatosMetodoPagoDTO datos, String numero, LocalDate hoy)

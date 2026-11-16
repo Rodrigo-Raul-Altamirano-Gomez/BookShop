@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- RF18 - Libros ordenados por monto vendido en un período (JasperReports 7.0.6).
+     Paleta y tipografía del proyecto BookShop (wwwroot/app.css): verde #0B453A, texto #172332, gris #66717E.
+     Ábrelo en Jaspersoft Studio 7.x y pulsa Compile para generar el .jasper en esta misma carpeta. -->
+<jasperReport name="ReporteVentasLibros" language="java" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="782" leftMargin="30" rightMargin="30" topMargin="30" bottomMargin="24" whenNoDataType="AllSectionsNoDetail" uuid="312f3f49-b84e-4ba6-b5ce-1abc1e1bddad">
+	<property name="net.sf.jasperreports.export.pdf.metadata.title" value="Reporte de ventas por libro - BookShop"/>
+	<property name="net.sf.jasperreports.export.pdf.metadata.author" value="BookShop"/>
+	<property name="net.sf.jasperreports.export.pdf.metadata.subject" value="Libros ordenados por monto vendido"/>
+	<style name="Normal" default="true" forecolor="#172332" fontName="DejaVu Sans" fontSize="8.5" bold="false" italic="false" underline="false" strikeThrough="false"/>
+	<style name="Negrita" style="Normal" bold="true"/>
+	<style name="Marca" forecolor="#0B453A" fontName="DejaVu Serif" fontSize="20.0" bold="true" italic="false" underline="false" strikeThrough="false"/>
+	<style name="Subtitulo" forecolor="#0B453A" fontName="DejaVu Sans" fontSize="11.0" bold="true" italic="false" underline="false" strikeThrough="false"/>
+	<style name="Seccion" forecolor="#66717E" fontName="DejaVu Sans" fontSize="7.5" bold="true" italic="false" underline="false" strikeThrough="false"/>
+	<style name="Cabecera" mode="Opaque" forecolor="#FFFFFF" backcolor="#0B453A" fontName="DejaVu Sans" fontSize="8.5" bold="true" italic="false" underline="false" strikeThrough="false"/>
+	<style name="Bloque" mode="Opaque" forecolor="#172332" backcolor="#EEF3EC" fontName="DejaVu Sans" fontSize="9.0" bold="false" italic="false" underline="false" strikeThrough="false"/>
+	<style name="Fila" mode="Opaque" forecolor="#172332" backcolor="#FFFFFF" fontName="DejaVu Sans" fontSize="8.5" bold="false" italic="false" underline="false" strikeThrough="false">
+		<conditionalStyle backcolor="#FAFBF7">
+			<conditionExpression><![CDATA[$V{REPORT_COUNT} % 2 == 0]]></conditionExpression>
+		</conditionalStyle>
+	</style>
+	<style name="FilaNegrita" style="Fila" bold="true"/>
+	<style name="Descuento" forecolor="#B43D3D" fontName="DejaVu Sans" fontSize="9.0" bold="false" italic="false" underline="false" strikeThrough="false"/>
+	<style name="Total" forecolor="#07352D" fontName="DejaVu Sans" fontSize="11.0" bold="true" italic="false" underline="false" strikeThrough="false"/>
+	<style name="FilaTotal" mode="Opaque" forecolor="#07352D" backcolor="#EEF3EC" fontName="DejaVu Sans" fontSize="9.0" bold="true" italic="false" underline="false" strikeThrough="false"/>
+	<style name="Pie" forecolor="#66717E" fontName="DejaVu Sans" fontSize="7.5" bold="false" italic="false" underline="false" strikeThrough="false"/>
+	<parameter name="periodo" class="java.lang.String"/>
+	<parameter name="limite" class="java.lang.String"/>
+	<parameter name="cantidadResultados" class="java.lang.Integer"/>
+	<parameter name="fechaGeneracion" class="java.lang.String"/>
+	<field name="posicion" class="java.lang.Integer"/>
+	<field name="titulo" class="java.lang.String"/>
+	<field name="categoria" class="java.lang.String"/>
+	<field name="autor" class="java.lang.String"/>
+	<field name="editorial" class="java.lang.String"/>
+	<field name="cantidadVendida" class="java.lang.Long"/>
+	<field name="importeVentas" class="java.math.BigDecimal"/>
+	<variable name="totalEjemplares" calculation="Sum" class="java.lang.Long">
+		<expression><![CDATA[$F{cantidadVendida}]]></expression>
+	</variable>
+	<variable name="totalImporte" calculation="Sum" class="java.math.BigDecimal">
+		<expression><![CDATA[$F{importeVentas}]]></expression>
+	</variable>
+	<title height="78">
+		<element kind="staticText" uuid="74a3eb5a-527a-4524-b5c0-a9c1322a74c9" x="0" y="0" width="250" height="26" style="Marca">
+			<text><![CDATA[BookShop]]></text>
+		</element>
+		<element kind="staticText" uuid="09b0315a-d3a6-4c0c-8208-9bf6ed794000" x="250" y="4" width="532" height="20" hTextAlign="Right" style="Subtitulo">
+			<text><![CDATA[REPORTE DE VENTAS POR LIBRO]]></text>
+		</element>
+		<element kind="line" uuid="397ecf02-a71e-45f7-821a-75c4d9c8edf3" x="0" y="32" width="782" height="1" forecolor="#0B453A"/>
+		<element kind="textField" uuid="c34d96fd-7d0f-48cf-a47c-493ad6f6e322" x="0" y="40" width="390" height="14" style="Negrita">
+			<expression><![CDATA["Período: " + $P{periodo}]]></expression>
+		</element>
+		<element kind="textField" uuid="01c7acc9-a00a-42a6-9767-568ef774b083" x="390" y="40" width="392" height="14" hTextAlign="Right" style="Normal">
+			<expression><![CDATA["Resultados: " + $P{cantidadResultados} + "  ·  Límite: " + $P{limite}]]></expression>
+		</element>
+		<element kind="staticText" uuid="3af41fce-6c62-4655-a513-6250839834c3" x="0" y="56" width="782" height="14" style="Pie">
+			<text><![CDATA[Ordenado por monto vendido (después del descuento del libro, antes de cupón y envío). Excluye pedidos cancelados y devueltos.]]></text>
+		</element>
+	</title>
+	<columnHeader height="24">
+		<element kind="staticText" uuid="1d12bf57-db9d-43cd-84fd-b8804165e730" x="0" y="0" width="32" height="24" hTextAlign="Center" vTextAlign="Middle" style="Cabecera">
+			<text><![CDATA[N.°]]></text>
+		</element>
+		<element kind="staticText" uuid="f8af662e-895d-40cf-be92-c95e95e3ef5e" x="32" y="0" width="230" height="24" vTextAlign="Middle" style="Cabecera">
+			<text><![CDATA[Libro]]></text>
+			<box leftPadding="5"/>
+		</element>
+		<element kind="staticText" uuid="48931085-9fb5-45e8-b722-a38c19e6a342" x="262" y="0" width="115" height="24" vTextAlign="Middle" style="Cabecera">
+			<text><![CDATA[Categoría]]></text>
+			<box leftPadding="5"/>
+		</element>
+		<element kind="staticText" uuid="2ce26b0c-efca-4846-97a7-e8c1f63a6c27" x="377" y="0" width="135" height="24" vTextAlign="Middle" style="Cabecera">
+			<text><![CDATA[Autor]]></text>
+			<box leftPadding="5"/>
+		</element>
+		<element kind="staticText" uuid="821c8b4d-2bbf-488a-94be-ae23639ea459" x="512" y="0" width="120" height="24" vTextAlign="Middle" style="Cabecera">
+			<text><![CDATA[Editorial]]></text>
+			<box leftPadding="5"/>
+		</element>
+		<element kind="staticText" uuid="bf70fb84-645f-4af8-8592-ffe52412eab8" x="632" y="0" width="60" height="24" hTextAlign="Right" vTextAlign="Middle" style="Cabecera">
+			<text><![CDATA[Ejemplares]]></text>
+			<box rightPadding="5"/>
+		</element>
+		<element kind="staticText" uuid="97b1519b-bd9c-4e59-9803-999142ec5f2a" x="692" y="0" width="90" height="24" hTextAlign="Right" vTextAlign="Middle" style="Cabecera">
+			<text><![CDATA[Monto vendido]]></text>
+			<box rightPadding="5"/>
+		</element>
+	</columnHeader>
+	<detail>
+		<band height="21">
+			<element kind="textField" uuid="bbafc827-9068-4a09-b31a-77de49ec63e2" stretchType="ContainerHeight" x="0" y="0" width="32" height="20" hTextAlign="Center" vTextAlign="Middle" style="Fila">
+				<expression><![CDATA[$F{posicion}]]></expression>
+			</element>
+			<element kind="textField" uuid="b1fc59ba-3e56-4f52-834f-dfd73b662a78" textAdjust="StretchHeight" x="32" y="0" width="230" height="20" vTextAlign="Middle" style="Fila">
+				<expression><![CDATA[$F{titulo}]]></expression>
+				<box topPadding="3" leftPadding="5" bottomPadding="3"/>
+			</element>
+			<element kind="textField" uuid="fe4d395a-dda5-4ca3-967f-47f3647b8840" stretchType="ContainerHeight" x="262" y="0" width="115" height="20" vTextAlign="Middle" style="Fila">
+				<expression><![CDATA[$F{categoria}]]></expression>
+				<box leftPadding="5"/>
+			</element>
+			<element kind="textField" uuid="ce00393d-7527-4e1c-a05c-ebc283ecf75d" stretchType="ContainerHeight" x="377" y="0" width="135" height="20" vTextAlign="Middle" style="Fila">
+				<expression><![CDATA[$F{autor}]]></expression>
+				<box leftPadding="5"/>
+			</element>
+			<element kind="textField" uuid="0e4ff136-f977-448f-9d12-8dce88c0ed7b" stretchType="ContainerHeight" x="512" y="0" width="120" height="20" vTextAlign="Middle" style="Fila">
+				<expression><![CDATA[$F{editorial}]]></expression>
+				<box leftPadding="5"/>
+			</element>
+			<element kind="textField" uuid="3cc676e9-a56b-4c68-94d3-460288d7afba" stretchType="ContainerHeight" x="632" y="0" width="60" height="20" pattern="#,##0" hTextAlign="Right" vTextAlign="Middle" style="Fila">
+				<expression><![CDATA[$F{cantidadVendida}]]></expression>
+				<box rightPadding="5"/>
+			</element>
+			<element kind="textField" uuid="f3685a42-d53e-44f3-a16f-d8db7dce9c5e" stretchType="ContainerHeight" x="692" y="0" width="90" height="20" pattern="S/ #,##0.00" hTextAlign="Right" vTextAlign="Middle" style="FilaNegrita">
+				<expression><![CDATA[$F{importeVentas}]]></expression>
+				<box rightPadding="5"/>
+			</element>
+			<element kind="line" uuid="4deec9ea-8a5f-4e2a-a055-c7de01f0bb23" positionType="Float" x="0" y="20" width="782" height="1" forecolor="#DFE5E0"/>
+		</band>
+	</detail>
+	<pageFooter height="24">
+		<element kind="line" uuid="c5339663-a851-42c8-9b71-33d723b4b988" x="0" y="2" width="782" height="1" forecolor="#DFE5E0"/>
+		<element kind="textField" uuid="73c416e9-2d44-4ef5-8660-b5f9199b9761" x="0" y="8" width="592" height="14" style="Pie">
+			<expression><![CDATA["BookShop · Reporte generado el " + $P{fechaGeneracion}]]></expression>
+		</element>
+		<element kind="textField" uuid="8c17dcb6-84f8-45ab-b466-7c047b302bd6" x="592" y="8" width="140" height="14" hTextAlign="Right" style="Pie">
+			<expression><![CDATA["Página " + $V{PAGE_NUMBER} + " de"]]></expression>
+		</element>
+		<element kind="textField" uuid="3a8fe009-c88c-40b0-ae05-0ac22e5fe6c2" evaluationTime="Report" x="732" y="8" width="50" height="14" style="Pie">
+			<expression><![CDATA[" " + $V{PAGE_NUMBER}]]></expression>
+		</element>
+	</pageFooter>
+	<summary height="50">
+		<element kind="staticText" uuid="8bd8dcf7-9fa5-428d-a9e9-a375b830a9cf" x="0" y="6" width="632" height="22" vTextAlign="Middle" style="FilaTotal">
+			<text><![CDATA[TOTAL]]></text>
+			<box leftPadding="5"/>
+		</element>
+		<element kind="textField" uuid="46875d8d-3fdb-425d-b197-7eb17d583197" x="632" y="6" width="60" height="22" pattern="#,##0" hTextAlign="Right" vTextAlign="Middle" style="FilaTotal">
+			<expression><![CDATA[$V{totalEjemplares} == null ? 0L : $V{totalEjemplares}]]></expression>
+			<box rightPadding="5"/>
+		</element>
+		<element kind="textField" uuid="fad533e3-ce92-4f4f-8b10-e010ef457a35" x="692" y="6" width="90" height="22" pattern="S/ #,##0.00" hTextAlign="Right" vTextAlign="Middle" style="FilaTotal">
+			<expression><![CDATA[$V{totalImporte} == null ? java.math.BigDecimal.ZERO : $V{totalImporte}]]></expression>
+			<box rightPadding="5"/>
+		</element>
+		<element kind="staticText" uuid="6430e6a0-9ef4-4ebf-b30d-bfece8e17d15" x="0" y="32" width="782" height="14" style="Pie">
+			<printWhenExpression><![CDATA[$P{cantidadResultados} == 0]]></printWhenExpression>
+			<text><![CDATA[No se registraron ventas válidas en el período seleccionado.]]></text>
+		</element>
+	</summary>
+</jasperReport>

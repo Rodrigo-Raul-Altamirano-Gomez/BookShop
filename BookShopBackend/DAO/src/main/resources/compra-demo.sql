@@ -1,3 +1,7 @@
+-- OBSOLETO: preferir me.App.LaboratorioDesdeCero (ver LABORATORIO.md), que crea los datos con las
+-- reglas de negocio y genera hash y cifrado reales. Si este script se ejecuta sin reemplazar
+-- ${HASH} y ${CIFRADO}, el usuario no puede iniciar sesión y el pago falla con
+-- "El método tiene un formato de protección desconocido".
 -- Datos para el flujo de compra de App/Main sobre el DDL actual.
 -- Ejecutar solo en una base de desarrollo recién creada.
 -- El ejecutor reemplaza los marcadores con ProteccionDatos.hash y cifrar.

@@ -10,6 +10,7 @@ import me.Service.catalogo.LibroRS;
 import me.Service.compra.CarritoRS;
 import me.Service.compra.CuponRS;
 import me.Service.compra.PedidoRS;
+import me.Service.documentos.ReporteRS;
 import me.Service.opinion.ResenaRS;
 import me.Service.recomendacion.RecomendacionRS;
 import me.Service.usuario.DireccionEnvioRS;
@@ -26,6 +27,6 @@ public class AplicacionRest extends Application {
         return Set.of(AutorRS.class, CategoriaRS.class, EditorialRS.class, LibroRS.class,
             DireccionEnvioRS.class, MetodoPagoRS.class, LibroGuardadoRS.class, SeguimientoRS.class,
             CarritoRS.class, CuponRS.class, PedidoRS.class, ResenaRS.class, RecomendacionRS.class,
-            UsuarioRS.class, Errores.class);
+            ReporteRS.class, UsuarioRS.class, Errores.class);
     }
 }

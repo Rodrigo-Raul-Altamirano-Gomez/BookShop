@@ -13,6 +13,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jasperreports.version>7.0.6</jasperreports.version>
     </properties>
 
     <dependencies>
@@ -36,6 +37,27 @@
             <groupId>me</groupId>
             <artifactId>DBManager</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <!-- RF17, RF18 y RF19: plantillas JRXML compiladas y exportadas a PDF. -->
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports</artifactId>
+            <version>${jasperreports.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports-pdf</artifactId>
+            <version>${jasperreports.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports-jdt</artifactId>
+            <version>${jasperreports.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports-fonts</artifactId>
+            <version>${jasperreports.version}</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

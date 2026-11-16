@@ -28,12 +28,33 @@ public sealed class HttpClientUtils : IDisposable
     public Task Put(string ruta, object? datos = null) => Enviar<object>(HttpMethod.Put, ruta, datos);
     public Task Delete(string ruta) => Enviar<object>(HttpMethod.Delete, ruta);
 
+    // Descarga binaria (PDF de RF17, RF18 y RF19). Los errores llegan como JSON igual que en las demás llamadas.
+    public async Task<byte[]> GetArchivo(string ruta, string tipo = "application/pdf")
+    {
+        using var peticion = new HttpRequestMessage(HttpMethod.Get, ruta);
+        peticion.Headers.Accept.Clear();
+        peticion.Headers.Accept.ParseAdd(tipo);
+        peticion.Headers.Accept.ParseAdd("application/json");
+        using var respuesta = await Ejecutar(peticion);
+        return await respuesta.Content.ReadAsByteArrayAsync();
+    }
+
     private async Task<T> Enviar<T>(HttpMethod metodo, string ruta, object? datos = null)
     {
         using var peticion = new HttpRequestMessage(metodo, ruta);
         if (datos is not null || metodo == HttpMethod.Put)
             peticion.Content = new StringContent(
                 JsonConvert.SerializeObject(datos), Encoding.UTF8, "application/json");
+        using var respuesta = await Ejecutar(peticion);
+        if (respuesta.StatusCode == HttpStatusCode.NoContent)
+            return default!;
+        var contenido = await respuesta.Content.ReadAsStringAsync();
+        return JsonConvert.DeserializeObject<T>(contenido)!;
+    }
+
+    // Envía la petición y convierte las respuestas de error en InvalidOperationException con el mensaje del backend.
+    private async Task<HttpResponseMessage> Ejecutar(HttpRequestMessage peticion)
+    {
         HttpResponseMessage respuesta;
         try
         {
@@ -48,26 +69,21 @@ public sealed class HttpClientUtils : IDisposable
             throw new InvalidOperationException("El backend tardó demasiado en responder. "
                 + "Consulta el estado antes de repetir la operación.");
         }
+        if (respuesta.IsSuccessStatusCode)
+            return respuesta;
         using (respuesta)
         {
-            if (!respuesta.IsSuccessStatusCode)
+            var texto = await respuesta.Content.ReadAsStringAsync();
+            string mensaje = "No se pudo completar la operación.";
+            ErrorRestDTO? error = null;
+            if (respuesta.Content.Headers.ContentType?.MediaType == "application/json")
             {
-                var texto = await respuesta.Content.ReadAsStringAsync();
-                string mensaje = "No se pudo completar la operación.";
-                ErrorRestDTO? error = null;
-                if (respuesta.Content.Headers.ContentType?.MediaType == "application/json")
-                {
-                    error = JsonConvert.DeserializeObject<ErrorRestDTO>(texto);
-                    mensaje = error?.Mensaje ?? mensaje;
-                }
-                if (respuesta.StatusCode == HttpStatusCode.Unauthorized && error?.Codigo != "CredencialesInvalidas")
-                    SesionVencida?.Invoke();
-                throw new InvalidOperationException(mensaje);
+                error = JsonConvert.DeserializeObject<ErrorRestDTO>(texto);
+                mensaje = error?.Mensaje ?? mensaje;
             }
-            if (respuesta.StatusCode == HttpStatusCode.NoContent)
-                return default!;
-            var contenido = await respuesta.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<T>(contenido)!;
+            if (respuesta.StatusCode == HttpStatusCode.Unauthorized && error?.Codigo != "CredencialesInvalidas")
+                SesionVencida?.Invoke();
+            throw new InvalidOperationException(mensaje);
         }
     }
 

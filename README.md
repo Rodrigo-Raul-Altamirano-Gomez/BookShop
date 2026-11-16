@@ -4,7 +4,19 @@ Proyecto académico de una tienda de libros: backend Java 25 con servicios REST 
 
 El frontend consume la API desde el proyecto Web para los doce requisitos elegidos. Las imágenes se guardan como URLs; los archivos actuales del catálogo están en `BookShopFrontend/Web/wwwroot/images/catalogo`.
 
-El entregable abarca RF01, RF02, RF05, RF06, RF07, RF08, RF09, RF11, RF12, RF14, RF15 y RF16. Las funcionalidades fuera de este alcance muestran un aviso de pendiente.
+El entregable abarca RF01, RF02, RF05, RF06, RF07, RF08, RF09, RF11, RF12, RF14, RF15 y RF16, además de los documentos PDF RF17, RF18 y RF19. Las funcionalidades fuera de este alcance muestran un aviso de pendiente.
+
+## Documentos PDF (RF17, RF18 y RF19)
+
+Se generan con JasperReports 7.0.6 a partir de las plantillas de `BookShopBackend/Business/src/main/resources/reportes`. `GeneradorPDF` compila cada `.jrxml` la primera vez que se usa y conserva el resultado en memoria.
+
+| Requisito | Endpoint (GET, `application/pdf`) | Acceso | Pantalla |
+|---|---|---|---|
+| RF17 Comprobante de compra | `documentos/comprobantes/{idPedido}` | Dueño del pedido | Botón en la confirmación del pedido |
+| RF18 Ventas por libro | `documentos/ventas-libros?inicio=aaaa-mm-dd&fin=aaaa-mm-dd&cantidad=n` | Administrador | `/administracion/reportes` |
+| RF19 Usuarios por gasto | `documentos/usuarios?mes=aaaa-mm&cantidad=n` | Administrador | `/administracion/reportes` |
+
+`cantidad` es opcional: si se omite, el reporte no tiene límite. Web descarga el PDF con la sesión del circuito y lo entrega al navegador mediante `bookshopDescargar` (`wwwroot/ui.js`). Para cambiar el diseño, edita el `.jrxml` en Jaspersoft Studio 7.x y vuelve a copiarlo en esa carpeta. `GeneradorPDFTest` deja ejemplos en `Business/target/reportes-prueba`.
 
 ## Estructura
 
@@ -49,24 +61,6 @@ dotnet run --project BookShopFrontend/Web --launch-profile http
 Abrir [BookShop local](http://localhost:5188). El backend y la base de datos deben estar disponibles.
 
 La clave de cifrado de los métodos de pago está definida en `ProteccionDatos.java` y debe conservarse para leer los datos ya guardados. La configuración de BD se incluye al empaquetar el WAR: no publicar ese archivo compilado con credenciales.
-
-## Funcionamiento
-
-La [guía para recorrer y explicar el código](docs/Guia_codigo.md) sigue los flujos principales y explica las piezas compartidas.
-
-Los recursos REST delegan las reglas en Business, que utiliza los DAO para acceder a MySQL. El servidor convierte los DTO Java a JSON con JSON-B. Web consume ese JSON con Newtonsoft.Json y clases DTO en `Modelos/DTO`.
-
-Las pantallas Blazor están en `Componentes`, con marcado `.razor`, lógica `.razor.cs` y estilos `.razor.css`. Los servicios de Web gestionan las llamadas REST, la sesión y los datos compartidos. El componente `Cargando` muestra la espera o el error mientras se consultan datos.
-
-DAO y Business conservan una interfaz y su implementación por responsabilidad. Business coordina las operaciones: cambiar una referencia y sus vetos, guardar un pedido y sus líneas, o registrar un voto y actualizar su contador. Los DAO ejecutan las consultas SQL y convierten sus resultados en entidades o DTO. Business confirma o revierte las operaciones que deben guardarse juntas mediante DBManager.
-
-En Web, la pantalla de compra conserva la preparación recibida del backend y utiliza su selección directamente. Los filtros guardados en la sesión son los mismos que utiliza la pantalla, para volver del detalle sin copiar su estado. Favorito y Deseado pertenecen al detalle del libro. Las reseñas y la confirmación del pedido muestran los DTO recibidos, sin modelos intermedios que repitan los mismos datos.
-
-Los formularios utilizan los campos obligatorios del navegador. El esquema define los límites y las restricciones de los datos; Business conserva reglas de operación como ISBN único, stock, importes y vigencia para pagar, sin repetir validadores completos de los formularios de catálogo y direcciones. Los avisos se cierran con la X. Al perder la conexión, Blazor intenta reconectar y el diálogo permite recargar la página.
-
-La autenticación utiliza una cookie de sesión por circuito Blazor. Una recarga completa requiere iniciar sesión nuevamente. Las operaciones con sesión usan HTTPS.
-
-Las imágenes se reciben y devuelven como texto en los DTO, por ejemplo `"portada": "https://ejemplo.com/libro.jpg"`. Registro y perfil permiten ingresar una URL HTTP/HTTPS o retirar la imagen. La BD guarda texto de hasta 2048 caracteres; las imágenes nuevas deben estar alojadas previamente.
 
 ## Conceptos del curso en el proyecto
 

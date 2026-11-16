@@ -5,6 +5,7 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
+import me.Business.exceptions.AccesoDenegadoException;
 import me.Business.exceptions.NegocioException;
 import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.ValidacionException;
@@ -15,12 +16,15 @@ import me.DAO.usuario.UsuarioDAOImpl;
 import me.Model.dto.catalogo.ConsultaReporteLibrosDTO;
 import me.Model.dto.catalogo.ReporteVentasLibrosDTO;
 import me.Model.dto.usuario.ReporteUsuariosDTO;
+import me.Model.entities.usuario.Rol;
+import me.Model.entities.usuario.Usuario;
 
 public class ReporteBOImpl implements ReporteBO {
 
     private final LibroDAO libroDAO;
     private final UsuarioDAO usuarioDAO;
     private final Clock reloj;
+    private final GeneradorPDF generador = new GeneradorPDF();
 
     public ReporteBOImpl() {
         this(new LibroDAOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")));
@@ -63,6 +67,30 @@ public class ReporteBOImpl implements ReporteBO {
                 usuarioDAO.listarActividadUsuarios(mes.atDay(1), mes.atEndOfMonth(), cantidadMaxima));
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudieron preparar los datos de actividad.", e);
+        }
+    }
+
+    @Override
+    public byte[] generarLibrosPDF(int idActor, ConsultaReporteLibrosDTO consulta) throws NegocioException {
+        exigirAdministrador(idActor);
+        return generador.ventasLibros(prepararLibros(consulta));
+    }
+
+    @Override
+    public byte[] generarUsuariosPDF(int idActor, YearMonth mes, Integer cantidadMaxima) throws NegocioException {
+        exigirAdministrador(idActor);
+        return generador.usuarios(prepararUsuarios(mes, cantidadMaxima));
+    }
+
+    // El rol ADMIN se asigna por el correo @admin.bookshop; aquí se comprueba en el servidor,
+    // porque ocultar la página en el frontend no impide llamar al endpoint directamente.
+    private void exigirAdministrador(int idActor) throws NegocioException {
+        try {
+            Usuario actor = usuarioDAO.leer(idActor);
+            if (actor == null || actor.isEliminado() || actor.getRol() != Rol.ADMIN)
+                throw new AccesoDenegadoException("Esta operación requiere una cuenta administradora.");
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo comprobar la cuenta.", e);
         }
     }
 }

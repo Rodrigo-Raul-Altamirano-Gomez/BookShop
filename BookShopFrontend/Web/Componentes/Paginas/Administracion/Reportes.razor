@@ -1,0 +1,100 @@
+@page "/administracion/reportes"
+<PageTitle>Reportes · BookShop</PageTitle>
+<div class="container py-4">
+    <nav aria-label="Ruta de navegación">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+            <li class="breadcrumb-item">Administración</li>
+            <li class="breadcrumb-item active" aria-current="page">Reportes</li>
+        </ol>
+    </nav>
+    <h1 class="page-heading">Reportes</h1>
+    @if (Sesion.Usuario is null)
+    {
+        <div class="empty-state card border-0 text-center align-items-center py-5">
+            <Icono Nombre="report" />
+            <h2>Reportes de administración</h2>
+            <p>Inicia sesión con una cuenta de administrador.</p>
+            <button class="btn btn-primary" @onclick="Sesion.MostrarAcceso">Iniciar sesión</button>
+        </div>
+    }
+    else if (!Sesion.EsAdministrador)
+    {
+        <div class="empty-state card border-0 text-center align-items-center py-5">
+            <Icono Nombre="shield" />
+            <h2>Acceso restringido</h2>
+            <p>Solo los administradores pueden generar reportes.</p>
+            <a class="btn btn-secondary" href="/catalogo">Volver al catálogo</a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            <div class="col-12 col-lg-6">
+                <section class="card p-4 h-100">
+                    <h2 class="d-flex align-items-center gap-3">
+                        <Icono Nombre="report" />
+                        Ventas por libro
+                    </h2>
+                    <p class="text-body-secondary">
+                        Libros ordenados por monto vendido en el período, sin pedidos cancelados ni devueltos.
+                    </p>
+                    <form class="d-flex flex-column gap-3" @onsubmit="GenerarVentasLibros" @onsubmit:preventDefault>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <label class="form-label" for="ventas-inicio">Desde</label>
+                                <input id="ventas-inicio" class="form-control" type="date" @bind="inicio" required />
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" for="ventas-fin">Hasta</label>
+                                <input id="ventas-fin" class="form-control" type="date" @bind="fin" required />
+                            </div>
+                        </div>
+                        <div>
+                            <label class="form-label" for="ventas-cantidad">Cantidad máxima de libros</label>
+                            <input id="ventas-cantidad" class="form-control" type="number" min="1" @bind="cantidadLibros"
+                                placeholder="Sin límite" />
+                        </div>
+                        @if (errorLibros is not null)
+                        {
+                            <p class="alert alert-danger py-2 mb-0" role="alert">@errorLibros</p>
+                        }
+                        <button class="btn btn-primary align-self-start" type="submit" disabled="@generandoLibros">
+                            @(generandoLibros ? "Generando…" : "Descargar PDF")
+                        </button>
+                    </form>
+                </section>
+            </div>
+            <div class="col-12 col-lg-6">
+                <section class="card p-4 h-100">
+                    <h2 class="d-flex align-items-center gap-3">
+                        <Icono Nombre="user" />
+                        Usuarios por monto gastado
+                    </h2>
+                    <p class="text-body-secondary">
+                        Usuarios ordenados por gasto del mes, con su tiempo de uso y sus preferencias de compra.
+                    </p>
+                    <form class="d-flex flex-column gap-3" @onsubmit="GenerarUsuarios" @onsubmit:preventDefault>
+                        <div>
+                            <label class="form-label" for="usuarios-mes">Mes</label>
+                            <input id="usuarios-mes" class="form-control" type="month" @bind="mes" @bind:format="yyyy-MM"
+                                required />
+                        </div>
+                        <div>
+                            <label class="form-label" for="usuarios-cantidad">Cantidad máxima de usuarios</label>
+                            <input id="usuarios-cantidad" class="form-control" type="number" min="1" @bind="cantidadUsuarios"
+                                placeholder="Sin límite" />
+                        </div>
+                        @if (errorUsuarios is not null)
+                        {
+                            <p class="alert alert-danger py-2 mb-0" role="alert">@errorUsuarios</p>
+                        }
+                        <button class="btn btn-primary align-self-start" type="submit" disabled="@generandoUsuarios">
+                            @(generandoUsuarios ? "Generando…" : "Descargar PDF")
+                        </button>
+                    </form>
+                </section>
+            </div>
+        </div>
+    }
+</div>
