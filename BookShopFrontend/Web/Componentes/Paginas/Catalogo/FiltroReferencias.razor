@@ -16,7 +16,7 @@
                 <input class="form-check-input"
                     type="checkbox"
                     checked="@Seleccionados.Contains(option)"
-                    @onchange="() => Seleccionar(option)"
+                    @onchange="() => SeleccionCambiada.InvokeAsync(option)"
                     />
                 <span>@option</span>
             </label>
@@ -28,7 +28,7 @@
     </div>
     @if (OpcionesFiltradas.Count > 4)
     {
-        <button class="btn btn-link text-button" @onclick="AlternarExpansion">
+        <button class="btn btn-link text-button" @onclick="() => expandido = !expandido">
             @(expandido ? "Ver menos" : "Ver más")
             <span aria-hidden="true">→</span>
         </button>

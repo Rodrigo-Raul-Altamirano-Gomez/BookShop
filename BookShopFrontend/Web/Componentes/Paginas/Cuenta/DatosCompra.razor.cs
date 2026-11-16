@@ -28,9 +28,12 @@ public partial class DatosCompra
     {
         get
         {
-            if (Sesion.Usuario is null) return 0;
-            if (Pestana == "direcciones") return Cuenta.Direcciones.Count;
-            if (Pestana == "metodos") return Cuenta.Metodos.Count;
+            if (Sesion.Usuario is null)
+                return 0;
+            if (Pestana == "direcciones")
+                return Cuenta.Direcciones.Count;
+            if (Pestana == "metodos")
+                return Cuenta.Metodos.Count;
             return Cuenta.Cupones.Count;
         }
     }
@@ -38,8 +41,10 @@ public partial class DatosCompra
     {
         get
         {
-            if (Pestana == "direcciones") return "direcciones";
-            if (Pestana == "metodos") return "métodos";
+            if (Pestana == "direcciones")
+                return "direcciones";
+            if (Pestana == "metodos")
+                return "métodos";
             return "cupones";
         }
     }
@@ -55,26 +60,16 @@ public partial class DatosCompra
         : metodo.Tipo;
     private static string ClaseCupon(Cupon cupon)
     {
-        if (cupon.Estado == "Disponible") return "success";
-        if (cupon.Estado == "Vencido") return "danger";
+        if (cupon.Estado == "Disponible")
+            return "success";
+        if (cupon.Estado == "Vencido")
+            return "danger";
         return "neutral";
     }
 
-    private void MostrarDirecciones()
+    private void MostrarPestana(string pestana)
     {
-        Pestana = "direcciones";
-        Pagina = 1;
-    }
-
-    private void MostrarMetodos()
-    {
-        Pestana = "metodos";
-        Pagina = 1;
-    }
-
-    private void MostrarCupones()
-    {
-        Pestana = "cupones";
+        Pestana = pestana;
         Pagina = 1;
     }
 
@@ -107,31 +102,16 @@ public partial class DatosCompra
 
     private async Task GuardarDireccion(Direccion direccion)
     {
-        try
-        {
-            await Cuenta.GuardarDireccion(direccion, DireccionEnEdicion?.Id ?? 0);
-            Cerrar();
-            Sesion.Notificar();
-        }
-        catch (InvalidOperationException e)
-        {
-            Sesion.Avisar(e.Message);
-        }
+        await Cuenta.GuardarDireccion(direccion, DireccionEnEdicion?.Id ?? 0);
+        Cerrar();
+        Sesion.Notificar();
     }
 
     private async Task GuardarMetodo(MetodoPago metodo)
     {
-        try
-        {
-            await Cuenta.GuardarMetodo(metodo, MetodoEnEdicion?.Id ?? 0);
-            Cerrar();
-            Sesion.Notificar();
-        }
-        catch (InvalidOperationException e)
-        {
-            Sesion.Error = e.Message;
-            Sesion.Avisar(e.Message);
-        }
+        await Cuenta.GuardarMetodo(metodo, MetodoEnEdicion?.Id ?? 0);
+        Cerrar();
+        Sesion.Notificar();
     }
 
     private async Task EliminarDireccion(Direccion direccion)
@@ -139,13 +119,12 @@ public partial class DatosCompra
         try
         {
             await Api.Delete($"cuenta/direcciones/{direccion.Id}");
-            await Cuenta.CargarDatosCompra();
+            await Cuenta.CargarDirecciones();
             Pagina = Math.Min(Pagina, TotalPaginas);
             Sesion.Notificar();
         }
         catch (InvalidOperationException e)
         {
-            Sesion.Error = e.Message;
             Sesion.Avisar(e.Message);
         }
     }
@@ -155,13 +134,12 @@ public partial class DatosCompra
         try
         {
             await Api.Delete($"cuenta/metodos/{metodo.Id}");
-            await Cuenta.CargarDatosCompra();
+            await Cuenta.CargarMetodos();
             Pagina = Math.Min(Pagina, TotalPaginas);
             Sesion.Notificar();
         }
         catch (InvalidOperationException e)
         {
-            Sesion.Error = e.Message;
             Sesion.Avisar(e.Message);
         }
     }
@@ -171,12 +149,11 @@ public partial class DatosCompra
         try
         {
             await Api.Put($"cuenta/direcciones/{direccion.Id}/predeterminada");
-            await Cuenta.CargarDatosCompra();
+            await Cuenta.CargarDirecciones();
             Sesion.Notificar();
         }
         catch (InvalidOperationException e)
         {
-            Sesion.Error = e.Message;
             Sesion.Avisar(e.Message);
         }
     }
@@ -186,12 +163,11 @@ public partial class DatosCompra
         try
         {
             await Api.Put($"cuenta/metodos/{metodo.Id}/predeterminado");
-            await Cuenta.CargarDatosCompra();
+            await Cuenta.CargarMetodos();
             Sesion.Notificar();
         }
         catch (InvalidOperationException e)
         {
-            Sesion.Error = e.Message;
             Sesion.Avisar(e.Message);
         }
     }

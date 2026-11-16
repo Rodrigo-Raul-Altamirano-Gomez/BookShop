@@ -225,54 +225,6 @@
     line-height:1.65;
     margin:4px 0
 }
-.review-actions {
-    align-self:center
-}
-
-.review-actions .icon-button {
-    width:auto;
-    min-width:33px;
-    padding:7px;
-    gap:5px;
-    font-size:12px
-}
-.rating-picker button {
-    border:0;
-    background:none;
-    font-size:35px;
-    color:#c3c8bf;
-    cursor:pointer;
-    padding:0 3px
-}
-.rating-picker button.chosen {
-    color:#d69527
-}
-.form-book {
-    font-family:Georgia,serif;
-    font-size:21px;
-    color:var(--green);
-    text-align:center;
-    margin-bottom:22px
-}
-.image-actions {
-    position:absolute;
-    bottom:13px;
-    right:13px
-}
-
-.image-actions .icon-button {
-    background:white
-}
-.image-actions label {
-    position:relative;
-    overflow:hidden
-}
-.image-actions ::deep input[type=file] {
-    position:absolute;
-    inset:0;
-    opacity:0;
-    cursor:pointer
-}
 .average-stars {
     color:transparent;
     background:linear-gradient(to right,#d69432 0%,#d69432 var(--relleno),#dce1d8 var(--relleno),#dce1d8 100%);

@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import me.Model.entities.usuario.Usuario;
 
 public abstract class MetodoPago {
+
     private int id;
     private Usuario usuario;
     private String titular;
@@ -24,8 +25,8 @@ public abstract class MetodoPago {
         this.fechaCreacion = LocalDateTime.now();
     }
 
-    public MetodoPago(int id, String titular, String proveedor, Usuario usuario, String alias,
-                      LocalDate fechaVencimiento) {
+    public MetodoPago(int id, String titular, String proveedor, Usuario usuario, String alias, LocalDate
+        fechaVencimiento) {
         this();
         this.id = id;
         this.usuario = usuario;
@@ -81,7 +82,8 @@ public abstract class MetodoPago {
 
     public void setActivo(boolean activo) {
         this.activo = activo;
-        if (!activo) predeterminado = false;
+        if (!activo)
+            predeterminado = false;
     }
 
     public boolean isPredeterminado() {
@@ -106,7 +108,8 @@ public abstract class MetodoPago {
 
     public void setEliminado(boolean eliminado) {
         this.eliminado = eliminado;
-        if (eliminado) predeterminado = false;
+        if (eliminado)
+            predeterminado = false;
     }
 
     public String getUsuarioCreacion() {
@@ -146,8 +149,8 @@ public abstract class MetodoPago {
     }
 
     public boolean validarEstado(LocalDate fechaActual) {
-        return activo && !eliminado && fechaActual != null && fechaVencimiento != null
-                && !fechaVencimiento.isBefore(fechaActual);
+        return activo && !eliminado && fechaActual != null && fechaVencimiento != null &&
+            !fechaVencimiento.isBefore(fechaActual);
     }
 
     public boolean estaVencido(LocalDate fechaActual) {

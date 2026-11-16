@@ -6,7 +6,7 @@
                 <button
                     class="page-link"
                     disabled="@(Pagina <= 1)"
-                    @onclick="() => Ir(Pagina - 1)"
+                    @onclick="() => PaginaCambiada.InvokeAsync(Pagina - 1)"
                     aria-label="Página anterior">
                     ‹
                 </button>
@@ -18,7 +18,7 @@
                         class="page-link"
                         aria-current="@(Pagina == p ? "page" : null)"
                         aria-label="Página @p"
-                        @onclick="() => Ir(p)">
+                        @onclick="() => PaginaCambiada.InvokeAsync(p)">
                         @p
                     </button>
                 </li>
@@ -27,11 +27,34 @@
                 <button
                     class="page-link"
                     disabled="@(Pagina >= TotalPaginas)"
-                    @onclick="() => Ir(Pagina + 1)"
+                    @onclick="() => PaginaCambiada.InvokeAsync(Pagina + 1)"
                     aria-label="Página siguiente">
                     ›
                 </button>
             </li>
         </ul>
     </nav>
+}
+
+@code {
+    [Parameter]
+    public int Pagina { get; set; } = 1;
+
+    [Parameter]
+    public int TotalPaginas { get; set; }
+
+    [Parameter]
+    public EventCallback<int> PaginaCambiada { get; set; }
+    private IEnumerable<int> PaginasVisibles
+    {
+        get
+        {
+            int primeraPagina = Math.Max(1, Pagina - 2);
+            int ultimaPagina = Math.Min(TotalPaginas, Pagina + 2);
+            var paginas = new List<int>();
+            for (int numero = primeraPagina; numero <= ultimaPagina; numero++)
+                paginas.Add(numero);
+            return paginas;
+        }
+    }
 }

@@ -20,15 +20,16 @@ import me.Service.Sesion;
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
 public class CuponRS {
+
     @Inject
     private Servicios servicios;
+
     @Context
     private HttpServletRequest peticion;
 
     @GET
-    public ResultadoPaginadoDTO<CuponDTO> listar(
-            @DefaultValue("1") @QueryParam("pagina") int pagina,
-            @DefaultValue("10") @QueryParam("tamanioPagina") int tamanioPagina) throws NegocioException {
+    public ResultadoPaginadoDTO<CuponDTO> listar(@DefaultValue("1") @QueryParam("pagina") int pagina,
+        @DefaultValue("10") @QueryParam("tamanioPagina") int tamanioPagina) throws NegocioException {
         return servicios.getCuponBO().listar(Sesion.exigirIdUsuario(peticion), pagina, tamanioPagina);
     }
 }

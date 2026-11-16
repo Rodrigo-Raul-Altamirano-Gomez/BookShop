@@ -4,14 +4,15 @@ import java.time.LocalDate;
 import me.Model.entities.usuario.Usuario;
 
 public class TarjetaBancaria extends MetodoPago {
+
     private String numeroTarjetaCifrado;
     private TipoTarjeta tipoTarjeta;
 
     public TarjetaBancaria() {
     }
 
-    public TarjetaBancaria(int id, String titular, String proveedor, Usuario usuario, String alias,
-                           String numeroTarjetaCifrado, LocalDate fechaVencimiento, TipoTarjeta tipoTarjeta) {
+    public TarjetaBancaria(int id, String titular, String proveedor, Usuario usuario, String alias, String
+        numeroTarjetaCifrado, LocalDate fechaVencimiento, TipoTarjeta tipoTarjeta) {
         super(id, titular, proveedor, usuario, alias, fechaVencimiento);
         this.numeroTarjetaCifrado = numeroTarjetaCifrado;
         this.tipoTarjeta = tipoTarjeta;

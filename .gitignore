@@ -46,6 +46,7 @@ Thumbs.db
 **/appsettings.*.local.json
 /BookShop/config/
 /BookShopBackend/config/
+/BookShopBackend/negocio.properties
 
 # Datos antiguos incompatibles con el esquema actual.
 /BookShop/DAO/src/main/resources/registers.sql

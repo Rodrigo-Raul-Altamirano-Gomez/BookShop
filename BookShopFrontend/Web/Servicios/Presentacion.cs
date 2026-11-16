@@ -5,13 +5,8 @@ namespace Web.Servicios;
 // Adapta los contratos REST a los datos que muestran las pantallas existentes.
 public static class Presentacion
 {
-    public static string Dinero(decimal valor) => "S/ " + valor.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("es-PE"));
-
-    public static string Imagen(string? imagen, string defecto)
-        => string.IsNullOrWhiteSpace(imagen) ? defecto : imagen;
-
-    public static string? ImagenDesdeUrl(string url)
-        => string.IsNullOrWhiteSpace(url) ? null : url.Trim();
+    public static string Dinero(decimal valor) =>
+        "S/ " + valor.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("es-PE"));
 
     public static Libro Libro(TarjetaLibroDTO dto) => new()
     {
@@ -22,7 +17,7 @@ public static class Presentacion
         Precio = dto.PrecioConDescuento,
         Descuento = dto.PorcentajeDescuento,
         Activo = dto.Activo,
-        Portada = Imagen(dto.Portada, "/images/book-placeholder.svg")
+        Portada = dto.Portada ?? "/images/book-placeholder.svg"
     };
 
     public static Libro Libro(DetalleLibroDTO dto)
@@ -37,9 +32,10 @@ public static class Presentacion
         libro.Paginas = dto.NumeroPaginas;
         libro.Stock = dto.StockDisponible;
         libro.Peso = dto.Peso is null ? "—" : $"{dto.Peso} kg";
-        libro.Dimensiones = $"{dto.Alto} × {dto.Ancho} cm";
+        libro.Dimensiones = dto.Alto is null || dto.Ancho is null ? "—" : $"{dto.Alto} × {dto.Ancho} cm";
         libro.Saga = dto.Saga ?? "";
         libro.Tomo = dto.NumeroTomo;
+        libro.Valoracion = dto.Valoracion;
         return libro;
     }
 
@@ -48,7 +44,7 @@ public static class Presentacion
         Id = dto.Id,
         Nombre = dto.Nombre,
         Tipo = tipo,
-        Imagen = Imagen(dto.Imagen, "/images/reference-placeholder.svg")
+        Imagen = dto.Imagen ?? "/images/reference-placeholder.svg"
     };
 
     public static Direccion Direccion(DireccionEnvioDTO dto) => new()
@@ -70,38 +66,9 @@ public static class Presentacion
         Alias = dto.Alias ?? "",
         Proveedor = dto.Proveedor,
         NumeroEnmascarado = dto.NumeroEnmascarado,
-        TipoTarjeta = dto.TipoTarjeta == "CREDITO" ? "Crédito" : "Débito",
+        TipoTarjeta = dto.TarjetaBancaria ? (dto.TipoTarjeta == "CREDITO" ? "Crédito" : "Débito") : "",
         Vencimiento = dto.FechaVencimiento,
         Predeterminada = dto.Predeterminado,
         Vigente = dto.Vigente
-    };
-
-    public static Pedido Pedido(DetallePedidoDTO dto) => new()
-    {
-        Id = dto.Pedido.Id,
-        FechaPago = dto.Pedido.FechaPago,
-        Estado = dto.Pedido.Estado switch
-        {
-            "EN_ALMACEN" => "En almacén",
-            "EN_CAMINO" => "En camino",
-            "ENTREGADO" => "Entregado",
-            "CANCELADO" => "Cancelado",
-            "DEVUELTO" => "Devuelto",
-            _ => dto.Pedido.Estado
-        },
-        Direccion = Direccion(dto.DireccionEnvio),
-        Metodo = Metodo(dto.MetodoPago),
-        Productos = dto.Resumen.SubtotalProductos,
-        DescuentoLibro = dto.Resumen.DescuentoLibros,
-        Subtotal = dto.Resumen.SubtotalProductos - dto.Resumen.DescuentoLibros,
-        DescuentoCupon = dto.Resumen.DescuentoCupon,
-        Envio = dto.Resumen.CostoEnvio,
-        Total = dto.Resumen.Total,
-        Transaccion = dto.IdentificadorTransaccion,
-        Seguimiento = dto.CodigoSeguimiento,
-        EntregaEstimada = dto.FechaEntregaEstimada ?? default,
-        FechaSalida = dto.FechaSalida,
-        FechaEntrega = dto.FechaEntrega,
-        Lineas = dto.Resumen.Items.Select(i => new LineaPedido { IdLibro = i.IdLibro, Cantidad = i.Cantidad, Precio = i.PrecioUnitario, PrecioOriginal = i.PrecioOriginal, Descuento = i.PorcentajeDescuento }).ToList()
     };
 }

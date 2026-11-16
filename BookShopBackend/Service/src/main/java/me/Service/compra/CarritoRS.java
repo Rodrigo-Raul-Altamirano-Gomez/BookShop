@@ -23,8 +23,10 @@ import me.Service.Sesion;
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
 public class CarritoRS {
+
     @Inject
     private Servicios servicios;
+
     @Context
     private HttpServletRequest peticion;
 
@@ -35,21 +37,21 @@ public class CarritoRS {
 
     @POST
     @Path("libros/{idLibro}")
-    public ResumenCompraDTO agregar(
-            @PathParam("idLibro") int idLibro,
-            @QueryParam("cantidad") Integer cantidad) throws NegocioException {
+    public ResumenCompraDTO agregar(@PathParam("idLibro") int idLibro, @QueryParam("cantidad") Integer
+        cantidad) throws NegocioException {
         int idUsuario = Sesion.exigirIdUsuario(peticion);
-        if (cantidad == null) throw new ValidacionException("cantidad", "Indica la cantidad.");
+        if (cantidad == null)
+            throw new ValidacionException("cantidad", "Indica la cantidad.");
         return servicios.getCarritoBO().agregar(idUsuario, idLibro, cantidad);
     }
 
     @PUT
     @Path("libros/{idLibro}")
-    public ResumenCompraDTO cambiarCantidad(
-            @PathParam("idLibro") int idLibro,
-            @QueryParam("cantidad") Integer cantidad) throws NegocioException {
+    public ResumenCompraDTO cambiarCantidad(@PathParam("idLibro") int idLibro, @QueryParam("cantidad") Integer
+        cantidad) throws NegocioException {
         int idUsuario = Sesion.exigirIdUsuario(peticion);
-        if (cantidad == null) throw new ValidacionException("cantidad", "Indica la cantidad.");
+        if (cantidad == null)
+            throw new ValidacionException("cantidad", "Indica la cantidad.");
         return servicios.getCarritoBO().cambiarCantidad(idUsuario, idLibro, cantidad);
     }
 

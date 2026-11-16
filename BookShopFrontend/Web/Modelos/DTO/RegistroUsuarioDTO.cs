@@ -26,7 +26,9 @@ public class RegistroUsuarioDTO
     {
     }
 
-    public RegistroUsuarioDTO(string nombre, string email, DateOnly fechaNacimiento, string contrasenia, string confirmacionContrasenia, string? imagen)
+    public RegistroUsuarioDTO(
+        string nombre, string email, DateOnly fechaNacimiento, string contrasenia, string confirmacionContrasenia,
+        string? imagen)
     {
         Nombre = nombre;
         Email = email;

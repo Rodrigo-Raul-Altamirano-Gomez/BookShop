@@ -13,3 +13,8 @@
         <h3 class="card-title">@Referencia.Nombre</h3>
     </a>
 </div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Referencia Referencia { get; set; } = new();
+}

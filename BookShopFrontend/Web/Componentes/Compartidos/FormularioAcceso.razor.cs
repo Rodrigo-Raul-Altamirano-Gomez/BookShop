@@ -39,11 +39,6 @@ public partial class FormularioAcceso
     {
         if (enviando)
             return;
-        if (registro && contrasena != confirmacion)
-        {
-            error = "Las contraseñas no coinciden.";
-            return;
-        }
         enviando = true;
         try
         {
@@ -59,7 +54,7 @@ public partial class FormularioAcceso
                     FechaNacimiento = DateOnly.FromDateTime(nacimiento),
                     Contrasenia = contrasena,
                     ConfirmacionContrasenia = confirmacion,
-                    Imagen = Presentacion.ImagenDesdeUrl(urlFoto)
+                    Imagen = string.IsNullOrWhiteSpace(urlFoto) ? null : urlFoto.Trim()
                 };
             }
             else
@@ -82,11 +77,13 @@ public partial class FormularioAcceso
             Sesion.MostrarPerfil(await Api.Get<PerfilUsuarioDTO>("cuenta"), acceso.Rol == "ADMIN");
             Compras.MostrarCarrito(await Api.Get<ResumenCompraDTO>("carrito"));
             Sesion.Notificar();
-            await Cerrar();
+            await AlCerrar.InvokeAsync();
         }
         catch (InvalidOperationException e)
         {
             error = e.Message;
+            if (!registro && !reactivacion)
+                correo = contrasena = "";
         }
         finally
         {
@@ -94,5 +91,4 @@ public partial class FormularioAcceso
         }
     }
 
-    private Task Cerrar() => AlCerrar.InvokeAsync();
 }

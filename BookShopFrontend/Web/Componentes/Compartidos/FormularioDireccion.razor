@@ -1,13 +1,13 @@
 @using Web.Modelos
-<Modal Titulo="@(Valor is null ? "Añadir dirección" : "Editar dirección")" AlCerrar="AlCerrar">
-    <form @onsubmit="Guardar" @onsubmit:preventDefault novalidate>
+<Modal Titulo="@(Valor is null ? "Añadir dirección" : "Editar dirección")" AlCerrar="AlCerrar" Ocupado="@Guardando">
+    <form @onsubmit="Guardar" @onsubmit:preventDefault>
         <label class="field form-label d-block mb-3">
             Alias *
             <input
                 class="form-control"
-                @bind="Borrador.Alias"
+                required @bind="Borrador.Alias"
                 @bind:event="oninput"
-                maxlength="60"
+                maxlength="100"
                 autocomplete="off"
             />
         </label>
@@ -15,21 +15,21 @@
             Dirección *
             <input
                 class="form-control"
-                @bind="Borrador.Calle"
+                required @bind="Borrador.Calle"
                 @bind:event="oninput"
-                maxlength="200"
+                maxlength="255"
                 autocomplete="street-address"
             />
         </label>
         <div class="row g-3">
             <label class="field form-label d-block mb-3 col-md-6">
                 Distrito *
-                <input class="form-control" @bind="Borrador.Distrito" @bind:event="oninput" maxlength="100" />
+                <input class="form-control" required @bind="Borrador.Distrito" @bind:event="oninput" maxlength="100" />
             </label>
             <label class="field form-label d-block mb-3 col-md-6">
                 Ciudad *
                 <input class="form-control"
-                    @bind="Borrador.Ciudad"
+                    required @bind="Borrador.Ciudad"
                     @bind:event="oninput"
                     maxlength="100"
                     autocomplete="address-level2"
@@ -42,7 +42,7 @@
                 class="form-control"
                 @bind="Borrador.ReferenciaAdicional"
                 @bind:event="oninput"
-                maxlength="300"
+                maxlength="255"
                 rows="3"
             >
             </textarea>
@@ -56,8 +56,8 @@
             <p class="alert alert-danger form-error" role="alert">@MensajeError</p>
         }
         <div class="modal-footer px-0 pb-0 mt-4">
-            <button type="button" class="btn btn-secondary" @onclick="AlCerrar">Cancelar</button>
-            <button type="submit" class="btn btn-primary" disabled="@(!Completo || Guardando)">
+            <button type="button" class="btn btn-secondary" @onclick="AlCerrar" disabled="@Guardando">Cancelar</button>
+            <button type="submit" class="btn btn-primary" disabled="@Guardando">
                 @(Valor is null ? "Guardar dirección" : "Guardar cambios")
             </button>
         </div>

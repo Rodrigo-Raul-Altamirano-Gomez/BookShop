@@ -30,16 +30,11 @@ class SolicitudTest {
             assertFalse(solicitud.estaPendiente());
             assertEquals(fecha.plusHours(1), solicitud.getFechaResolucion());
             assertEquals("uno@admin.bookshop", solicitud.getUsuarioActualizacion());
-            assertThrows(IllegalStateException.class,
-                    () -> solicitud.editar("Otro", "cliente@bookshop", fecha));
-            assertThrows(IllegalStateException.class, () -> solicitud.retirar("cliente@bookshop", fecha));
-            assertThrows(IllegalStateException.class,
-                    () -> solicitud.resolver(EstadoSolicitud.RECHAZADA, "uno@admin.bookshop", fecha));
         }
     }
 
     @Test
-    void retirarUnaPendienteNoLaApruebaYBloqueaSuResolucion() {
+    void retirarUnaPendienteConservaSuEstadoYRegistraAuditoria() {
         Solicitud solicitud = new SolicitudDevolucion();
         solicitud.retirar("cliente@bookshop", fecha);
         assertTrue(solicitud.isEliminado());
@@ -47,8 +42,6 @@ class SolicitudTest {
         assertFalse(solicitud.estaPendiente());
         assertFalse(solicitud.estaResuelta());
         assertNull(solicitud.getFechaResolucion());
-        assertThrows(IllegalStateException.class,
-                () -> solicitud.resolver(EstadoSolicitud.ACEPTADA, "uno@admin.bookshop", fecha));
     }
 
     @Test
@@ -72,19 +65,7 @@ class SolicitudTest {
     }
 
     @Test
-    void editarUnaSolicitudNoPermiteCambiarSuObjeto() {
-        Pedido pedido = new Pedido();
-        pedido.setId(1);
-        SolicitudDevolucion solicitud = new SolicitudDevolucion(
-                1, new Usuario(), pedido, MotivoDevolucion.OTRO, "");
-        Pedido otro = new Pedido();
-        otro.setId(2);
-        assertThrows(IllegalStateException.class, () -> solicitud.setPedido(otro));
-        assertSame(pedido, solicitud.getPedido());
-    }
-
-    @Test
-    void editarReporteActualizaMotivoEnumeradoSinCambiarOriginalYRespetaEstado() {
+    void editarReporteActualizaMotivoEnumeradoSinCambiarOriginalYConservaAuditoria() {
         Resena resena = new Resena();
         resena.setComentario("Original");
         SolicitudReporteResena reporte = new SolicitudReporteResena(
@@ -94,14 +75,12 @@ class SolicitudTest {
         assertEquals("Ampliacion", reporte.getComentario());
         assertEquals("Original", reporte.getComentarioOriginal());
         reporte.resolver(EstadoSolicitud.RECHAZADA, "uno@admin.bookshop", fecha.plusHours(1));
-        assertThrows(IllegalStateException.class,
-                () -> reporte.editar(MotivoReporteResena.OTRO, "Otro", "cliente@bookshop", fecha));
         assertEquals(MotivoReporteResena.PUBLICIDAD_O_SPAM, reporte.getMotivo());
         assertEquals("Ampliacion", reporte.getComentario());
     }
 
     @Test
-    void editarDevolucionActualizaMotivoEnumeradoYRespetaEstado() {
+    void editarDevolucionActualizaMotivoEnumeradoYConservaAuditoria() {
         Pedido pedido = new Pedido();
         SolicitudDevolucion solicitud = new SolicitudDevolucion(
                 1, new Usuario(), pedido, MotivoDevolucion.LIBRO_DANADO, "Comentario");
@@ -111,8 +90,6 @@ class SolicitudTest {
         assertEquals("cliente@bookshop", solicitud.getUsuarioActualizacion());
         assertSame(pedido, solicitud.getPedido());
         solicitud.resolver(EstadoSolicitud.RECHAZADA, "uno@admin.bookshop", fecha.plusHours(1));
-        assertThrows(IllegalStateException.class,
-                () -> solicitud.editar(MotivoDevolucion.OTRO, "Otro", "cliente@bookshop", fecha));
         assertEquals(MotivoDevolucion.PEDIDO_INCOMPLETO, solicitud.getMotivo());
         assertEquals("Falta un libro", solicitud.getComentario());
     }

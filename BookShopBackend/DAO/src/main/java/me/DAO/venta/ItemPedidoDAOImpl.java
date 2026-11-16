@@ -12,13 +12,14 @@ import me.Model.entities.catalogo.Libro;
 import me.Model.entities.compra.Item;
 
 public class ItemPedidoDAOImpl implements ItemPedidoDAO {
+
     @Override
     public void insertar(int idPedido, Item item) throws SQLException {
         String sql = """
-                INSERT INTO ITEM_PEDIDO (id_pedido, id_libro, cantidad, precio_base, precio_unitario,
-                    porcentaje_descuento, sub_total, usuario_creacion, fecha_creacion, eliminado)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """;
+            INSERT INTO ITEM_PEDIDO (id_pedido, id_libro, cantidad, precio_base, precio_unitario,
+                porcentaje_descuento, sub_total, usuario_creacion, fecha_creacion, eliminado)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """;
         Connection conexion = TransactionContext.getConnection();
         try (PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             sentencia.setInt(1, idPedido);
@@ -33,7 +34,8 @@ public class ItemPedidoDAOImpl implements ItemPedidoDAO {
             sentencia.setBoolean(10, item.isEliminado());
             sentencia.executeUpdate();
             try (ResultSet resultado = sentencia.getGeneratedKeys()) {
-                if (!resultado.next()) throw new SQLException("No se genero el identificador del item.");
+                if (!resultado.next())
+                    throw new SQLException("No se genero el identificador del item.");
                 item.setId(resultado.getInt(1));
             }
         }
@@ -41,18 +43,10 @@ public class ItemPedidoDAOImpl implements ItemPedidoDAO {
 
     @Override
     public List<Item> listarPorPedido(int idPedido) throws SQLException {
-        try (Connection conexion = DBManager.getConnection()) { return listar(conexion, idPedido, false); }
-    }
-
-    @Override
-    public List<Item> listarParaActualizar(int idPedido) throws SQLException {
-        return listar(TransactionContext.getConnection(), idPedido, true);
-    }
-
-    private List<Item> listar(Connection conexion, int idPedido, boolean bloquear) throws SQLException {
-        String sql = "SELECT * FROM ITEM_PEDIDO WHERE id_pedido = ? AND NOT eliminado ORDER BY id" + (bloquear ? " FOR UPDATE" : "");
+        String sql = "SELECT * FROM ITEM_PEDIDO WHERE id_pedido = ? AND NOT eliminado ORDER BY id";
         List<Item> items = new ArrayList<>();
-        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+        try (Connection conexion = DBManager.getConnection();
+            PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setInt(1, idPedido);
             try (ResultSet resultado = sentencia.executeQuery()) {
                 while (resultado.next()) {
@@ -81,12 +75,13 @@ public class ItemPedidoDAOImpl implements ItemPedidoDAO {
     @Override
     public List<ItemDTO> obtenerItemsDTO(int idPedido) throws SQLException {
         String sql = """
-                SELECT i.*, l.titulo, l.portada
-                FROM ITEM_PEDIDO i JOIN LIBRO l ON l.id = i.id_libro
-                WHERE i.id_pedido = ? AND NOT i.eliminado ORDER BY i.id
-                """;
+            SELECT i.*, l.titulo, l.portada
+            FROM ITEM_PEDIDO i JOIN LIBRO l ON l.id = i.id_libro
+            WHERE i.id_pedido = ? AND NOT i.eliminado ORDER BY i.id
+            """;
         List<ItemDTO> items = new ArrayList<>();
-        try (Connection conexion = DBManager.getConnection(); PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+        try (Connection conexion = DBManager.getConnection();
+            PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setInt(1, idPedido);
             try (ResultSet resultado = sentencia.executeQuery()) {
                 while (resultado.next()) {
@@ -94,8 +89,9 @@ public class ItemPedidoDAOImpl implements ItemPedidoDAO {
                     BigDecimal original = resultado.getBigDecimal("precio_base");
                     BigDecimal unitario = resultado.getBigDecimal("precio_unitario");
                     items.add(new ItemDTO(resultado.getInt("id_libro"), resultado.getString("titulo"),
-                            portada,
-                            resultado.getInt("cantidad"), original, unitario, resultado.getBigDecimal("porcentaje_descuento"), resultado.getBigDecimal("sub_total"), null, null));
+                        portada, resultado.getInt("cantidad"), original, unitario,
+                        resultado.getBigDecimal("porcentaje_descuento"), resultado.getBigDecimal("sub_total"),
+                        null, null));
                 }
             }
         }

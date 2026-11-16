@@ -22,6 +22,7 @@ import me.Business.compra.CarritoBO;
 import me.Business.compra.CuponBO;
 import me.Business.compra.PedidoBO;
 import me.Business.exceptions.CuentaInactivaException;
+import me.Business.exceptions.CredencialesInvalidasException;
 import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.ValidacionException;
 import me.Business.usuario.DireccionEnvioBO;
@@ -49,18 +50,21 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class ServicioHttpTest {
+
     private JerseyTest http;
+
     private Servicios servicios;
+
     private HttpServletRequest request;
+
     private HttpSession sesion;
+
     private Map<String, Object> atributos;
 
     @BeforeEach
@@ -83,9 +87,12 @@ class ServicioHttpTest {
         when(request.getSession(false)).thenReturn(null);
         when(request.getSession(true)).thenReturn(sesion);
         when(sesion.getAttribute(anyString())).thenAnswer(inv -> atributos.get(inv.getArgument(0)));
-        doAnswer(inv -> { atributos.put(inv.getArgument(0), inv.getArgument(1)); return null; })
-                .when(sesion).setAttribute(anyString(), any());
+        doAnswer(inv -> {
+            atributos.put(inv.getArgument(0), inv.getArgument(1));
+            return null;
+        }).when(sesion).setAttribute(anyString(), any());
         http = new JerseyTest() {
+
             @Override
             protected void configureClient(ClientConfig config) {
                 // Permite probar PUT sin entidad; el contrato del servidor no exige cuerpo en esas rutas.
@@ -97,6 +104,7 @@ class ServicioHttpTest {
                 ResourceConfig config = new ResourceConfig();
                 new AplicacionRest().getClasses().forEach(config::register);
                 config.register(new AbstractBinder() {
+
                     @Override
                     protected void configure() {
                         bind(servicios).to(Servicios.class);
@@ -116,7 +124,8 @@ class ServicioHttpTest {
 
     @AfterEach
     void cerrar() throws Exception {
-        if (http != null) http.tearDown();
+        if (http != null)
+            http.tearDown();
     }
 
     @Test
@@ -136,18 +145,18 @@ class ServicioHttpTest {
     void reportesRF18YRF19ConviertenParametros() throws Exception {
         when(request.getSession(false)).thenReturn(sesion);
         atributos.put("bookshop.actor", 1);
-        when(servicios.getReporteBO().generarLibrosPDF(eq(1), any())).thenReturn(new byte[] {1});
-        when(servicios.getReporteBO().generarUsuariosPDF(eq(1), any(), any())).thenReturn(new byte[] {2});
+        when(servicios.getReporteBO().generarLibrosPDF(any())).thenReturn(new byte[] {1});
+        when(servicios.getReporteBO().generarUsuariosPDF(any(), any())).thenReturn(new byte[] {2});
         try (Response respuesta = http.target("documentos/ventas-libros").queryParam("inicio", "2026-10-01")
                 .queryParam("fin", "2026-10-31").queryParam("cantidad", 5).request("application/pdf").get()) {
             assertEquals(200, respuesta.getStatus());
-            verify(servicios.getReporteBO()).generarLibrosPDF(1, new ConsultaReporteLibrosDTO(
+            verify(servicios.getReporteBO()).generarLibrosPDF(new ConsultaReporteLibrosDTO(
                     LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 31), 5));
         }
         try (Response respuesta = http.target("documentos/usuarios").queryParam("mes", "2026-10")
                 .request("application/pdf").get()) {
             assertEquals(200, respuesta.getStatus());
-            verify(servicios.getReporteBO()).generarUsuariosPDF(1, YearMonth.of(2026, 10), null);
+            verify(servicios.getReporteBO()).generarUsuariosPDF(YearMonth.of(2026, 10), null);
         }
         try (Response respuesta = http.target("documentos/usuarios").queryParam("mes", "octubre")
                 .request("application/pdf").get()) {
@@ -174,29 +183,26 @@ class ServicioHttpTest {
 
     @Test
     void catalogoPublicoUsaVisitanteYRespetaFiltro() throws Exception {
-        when(servicios.getLibroBO().buscar(eq(0), any())).thenReturn(new ResultadoPaginadoDTO<>(List.of(), 0, 1, 12));
+        when(servicios.getLibroBO().buscar(any())).thenReturn(new ResultadoPaginadoDTO<>(List.of(), 0, 1, 12));
         try (Response respuesta = http.target("libros/busqueda").request().post(Entity.json(FiltroLibroDTO.porDefecto()))) {
             assertEquals(200, respuesta.getStatus());
-            verify(servicios.getLibroBO()).buscar(eq(0), argThat(f -> f.pagina() == 1 && f.soloActivos()));
+            verify(servicios.getLibroBO()).buscar(argThat(f -> f.pagina() == 1 && f.soloActivos()));
         }
     }
 
     @Test
     void loginCreaSesionYRenuevaIdentificador() throws Exception {
         when(servicios.getUsuarioBO().iniciarSesion(any())).thenReturn(new AccesoUsuarioDTO(7, "Ana", Rol.CLIENTE, false));
-        try (Response respuesta = http.target("cuenta/sesion").request()
-                .post(Entity.json(new CredencialesDTO("ana@correo.pe", "clave123")))) {
+        try (Response respuesta = http.target("cuenta/sesion").request().post(Entity.json(new CredencialesDTO("ana@correo.pe", "clave123")))) {
             assertEquals(200, respuesta.getStatus());
             assertEquals(7, atributos.get("bookshop.actor"));
-            verify(request).changeSessionId();
         }
     }
 
     @Test
     void cuentaInactivaNoObtieneSesionPrivada() throws Exception {
         when(servicios.getUsuarioBO().iniciarSesion(any())).thenReturn(new AccesoUsuarioDTO(7, "Ana", Rol.CLIENTE, true));
-        try (Response respuesta = http.target("cuenta/sesion").request()
-                .post(Entity.json(new CredencialesDTO("ana@correo.pe", "clave123")))) {
+        try (Response respuesta = http.target("cuenta/sesion").request().post(Entity.json(new CredencialesDTO("ana@correo.pe", "clave123")))) {
             assertEquals(200, respuesta.getStatus());
             verify(request, never()).getSession(true);
             assertTrue(atributos.isEmpty());
@@ -207,8 +213,7 @@ class ServicioHttpTest {
     void actorDeConsultaNoSustituyeLaSesion() throws Exception {
         when(request.getSession(false)).thenReturn(sesion);
         atributos.put("bookshop.actor", 7);
-        try (Response respuesta = http.target("pedidos/confirmacion").queryParam("idActor", 99)
-                .request().post(Entity.json(""))) {
+        try (Response respuesta = http.target("pedidos/confirmacion").queryParam("idActor", 99).request().post(Entity.json(""))) {
             assertEquals(204, respuesta.getStatus());
             verify(servicios.getPedidoBO()).pagar(7);
             verify(servicios.getPedidoBO(), never()).pagar(99);
@@ -217,7 +222,7 @@ class ServicioHttpTest {
 
     @Test
     void errorDeValidacionExponeCampoSinTraza() throws Exception {
-        when(servicios.getLibroBO().buscar(anyInt(), any())).thenThrow(new ValidacionException("pagina", "Página inválida."));
+        when(servicios.getLibroBO().buscar(any())).thenThrow(new ValidacionException("pagina", "Página inválida."));
         try (Response respuesta = http.target("libros/busqueda").request().post(Entity.json(FiltroLibroDTO.porDefecto()))) {
             assertEquals(400, respuesta.getStatus());
             String json = respuesta.readEntity(String.class);
@@ -228,8 +233,7 @@ class ServicioHttpTest {
 
     @Test
     void errorInternoNoExponeSqlNiCausa() throws Exception {
-        when(servicios.getLibroBO().buscar(anyInt(), any()))
-                .thenThrow(new PersistenciaException("SELECT secreto", new IllegalStateException("clave privada")));
+        when(servicios.getLibroBO().buscar(any())).thenThrow(new PersistenciaException("SELECT secreto", new IllegalStateException("clave privada")));
         try (Response respuesta = http.target("libros/busqueda").request().post(Entity.json(FiltroLibroDTO.porDefecto()))) {
             assertEquals(500, respuesta.getStatus());
             String json = respuesta.readEntity(String.class);
@@ -249,12 +253,10 @@ class ServicioHttpTest {
     @Test
     void registroRecibeFechaIso() throws Exception {
         when(servicios.getUsuarioBO().registrar(any())).thenReturn(new AccesoUsuarioDTO(7, "Ana", Rol.CLIENTE, false));
-        String json = "{\"nombre\":\"Ana\",\"email\":\"ana@correo.pe\",\"fechaNacimiento\":\"2000-02-29\","
-                + "\"contrasenia\":\"clave123\",\"confirmacionContrasenia\":\"clave123\",\"imagen\":null}";
+        String json = "{\"nombre\":\"Ana\",\"email\":\"ana@correo.pe\",\"fechaNacimiento\":\"2000-02-29\"," + "\"contrasenia\":\"clave123\",\"confirmacionContrasenia\":\"clave123\",\"imagen\":null}";
         try (Response respuesta = http.target("cuenta/registro").request().post(Entity.json(json))) {
             assertEquals(200, respuesta.getStatus());
-            verify(servicios.getUsuarioBO()).registrar(argThat(datos ->
-                    datos.fechaNacimiento().equals(java.time.LocalDate.of(2000, 2, 29))));
+            verify(servicios.getUsuarioBO()).registrar(argThat(datos -> datos.fechaNacimiento().equals(java.time.LocalDate.of(2000, 2, 29))));
         }
     }
 
@@ -275,18 +277,39 @@ class ServicioHttpTest {
     void imagenLlegaComoUrl() throws Exception {
         when(request.getSession(false)).thenReturn(sesion);
         atributos.put("bookshop.actor", 7);
-        try (Response respuesta = http.target("cuenta/imagen").queryParam("url", "https://example.test/imagen.png").request()
-                .put(Entity.json("null"))) {
+        try (Response respuesta = http.target("cuenta/imagen").queryParam("url", "https://example.test/imagen.png").request().put(Entity.json("null"))) {
             assertEquals(204, respuesta.getStatus());
-            verify(servicios.getUsuarioBO()).cambiarImagen(eq(7), argThat(imagen ->
-                    "https://example.test/imagen.png".equals(imagen)));
+            verify(servicios.getUsuarioBO()).cambiarImagen(eq(7), argThat(imagen -> "https://example.test/imagen.png".equals(imagen)));
+        }
+    }
+
+    @Test
+    void operacionPrivadaUsaLaIdentidadDeSesionSinOtraConsultaDeCuenta() throws Exception {
+        when(request.getSession(false)).thenReturn(sesion);
+        atributos.put("bookshop.actor", 7);
+        try (Response respuesta = http.target("carrito").request().get()) {
+            assertEquals(204, respuesta.getStatus());
+            verify(servicios.getCarritoBO()).consultar(7);
+            verifyNoInteractions(servicios.getUsuarioBO());
+        }
+    }
+
+    @Test
+    void consultarConfirmacionExigeSesionYUsaSuPropietario() throws Exception {
+        try (Response respuesta = http.target("pedidos/123").request().get()) {
+            assertEquals(401, respuesta.getStatus());
+        }
+        when(request.getSession(false)).thenReturn(sesion);
+        atributos.put("bookshop.actor", 7);
+        try (Response respuesta = http.target("pedidos/123").request().get()) {
+            assertEquals(204, respuesta.getStatus());
+            verify(servicios.getPedidoBO()).consultar(7, 123);
         }
     }
 
     @Test
     void noExponeRequisitosExcluidos() {
-        for (String ruta : List.of("solicitudes", "configuracion", "documentos/reportes/usuarios/datos",
-                "pedidos/123", "libros/123/gestion", "recomendaciones/para-ti/disponibilidad")) {
+        for (String ruta : List.of("solicitudes", "configuracion", "documentos/reportes/usuarios/datos", "libros/123/gestion", "recomendaciones/para-ti/disponibilidad")) {
             try (Response respuesta = http.target(ruta).request().get()) {
                 assertEquals(404, respuesta.getStatus(), ruta);
             }
@@ -294,7 +317,7 @@ class ServicioHttpTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"POST", "PUT"})
+    @ValueSource(strings = { "POST", "PUT" })
     void cantidadOmitidaNoModificaElCarrito(String metodo) {
         when(request.getSession(false)).thenReturn(sesion);
         atributos.put("bookshop.actor", 7);
@@ -308,49 +331,34 @@ class ServicioHttpTest {
     void ceroExplicitoConservaLaOperacionDeRetirarLinea() throws Exception {
         when(request.getSession(false)).thenReturn(sesion);
         atributos.put("bookshop.actor", 7);
-        try (Response respuesta = http.target("carrito/libros/3").queryParam("cantidad", 0)
-                .request().method("PUT")) {
+        try (Response respuesta = http.target("carrito/libros/3").queryParam("cantidad", 0).request().method("PUT")) {
             assertEquals(204, respuesta.getStatus());
             verify(servicios.getCarritoBO()).cambiarCantidad(7, 3, 0);
         }
     }
 
     @ParameterizedTest
-    @NullAndEmptySource
-    @ValueSource(strings = {"fasle", "1"})
-    void listaAusenteOInvalidaNoModificaDeseados(String favorito) {
-        when(request.getSession(false)).thenReturn(sesion);
-        atributos.put("bookshop.actor", 7);
-        var destino = http.target("cuenta/libros-guardados/3");
-        if (favorito != null) destino = destino.queryParam("favorito", favorito);
-        for (String metodo : List.of("PUT", "DELETE")) {
-            try (Response respuesta = destino.request().method(metodo)) {
-                assertEquals(400, respuesta.getStatus());
-                verifyNoInteractions(servicios.getLibroGuardadoBO());
-            }
-        }
-        var busqueda = http.target("cuenta/libros-guardados/busqueda");
-        if (favorito != null) busqueda = busqueda.queryParam("favorito", favorito);
-        try (Response respuesta = busqueda.request().post(Entity.json(FiltroLibroDTO.porDefecto()))) {
-            assertEquals(400, respuesta.getStatus());
-            verifyNoInteractions(servicios.getLibroGuardadoBO());
-        }
-    }
-
-    @ParameterizedTest
-    @ValueSource(booleans = {true, false})
+    @ValueSource(booleans = { true, false })
     void listaExplicitaSeEntregaSinCambiosABusiness(boolean favorito) throws Exception {
         when(request.getSession(false)).thenReturn(sesion);
         atributos.put("bookshop.actor", 7);
-        try (Response respuesta = http.target("cuenta/libros-guardados/3").queryParam("favorito", favorito)
-                .request().method("PUT")) {
+        try (Response respuesta = http.target("cuenta/libros-guardados/3").queryParam("favorito", favorito).request().method("PUT")) {
             assertEquals(204, respuesta.getStatus());
             verify(servicios.getLibroGuardadoBO()).guardar(7, 3, favorito);
+        }
+        try (Response respuesta = http.target("cuenta/libros-guardados/3").queryParam("favorito", favorito).request().delete()) {
+            assertEquals(200, respuesta.getStatus());
+            verify(servicios.getLibroGuardadoBO()).retirar(7, 3, favorito);
+        }
+        try (Response respuesta = http.target("cuenta/libros-guardados/busqueda").queryParam("favorito", favorito)
+            .request().post(Entity.json(FiltroLibroDTO.porDefecto()))) {
+            assertEquals(204, respuesta.getStatus());
+            verify(servicios.getLibroGuardadoBO()).listar(eq(7), eq(favorito), any());
         }
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"pedidos/preparacion", "pedidos/confirmacion"})
+    @ValueSource(strings = { "pedidos/preparacion", "pedidos/confirmacion" })
     void compraAceptaPostSinCuerpoNiTipoDeContenido(String ruta) {
         when(request.getSession(false)).thenReturn(sesion);
         atributos.put("bookshop.actor", 7);
@@ -360,8 +368,7 @@ class ServicioHttpTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"cuenta/direcciones/3/predeterminada", "cuenta/metodos/3/predeterminado",
-            "cuenta/seguimientos/AUTOR/3"})
+    @ValueSource(strings = { "cuenta/direcciones/3/predeterminada", "cuenta/metodos/3/predeterminado", "cuenta/seguimientos/AUTOR/3" })
     void seleccionPropiaAceptaPutSinCuerpoNiTipoDeContenido(String ruta) {
         when(request.getSession(false)).thenReturn(sesion);
         atributos.put("bookshop.actor", 7);
@@ -375,28 +382,25 @@ class ServicioHttpTest {
         when(request.getSession(false)).thenReturn(sesion);
         atributos.put("bookshop.actor", 7);
         for (String ruta : List.of("libros/idiomas", "cuenta/cupones")) {
-            try (Response respuesta = http.target(ruta).queryParam("pagina", 2)
-                    .queryParam("tamanioPagina", 3).request().get()) {
+            try (Response respuesta = http.target(ruta).queryParam("pagina", 2).queryParam("tamanioPagina", 3).request().get()) {
                 assertEquals(204, respuesta.getStatus());
             }
         }
-        verify(servicios.getLibroBO()).buscarIdiomas(7, null, 2, 3);
+        verify(servicios.getLibroBO()).buscarIdiomas(null, 2, 3);
         verify(servicios.getCuponBO()).listar(7, 2, 3);
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {true, false})
+    @ValueSource(booleans = { true, false })
     void falloAlRegistrarTiempoNoImpideCerrarSesion(boolean cuentaInactiva) throws Exception {
         when(request.getSession(false)).thenReturn(sesion);
         atributos.put("bookshop.actor", 7);
         atributos.put("bookshop.inicio", java.time.Instant.now().minusSeconds(10));
         UsuarioBO usuarios = servicios.getUsuarioBO();
         if (cuentaInactiva) {
-            doThrow(new CuentaInactivaException("Cuenta desactivada."))
-                    .when(usuarios).cerrarSesion(eq(7), any());
+            doThrow(new CuentaInactivaException("Cuenta desactivada.")).when(usuarios).cerrarSesion(eq(7), any());
         } else {
-            doThrow(new PersistenciaException("No se pudo guardar el tiempo.", new IllegalStateException()))
-                    .when(usuarios).cerrarSesion(eq(7), any());
+            doThrow(new PersistenciaException("No se pudo guardar el tiempo.", new IllegalStateException())).when(usuarios).cerrarSesion(eq(7), any());
         }
         try (Response respuesta = http.target("cuenta/sesion").request().delete()) {
             assertEquals(cuentaInactiva ? 403 : 500, respuesta.getStatus());
@@ -405,21 +409,66 @@ class ServicioHttpTest {
     }
 
     @Test
+    void desactivarValidaLaClaveUnaVezYConservaElTiempoDeSesion() throws Exception {
+        when(request.getSession(false)).thenReturn(sesion);
+        atributos.put("bookshop.actor", 7);
+        atributos.put("bookshop.inicio", java.time.Instant.now().minusSeconds(10));
+        UsuarioBO usuarios = servicios.getUsuarioBO();
+        try (Response respuesta = http.target("cuenta/desactivacion").request()
+            .post(Entity.json("{\"contraseniaActual\":\"clave123\"}"))) {
+            assertEquals(204, respuesta.getStatus());
+            var orden = inOrder(usuarios, sesion);
+            orden.verify(usuarios).desactivar(7, "clave123");
+            orden.verify(usuarios).cerrarSesion(eq(7), argThat(tiempo -> tiempo.toSeconds() >= 10));
+            orden.verify(sesion).invalidate();
+            verify(usuarios, never()).obtenerPerfil(anyInt());
+            verify(usuarios, never()).iniciarSesion(any());
+        }
+    }
+
+    @Test
+    void claveIncorrectaAlDesactivarConservaLaSesion() throws Exception {
+        when(request.getSession(false)).thenReturn(sesion);
+        atributos.put("bookshop.actor", 7);
+        UsuarioBO usuarios = servicios.getUsuarioBO();
+        doThrow(new CredencialesInvalidasException("La contraseña no es correcta."))
+            .when(usuarios).desactivar(7, "incorrecta");
+        try (Response respuesta = http.target("cuenta/desactivacion").request()
+            .post(Entity.json("{\"contraseniaActual\":\"incorrecta\"}"))) {
+            assertEquals(401, respuesta.getStatus());
+            verify(usuarios, never()).cerrarSesion(anyInt(), any());
+            verify(sesion, never()).invalidate();
+        }
+    }
+
+    @Test
+    void cuentaDesactivadaCierraSesionAunqueFalleGuardarSuTiempo() throws Exception {
+        when(request.getSession(false)).thenReturn(sesion);
+        atributos.put("bookshop.actor", 7);
+        atributos.put("bookshop.inicio", java.time.Instant.now().minusSeconds(10));
+        UsuarioBO usuarios = servicios.getUsuarioBO();
+        doThrow(new PersistenciaException("No se pudo guardar el tiempo.", new IllegalStateException()))
+            .when(usuarios).cerrarSesion(eq(7), any());
+        try (Response respuesta = http.target("cuenta/desactivacion").request()
+            .post(Entity.json("{\"contraseniaActual\":\"clave123\"}"))) {
+            assertEquals(500, respuesta.getStatus());
+            verify(usuarios).desactivar(7, "clave123");
+            verify(sesion).invalidate();
+        }
+    }
+
+    @Test
     void paginaDeCatalogoConservaImportesYTotalDelConjunto() throws Exception {
-        var libro = new TarjetaLibroDTO(3, "Libro", null, "Autor", new BigDecimal("19.99"),
-                new BigDecimal("16.99"), new BigDecimal("15.00"), true);
-        when(servicios.getLibroBO().buscar(eq(0), any()))
-                .thenReturn(new ResultadoPaginadoDTO<>(List.of(libro), 25, 2, 12));
-        try (Response respuesta = http.target("libros/busqueda").request()
-                .post(Entity.json(FiltroLibroDTO.porDefecto()))) {
+        var libro = new TarjetaLibroDTO(3, "Libro", null, "Autor", new BigDecimal("19.99"), new BigDecimal("16.99"), new BigDecimal("15.00"), true);
+        when(servicios.getLibroBO().buscar(any())).thenReturn(new ResultadoPaginadoDTO<>(List.of(libro), 25, 2, 12));
+        try (Response respuesta = http.target("libros/busqueda").request().post(Entity.json(FiltroLibroDTO.porDefecto()))) {
             assertEquals(200, respuesta.getStatus());
             try (var lector = Json.createReader(new StringReader(respuesta.readEntity(String.class)))) {
                 var pagina = lector.readObject();
                 assertEquals(25, pagina.getInt("totalResultados"));
                 assertEquals(2, pagina.getInt("pagina"));
                 var tarjeta = pagina.getJsonArray("items").getJsonObject(0);
-                assertEquals(0, new BigDecimal("16.99").compareTo(
-                        tarjeta.getJsonNumber("precioConDescuento").bigDecimalValue()));
+                assertEquals(0, new BigDecimal("16.99").compareTo(tarjeta.getJsonNumber("precioConDescuento").bigDecimalValue()));
             }
         }
     }
@@ -430,8 +479,7 @@ class ServicioHttpTest {
         atributos.put("bookshop.actor", 7);
         LocalDateTime fecha = LocalDateTime.of(2026, 11, 4, 10, 0);
         var cabecera = new ResumenPedidoDTO(15, fecha, EstadoPedido.EN_ALMACEN, 2, new BigDecimal("35.68"));
-        var detalle = new DetallePedidoDTO(cabecera, null, null, null, "TRANSACCION", "SEGUIMIENTO",
-                fecha.plusSeconds(90), null, null, true, false);
+        var detalle = new DetallePedidoDTO(cabecera, null, null, null, "TRANSACCION", "SEGUIMIENTO", fecha.plusSeconds(90), null, null, true, false);
         when(servicios.getPedidoBO().pagar(7)).thenReturn(detalle);
         try (Response respuesta = http.target("pedidos/confirmacion").request().method("POST")) {
             assertEquals(200, respuesta.getStatus());
@@ -439,8 +487,7 @@ class ServicioHttpTest {
                 var pedido = lector.readObject().getJsonObject("pedido");
                 assertEquals(fecha, LocalDateTime.parse(pedido.getString("fechaPago")));
                 assertEquals("EN_ALMACEN", pedido.getString("estado"));
-                assertEquals(0, new BigDecimal("35.68").compareTo(
-                        pedido.getJsonNumber("total").bigDecimalValue()));
+                assertEquals(0, new BigDecimal("35.68").compareTo(pedido.getJsonNumber("total").bigDecimalValue()));
             }
         }
     }

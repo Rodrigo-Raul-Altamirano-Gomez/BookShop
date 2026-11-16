@@ -27,48 +27,47 @@ import me.Service.Sesion;
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
 public class LibroRS {
+
     @Inject
     private Servicios servicios;
+
     @Context
     private HttpServletRequest peticion;
 
     @POST
     @Path("busqueda")
     public ResultadoPaginadoDTO<TarjetaLibroDTO> buscar(FiltroLibroDTO filtro) throws NegocioException {
-        return servicios.getLibroBO().buscar(Sesion.obtenerIdUsuario(peticion), filtro);
+        return servicios.getLibroBO().buscar(filtro);
     }
 
     @POST
     @Path("por-autor/{idAutor}")
-    public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorAutor(
-            @PathParam("idAutor") int idAutor,
-            FiltroLibroDTO filtro) throws NegocioException {
-        return servicios.getLibroBO().buscarPorAutor(Sesion.obtenerIdUsuario(peticion), idAutor, filtro);
+    public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorAutor(@PathParam("idAutor") int idAutor,
+        FiltroLibroDTO filtro) throws NegocioException {
+        return servicios.getLibroBO().buscarPorAutor(idAutor, filtro);
     }
 
     @POST
     @Path("por-categoria/{idCategoria}")
-    public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorCategoria(
-            @PathParam("idCategoria") int idCategoria,
-            FiltroLibroDTO filtro) throws NegocioException {
-        return servicios.getLibroBO().buscarPorCategoria(Sesion.obtenerIdUsuario(peticion), idCategoria, filtro);
+    public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorCategoria(@PathParam("idCategoria") int idCategoria,
+        FiltroLibroDTO filtro) throws NegocioException {
+        return servicios.getLibroBO().buscarPorCategoria(idCategoria, filtro);
     }
 
     @POST
     @Path("por-editorial/{idEditorial}")
-    public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorEditorial(
-            @PathParam("idEditorial") int idEditorial,
-            FiltroLibroDTO filtro) throws NegocioException {
-        return servicios.getLibroBO().buscarPorEditorial(Sesion.obtenerIdUsuario(peticion), idEditorial, filtro);
+    public ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorEditorial(@PathParam("idEditorial") int idEditorial,
+        FiltroLibroDTO filtro) throws NegocioException {
+        return servicios.getLibroBO().buscarPorEditorial(idEditorial, filtro);
     }
 
     @GET
     @Path("idiomas")
-    public ResultadoPaginadoDTO<String> buscarIdiomas(
-            @QueryParam("nombre") String nombre,
-            @DefaultValue("1") @QueryParam("pagina") int pagina,
-            @DefaultValue("12") @QueryParam("tamanioPagina") int tamanioPagina) throws NegocioException {
-        return servicios.getLibroBO().buscarIdiomas(Sesion.obtenerIdUsuario(peticion), nombre, pagina, tamanioPagina);
+    public ResultadoPaginadoDTO<String> buscarIdiomas(@QueryParam("nombre") String nombre, @DefaultValue("1")
+        @QueryParam("pagina") int pagina, @DefaultValue("12") @QueryParam("tamanioPagina") int tamanioPagina)
+        throws NegocioException {
+        return servicios.getLibroBO().buscarIdiomas(nombre, pagina,
+            tamanioPagina);
     }
 
     @GET
@@ -79,9 +78,8 @@ public class LibroRS {
 
     @GET
     @Path("comparacion")
-    public List<DetalleLibroDTO> comparar(
-            @QueryParam("primerLibro") int primerLibro,
-            @QueryParam("segundoLibro") int segundoLibro) throws NegocioException {
+    public List<DetalleLibroDTO> comparar(@QueryParam("primerLibro") int primerLibro,
+        @QueryParam("segundoLibro") int segundoLibro) throws NegocioException {
         return servicios.getLibroBO().comparar(Sesion.obtenerIdUsuario(peticion), primerLibro, segundoLibro);
     }
 }

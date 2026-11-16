@@ -24,22 +24,17 @@ import me.Service.Sesion;
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
 public class CategoriaRS {
+
     @Inject
     private Servicios servicios;
+
     @Context
     private HttpServletRequest peticion;
 
     @POST
     @Path("busqueda")
     public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscar(FiltroReferenciaDTO filtro) throws NegocioException {
-        return servicios.getCategoriaBO().buscar(Sesion.obtenerIdUsuario(peticion), filtro);
-    }
-
-    @POST
-    @Path("opciones")
-    public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscarOpciones(
-            FiltroReferenciaDTO filtro) throws NegocioException {
-        return servicios.getCategoriaBO().buscarOpciones(Sesion.obtenerIdUsuario(peticion), filtro);
+        return servicios.getCategoriaBO().buscar(filtro);
     }
 
     @GET

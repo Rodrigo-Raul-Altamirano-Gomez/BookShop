@@ -1,27 +1,35 @@
 package me.DAO;
 
+import me.DAO.usuario.UsuarioDAOImpl;
+
+import me.DAO.catalogo.LibroDAOImpl;
+
+import me.DAO.catalogo.AutorDAOImpl;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import me.DAO.catalogo.AutorDAOImpl;
-import me.DAO.catalogo.LibroDAOImpl;
-import me.DAO.catalogo.VotoUtilDAOImpl;
-import me.DAO.usuario.DireccionEnvioDAOImpl;
-import me.DAO.usuario.UsuarioDAOImpl;
+import me.DAO.catalogo.AutorDAO;
+import me.DAO.catalogo.LibroDAO;
+import me.DAO.catalogo.VotoUtilDAO;
+import me.DAO.usuario.DireccionEnvioDAO;
+import me.DAO.usuario.UsuarioDAO;
 import me.DBManager.DBManager;
 import me.DBManager.TransactionContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class TransaccionesDAOTest {
+
     private Connection conexion;
+
     private PreparedStatement statement;
+
     private MockedStatic<DBManager> manager;
 
     @BeforeEach
@@ -63,17 +71,6 @@ class TransaccionesDAOTest {
     }
 
     @Test
-    void lecturaBloqueadaAbreYConservaLaTransaccion() throws Exception {
-        ResultSet rs = mock(ResultSet.class);
-        when(statement.executeQuery()).thenReturn(rs);
-        assertNull(new LibroDAOImpl().leerParaActualizar(1));
-        verify(conexion).setAutoCommit(false);
-        verify(conexion, never()).close();
-        assertSame(conexion, TransactionContext.getConnection());
-        manager.verify(DBManager::getConnection, times(1));
-    }
-
-    @Test
     void errorJdbcSePropagaYPermiteRevertirLaTransaccion() throws Exception {
         TransactionContext.getConnection();
         when(statement.executeUpdate()).thenThrow(new SQLException("Fallo simulado"));
@@ -99,9 +96,9 @@ class TransaccionesDAOTest {
         ResultSet rs = mock(ResultSet.class);
         when(statement.executeQuery()).thenReturn(rs);
         when(rs.next()).thenReturn(true);
-        assertTrue(new AutorDAOImpl().cambiarActivo(1, false, "admin"));
+        new LibroDAOImpl().recalcularVetosPorAutor(1, "admin");
         var sql = org.mockito.ArgumentCaptor.forClass(String.class);
-        verify(conexion, times(2)).prepareStatement(sql.capture());
+        verify(conexion).prepareStatement(sql.capture());
         String recalculo = sql.getAllValues().getLast();
         assertTrue(recalculo.contains("vetado_directamente"));
         assertTrue(recalculo.contains("a.eliminado"));

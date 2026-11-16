@@ -31,6 +31,4 @@ public partial class FiltroReferencias
         expandido = false;
     }
 
-    private void AlternarExpansion() => expandido = !expandido;
-    private Task Seleccionar(string opcion) => SeleccionCambiada.InvokeAsync(opcion);
 }

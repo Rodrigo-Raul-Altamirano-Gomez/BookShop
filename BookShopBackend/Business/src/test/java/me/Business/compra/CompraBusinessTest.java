@@ -27,28 +27,51 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class CompraBusinessTest {
+
     private final LocalDateTime fecha = LocalDateTime.of(2026, 10, 7, 10, 0);
-    private final ConfiguracionDTO parametros = new ConfiguracionDTO(new BigDecimal("5"), 30, 3, 5,
-            new BigDecimal("10"), new BigDecimal("100"), 30);
+
+    private final ConfiguracionDTO parametros = new ConfiguracionDTO(new BigDecimal("5"), 30, 3, 5, new BigDecimal("10"), new BigDecimal("100"), 30);
+
     private LibroDAO libros;
+
     private DescuentoDAO descuentos;
+
     private UsuarioDAO usuarios;
+
     private PedidoDAO pedidos;
+
+    private ItemPedidoDAO items;
+
     private DireccionEnvioDAO direcciones;
+
     private MetodoPagoDAO metodos;
+
     private CuponDAO cupones;
+
     private SolicitudDAO solicitudes;
+
     private CarritoBOImpl carrito;
+
     private PedidoBOImpl negocio;
+
     private Libro libro;
+
     private Usuario usuario;
+
     private DireccionEnvio direccion;
+
     private TarjetaBancaria metodo;
+
     private AtomicReference<Pedido> registrado;
+
     private AtomicReference<Double> azar;
+
     private Reloj reloj;
+
     private Connection conexion;
+
     private MockedStatic<DBManager> manager;
+
     private MockedStatic<ProteccionDatos> proteccion;
 
     @BeforeEach
@@ -57,6 +80,7 @@ class CompraBusinessTest {
         descuentos = mock(DescuentoDAO.class);
         usuarios = mock(UsuarioDAO.class);
         pedidos = mock(PedidoDAO.class);
+        items = mock(ItemPedidoDAO.class);
         direcciones = mock(DireccionEnvioDAO.class);
         metodos = mock(MetodoPagoDAO.class);
         cupones = mock(CuponDAO.class);
@@ -75,7 +99,7 @@ class CompraBusinessTest {
         usuario.setEmail("ana@test");
         usuario.setCantidadPedidosEntregados(4);
         when(usuarios.leer(1)).thenReturn(usuario);
-        when(usuarios.leerParaActualizar(1)).thenReturn(usuario);
+        when(usuarios.leer(1)).thenReturn(usuario);
         when(usuarios.incrementarPedidosEntregados(1, "ana@test")).thenReturn(true);
         libro = new Libro();
         libro.setId(3);
@@ -83,7 +107,7 @@ class CompraBusinessTest {
         libro.setPrecioBase(new BigDecimal("19.99"));
         libro.setStockFisico(20);
         when(libros.leer(3)).thenReturn(libro);
-        when(libros.leerParaActualizar(3)).thenReturn(libro);
+        when(libros.leer(3)).thenReturn(libro);
         when(libros.descontarStock(eq(3), anyInt(), eq("ana@test"))).thenReturn(true);
         when(libros.reponerStock(eq(3), anyInt(), anyString())).thenReturn(true);
         Descuento promocion = new Descuento();
@@ -98,9 +122,8 @@ class CompraBusinessTest {
         direccion.setCiudad("Lima");
         direccion.setPredeterminada(true);
         when(direcciones.leer(1)).thenReturn(direccion);
-        when(direcciones.leerParaActualizar(1)).thenReturn(direccion);
-        when(direcciones.listarPorUsuario(1, 1, 100)).thenReturn(new ResultadoPaginadoDTO<>(List.of(
-                new DireccionEnvioDTO(1, "Casa", "Calle 1", "Distrito", "Lima", null, true)), 1, 1, 100));
+        when(direcciones.leer(1)).thenReturn(direccion);
+        when(direcciones.listarPorUsuario(1, 1, 1)).thenReturn(new ResultadoPaginadoDTO<>(List.of(new DireccionEnvioDTO(1, "Casa", "Calle 1", "Distrito", "Lima", null, true)), 1, 1, 1));
         metodo = new TarjetaBancaria();
         metodo.setId(1);
         metodo.setUsuario(usuario);
@@ -111,8 +134,8 @@ class CompraBusinessTest {
         metodo.setFechaVencimiento(LocalDate.of(2030, 1, 1));
         metodo.setPredeterminado(true);
         when(metodos.leer(1)).thenReturn(metodo);
-        when(metodos.leerParaActualizar(1)).thenReturn(metodo);
-        when(metodos.listarPorUsuario(1, 1, 100)).thenReturn(new ResultadoPaginadoDTO<>(List.of(metodo), 1, 1, 100));
+        when(metodos.leer(1)).thenReturn(metodo);
+        when(metodos.listarPorUsuario(1, 1, 1)).thenReturn(new ResultadoPaginadoDTO<>(List.of(metodo), 1, 1, 1));
         doAnswer(inv -> {
             Pedido pedido = inv.getArgument(0);
             pedido.setId(20);
@@ -120,21 +143,20 @@ class CompraBusinessTest {
             return null;
         }).when(pedidos).insertar(any());
         when(pedidos.leer(20)).thenAnswer(inv -> registrado.get());
-        when(pedidos.leerParaActualizar(20)).thenAnswer(inv -> registrado.get());
+        when(pedidos.leer(20)).thenAnswer(inv -> registrado.get());
         when(pedidos.actualizarEstado(any(), any())).thenReturn(true);
-        when(pedidos.obtenerItemsDTO(20)).thenAnswer(inv -> registrado.get().getItems().stream()
-                .map(item -> new ItemDTO(item.getLibro().getId(), libro.getTitulo(), null, item.getCantidad(),
-                        item.getPrecioBase(), item.getPrecioUnitario(), item.getPorcentajeDescuento(), item.getSubTotal(), null, null)).toList());
-        carrito = new CarritoBOImpl(libros, descuentos, usuarios, reloj, () -> parametros);
-        negocio = new PedidoBOImpl(pedidos, libros, descuentos, usuarios, direcciones, metodos, cupones,
-                solicitudes, carrito, reloj, () -> azar.get(), () -> parametros);
+        when(pedidos.obtenerItemsDTO(20)).thenAnswer(inv -> registrado.get().getItems().stream().map(item -> new ItemDTO(item.getLibro().getId(), libro.getTitulo(), null, item.getCantidad(), item.getPrecioBase(), item.getPrecioUnitario(), item.getPorcentajeDescuento(), item.getSubTotal(), null, null)).toList());
+        carrito = new CarritoBOImpl(libros, descuentos, reloj, () -> parametros);
+        negocio = new PedidoBOImpl(pedidos, items, libros, usuarios, direcciones, metodos, cupones, solicitudes, carrito, reloj, () -> azar.get(), () -> parametros);
     }
 
     @AfterEach
     void cerrar() {
         TransactionContext.close();
-        if (proteccion != null) proteccion.close();
-        if (manager != null) manager.close();
+        if (proteccion != null)
+            proteccion.close();
+        if (manager != null)
+            manager.close();
     }
 
     @Test
@@ -167,18 +189,37 @@ class CompraBusinessTest {
     }
 
     @Test
-    void importeIncluidoEnvioDebeCaberEnPedidoAntesDeModificarCarrito() throws Exception {
-        libro.setPrecioBase(new BigDecimal("9999999999.99"));
-        libro.setStockFisico(1000);
-        when(descuentos.obtenerVigente(eq(3), any())).thenReturn(null);
-        carrito.agregar(1, 3, 95);
+    void agregarYCambiarCantidadMantienenOrdenYNoAplicanCambiosSiFallaOtraLinea() throws Exception {
+        Libro otro = new Libro();
+        otro.setId(4);
+        otro.setTitulo("Otro libro");
+        otro.setPrecioBase(new BigDecimal("10.00"));
+        otro.setStockFisico(10);
+        when(libros.leer(4)).thenReturn(otro);
+        carrito.agregar(1, 3, 1);
+        carrito.agregar(1, 4, 2);
+        var resumen = carrito.agregar(1, 3, 2);
+        assertEquals(List.of(3, 4), resumen.items().stream().map(ItemDTO::idLibro).toList());
+        assertEquals(3, resumen.items().getFirst().cantidad());
         var preparacion = negocio.preparar(1);
-        // 96 ejemplares caben en subtotal, pero su total con envio excede DECIMAL(14,2).
-        assertThrows(ValidacionException.class, () -> carrito.agregar(1, 3, 1));
-        assertThrows(ValidacionException.class, () -> carrito.cambiarCantidad(1, 3, 101));
-        assertEquals(95, carrito.consultar(1).cantidadLibros());
+        when(libros.leer(4)).thenThrow(new SQLException("Fallo al actualizar otra linea"));
+        assertThrows(PersistenciaException.class, () -> carrito.cambiarCantidad(1, 3, 5));
         assertSame(preparacion, negocio.consultarPreparacion(1));
-        verifyNoInteractions(conexion);
+        doReturn(otro).when(libros).leer(4);
+        assertEquals(3, carrito.consultar(1).items().getFirst().cantidad());
+    }
+
+    @Test
+    void prepararNoEligeRegistrosSinMarcaNiMetodoPredeterminadoVencido() throws Exception {
+        carrito.agregar(1, 3, 1);
+        when(direcciones.listarPorUsuario(1, 1, 1)).thenReturn(new ResultadoPaginadoDTO<>(List.of(
+            new DireccionEnvioDTO(1, "Casa", "Calle 1", "Distrito", "Lima", null, false)), 1, 1, 1));
+        metodo.setFechaVencimiento(fecha.toLocalDate().minusDays(1));
+        var preparacion = negocio.preparar(1);
+        assertEquals(new SeleccionCompraDTO(0, 0, 0), preparacion.seleccion());
+        assertFalse(preparacion.puedePagar());
+        verify(direcciones).listarPorUsuario(1, 1, 1);
+        verify(metodos).listarPorUsuario(1, 1, 1);
     }
 
     @Test
@@ -186,9 +227,8 @@ class CompraBusinessTest {
         Clock utc = Clock.fixed(Instant.parse("2026-10-08T01:00:00Z"), ZoneOffset.UTC);
         LocalDateTime ahoraLima = LocalDateTime.of(2026, 10, 7, 20, 0);
         metodo.setFechaVencimiento(ahoraLima.toLocalDate());
-        carrito = new CarritoBOImpl(libros, descuentos, usuarios, utc, () -> parametros);
-        negocio = new PedidoBOImpl(pedidos, libros, descuentos, usuarios, direcciones, metodos, cupones,
-                solicitudes, carrito, utc, () -> azar.get(), () -> parametros);
+        carrito = new CarritoBOImpl(libros, descuentos, utc, () -> parametros);
+        negocio = new PedidoBOImpl(pedidos, items, libros, usuarios, direcciones, metodos, cupones, solicitudes, carrito, utc, () -> azar.get(), () -> parametros);
         carrito.agregar(1, 3, 1);
         assertTrue(negocio.preparar(1).puedePagar());
         assertTrue(negocio.pagar(1).metodoPago().vigente());
@@ -251,11 +291,24 @@ class CompraBusinessTest {
     }
 
     @Test
+    void libroRetiradoSigueVisibleYNoSeConfirmaElPedido() throws Exception {
+        carrito.agregar(1, 3, 2);
+        negocio.preparar(1);
+        when(libros.leer(3)).thenReturn(null);
+        assertThrows(ConflictoException.class, () -> negocio.pagar(1));
+        ItemDTO linea = negocio.consultarPreparacion(1).resumen().items().getFirst();
+        assertEquals(3, linea.idLibro());
+        assertEquals(2, linea.cantidad());
+        assertFalse(linea.activo());
+        verify(pedidos, never()).insertar(any());
+        verify(libros, never()).descontarStock(anyInt(), anyInt(), anyString());
+    }
+
+    @Test
     void falloDeDatosDespuesDeCommitNoPermiteCobrarDeNuevo() throws Exception {
         carrito.agregar(1, 3, 2);
         negocio.preparar(1);
-        when(pedidos.leer(20)).thenThrow(new SQLException("Fallo al construir la respuesta"))
-                .thenAnswer(inv -> registrado.get());
+        when(pedidos.leer(20)).thenThrow(new SQLException("Fallo al construir la respuesta")).thenAnswer(inv -> registrado.get());
         assertThrows(PersistenciaException.class, () -> negocio.pagar(1));
         var repetido = negocio.pagar(1);
         assertEquals(20, repetido.pedido().id());
@@ -266,12 +319,28 @@ class CompraBusinessTest {
     }
 
     @Test
+    void compraConservaImportesHistoricosAlCambiarCatalogoYCarrito() throws Exception {
+        carrito.agregar(1, 3, 2);
+        negocio.preparar(1);
+        negocio.pagar(1);
+        libro.setPrecioBase(new BigDecimal("50.00"));
+        carrito.agregar(1, 3, 5);
+        var historico = negocio.consultar(1, 20);
+        assertEquals(2, historico.resumen().cantidadLibros());
+        assertEquals(new BigDecimal("19.99"), historico.resumen().items().getFirst().precioOriginal());
+        assertEquals(new BigDecimal("16.99"), historico.resumen().items().getFirst().precioUnitario());
+        assertEquals(new BigDecimal("35.68"), historico.pedido().total());
+        assertEquals(5, carrito.consultar(1).cantidadLibros());
+    }
+
+    @Test
     void falloAlInsertarRevierteTransaccionSinVaciarCarrito() throws Exception {
         carrito.agregar(1, 3, 2);
         negocio.preparar(1);
-        doThrow(new SQLException("Fallo de items")).when(pedidos).insertar(any());
+        doThrow(new SQLException("Fallo de items")).when(items).insertar(eq(20), any());
         assertThrows(PersistenciaException.class, () -> negocio.pagar(1));
         verify(libros).descontarStock(3, 2, "ana@test");
+        verify(pedidos).insertar(any());
         verify(conexion).rollback();
         verify(conexion, never()).commit();
         assertEquals(2, carrito.consultar(1).cantidadLibros());
@@ -322,15 +391,34 @@ class CompraBusinessTest {
     }
 
     static class Reloj extends Clock {
+
         private Instant instante;
+
         private final ZoneId zona = ZoneId.of("America/Lima");
-        Reloj(LocalDateTime fecha) { instante = fecha.atZone(zona).toInstant(); }
-        void avanzar(long segundos) { instante = instante.plusSeconds(segundos); }
-        @Override public ZoneId getZone() { return zona; }
-        @Override public Clock withZone(ZoneId zone) {
-            if (zona.equals(zone)) return this;
+
+        Reloj(LocalDateTime fecha) {
+            instante = fecha.atZone(zona).toInstant();
+        }
+
+        void avanzar(long segundos) {
+            instante = instante.plusSeconds(segundos);
+        }
+
+        @Override
+        public ZoneId getZone() {
+            return zona;
+        }
+
+        @Override
+        public Clock withZone(ZoneId zone) {
+            if (zona.equals(zone))
+                return this;
             throw new IllegalArgumentException("El reloj de prueba conserva Lima.");
         }
-        @Override public Instant instant() { return instante; }
+
+        @Override
+        public Instant instant() {
+            return instante;
+        }
     }
 }

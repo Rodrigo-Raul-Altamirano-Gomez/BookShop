@@ -9,6 +9,7 @@ import me.Model.entities.compra.MetodoPago;
 import me.Model.entities.usuario.Usuario;
 
 public class Pedido {
+
     private int id;
     private Usuario usuario;
     private List<Item> items;
@@ -52,26 +53,6 @@ public class Pedido {
         this.fechaCreacion = LocalDateTime.now();
     }
 
-    public Pedido(int id, Usuario usuario, Carrito carrito) {
-        this();
-        this.id = id;
-        this.usuario = usuario;
-        for (Item item : carrito.getItems()) {
-            if (item.isEliminado()) continue;
-            this.items.add(new Item(item));
-            subtotalProductos = subtotalProductos.add(item.getPrecioBase().multiply(
-                    BigDecimal.valueOf(item.getCantidad())));
-            descuentoLibros = descuentoLibros.add(item.getDescuentoTotal());
-        }
-        total = carrito.getTotal();
-        cantidadTotalLibros = carrito.getCantidad();
-    }
-
-    public Pedido(int id, Usuario usuario, Carrito carrito, DireccionEnvio direccionEnvio) {
-        this(id, usuario, carrito);
-        this.direccionEnvio = direccionEnvio;
-    }
-
     public int getId() {
         return id;
     }
@@ -89,11 +70,11 @@ public class Pedido {
     }
 
     public List<Item> getItems() {
-        return new ArrayList<>(items);
+        return items;
     }
 
     public void setItems(List<Item> items) {
-        this.items = new ArrayList<>(items);
+        this.items = items;
     }
 
     public Cupon getCupon() {
@@ -245,9 +226,6 @@ public class Pedido {
     }
 
     public void setNumeroIntentos(int numeroIntentos) {
-        if (numeroIntentos < 0) {
-            throw new IllegalArgumentException("El numero de intentos no puede ser negativo.");
-        }
         this.numeroIntentos = numeroIntentos;
     }
 
@@ -299,22 +277,14 @@ public class Pedido {
         this.fechaActualizacion = fechaActualizacion;
     }
 
-    public BigDecimal getSubtotal() {
-        return subtotalProductos.subtract(descuentoLibros);
-    }
-
     public boolean puedeCancelar() {
         return !eliminado && estado == EstadoPedido.EN_ALMACEN;
     }
 
     public boolean puedeSolicitarDevolucion(LocalDateTime fechaActual, int plazoDias, int maximoIntentos) {
-        return !eliminado && estado == EstadoPedido.ENTREGADO && fechaEntrega != null
-                && fechaActual != null && plazoDias >= 0 && maximoIntentos > 0
-                && numeroIntentos < maximoIntentos && !fechaActual.isBefore(fechaEntrega)
-                && !fechaActual.isAfter(fechaEntrega.plusDays(plazoDias));
+        return !eliminado && estado == EstadoPedido.ENTREGADO && fechaEntrega != null && fechaActual != null
+            && plazoDias >= 0 && maximoIntentos > 0 && numeroIntentos < maximoIntentos &&
+            !fechaActual.isBefore(fechaEntrega) && !fechaActual.isAfter(fechaEntrega.plusDays(plazoDias));
     }
 
-    public void registrarIntento() {
-        numeroIntentos = numeroIntentos + 1;
-    }
 }

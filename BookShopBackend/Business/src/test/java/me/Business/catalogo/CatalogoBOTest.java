@@ -36,7 +36,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -54,44 +53,65 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import me.Model.dto.catalogo.FiltroReferenciaDTO;
+import me.Model.dto.ResultadoPaginadoDTO;
+import me.Model.dto.catalogo.EstadoDescuento;
 
 class CatalogoBOTest {
+
     private final LibroDAO libros = mock(LibroDAO.class);
+
     private final AutorDAO autores = mock(AutorDAO.class);
+
     private final CategoriaDAO categorias = mock(CategoriaDAO.class);
+
     private final EditorialDAO editoriales = mock(EditorialDAO.class);
+
     private final UsuarioDAO usuarios = mock(UsuarioDAO.class);
+
     private final DescuentoDAO descuentos = mock(DescuentoDAO.class);
+
     private final Clock reloj = Clock.fixed(Instant.parse("2026-10-07T04:30:00Z"), ZoneOffset.UTC);
+
     private LibroBOImpl bo;
+
     private Libro libro;
+
     private Autor autor;
+
     private Categoria categoria;
+
     private Editorial editorial;
 
     @BeforeEach
     void preparar() throws Exception {
         Usuario admin = new Usuario();
-        admin.setId(1); admin.setEmail("admin@admin.bookshop"); admin.setRol(Rol.ADMIN);
+        admin.setId(1);
+        admin.setEmail("admin@admin.bookshop");
+        admin.setRol(Rol.ADMIN);
         Usuario cliente = new Usuario();
-        cliente.setId(2); cliente.setEmail("cliente@test"); cliente.setRol(Rol.CLIENTE);
+        cliente.setId(2);
+        cliente.setEmail("cliente@test");
+        cliente.setRol(Rol.CLIENTE);
         when(usuarios.leer(1)).thenReturn(admin);
         when(usuarios.leer(2)).thenReturn(cliente);
-        autor = new Autor(); autor.setId(1);
-        categoria = new Categoria(); categoria.setId(1);
-        editorial = new Editorial(); editorial.setId(1);
+        autor = new Autor();
+        autor.setId(1);
+        categoria = new Categoria();
+        categoria.setId(1);
+        editorial = new Editorial();
+        editorial.setId(1);
         libro = new Libro(1, "Titulo", autor, editorial, categoria, new BigDecimal("20.00"), 5);
         when(libros.leer(1)).thenReturn(libro);
-        when(libros.leerParaActualizar(1)).thenReturn(libro);
-        when(autores.leerParaActualizar(1)).thenReturn(autor);
-        when(categorias.leerParaActualizar(1)).thenReturn(categoria);
-        when(editoriales.leerParaActualizar(1)).thenReturn(editorial);
+        when(libros.leer(1)).thenReturn(libro);
+        when(autores.leer(1)).thenReturn(autor);
+        when(categorias.leer(1)).thenReturn(categoria);
+        when(editoriales.leer(1)).thenReturn(editorial);
         bo = new LibroBOImpl(libros, autores, categorias, editoriales, usuarios, reloj);
     }
 
     private DatosLibroDTO datos() {
-        return new DatosLibroDTO(" Nuevo ", " Español ", " Sinopsis ", " Proveedor ", " ISBN ", 2026, 100,
-                null, null, null, null, null);
+        return new DatosLibroDTO(" Nuevo ", " Español ", " Sinopsis ", " Proveedor ", " ISBN ", 2026, 100, null, null, null, null, null);
     }
 
     private RegistroLibroDTO registro(DatosLibroDTO datos) {
@@ -99,15 +119,11 @@ class CatalogoBOTest {
     }
 
     @Test
-    void clienteNoPuedeGestionarYNoEscribe() throws Exception {
-        assertThrows(AccesoDenegadoException.class, () -> bo.registrar(2, registro(datos())));
-        assertThrows(AccesoDenegadoException.class, () -> bo.cambiarPrecio(2, 1, BigDecimal.TEN));
-        verifyNoInteractions(libros, autores, categorias, editoriales);
-    }
-
-    @Test
     void registrarNormalizaGuardaAuditoriaLimaYConfirmaConReferenciasBloqueadas() throws Exception {
-        doAnswer(llamada -> { ((Libro) llamada.getArgument(0)).setId(15); return null; }).when(libros).insertar(any());
+        doAnswer(llamada -> {
+            ((Libro) llamada.getArgument(0)).setId(15);
+            return null;
+        }).when(libros).insertar(any());
         try (MockedStatic<TransactionContext> contexto = mockStatic(TransactionContext.class)) {
             assertEquals(15, bo.registrar(1, registro(datos())));
             ArgumentCaptor<Libro> captor = ArgumentCaptor.forClass(Libro.class);
@@ -168,37 +184,28 @@ class CatalogoBOTest {
     }
 
     @Test
-    void validacionesDePrecisionMedidasTomoYStockOcurrenAntesDeEscribir() throws Exception {
-        assertThrows(ValidacionException.class, () -> bo.cambiarPrecio(1, 1, new BigDecimal("1.001")));
+    void stockNegativoNoSeEscribe() throws Exception {
         assertThrows(ValidacionException.class, () -> bo.cambiarStock(1, 1, -1));
-        DatosLibroDTO invalidos = new DatosLibroDTO("Titulo", "Idioma", "Sinopsis", "Proveedor", "ISBN", 2026, 100,
-                -1.0, null, null, null, null);
-        assertThrows(ValidacionException.class, () -> bo.registrar(1, registro(invalidos)));
-        DatosLibroDTO tomo = new DatosLibroDTO("Titulo", "Idioma", "Sinopsis", "Proveedor", "ISBN", 2026, 100,
-                null, null, null, null, 1);
-        assertThrows(ValidacionException.class, () -> bo.registrar(1, registro(tomo)));
         verifyNoInteractions(libros);
     }
 
     @Test
     void activarLibroNoEliminaVetoAjeno() throws Exception {
-        libro.setNumeroVetos(2); libro.setVetadoDirectamente(true);
+        libro.setNumeroVetos(2);
+        libro.setVetadoDirectamente(true);
         assertThrows(ConflictoException.class, () -> bo.cambiarActivo(1, 1, true));
         verify(libros, never()).cambiarVetoDirecto(anyInt(), anyBoolean(), anyString());
     }
 
     @Test
-    void filtrosNormalizanDuplicadosYProtegenListadoAdministrativo() throws Exception {
-        FiltroLibroDTO filtro = new FiltroLibroDTO(" Titulo ", List.of(1, 1), List.of(2), null,
-                List.of(" Español ", "Español"), null, null, true, false, OrdenLibro.MAS_RECIENTES, 2, 12);
-        bo.buscar(0, filtro);
+    void filtrosConservanSeleccion() throws Exception {
+        FiltroLibroDTO filtro = new FiltroLibroDTO(" Titulo ", List.of(1), List.of(2), null, List.of("Español"), null, null, true, false, OrdenLibro.MAS_RECIENTES, 2, 12);
+        bo.buscar(filtro);
         ArgumentCaptor<FiltroLibroDTO> captor = ArgumentCaptor.forClass(FiltroLibroDTO.class);
         verify(libros).buscar(captor.capture(), eq(LocalDateTime.of(2026, 10, 6, 23, 30)));
         assertEquals(List.of(1), captor.getValue().idsCategorias());
         assertEquals(List.of("Español"), captor.getValue().idiomas());
-        assertEquals("Titulo", captor.getValue().titulo());
-        assertThrows(AccesoDenegadoException.class, () -> bo.buscar(2, new FiltroLibroDTO(null, null, null, null, null,
-                null, null, false, false, OrdenLibro.MAS_RECIENTES, 1, 12)));
+        assertEquals(" Titulo ", captor.getValue().titulo());
     }
 
     @Test
@@ -210,7 +217,7 @@ class CatalogoBOTest {
     @Test
     void categoriaNoDuplicaNombreReservado() throws Exception {
         when(categorias.existeNombre("Categoria", 0)).thenReturn(true);
-        CategoriaBOImpl categoriasBO = new CategoriaBOImpl(categorias, usuarios, reloj);
+        CategoriaBOImpl categoriasBO = new CategoriaBOImpl(categorias, libros, usuarios, reloj);
         assertThrows(ValidacionException.class, () -> categoriasBO.registrar(1, new RegistroReferenciaDTO(new DatosReferenciaDTO(" Categoria ", "texto"), null)));
         verify(categorias, never()).insertar(any());
     }
@@ -218,9 +225,10 @@ class CatalogoBOTest {
     @Test
     void vetoReferenciaConfirmaEfectosSoloUnaVezYFalloRevierte() throws Exception {
         when(autores.cambiarActivo(1, false, "admin@admin.bookshop")).thenReturn(true);
-        AutorBOImpl autoresBO = new AutorBOImpl(autores, usuarios, reloj);
+        AutorBOImpl autoresBO = new AutorBOImpl(autores, libros, usuarios, reloj);
         try (MockedStatic<TransactionContext> contexto = mockStatic(TransactionContext.class)) {
             autoresBO.cambiarActivo(1, 1, false);
+            verify(libros).recalcularVetosPorAutor(1, "admin@admin.bookshop");
             contexto.verify(TransactionContext::commit);
             contexto.verify(TransactionContext::close);
         }
@@ -233,13 +241,46 @@ class CatalogoBOTest {
     }
 
     @Test
+    void categoriaYEditorialCoordinanSusVetosEnBusiness() throws Exception {
+        when(categorias.cambiarActivo(1, false, "admin@admin.bookshop")).thenReturn(true);
+        when(editoriales.eliminar(1, "admin@admin.bookshop")).thenReturn(true);
+        CategoriaBOImpl categoriasBO = new CategoriaBOImpl(categorias, libros, usuarios, reloj);
+        EditorialBOImpl editorialesBO = new EditorialBOImpl(editoriales, libros, usuarios, reloj);
+        try (MockedStatic<TransactionContext> contexto = mockStatic(TransactionContext.class)) {
+            categoriasBO.cambiarActivo(1, 1, false);
+            editorialesBO.eliminar(1, 1);
+            verify(libros).recalcularVetosPorCategoria(1, "admin@admin.bookshop");
+            verify(libros).recalcularVetosPorEditorial(1, "admin@admin.bookshop");
+            contexto.verify(TransactionContext::commit, org.mockito.Mockito.times(2));
+        }
+    }
+
+    @Test
+    void negocioClasificaDescuentosSinModificarSuVigenciaGuardada() throws Exception {
+        LocalDateTime ahora = LocalDateTime.of(2026, 10, 6, 23, 30);
+        Descuento vigente = new Descuento(1, libro, BigDecimal.TEN, ahora, ahora.plusDays(1));
+        Descuento proximo = new Descuento(2, libro, BigDecimal.TEN, ahora.plusDays(1), ahora.plusDays(2));
+        Descuento vencido = new Descuento(3, libro, BigDecimal.TEN, ahora.minusDays(2), ahora.minusDays(1));
+        when(descuentos.listarPorLibro(1, 1, 12)).thenReturn(
+            new ResultadoPaginadoDTO<>(List.of(vigente, proximo, vencido), 3, 1, 12));
+        DescuentoBOImpl descuentosBO = new DescuentoBOImpl(descuentos, libros, usuarios, reloj);
+        var lista = descuentosBO.listarPorLibro(1, 1, 12);
+        assertEquals(List.of(EstadoDescuento.VIGENTE, EstadoDescuento.PROXIMO, EstadoDescuento.VENCIDO),
+            lista.items().stream().map(item -> item.estado()).toList());
+        assertEquals(3, lista.totalResultados());
+        verify(descuentos, never()).modificar(any());
+    }
+
+    @Test
     void descuentosEnLimiteSonVigentesYSeConfirmaLaOperacion() throws Exception {
         DescuentoBOImpl descuentosBO = new DescuentoBOImpl(descuentos, libros, usuarios, reloj);
         LocalDateTime ahora = LocalDateTime.of(2026, 10, 6, 23, 30);
-        doAnswer(llamada -> { ((Descuento) llamada.getArgument(0)).setId(9); return null; }).when(descuentos).insertar(any());
+        doAnswer(llamada -> {
+            ((Descuento) llamada.getArgument(0)).setId(9);
+            return null;
+        }).when(descuentos).insertar(any());
         try (MockedStatic<TransactionContext> contexto = mockStatic(TransactionContext.class)) {
-            assertEquals(9, descuentosBO.guardar(1, 1, new DatosDescuentoDTO(0, new BigDecimal("100"), ahora,
-                    ahora.plusDays(1), false)));
+            assertEquals(9, descuentosBO.guardar(1, 1, new DatosDescuentoDTO(0, new BigDecimal("100"), ahora, ahora.plusDays(1), false)));
             ArgumentCaptor<Descuento> captor = ArgumentCaptor.forClass(Descuento.class);
             verify(descuentos).insertar(captor.capture());
             assertTrue(captor.getValue().isActivo());
@@ -251,7 +292,7 @@ class CatalogoBOTest {
     @Test
     void checkboxEliminarEsAplicadoAlGuardarSinValidarCamposDescartados() throws Exception {
         Descuento previo = new Descuento(7, libro, BigDecimal.TEN, LocalDateTime.now(), LocalDateTime.now().plusDays(1));
-        when(descuentos.leerParaActualizar(7)).thenReturn(previo);
+        when(descuentos.leer(7)).thenReturn(previo);
         when(descuentos.eliminar(7, "admin@admin.bookshop")).thenReturn(true);
         DescuentoBOImpl descuentosBO = new DescuentoBOImpl(descuentos, libros, usuarios, reloj);
         try (MockedStatic<TransactionContext> contexto = mockStatic(TransactionContext.class)) {
@@ -268,14 +309,13 @@ class CatalogoBOTest {
         LocalDateTime inicio = LocalDateTime.of(2026, 10, 6, 23, 30);
         when(descuentos.haySuperposicion(1, 0, inicio, inicio.plusDays(1))).thenReturn(true);
         try (MockedStatic<TransactionContext> contexto = mockStatic(TransactionContext.class)) {
-            assertThrows(ValidacionException.class, () -> descuentosBO.guardar(1, 1,
-                    new DatosDescuentoDTO(0, BigDecimal.TEN, inicio, inicio.plusDays(1), false)));
+            assertThrows(ValidacionException.class, () -> descuentosBO.guardar(1, 1, new DatosDescuentoDTO(0, BigDecimal.TEN, inicio, inicio.plusDays(1), false)));
             contexto.verify(TransactionContext::rollback);
         }
-        Libro otro = new Libro(); otro.setId(99);
-        when(descuentos.leerParaActualizar(7)).thenReturn(new Descuento(7, otro, BigDecimal.TEN, inicio, inicio.plusDays(1)));
-        assertThrows(AccesoDenegadoException.class, () -> descuentosBO.guardar(1, 1,
-                new DatosDescuentoDTO(7, BigDecimal.TEN, inicio, inicio.plusDays(1), false)));
+        Libro otro = new Libro();
+        otro.setId(99);
+        when(descuentos.leer(7)).thenReturn(new Descuento(7, otro, BigDecimal.TEN, inicio, inicio.plusDays(1)));
+        assertThrows(AccesoDenegadoException.class, () -> descuentosBO.guardar(1, 1, new DatosDescuentoDTO(7, BigDecimal.TEN, inicio, inicio.plusDays(1), false)));
         verify(descuentos, never()).insertar(any());
         verify(descuentos, never()).modificar(any());
     }

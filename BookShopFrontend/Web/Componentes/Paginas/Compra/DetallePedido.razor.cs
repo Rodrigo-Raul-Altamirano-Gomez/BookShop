@@ -4,26 +4,31 @@ using Web.Modelos;
 
 namespace Web.Componentes.Paginas.Compra;
 
-public partial class DetallePedido : IDisposable
+public partial class DetallePedido : Web.Componentes.Paginas.Cuenta.PaginaCuenta
 {
-    [Inject] protected CompraServicio Compras { get; set; } = default!;
-
-    [Inject]
-    private SesionUsuario Sesion { get; set; } = default!;
-
-    [Inject]
-    private NavigationManager Navegacion { get; set; } = default!;
-
-    [Parameter]
-    public int Id { get; set; }
-
+    [Inject] private HttpClientUtils Api { get; set; } = default!;
     [Inject] private DocumentoServicio Documentos { get; set; } = default!;
-
-    private Pedido? pedido;
-    private bool confirmacion;
+    [Parameter] public int Id { get; set; }
+    private DetallePedidoDTO? pedido;
     private bool descargando;
     private string? errorComprobante;
     private string? urlComprobante;
+    private string EstadoPedido => pedido?.Pedido.Estado switch
+    {
+        "EN_ALMACEN" => "En almacén",
+        "EN_CAMINO" => "En camino",
+        "ENTREGADO" => "Entregado",
+        "CANCELADO" => "Cancelado",
+        "DEVUELTO" => "Devuelto",
+        _ => ""
+    };
+
+    protected override async Task CargarDatos()
+    {
+        pedido = null;
+        if (Sesion.Usuario is not null)
+            pedido = await Api.Get<DetallePedidoDTO>($"pedidos/{Id}");
+    }
 
     // RF17: el backend genera el PDF y la página lo muestra en una ventana, sin descargarlo.
     private async Task VerComprobante()
@@ -77,13 +82,4 @@ public partial class DetallePedido : IDisposable
             descargando = false;
         }
     }
-    protected override void OnInitialized() => Sesion.Cambiado += Actualizar;
-    protected override void OnParametersSet()
-    {
-        pedido = Compras.Pedidos.FirstOrDefault(o => o.Id == Id);
-        confirmacion = Navegacion.Uri.Contains("/confirmacion/");
-    }
-
-    private void Actualizar() => _ = InvokeAsync(StateHasChanged);
-    public void Dispose() => Sesion.Cambiado -= Actualizar;
 }

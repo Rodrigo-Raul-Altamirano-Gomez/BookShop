@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import me.Model.entities.usuario.Usuario;
 
 public class DireccionEnvio {
+
     private int id;
     private Usuario usuario;
     private String alias;
@@ -24,13 +25,13 @@ public class DireccionEnvio {
         this.fechaCreacion = LocalDateTime.now();
     }
 
-    public DireccionEnvio(int id, Usuario usuario, String calle, String distrito, String ciudad,
-                          String referencia) {
+    public DireccionEnvio(int id, Usuario usuario, String calle, String distrito, String ciudad, String
+        referencia) {
         this(id, usuario, null, calle, distrito, ciudad, referencia);
     }
 
-    public DireccionEnvio(int id, Usuario usuario, String alias, String calle, String distrito,
-                          String ciudad, String referencia) {
+    public DireccionEnvio(int id, Usuario usuario, String alias, String calle, String distrito, String ciudad,
+        String referencia) {
         this();
         this.id = id;
         this.usuario = usuario;
@@ -103,7 +104,8 @@ public class DireccionEnvio {
 
     public void setActivo(boolean activo) {
         this.activo = activo;
-        if (!activo) predeterminada = false;
+        if (!activo)
+            predeterminada = false;
     }
 
     public boolean isPredeterminada() {
@@ -111,9 +113,6 @@ public class DireccionEnvio {
     }
 
     public void setPredeterminada(boolean predeterminada) {
-        if (predeterminada && !estaDisponible()) {
-            throw new IllegalStateException("Una direccion no disponible no puede ser predeterminada.");
-        }
         this.predeterminada = predeterminada;
     }
 
@@ -123,7 +122,8 @@ public class DireccionEnvio {
 
     public void setEliminado(boolean eliminado) {
         this.eliminado = eliminado;
-        if (eliminado) predeterminada = false;
+        if (eliminado)
+            predeterminada = false;
     }
 
     public String getUsuarioCreacion() {

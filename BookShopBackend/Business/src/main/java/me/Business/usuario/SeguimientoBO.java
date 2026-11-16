@@ -7,8 +7,11 @@ import me.Model.dto.usuario.ConsultaSeguimientosDTO;
 import me.Model.dto.usuario.TipoSeguimiento;
 
 public interface SeguimientoBO {
+
     void guardar(int idActor, TipoSeguimiento tipo, int idReferencia) throws NegocioException;
+
     boolean retirar(int idActor, TipoSeguimiento tipo, int idReferencia) throws NegocioException;
-    ResultadoPaginadoDTO<TarjetaReferenciaDTO> listar(int idActor, ConsultaSeguimientosDTO consulta)
-            throws NegocioException;
+
+    ResultadoPaginadoDTO<TarjetaReferenciaDTO> listar(int idActor, ConsultaSeguimientosDTO consulta) throws
+        NegocioException;
 }

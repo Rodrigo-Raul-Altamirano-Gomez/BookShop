@@ -25,22 +25,3 @@
     margin-bottom:18px;
     color:#435449
 }
-.image-actions {
-    position:absolute;
-    bottom:14px;
-    right:14px
-}
-
-.image-actions .icon-button {
-    background:white
-}
-.image-actions label {
-    position:relative;
-    overflow:hidden
-}
-.image-actions ::deep input[type=file] {
-    position:absolute;
-    inset:0;
-    opacity:0;
-    cursor:pointer
-}

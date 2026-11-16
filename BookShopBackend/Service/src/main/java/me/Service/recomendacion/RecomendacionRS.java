@@ -19,6 +19,7 @@ import me.Service.Servicios;
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
 public class RecomendacionRS {
+
     @Inject
     private Servicios servicios;
 

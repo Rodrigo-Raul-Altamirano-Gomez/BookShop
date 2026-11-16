@@ -24,3 +24,8 @@
         </div>
     </a>
 </div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Libro Libro { get; set; } = new();
+}

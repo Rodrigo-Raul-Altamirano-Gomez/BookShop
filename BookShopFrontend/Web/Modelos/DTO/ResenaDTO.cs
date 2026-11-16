@@ -44,7 +44,10 @@ public class ResenaDTO
     {
     }
 
-    public ResenaDTO(int id, int idLibro, string tituloLibro, string? portadaLibro, string nombreUsuario, string? imagenUsuario, int puntuacion, string comentario, DateTime fecha, int cantidadVotosUtiles, bool votoUtilPropio, bool activo)
+    public ResenaDTO(
+        int id, int idLibro, string tituloLibro, string? portadaLibro, string nombreUsuario, string? imagenUsuario,
+        int puntuacion, string comentario, DateTime fecha, int cantidadVotosUtiles, bool votoUtilPropio,
+        bool activo)
     {
         Id = id;
         IdLibro = idLibro;

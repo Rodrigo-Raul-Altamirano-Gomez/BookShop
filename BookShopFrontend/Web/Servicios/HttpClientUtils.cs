@@ -18,7 +18,6 @@ public sealed class HttpClientUtils : IDisposable
         cliente.Timeout = TimeSpan.FromSeconds(30);
         cliente.DefaultRequestHeaders.Accept.ParseAdd("application/json");
         cliente.BaseAddress = new Uri(configuracion["Backend:Url"]!.TrimEnd('/') + "/");
-        cliente.DefaultRequestHeaders.Add("X-BookShop-Cliente", "web");
     }
 
     public Task<T> Get<T>(string ruta) => Enviar<T>(HttpMethod.Get, ruta);
@@ -44,7 +43,8 @@ public sealed class HttpClientUtils : IDisposable
     {
         using var peticion = new HttpRequestMessage(metodo, ruta);
         if (datos is not null || metodo == HttpMethod.Put)
-            peticion.Content = new StringContent(JsonConvert.SerializeObject(datos), Encoding.UTF8, "application/json");
+            peticion.Content = new StringContent(
+                JsonConvert.SerializeObject(datos), Encoding.UTF8, "application/json");
         using var respuesta = await Ejecutar(peticion);
         if (respuesta.StatusCode == HttpStatusCode.NoContent)
             return default!;
@@ -66,20 +66,23 @@ public sealed class HttpClientUtils : IDisposable
         }
         catch (TaskCanceledException)
         {
-            throw new InvalidOperationException("El backend tardó demasiado en responder. Consulta el estado antes de repetir la operación.");
+            throw new InvalidOperationException("El backend tardó demasiado en responder. "
+                + "Consulta el estado antes de repetir la operación.");
         }
         if (respuesta.IsSuccessStatusCode)
             return respuesta;
         using (respuesta)
         {
-            if (respuesta.StatusCode == HttpStatusCode.Unauthorized)
-                SesionVencida?.Invoke();
             var texto = await respuesta.Content.ReadAsStringAsync();
             string mensaje = "No se pudo completar la operación.";
+            ErrorRestDTO? error = null;
             if (respuesta.Content.Headers.ContentType?.MediaType == "application/json")
             {
-                mensaje = JsonConvert.DeserializeObject<ErrorRestDTO>(texto)?.Mensaje ?? mensaje;
+                error = JsonConvert.DeserializeObject<ErrorRestDTO>(texto);
+                mensaje = error?.Mensaje ?? mensaje;
             }
+            if (respuesta.StatusCode == HttpStatusCode.Unauthorized && error?.Codigo != "CredencialesInvalidas")
+                SesionVencida?.Invoke();
             throw new InvalidOperationException(mensaje);
         }
     }

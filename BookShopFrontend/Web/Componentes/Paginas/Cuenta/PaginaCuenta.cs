@@ -22,7 +22,7 @@ public class PaginaCuenta : ComponentBase, IDisposable
         await ActualizarDatos();
     }
 
-    private async Task ActualizarDatos()
+    protected async Task ActualizarDatos()
     {
         CargandoDatos = true;
         ErrorCarga = null;
@@ -35,10 +35,7 @@ public class PaginaCuenta : ComponentBase, IDisposable
         {
             ErrorCarga = e.Message;
         }
-        finally
-        {
-            CargandoDatos = false;
-        }
+        CargandoDatos = false;
     }
 
     protected virtual Task CargarDatos() => Task.CompletedTask;

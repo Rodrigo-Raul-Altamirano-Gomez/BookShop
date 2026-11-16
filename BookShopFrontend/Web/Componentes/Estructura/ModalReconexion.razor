@@ -1,44 +1,5 @@
-<script type="module" src="@Assets["Componentes/Estructura/ModalReconexion.razor.js"]">
-</script>
-<dialog class="border-0 rounded shadow" id="components-reconnect-modal" data-nosnippet>
-    <div class="components-reconnect-container">
-        <div class="components-rejoining-animation" aria-hidden="true">
-            <div>
-            </div>
-            <div>
-            </div>
-        </div>
-        <p class="components-reconnect-first-attempt-visible">
-            Reconectando con el servidor…
-        </p>
-        <p class="components-reconnect-repeated-attempt-visible">
-            No se pudo reconectar. Otro intento en
-            <span id="components-seconds-to-next-attempt">
-            </span>
-            segundos.
-        </p>
-        <p class="components-reconnect-failed-visible">
-            No se pudo reconectar.
-            <br />
-            Vuelve a intentarlo o recarga la página.
-        </p>
-        <button
-            class="btn btn-primary components-reconnect-failed-visible"
-            id="components-reconnect-button">
-            Reintentar
-        </button>
-        <p class="components-pause-visible">
-            El servidor ha pausado la sesión.
-        </p>
-        <p class="components-resume-failed-visible">
-            No se pudo reanudar la sesión.
-            <br />
-            Vuelve a intentarlo o recarga la página.
-        </p>
-        <button
-            class="btn btn-primary components-pause-visible components-resume-failed-visible"
-            id="components-resume-button">
-            Reanudar
-        </button>
-    </div>
+<script type="module" src="@Assets["Componentes/Estructura/ModalReconexion.razor.js"]"></script>
+<dialog class="border-0 rounded shadow p-4" id="components-reconnect-modal" data-nosnippet>
+    <p>Se perdió la conexión con el servidor. Espera un momento o recarga la página.</p>
+    <button class="btn btn-primary" onclick="location.reload()">Recargar página</button>
 </dialog>

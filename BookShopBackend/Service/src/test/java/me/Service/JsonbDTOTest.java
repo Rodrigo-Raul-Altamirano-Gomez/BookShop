@@ -14,16 +14,12 @@ import me.Model.dto.usuario.RegistroUsuarioDTO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class JsonbDTOTest {
+
     static Stream<Object> consultas() {
-        return Stream.of(FiltroLibroDTO.porDefecto(), FiltroReferenciaDTO.porDefecto(),
-                ConsultaSeguimientosDTO.porDefecto(), ConsultaResenasDTO.porDefecto(),
-                FiltroPedidoDTO.porDefecto(), FiltroSolicitudDTO.porDefecto(),
-                ConsultaRecomendacionesDTO.porDefecto());
+        return Stream.of(FiltroLibroDTO.porDefecto(), FiltroReferenciaDTO.porDefecto(), ConsultaSeguimientosDTO.porDefecto(), ConsultaResenasDTO.porDefecto(), FiltroPedidoDTO.porDefecto(), FiltroSolicitudDTO.porDefecto(), ConsultaRecomendacionesDTO.porDefecto());
     }
 
     @ParameterizedTest
@@ -37,14 +33,12 @@ class JsonbDTOTest {
 
     @Test
     void conservaFechaYUrlEnRegistro() throws Exception {
-        var original = new RegistroUsuarioDTO("Ana", "ana@correo.pe", LocalDate.of(2000, 2, 29),
-                "clave123", "clave123", "https://example.test/imagen.png");
+        var original = new RegistroUsuarioDTO("Ana", "ana@correo.pe", LocalDate.of(2000, 2, 29), "clave123", "clave123", "https://example.test/imagen.png");
         try (var jsonb = JsonbBuilder.create()) {
             var recibido = jsonb.fromJson(jsonb.toJson(original), RegistroUsuarioDTO.class);
             assertEquals(original.fechaNacimiento(), recibido.fechaNacimiento());
             assertEquals(original.email(), recibido.email());
             assertEquals(original.imagen(), recibido.imagen());
-
         }
     }
 }

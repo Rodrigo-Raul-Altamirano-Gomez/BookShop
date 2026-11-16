@@ -4,6 +4,7 @@ namespace Web.Componentes.Paginas.Cuenta;
 
 public partial class MiPerfil
 {
+    private bool procesando;
     [Inject] protected HttpClientUtils Api { get; set; } = default!;
 
     private string ModalAbierto { get; set; } = "";
@@ -14,8 +15,6 @@ public partial class MiPerfil
     private string ConfirmacionContrasena { get; set; } = "";
     private bool MostrarContrasenas { get; set; }
     private string TipoContrasena => MostrarContrasenas ? "text" : "password";
-    private bool ContrasenasCompletas => ContrasenaActual.Length > 0 && NuevaContrasena.Length > 0
-        && ConfirmacionContrasena.Length > 0;
     private string MensajeError { get; set; } = "";
     private string ErrorImagen { get; set; } = "";
     private bool CargandoImagen { get; set; }
@@ -55,6 +54,8 @@ public partial class MiPerfil
 
     private async Task GuardarPerfil()
     {
+        if (procesando) return;
+        procesando = true;
         try
         {
             Sesion.MostrarPerfil(await Api.Put<PerfilUsuarioDTO>("cuenta", new DatosPerfilDTO
@@ -69,10 +70,13 @@ public partial class MiPerfil
         {
             MensajeError = e.Message;
         }
+        procesando = false;
     }
 
     private async Task GuardarContrasena()
     {
+        if (procesando) return;
+        procesando = true;
         try
         {
             await Api.Put("cuenta/contrasenia", new CambioContraseniaDTO
@@ -88,10 +92,13 @@ public partial class MiPerfil
         {
             MensajeError = e.Message;
         }
+        procesando = false;
     }
 
     private async Task Desactivar()
     {
+        if (procesando) return;
+        procesando = true;
         try
         {
             await Api.Post("cuenta/desactivacion", new
@@ -106,44 +113,32 @@ public partial class MiPerfil
         {
             MensajeError = e.Message;
         }
+        procesando = false;
     }
 
     private string urlFoto = "";
-    private async Task GuardarFoto()
+    private async Task GuardarFoto(bool quitar)
     {
-        if (Sesion.Usuario is null || CargandoImagen)
+        if (Sesion.Usuario is null || procesando)
             return;
+        procesando = true;
         CargandoImagen = true;
         ErrorImagen = "";
         try
         {
             string ruta = "cuenta/imagen";
-            if (!string.IsNullOrWhiteSpace(urlFoto))
+            if (!quitar)
                 ruta += "?url=" + Uri.EscapeDataString(urlFoto.Trim());
             Sesion.MostrarPerfil(await Api.Put<PerfilUsuarioDTO>(ruta));
             Sesion.Notificar();
+            urlFoto = "";
             Sesion.Avisar("Foto de perfil actualizada.");
         }
         catch (InvalidOperationException e)
         {
             ErrorImagen = e.Message;
         }
-        finally
-        {
-            CargandoImagen = false;
-        }
-    }
-
-    private async Task QuitarFoto()
-    {
-        try
-        {
-            Sesion.MostrarPerfil(await Api.Put<PerfilUsuarioDTO>("cuenta/imagen"));
-            Sesion.Notificar();
-        }
-        catch (InvalidOperationException e)
-        {
-            Sesion.Avisar(e.Message);
-        }
+        CargandoImagen = false;
+        procesando = false;
     }
 }

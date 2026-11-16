@@ -4,7 +4,7 @@ using Web.Modelos;
 
 namespace Web.Componentes.Paginas.Catalogo;
 
-public partial class Referencias : IDisposable
+public partial class Referencias
 {
     private string? errorCarga;
 
@@ -21,18 +21,19 @@ public partial class Referencias : IDisposable
     {
         get
         {
-            if (Tipo == "autores") return "Autores";
-            if (Tipo == "editoriales") return "Editoriales";
+            if (Tipo == "autores")
+                return "Autores";
+            if (Tipo == "editoriales")
+                return "Editoriales";
             return "Categorías";
         }
     }
 
-    private string orden = "nombre", tipoAnterior = "";
-    private int pagina = 1;
+    private string tipoAnterior = "", textoBusqueda = "";
+    private VistaReferencias vista = new();
     private List<Referencia> Resultados = [];
     private long totalResultados;
     private int TotalPaginas => Math.Max(1, (int)((totalResultados + 11) / 12));
-    private IEnumerable<Referencia> ReferenciasVisibles => Resultados;
     private async Task Consultar()
     {
         cargando = true;
@@ -42,10 +43,10 @@ public partial class Referencias : IDisposable
             var datos = await Api.Post<ResultadoPaginadoDTO<TarjetaReferenciaDTO>>($"{Tipo}/busqueda",
                 new FiltroReferenciaDTO
                 {
-                    Nombre = "",
+                    Nombre = vista.Nombre,
                     SoloActivos = true,
-                    Orden = orden == "reciente" ? "MAS_RECIENTES" : "NOMBRE_ASCENDENTE",
-                    Pagina = pagina,
+                    Orden = vista.Orden == "reciente" ? "MAS_RECIENTES" : "NOMBRE_ASCENDENTE",
+                    Pagina = vista.Pagina,
                     TamanioPagina = 12
                 });
             Resultados = datos.Items.Select(dto => Presentacion.Referencia(dto, Tipo)).ToList();
@@ -55,61 +56,54 @@ public partial class Referencias : IDisposable
         {
             errorCarga = e.Message;
         }
-        finally
-        {
-            cargando = false;
-        }
+        cargando = false;
     }
 
     protected override async Task OnParametersSetAsync()
     {
         if (tipoAnterior != Tipo)
         {
-            GuardarVista();
             tipoAnterior = Tipo;
-            if (Sesion.EstadoVistas.TryGetValue($"referencias:{Tipo}", out var guardado)
-                && guardado is VistaReferencias vista)
-            {
-                orden = vista.Orden;
-                pagina = vista.Pagina;
-            }
+            string clave = $"referencias:{Tipo}";
+            if (Sesion.EstadoVistas.TryGetValue(clave, out var guardado) && guardado is VistaReferencias almacenada)
+                vista = almacenada;
             else
             {
-                orden = "nombre";
-                pagina = 1;
+                vista = new VistaReferencias();
+                Sesion.EstadoVistas[clave] = vista;
             }
+            textoBusqueda = vista.Nombre;
         }
-
         await Consultar();
     }
 
-    private void GuardarVista()
-    {
-        if (tipoAnterior.Length == 0)
-            return;
-        Sesion.EstadoVistas[$"referencias:{tipoAnterior}"] = new VistaReferencias
-        {
-            Orden = orden,
-            Pagina = pagina
-
-        };
-    }
-
-    public void Dispose() => GuardarVista();
     private class VistaReferencias
     {
+        public string Nombre { get; set; } = "";
         public string Orden { get; set; } = "nombre";
         public int Pagina { get; set; } = 1;
     }
 
-    private async Task CambiarOrden()
+    private async Task Buscar()
     {
-        pagina = 1;
+        vista.Nombre = textoBusqueda.Trim();
+        await ActualizarResultados();
+    }
+
+    private async Task QuitarNombre()
+    {
+        textoBusqueda = vista.Nombre = "";
+        await ActualizarResultados();
+    }
+
+    private async Task ActualizarResultados()
+    {
+        vista.Pagina = 1;
         await Consultar();
     }
     private async Task CambiarPagina(int valor)
     {
-        pagina = valor;
+        vista.Pagina = valor;
         await Consultar();
     }
 }

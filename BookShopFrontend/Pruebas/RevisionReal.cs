@@ -15,8 +15,8 @@ public static class RevisionReal
         using var api = new HttpClientUtils(configuracion);
         var sesion = new SesionUsuario(api);
         var catalogo = new CatalogoServicio(api, sesion);
-        var cuenta = new CuentaServicio(api, sesion, catalogo);
-        var compras = new CompraServicio(api, sesion, catalogo);
+        var cuenta = new CuentaServicio(api, sesion);
+        var compras = new CompraServicio(api, sesion);
         await catalogo.Inicializar();
         if (!catalogo.Inicializado || catalogo.Idiomas.Count == 0) throw new Exception("No se pudo cargar el catálogo real.");
         var libros = await api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>("libros/busqueda", new FiltroLibroDTO());
@@ -44,12 +44,13 @@ public static class RevisionReal
             Console.WriteLine("RF01 y RF02: registro, sesión, edición de perfil e imagen correctos.");
             await cuenta.GuardarDireccion(new Direccion { Alias = "Revision frontend", Calle = "Calle de prueba 123", Distrito = "San Miguel", Ciudad = "Lima", Predeterminada = true });
             await cuenta.GuardarMetodo(new MetodoPago { Tipo = "Tarjeta", Alias = "Revision frontend", Titular = "Usuario de prueba", Proveedor = "Banco de prueba", Numero = "411" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), TipoTarjeta = "Débito", Vencimiento = new DateOnly(2030, 12, 31), Predeterminada = true });
-            await cuenta.AlternarGuardado(idLibro, false);
-            if (!cuenta.Deseados.Contains(idLibro)) throw new Exception("No se guardó el libro.");
-            await cuenta.AlternarGuardado(idLibro, true);
+            await cuenta.CambiarGuardado(idLibro, false, true);
+            var deseados = await api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>("cuenta/libros-guardados/busqueda?favorito=false", new FiltroLibroDTO());
+            if (!deseados.Items.Any(libro => libro.Id == idLibro)) throw new Exception("No se guardó el libro.");
+            await cuenta.CambiarGuardado(idLibro, true, true);
             var favoritos = await api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>("cuenta/libros-guardados/busqueda?favorito=true", new FiltroLibroDTO());
             if (!favoritos.Items.Any(libro => libro.Id == idLibro)) throw new Exception("Favorito no persistido.");
-            await cuenta.AlternarSeguimiento("autores", detalle.IdAutor);
+            await cuenta.AlternarSeguimiento("autores", detalle.IdAutor, false);
             await compras.AgregarLibro(idLibro, 1);
             await compras.CambiarCantidad(idLibro, 2);
             if (compras.CantidadCarrito != 2) throw new Exception("Cantidad incorrecta.");
@@ -93,7 +94,6 @@ public static class RevisionReal
             if (pedido is null) throw new Exception("Tres pagos simulados rechazados.");
             var repetido = await api.Post<DetallePedidoDTO>("pedidos/confirmacion");
             if (repetido.Pedido.Id != pedido.Pedido.Id) throw new Exception("Pedido duplicado.");
-            compras.Pedidos.Add(Presentacion.Pedido(pedido));
             var persistido = repetido;
             if (persistido.Resumen.Total != pedido.Resumen.Total) throw new Exception("El pedido persistido cambió de importe.");
             var stockFinal = await api.Get<DetalleLibroDTO>($"libros/{idLibro}");

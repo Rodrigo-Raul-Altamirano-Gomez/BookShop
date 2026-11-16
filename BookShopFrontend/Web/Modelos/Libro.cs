@@ -22,5 +22,6 @@ public class Libro
     public int? Tomo { get; set; }
     public string Portada { get; set; } = "/images/book-placeholder.svg";
     public bool Activo { get; set; } = true;
+    public ValoracionLibroDTO Valoracion { get; set; } = new();
 
 }

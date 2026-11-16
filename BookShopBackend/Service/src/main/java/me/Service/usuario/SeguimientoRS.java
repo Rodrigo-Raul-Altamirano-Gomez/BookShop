@@ -25,31 +25,31 @@ import me.Service.Sesion;
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
 public class SeguimientoRS {
+
     @Inject
     private Servicios servicios;
+
     @Context
     private HttpServletRequest peticion;
 
     @PUT
     @Path("{tipo}/{idReferencia}")
-    public void guardar(
-            @PathParam("tipo") TipoSeguimiento tipo,
-            @PathParam("idReferencia") int idReferencia) throws NegocioException {
+    public void guardar(@PathParam("tipo") TipoSeguimiento tipo, @PathParam("idReferencia") int idReferencia)
+        throws NegocioException {
         servicios.getSeguimientoBO().guardar(Sesion.exigirIdUsuario(peticion), tipo, idReferencia);
     }
 
     @DELETE
     @Path("{tipo}/{idReferencia}")
-    public boolean retirar(
-            @PathParam("tipo") TipoSeguimiento tipo,
-            @PathParam("idReferencia") int idReferencia) throws NegocioException {
+    public boolean retirar(@PathParam("tipo") TipoSeguimiento tipo, @PathParam("idReferencia") int
+        idReferencia) throws NegocioException {
         return servicios.getSeguimientoBO().retirar(Sesion.exigirIdUsuario(peticion), tipo, idReferencia);
     }
 
     @POST
     @Path("busqueda")
-    public ResultadoPaginadoDTO<TarjetaReferenciaDTO> listar(
-            ConsultaSeguimientosDTO consulta) throws NegocioException {
+    public ResultadoPaginadoDTO<TarjetaReferenciaDTO> listar(ConsultaSeguimientosDTO consulta) throws
+        NegocioException {
         return servicios.getSeguimientoBO().listar(Sesion.exigirIdUsuario(peticion), consulta);
     }
 }

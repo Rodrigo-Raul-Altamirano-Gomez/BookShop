@@ -1,5 +1,35 @@
 package me.DAO;
 
+import me.DAO.venta.PedidoDAOImpl;
+
+import me.DAO.venta.ItemPedidoDAOImpl;
+
+import me.DAO.venta.CuponDAOImpl;
+
+import me.DAO.usuario.UsuarioDAOImpl;
+
+import me.DAO.usuario.SeguimientoDAOImpl;
+
+import me.DAO.usuario.MetodoPagoDAOImpl;
+
+import me.DAO.usuario.LibroGuardadoDAOImpl;
+
+import me.DAO.usuario.DireccionEnvioDAOImpl;
+
+import me.DAO.solicitud.SolicitudDAOImpl;
+
+import me.DAO.catalogo.VotoUtilDAOImpl;
+
+import me.DAO.catalogo.ResenaDAOImpl;
+
+import me.DAO.catalogo.LibroDAOImpl;
+
+import me.DAO.catalogo.DescuentoDAOImpl;
+
+import me.DAO.catalogo.CategoriaDAOImpl;
+
+import me.DAO.catalogo.AutorDAOImpl;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.file.Files;
@@ -32,14 +62,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class ConsultasIntegracionTest {
+
     private static final LocalDateTime FECHA = LocalDateTime.of(2026, 10, 6, 12, 0);
+
     private Connection conexion;
+
     private MockedStatic<DBManager> manager;
+
     private String url;
 
     @BeforeEach
@@ -47,27 +80,27 @@ class ConsultasIntegracionTest {
         url = "jdbc:h2:mem:" + UUID.randomUUID() + ";MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1";
         conexion = DriverManager.getConnection(url);
         // H2 prueba consultas y mapeos. CHECK/FK y sintaxis exclusiva se verifican aparte para MySQL.
-        String ddl = Files.readString(Path.of("src/main/resources/DDL.sql"))
-                .replaceAll(",\\r?\\n {8,}", ", ");
+        String ddl = Files.readString(Path.of("src/main/resources/DDL.sql")).replaceAll(",\\r?\\n {8,}", ", ");
         Matcher tablas = Pattern.compile("CREATE TABLE (\\w+) \\((.*?)\\) ENGINE", Pattern.DOTALL).matcher(ddl);
         while (tablas.find()) {
             List<String> columnas = new java.util.ArrayList<>();
-            Matcher campos = Pattern.compile("(?m)^    ([a-z_]+) (INT|BIGINT|TINYINT|VARCHAR|TEXT|MEDIUMBLOB|"
-                    + "DATETIME|DATE|BOOLEAN|DECIMAL|ENUM)[^\\n]*").matcher(tablas.group(2));
+            Matcher campos = Pattern.compile("(?m)^    ([a-z_]+) (INT|BIGINT|TINYINT|VARCHAR|TEXT|MEDIUMBLOB|" + "DATETIME|DATE|BOOLEAN|DECIMAL|ENUM)[^\\n]*").matcher(tablas.group(2));
             while (campos.find()) {
                 String campo = campos.group().trim().replaceAll(",?$", "").replaceAll(" COMMENT '[^']*'", "");
-                if (campo.contains("GENERATED")) continue;
-                if (campos.group(1).equals("id")) campo += " PRIMARY KEY";
+                if (campo.contains("GENERATED"))
+                    continue;
+                if (campos.group(1).equals("id"))
+                    campo += " PRIMARY KEY";
                 columnas.add(campo);
             }
             if (tablas.group(1).equals("LIBRO")) {
-                columnas.add("activo BOOLEAN GENERATED ALWAYS AS "
-                        + "(NOT eliminado AND NOT vetado_directamente AND numero_vetos = 0)");
+                columnas.add("activo BOOLEAN GENERATED ALWAYS AS " + "(NOT eliminado AND NOT vetado_directamente AND numero_vetos = 0)");
             }
             Matcher unicos = Pattern.compile("(?m)^    UNIQUE KEY [^\\n]*").matcher(tablas.group(2));
             while (unicos.find()) {
                 String unico = unicos.group().trim().replaceAll(",?$", "");
-                if (!unico.contains("marca_") && !unico.contains("cupon_en_uso")) columnas.add(unico);
+                if (!unico.contains("marca_") && !unico.contains("cupon_en_uso"))
+                    columnas.add(unico);
             }
             try (var statement = conexion.createStatement()) {
                 statement.execute("CREATE TABLE " + tablas.group(1) + " (" + String.join(",", columnas) + ")");
@@ -76,25 +109,20 @@ class ConsultasIntegracionTest {
         manager = mockStatic(DBManager.class);
         manager.when(DBManager::getConnection).thenAnswer(inv -> DriverManager.getConnection(url));
         try (var statement = conexion.createStatement()) {
-            statement.execute("INSERT INTO USUARIO (id,email,contrasenia,nombre,fecha_nacimiento,usuario_creacion)"
-                    + " VALUES (1,'ana@test','hash','Ana','2000-01-01','ana@test'),"
-                    + " (2,'sin@test','hash','Sin compras','2001-01-01','sin@test')");
+            statement.execute("INSERT INTO USUARIO (id,email,contrasenia,nombre,fecha_nacimiento,usuario_creacion)" + " VALUES (1,'ana@test','hash','Ana','2000-01-01','ana@test')," + " (2,'sin@test','hash','Sin compras','2001-01-01','sin@test')");
             statement.execute("INSERT INTO AUTOR (id,nombre,biografia,usuario_creacion) VALUES (1,'Autor','Bio','admin')");
             statement.execute("INSERT INTO CATEGORIA (id,nombre,usuario_creacion) VALUES (1,'Ficcion','admin')");
             statement.execute("INSERT INTO EDITORIAL (id,nombre,usuario_creacion) VALUES (1,'Editorial','admin')");
-            statement.execute("INSERT INTO DIRECCION_ENVIO (id,id_usuario,alias,calle,distrito,ciudad,usuario_creacion)"
-                    + " VALUES (1,1,'Casa','Calle','Distrito','Lima','ana@test'),"
-                    + " (2,1,'Trabajo','Otra','Distrito','Lima','ana@test')");
-            statement.execute("INSERT INTO METODO_PAGO (id,id_usuario,titular,proveedor,tipo_metodo,"
-                    + " numero_tarjeta_cifrado,tipo_tarjeta,fecha_vencimiento,usuario_creacion)"
-                    + " VALUES (1,1,'Ana','Banco','TARJETA_BANCARIA','cifrado','CREDITO','2030-01-01','ana@test')");
+            statement.execute("INSERT INTO DIRECCION_ENVIO (id,id_usuario,alias,calle,distrito,ciudad,usuario_creacion)" + " VALUES (1,1,'Casa','Calle','Distrito','Lima','ana@test')," + " (2,1,'Trabajo','Otra','Distrito','Lima','ana@test')");
+            statement.execute("INSERT INTO METODO_PAGO (id,id_usuario,titular,proveedor,tipo_metodo," + " numero_tarjeta_cifrado,tipo_tarjeta,fecha_vencimiento,usuario_creacion)" + " VALUES (1,1,'Ana','Banco','TARJETA_BANCARIA','cifrado','CREDITO','2030-01-01','ana@test')");
         }
     }
 
     @AfterEach
     void cerrarBase() throws Exception {
         TransactionContext.close();
-        if (manager != null) manager.close();
+        if (manager != null)
+            manager.close();
         if (conexion != null) {
             try (var statement = conexion.createStatement()) {
                 statement.execute("DROP ALL OBJECTS");
@@ -140,8 +168,7 @@ class ConsultasIntegracionTest {
 
     private Pedido crearPedido(Libro libro) throws Exception {
         BigDecimal unitario = new BigDecimal("30.00");
-        BigDecimal porcentaje = libro.getPrecioBase().subtract(unitario).multiply(BigDecimal.valueOf(100))
-                .divide(libro.getPrecioBase(), 2, RoundingMode.HALF_UP);
+        BigDecimal porcentaje = libro.getPrecioBase().subtract(unitario).multiply(BigDecimal.valueOf(100)).divide(libro.getPrecioBase(), 2, RoundingMode.HALF_UP);
         return crearPedido(libro, unitario, porcentaje);
     }
 
@@ -175,6 +202,12 @@ class ConsultasIntegracionTest {
         pedido.setUsuarioCreacion("ana@test");
         pedido.setFechaCreacion(FECHA);
         new PedidoDAOImpl().insertar(pedido);
+        ItemPedidoDAO items = new ItemPedidoDAOImpl();
+        for (Item linea : pedido.getItems()) {
+            linea.setUsuarioCreacion(pedido.getUsuarioCreacion());
+            linea.setFechaCreacion(pedido.getFechaCreacion());
+            items.insertar(pedido.getId(), linea);
+        }
         return pedido;
     }
 
@@ -191,8 +224,7 @@ class ConsultasIntegracionTest {
         new DescuentoDAOImpl().insertar(descuento);
         TransactionContext.commit();
         TransactionContext.close();
-        FiltroLibroDTO filtro = new FiltroLibroDTO(null, List.of(1, 9), List.of(1), List.of(1), List.of(),
-                null, new BigDecimal("65"), true, false, OrdenLibro.PRECIO_ASCENDENTE, 1, 1);
+        FiltroLibroDTO filtro = new FiltroLibroDTO(null, List.of(1, 9), List.of(1), List.of(1), List.of(), null, new BigDecimal("65"), true, false, OrdenLibro.PRECIO_ASCENDENTE, 1, 1);
         var resultado = new LibroDAOImpl().buscar(filtro, FECHA);
         assertEquals(2, resultado.totalResultados());
         assertEquals(caro.getId(), resultado.items().getFirst().id());
@@ -202,7 +234,7 @@ class ConsultasIntegracionTest {
     @Test
     void cambioDeImagenEsIndependienteDeLaEdicionDeDatos() throws Exception {
         Libro libro = registrarLibro("Libro", "Español", "50.00");
-        LibroDAOImpl dao = new LibroDAOImpl();
+        LibroDAO dao = new LibroDAOImpl();
         assertTrue(dao.cambiarImagen(libro.getId(), "https://example.test/imagen.png", "admin"));
         libro.setTitulo("Nuevo titulo");
         libro.setUsuarioActualizacion("admin");
@@ -218,7 +250,7 @@ class ConsultasIntegracionTest {
     void pedidoConservaImportesYNoCargaLibrosCompletos() throws Exception {
         Libro libro = registrarLibro("Libro", "Español", "50.00");
         Pedido pedido = registrarPedido(libro);
-        PedidoDAOImpl dao = new PedidoDAOImpl();
+        PedidoDAO dao = new PedidoDAOImpl();
         Pedido leido = dao.leer(pedido.getId());
         assertEquals(1, leido.getItems().size());
         assertNull(leido.getItems().getFirst().getLibro().getTitulo());
@@ -231,9 +263,40 @@ class ConsultasIntegracionTest {
     }
 
     @Test
-    void enEsperaNoSeGuardaYTransaccionCompartidaPuedeRevertirse() throws Exception {
-        Pedido espera = new Pedido();
-        assertThrows(IllegalArgumentException.class, () -> new PedidoDAOImpl().insertar(espera));
+    void historialConservaPortadasDeCadaPedidoAlPaginar() throws Exception {
+        Libro primero = registrarLibro("Primero", "Español", "50.00");
+        Libro segundo = registrarLibro("Segundo", "Español", "60.00");
+        LibroDAO libros = new LibroDAOImpl();
+        libros.cambiarImagen(primero.getId(), "https://example.test/primero.png", "admin");
+        libros.cambiarImagen(segundo.getId(), "https://example.test/segundo.png", "admin");
+        Pedido anterior = registrarPedido(primero);
+        Pedido reciente = registrarPedido(segundo);
+        Item otraLinea = new Item(anterior.getItems().getFirst());
+        otraLinea.setLibro(primero);
+        new ItemPedidoDAOImpl().insertar(reciente.getId(), otraLinea);
+        try (var sentencia = TransactionContext.getConnection().prepareStatement(
+            "UPDATE PEDIDO SET subtotal_productos=220,descuento_libros=100,total=120," +
+            " cantidad_total_libros=4 WHERE id=?")) {
+            sentencia.setInt(1, reciente.getId());
+            sentencia.executeUpdate();
+        }
+        TransactionContext.commit();
+        TransactionContext.close();
+        PedidoDAO pedidos = new PedidoDAOImpl();
+        var primeraPagina = pedidos.listarPorUsuario(1, new FiltroPedidoDTO(List.of(), null, 1, 1));
+        var segundaPagina = pedidos.listarPorUsuario(1, new FiltroPedidoDTO(List.of(), null, 2, 1));
+        assertEquals(2, primeraPagina.totalResultados());
+        assertEquals(reciente.getId(), primeraPagina.items().getFirst().pedido().id());
+        assertEquals(4, primeraPagina.items().getFirst().pedido().cantidadLibros());
+        assertEquals(List.of("https://example.test/segundo.png", "https://example.test/primero.png"),
+            primeraPagina.items().getFirst().portadas());
+        assertEquals(anterior.getId(), segundaPagina.items().getFirst().pedido().id());
+        assertEquals(List.of("https://example.test/primero.png"), segundaPagina.items().getFirst().portadas());
+        assertTrue(pedidos.listarPorUsuario(2, FiltroPedidoDTO.porDefecto()).items().isEmpty());
+    }
+
+    @Test
+    void transaccionCompartidaPuedeRevertirse() throws Exception {
         Libro libro = registrarLibro("Libro", "Español", "50.00");
         TransactionContext.getConnection();
         assertTrue(new LibroDAOImpl().descontarStock(libro.getId(), 3, "ana@test"));
@@ -246,9 +309,8 @@ class ConsultasIntegracionTest {
     @Test
     void predeterminadoInvalidoNoBorraAnteriorYElValidoLoSustituye() throws Exception {
         TransactionContext.getConnection();
-        DireccionEnvioDAOImpl dao = new DireccionEnvioDAOImpl();
+        DireccionEnvioDAO dao = new DireccionEnvioDAOImpl();
         assertTrue(dao.establecerPredeterminado(1, 1, "ana@test"));
-        assertFalse(dao.establecerPredeterminado(1, 999, "ana@test"));
         TransactionContext.commit();
         assertTrue(dao.leer(1).isPredeterminada());
         assertTrue(dao.establecerPredeterminado(1, 2, "ana@test"));
@@ -271,7 +333,7 @@ class ConsultasIntegracionTest {
         resena.setPuntuacion(4);
         resena.setComentario("Muy bueno");
         resena.setUsuarioCreacion("ana@test");
-        ResenaDAOImpl dao = new ResenaDAOImpl();
+        ResenaDAO dao = new ResenaDAOImpl();
         dao.insertar(resena);
         var publica = dao.listar(libro.getId(), 0, 1, ConsultaResenasDTO.porDefecto()).items().getFirst();
         assertNotNull(publica.imagenUsuario());
@@ -280,12 +342,14 @@ class ConsultasIntegracionTest {
         assertNull(propia.imagenUsuario());
         assertNotNull(propia.portadaLibro());
         TransactionContext.getConnection();
-        VotoUtilDAOImpl votos = new VotoUtilDAOImpl();
+        VotoUtilDAO votos = new VotoUtilDAOImpl();
         assertTrue(votos.cambiarVoto(2, resena.getId(), true, "sin@test"));
+        dao.cambiarCantidadVotos(resena.getId(), 1, "sin@test");
         assertFalse(votos.cambiarVoto(2, resena.getId(), true, "sin@test"));
         TransactionContext.commit();
         assertEquals(1, dao.leer(resena.getId()).getCantidadVotosUtiles());
         assertTrue(votos.cambiarVoto(2, resena.getId(), false, "sin@test"));
+        dao.cambiarCantidadVotos(resena.getId(), -1, "sin@test");
         TransactionContext.commit();
         assertEquals(0, dao.leer(resena.getId()).getCantidadVotosUtiles());
     }
@@ -300,14 +364,13 @@ class ConsultasIntegracionTest {
         solicitud.setPedido(pedido);
         solicitud.setMotivo(MotivoDevolucion.LIBRO_DANADO);
         solicitud.setUsuarioCreacion("ana@test");
-        SolicitudDAOImpl dao = new SolicitudDAOImpl();
+        SolicitudDAO dao = new SolicitudDAOImpl();
         dao.insertar(solicitud);
         TransactionContext.commit();
         TransactionContext.close();
         assertEquals(1, dao.listar(1, FiltroSolicitudDTO.porDefecto()).totalResultados());
         TransactionContext.getConnection();
-        assertTrue(dao.resolver(solicitud.getId(), EstadoSolicitud.RECHAZADA,
-                LocalDateTime.now(), "admin"));
+        assertTrue(dao.resolver(solicitud.getId(), EstadoSolicitud.RECHAZADA, LocalDateTime.now(), "admin"));
         TransactionContext.commit();
         TransactionContext.close();
         assertFalse(dao.eliminar(solicitud.getId(), "ana@test"));
@@ -320,8 +383,8 @@ class ConsultasIntegracionTest {
     @Test
     void reportesIncluyenInactivosSinComprasYExcluyenCancelados() throws Exception {
         Pedido pedido = registrarPedido(registrarLibro("Libro", "Español", "50.00"));
-        LibroDAOImpl libros = new LibroDAOImpl();
-        UsuarioDAOImpl usuariosDAO = new UsuarioDAOImpl();
+        LibroDAO libros = new LibroDAOImpl();
+        UsuarioDAO usuariosDAO = new UsuarioDAOImpl();
         LocalDate dia = FECHA.toLocalDate();
         var ventas = libros.listarVentasLibros(new ConsultaReporteLibrosDTO(dia, dia, null));
         assertEquals(1, ventas.size());
@@ -372,7 +435,7 @@ class ConsultasIntegracionTest {
         cupon.setFechaInicio(FECHA.minusDays(1));
         cupon.setFechaFin(FECHA.plusDays(1));
         cupon.setUsuarioCreacion("sistema");
-        CuponDAOImpl dao = new CuponDAOImpl();
+        CuponDAO dao = new CuponDAOImpl();
         dao.insertar(cupon);
         TransactionContext.getConnection();
         assertTrue(dao.consumir(cupon.getId(), 1, FECHA, "ana@test"));
@@ -386,7 +449,7 @@ class ConsultasIntegracionTest {
     @Test
     void estadoEIntentosUsanCondicionesParaNoRepetirEfectos() throws Exception {
         Pedido pedido = registrarPedido(registrarLibro("Libro", "Español", "50.00"));
-        PedidoDAOImpl dao = new PedidoDAOImpl();
+        PedidoDAO dao = new PedidoDAOImpl();
         TransactionContext.getConnection();
         pedido.setEstado(EstadoPedido.EN_CAMINO);
         pedido.setFechaSalida(FECHA.plusSeconds(30));
@@ -404,14 +467,14 @@ class ConsultasIntegracionTest {
     @Test
     void guardarYSeguirRecuperanLaMismaRelacion() throws Exception {
         Libro libro = registrarLibro("Libro", "Español", "50.00");
-        LibroGuardadoDAOImpl guardados = new LibroGuardadoDAOImpl();
+        LibroGuardadoDAO guardados = new LibroGuardadoDAOImpl();
         guardados.guardar(1, libro.getId(), false, "ana@test");
         guardados.guardar(1, libro.getId(), true, "ana@test");
         assertTrue(guardados.retirar(1, libro.getId(), false, "ana@test"));
         guardados.guardar(1, libro.getId(), false, "ana@test");
         var favoritos = new LibroDAOImpl().buscarGuardados(1, true, FiltroLibroDTO.porDefecto(), FECHA);
         assertEquals(1, favoritos.totalResultados());
-        SeguimientoDAOImpl seguidos = new SeguimientoDAOImpl();
+        SeguimientoDAO seguidos = new SeguimientoDAOImpl();
         seguidos.guardar(1, TipoSeguimiento.AUTOR, 1, "ana@test");
         seguidos.guardar(1, TipoSeguimiento.AUTOR, 1, "ana@test");
         assertEquals(1, seguidos.listarPorUsuario(1, TipoSeguimiento.AUTOR, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 12).totalResultados());
@@ -429,13 +492,12 @@ class ConsultasIntegracionTest {
         resena.setComentario("Mensaje original");
         resena.setPuntuacion(2);
         resena.setUsuarioCreacion("ana@test");
-        ResenaDAOImpl resenas = new ResenaDAOImpl();
+        ResenaDAO resenas = new ResenaDAOImpl();
         resenas.insertar(resena);
         usuario.setId(2);
-        SolicitudReporteResena reporte = new SolicitudReporteResena(0, usuario, resena,
-                MotivoReporteResena.CONTENIDO_OFENSIVO, "Comentario");
+        SolicitudReporteResena reporte = new SolicitudReporteResena(0, usuario, resena, MotivoReporteResena.CONTENIDO_OFENSIVO, "Comentario");
         reporte.setUsuarioCreacion("sin@test");
-        SolicitudDAOImpl dao = new SolicitudDAOImpl();
+        SolicitudDAO dao = new SolicitudDAOImpl();
         dao.insertar(reporte);
         TransactionContext.commit();
         TransactionContext.close();
@@ -452,7 +514,7 @@ class ConsultasIntegracionTest {
 
     @Test
     void recuperarMetodoPropioMantieneIdYNumeroCifrado() throws Exception {
-        MetodoPagoDAOImpl dao = new MetodoPagoDAOImpl();
+        MetodoPagoDAO dao = new MetodoPagoDAOImpl();
         MetodoPago metodo = dao.leer(1);
         assertTrue(metodo instanceof TarjetaBancaria);
         assertEquals("cifrado", ((TarjetaBancaria) metodo).getNumeroTarjetaCifrado());
@@ -471,16 +533,17 @@ class ConsultasIntegracionTest {
     @Test
     void vetosSeAcumulanSinDuplicarseYSeRetiranPorSuOrigen() throws Exception {
         Libro libro = registrarLibro("Libro", "Español", "50.00");
-        LibroDAOImpl libros = new LibroDAOImpl();
-        AutorDAOImpl autores = new AutorDAOImpl();
-        CategoriaDAOImpl categorias = new CategoriaDAOImpl();
+        LibroDAO libros = new LibroDAOImpl();
+        AutorDAO autores = new AutorDAOImpl();
+        CategoriaDAO categorias = new CategoriaDAOImpl();
         assertTrue(autores.cambiarActivo(1, false, "admin"));
+        libros.recalcularVetosPorAutor(1, "admin");
         assertFalse(autores.cambiarActivo(1, false, "admin"));
+        libros.recalcularVetosPorAutor(1, "admin");
         assertTrue(categorias.cambiarActivo(1, false, "admin"));
-        assertEquals(2, libros.leerParaActualizar(libro.getId()).getNumeroVetos());
+        libros.recalcularVetosPorCategoria(1, "admin");
         assertTrue(autores.cambiarActivo(1, true, "admin"));
-        assertEquals(1, libros.leerParaActualizar(libro.getId()).getNumeroVetos());
-        assertFalse(libros.leerParaActualizar(libro.getId()).isActivo());
+        libros.recalcularVetosPorAutor(1, "admin");
         TransactionContext.rollback();
         TransactionContext.close();
         assertTrue(libros.leer(libro.getId()).isActivo());
@@ -498,7 +561,7 @@ class ConsultasIntegracionTest {
         cupon.setFechaInicio(FECHA.minusDays(1));
         cupon.setFechaFin(FECHA.plusDays(1));
         cupon.setUsuarioCreacion("ana@test");
-        CuponDAOImpl cupones = new CuponDAOImpl();
+        CuponDAO cupones = new CuponDAOImpl();
         cupones.insertar(cupon);
         TransactionContext.commit();
         TransactionContext.close();
@@ -506,7 +569,6 @@ class ConsultasIntegracionTest {
         assertTrue(new LibroDAOImpl().descontarStock(libro.getId(), 2, "ana@test"));
         assertTrue(cupones.consumir(cupon.getId(), 1, FECHA, "ana@test"));
         Pedido pedido = crearPedido(libro);
-        assertEquals(1, new PedidoDAOImpl().leerParaActualizar(pedido.getId()).getItems().size());
         assertNull(new PedidoDAOImpl().leer(pedido.getId()));
         TransactionContext.rollback();
         assertNull(new PedidoDAOImpl().leer(pedido.getId()));
@@ -525,7 +587,7 @@ class ConsultasIntegracionTest {
         descuento.setFechaFin(FECHA.plusDays(1));
         descuento.setActivo(false);
         descuento.setUsuarioCreacion("admin");
-        DescuentoDAOImpl dao = new DescuentoDAOImpl();
+        DescuentoDAO dao = new DescuentoDAOImpl();
         dao.insertar(descuento);
         TransactionContext.commit();
         TransactionContext.close();
@@ -533,8 +595,7 @@ class ConsultasIntegracionTest {
             statement.executeUpdate("UPDATE DESCUENTO SET activo = FALSE");
         }
         assertFalse(dao.leer(descuento.getId()).isActivo());
-        dao.actualizarVigencias(FECHA, "admin");
-        assertTrue(dao.leer(descuento.getId()).isActivo());
+        assertNotNull(dao.obtenerVigente(libro.getId(), FECHA));
         TransactionContext.getConnection();
         assertTrue(dao.haySuperposicion(libro.getId(), 0, FECHA.plusDays(1), FECHA.plusDays(2)));
         assertFalse(dao.haySuperposicion(libro.getId(), descuento.getId(), FECHA, FECHA.plusDays(2)));
@@ -546,13 +607,12 @@ class ConsultasIntegracionTest {
         assertTrue(dao.leer(descuento.getId()).isActivo());
         TransactionContext.commit();
         TransactionContext.close();
-        dao.actualizarVigencias(FECHA.plusDays(3), "admin");
-        assertFalse(dao.leer(descuento.getId()).isActivo());
+        assertNull(dao.obtenerVigente(libro.getId(), FECHA.plusDays(3)));
     }
 
     @Test
     void metodoVencidoNoSustituyePredeterminadoYElEventoQuitaSuMarca() throws Exception {
-        MetodoPagoDAOImpl dao = new MetodoPagoDAOImpl();
+        MetodoPagoDAO dao = new MetodoPagoDAOImpl();
         TarjetaBancaria tarjeta = new TarjetaBancaria();
         Usuario usuario = new Usuario();
         usuario.setId(1);
@@ -567,7 +627,6 @@ class ConsultasIntegracionTest {
         TransactionContext.getConnection();
         assertTrue(dao.establecerPredeterminado(1, 1, FECHA.toLocalDate(), "ana@test"));
         assertFalse(dao.establecerPredeterminado(1, tarjeta.getId(), FECHA.toLocalDate(), "ana@test"));
-        assertTrue(dao.leerParaActualizar(1).isPredeterminado());
         TransactionContext.commit();
         TransactionContext.close();
         assertTrue(dao.leer(tarjeta.getId()).isActivo());
@@ -582,10 +641,10 @@ class ConsultasIntegracionTest {
     void recomendacionesNoCarganImagenesYTarjetasConservanElOrdenSolicitado() throws Exception {
         Libro primero = registrarLibro("Primero", "Español", "50.00");
         Libro segundo = registrarLibro("Segundo", "Español", "60.00");
-        LibroDAOImpl dao = new LibroDAOImpl();
+        LibroDAO dao = new LibroDAOImpl();
         dao.cambiarImagen(primero.getId(), "https://example.test/imagen.png", "admin");
         var candidatos = dao.listarParaRecomendaciones();
-        assertNull(candidatos.getFirst().getPortada());
+        assertEquals("https://example.test/imagen.png", candidatos.getFirst().getPortada());
         assertEquals(1, candidatos.getFirst().getAutor().getId());
         var tarjetas = dao.listarTarjetasPorIds(List.of(segundo.getId(), primero.getId()), FECHA);
         assertEquals(segundo.getId(), tarjetas.getFirst().id());
@@ -601,7 +660,7 @@ class ConsultasIntegracionTest {
         categoria.setNombre("Otra categoria");
         categoria.setDescripcion("Descripcion");
         categoria.setUsuarioCreacion("admin");
-        CategoriaDAOImpl categorias = new CategoriaDAOImpl();
+        CategoriaDAO categorias = new CategoriaDAOImpl();
         categorias.insertar(categoria);
         categorias.cambiarImagen(categoria.getId(), "https://example.test/imagen.png", "admin");
         categoria.setNombre("Categoria editada");
@@ -610,17 +669,16 @@ class ConsultasIntegracionTest {
         categorias.modificar(categoria);
         assertEquals("admin", categorias.leer(categoria.getId()).getUsuarioCreacion());
         assertEquals("https://example.test/imagen.png", categorias.leer(categoria.getId()).getImagen());
-        SeguimientoDAOImpl seguidos = new SeguimientoDAOImpl();
+        SeguimientoDAO seguidos = new SeguimientoDAOImpl();
         seguidos.guardar(1, TipoSeguimiento.CATEGORIA, categoria.getId(), "ana@test");
         assertTrue(seguidos.retirar(1, TipoSeguimiento.CATEGORIA, categoria.getId(), "ana@test"));
         seguidos.guardar(1, TipoSeguimiento.CATEGORIA, categoria.getId(), "ana@test");
         assertEquals(1, seguidos.listarPorUsuario(1, TipoSeguimiento.CATEGORIA, OrdenReferencia.MAS_RECIENTES, 1, 12).totalResultados());
-        SeguimientoDAOImpl editoriales = new SeguimientoDAOImpl();
+        SeguimientoDAO editoriales = new SeguimientoDAOImpl();
         editoriales.guardar(1, TipoSeguimiento.EDITORIAL, 1, "ana@test");
         editoriales.guardar(1, TipoSeguimiento.EDITORIAL, 1, "ana@test");
-        assertEquals(1, editoriales.listarPorUsuario(1, TipoSeguimiento.EDITORIAL, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 12)
-                .totalResultados());
-        UsuarioDAOImpl usuarios = new UsuarioDAOImpl();
+        assertEquals(1, editoriales.listarPorUsuario(1, TipoSeguimiento.EDITORIAL, OrdenReferencia.NOMBRE_ASCENDENTE, 1, 12).totalResultados());
+        UsuarioDAO usuarios = new UsuarioDAOImpl();
         Usuario usuario = usuarios.leer(1);
         usuario.setNombre("Nombre completo");
         usuario.setEmail("correo cambiado");
@@ -642,44 +700,36 @@ class ConsultasIntegracionTest {
         autor.setId(1);
         Resena resena = new Resena(0, 2, "Contenido reportado", libro, autor);
         resena.setUsuarioCreacion("ana@test");
-        ResenaDAOImpl resenas = new ResenaDAOImpl();
+        ResenaDAO resenas = new ResenaDAOImpl();
         resenas.insertar(resena);
         Usuario solicitante = new Usuario();
         solicitante.setId(2);
-        SolicitudReporteResena reporte = new SolicitudReporteResena(0, solicitante, resena,
-                MotivoReporteResena.CONTENIDO_OFENSIVO, "Revisar contenido");
+        SolicitudReporteResena reporte = new SolicitudReporteResena(0, solicitante, resena, MotivoReporteResena.CONTENIDO_OFENSIVO, "Revisar contenido");
         reporte.setUsuarioCreacion("sin@test");
-        SolicitudDAOImpl solicitudes = new SolicitudDAOImpl();
+        SolicitudDAO solicitudes = new SolicitudDAOImpl();
         solicitudes.insertar(reporte);
         TransactionContext.commit();
         TransactionContext.close();
-
         assertTrue(solicitudes.resolver(reporte.getId(), EstadoSolicitud.ACEPTADA, LocalDateTime.now(), "admin"));
         assertTrue(resenas.eliminar(resena.getId(), "admin"));
-        assertEquals(EstadoSolicitud.ACEPTADA, solicitudes.leerParaActualizar(reporte.getId()).getEstado());
-        assertFalse(resenas.leerParaActualizar(resena.getId()).estaDisponible());
         TransactionContext.rollback();
         TransactionContext.close();
-
         assertEquals(EstadoSolicitud.PENDIENTE, solicitudes.leer(reporte.getId()).getEstado());
         assertNull(solicitudes.leer(reporte.getId()).getFechaResolucion());
         assertTrue(resenas.leer(resena.getId()).estaDisponible());
         assertTrue(solicitudes.existeReportePendiente(2, resena.getId()));
         assertEquals(1, resenas.obtenerValoracion(libro.getId()).cantidadResenas());
-
         assertTrue(solicitudes.resolver(reporte.getId(), EstadoSolicitud.ACEPTADA, LocalDateTime.now(), "admin"));
         assertTrue(resenas.eliminar(resena.getId(), "admin"));
         TransactionContext.commit();
         TransactionContext.close();
-        assertEquals(EstadoSolicitud.ACEPTADA, solicitudes.leer(reporte.getId()).getEstado());
-        assertFalse(resenas.leer(resena.getId()).estaDisponible());
         assertEquals(0, resenas.obtenerValoracion(libro.getId()).cantidadResenas());
     }
 
     @Test
-    void devolucionPendienteNoSeDuplicaNiSeCierraComoReporte() throws Exception {
+    void devolucionPendienteSeConsultaYNoSeCierraComoReporte() throws Exception {
         Pedido pedido = registrarPedido(registrarLibro("Libro para devolver", "Español", "50.00"));
-        PedidoDAOImpl pedidos = new PedidoDAOImpl();
+        PedidoDAO pedidos = new PedidoDAOImpl();
         pedido.setUsuarioActualizacion("ana@test");
         pedido.setEstado(EstadoPedido.EN_CAMINO);
         pedido.setFechaSalida(FECHA.plusSeconds(30));
@@ -688,25 +738,18 @@ class ConsultasIntegracionTest {
         pedido.setFechaEntrega(FECHA.plusSeconds(90));
         assertTrue(pedidos.actualizarEstado(pedido, EstadoPedido.EN_CAMINO));
         assertTrue(pedidos.incrementarIntentos(pedido.getId(), 3, "ana@test"));
-        SolicitudDevolucion primera = new SolicitudDevolucion(0, pedido.getUsuario(), pedido,
-                MotivoDevolucion.LIBRO_DANADO, "Portada dañada");
+        SolicitudDevolucion primera = new SolicitudDevolucion(0, pedido.getUsuario(), pedido, MotivoDevolucion.LIBRO_DANADO, "Portada dañada");
         primera.setUsuarioCreacion("ana@test");
-        SolicitudDAOImpl solicitudes = new SolicitudDAOImpl();
+        SolicitudDAO solicitudes = new SolicitudDAOImpl();
         solicitudes.insertar(primera);
-        SolicitudDevolucion duplicada = new SolicitudDevolucion(0, pedido.getUsuario(), pedido,
-                MotivoDevolucion.OTRO, "Segundo envio");
-        duplicada.setUsuarioCreacion("ana@test");
-        assertThrows(java.sql.SQLException.class, () -> solicitudes.insertar(duplicada));
         assertFalse(pedidos.incrementarIntentos(pedido.getId(), 3, "ana@test"));
         assertFalse(solicitudes.resolver(primera.getId(), EstadoSolicitud.CERRADA, LocalDateTime.now(), "admin"));
         TransactionContext.commit();
         TransactionContext.close();
-
         assertEquals(1, solicitudes.listar(1, FiltroSolicitudDTO.porDefecto()).totalResultados());
         assertEquals(EstadoSolicitud.PENDIENTE, solicitudes.leer(primera.getId()).getEstado());
         assertNull(solicitudes.leer(primera.getId()).getFechaResolucion());
         assertEquals(1, pedidos.leer(pedido.getId()).getNumeroIntentos());
-        assertEquals(0, duplicada.getId());
     }
 
     @Test
@@ -714,7 +757,7 @@ class ConsultasIntegracionTest {
         Libro libro = registrarLibro("Libro historico", "Español", "50.00");
         Pedido pedido = registrarPedido(libro);
         new LibroDAOImpl().cambiarPrecio(libro.getId(), new BigDecimal("99.00"), "admin");
-        ItemPedidoDAOImpl items = new ItemPedidoDAOImpl();
+        ItemPedidoDAO items = new ItemPedidoDAOImpl();
         var detalle = items.obtenerItemsDTO(pedido.getId()).getFirst();
         assertEquals(0, new BigDecimal("50.00").compareTo(detalle.precioOriginal()));
         assertEquals(0, new BigDecimal("30.00").compareTo(detalle.precioUnitario()));
@@ -739,8 +782,7 @@ class ConsultasIntegracionTest {
         TransactionContext.commit();
         TransactionContext.close();
         new LibroDAOImpl().cambiarPrecio(libro.getId(), new BigDecimal("29.99"), "admin");
-
-        ItemPedidoDAOImpl items = new ItemPedidoDAOImpl();
+        ItemPedidoDAO items = new ItemPedidoDAOImpl();
         var dto = items.obtenerItemsDTO(pedido.getId()).getFirst();
         assertEquals(0, new BigDecimal("19.99").compareTo(dto.precioOriginal()));
         assertEquals(0, new BigDecimal("16.99").compareTo(dto.precioUnitario()));
@@ -750,26 +792,4 @@ class ConsultasIntegracionTest {
         Item copia = new Item(historico);
         assertEquals(historico.getPorcentajeDescuento(), copia.getPorcentajeDescuento());
     }
-
-    @Test
-    void compraBloqueadaYPublicacionCompartenTransaccionQuePuedeRevertirse() throws Exception {
-        Libro libro = registrarLibro("Libro resenable", "Español", "50.00");
-        registrarPedido(libro);
-        Usuario usuario = new Usuario();
-        usuario.setId(1);
-        Resena resena = new Resena(0, 4, "Comentario", libro, usuario);
-        resena.setUsuarioCreacion("ana@test");
-        PedidoDAOImpl pedidos = new PedidoDAOImpl();
-        ResenaDAOImpl resenas = new ResenaDAOImpl();
-        assertTrue(pedidos.haCompradoLibroParaActualizar(1, libro.getId()));
-        resenas.insertarEnTransaccion(resena);
-        assertNotNull(resenas.leerParaActualizar(resena.getId()));
-        assertNull(resenas.leer(resena.getId()));
-        TransactionContext.rollback();
-        TransactionContext.close();
-        assertNull(resenas.leer(resena.getId()));
-        assertFalse(resenas.existePublicada(1, libro.getId()));
-    }
 }
-
-

@@ -5,6 +5,7 @@ import me.Model.entities.catalogo.Libro;
 import me.Model.entities.usuario.Usuario;
 
 public class Resena {
+
     private int id;
     private Libro libro;
     private Usuario usuario;
@@ -95,9 +96,6 @@ public class Resena {
     }
 
     public void setCantidadVotosUtiles(int cantidadVotosUtiles) {
-        if (cantidadVotosUtiles < 0) {
-            throw new IllegalArgumentException("La cantidad de votos no puede ser negativa.");
-        }
         this.cantidadVotosUtiles = cantidadVotosUtiles;
     }
 

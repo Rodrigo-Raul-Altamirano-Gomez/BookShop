@@ -26,7 +26,8 @@ public class DatosDireccionEnvioDTO
     {
     }
 
-    public DatosDireccionEnvioDTO(string alias, string calle, string distrito, string ciudad, string referencia, bool predeterminada)
+    public DatosDireccionEnvioDTO(
+        string alias, string calle, string distrito, string ciudad, string referencia, bool predeterminada)
     {
         Alias = alias;
         Calle = calle;

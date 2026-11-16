@@ -8,8 +8,13 @@ import me.Model.dto.usuario.ReporteUsuariosDTO;
 
 // Prepara los datos y genera los PDF con las plantillas JRXML (RF18 y RF19).
 public interface ReporteBO {
-    ReporteVentasLibrosDTO prepararLibros(int idActor, ConsultaReporteLibrosDTO consulta) throws NegocioException;
-    ReporteUsuariosDTO prepararUsuarios(int idActor, YearMonth mes, Integer cantidadMaxima) throws NegocioException;
-    byte[] generarLibrosPDF(int idActor, ConsultaReporteLibrosDTO consulta) throws NegocioException;
-    byte[] generarUsuariosPDF(int idActor, YearMonth mes, Integer cantidadMaxima) throws NegocioException;
+
+    ReporteVentasLibrosDTO prepararLibros(ConsultaReporteLibrosDTO consulta) throws NegocioException;
+
+    ReporteUsuariosDTO prepararUsuarios(YearMonth mes, Integer cantidadMaxima) throws
+        NegocioException;
+
+    byte[] generarLibrosPDF(ConsultaReporteLibrosDTO consulta) throws NegocioException;
+
+    byte[] generarUsuariosPDF(YearMonth mes, Integer cantidadMaxima) throws NegocioException;
 }

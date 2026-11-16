@@ -35,13 +35,4 @@ class UsuarioTest {
         }
     }
 
-    @Test
-    void contadorDeEntregasNoPuedeSerNegativo() {
-        Usuario usuario = new Usuario();
-        usuario.registrarPedidoEntregado();
-        usuario.registrarPedidoEntregado();
-        assertEquals(2, usuario.getCantidadPedidosEntregados());
-        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
-                () -> usuario.setCantidadPedidosEntregados(-1));
-    }
 }

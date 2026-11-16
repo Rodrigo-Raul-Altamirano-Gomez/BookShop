@@ -8,6 +8,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
@@ -22,10 +23,18 @@ import me.Service.Sesion;
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
 public class PedidoRS {
+
     @Inject
     private Servicios servicios;
+
     @Context
     private HttpServletRequest peticion;
+
+    @GET
+    @Path("{id}")
+    public DetallePedidoDTO consultar(@PathParam("id") int id) throws NegocioException {
+        return servicios.getPedidoBO().consultar(Sesion.exigirIdUsuario(peticion), id);
+    }
 
     @POST
     @Path("preparacion")

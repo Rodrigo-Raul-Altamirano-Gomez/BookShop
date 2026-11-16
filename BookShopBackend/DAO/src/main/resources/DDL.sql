@@ -47,30 +47,13 @@ CREATE TABLE USUARIO (
     usuario_actualizacion VARCHAR(254) NULL,
     fecha_actualizacion DATETIME NULL,
     eliminado BOOLEAN NOT NULL DEFAULT FALSE,
-    CONSTRAINT ck_usuario_imagen CHECK (
-        imagen IS NULL OR CHAR_LENGTH(TRIM(imagen)) BETWEEN 1 AND 2048
-    ),
     PRIMARY KEY (id),
     UNIQUE KEY uk_usuario_email (email),
     CONSTRAINT ck_usuario_datos CHECK (
         CHAR_LENGTH(TRIM(nombre)) > 0 AND CHAR_LENGTH(TRIM(contrasenia)) > 0
-        AND email = TRIM(email) AND CHAR_LENGTH(SUBSTRING_INDEX(email, '@', 1)) > 0
-        AND CHAR_LENGTH(email) - CHAR_LENGTH(REPLACE(email, '@', '')) = 1
-        AND CHAR_LENGTH(SUBSTRING_INDEX(email, '@', -1)) > 0
-    ),
-    CONSTRAINT ck_usuario_rol CHECK (
-        (rol = 'ADMIN' AND LOWER(SUBSTRING_INDEX(email, '@', -1)) = 'admin.bookshop')
-        OR (rol = 'CLIENTE' AND LOWER(SUBSTRING_INDEX(email, '@', -1)) <> 'admin.bookshop')
     ),
     CONSTRAINT ck_usuario_tiempo_total CHECK (tiempo_total >= 0),
-    CONSTRAINT ck_usuario_pedidos_entregados CHECK (cantidad_pedidos_entregados >= 0),
-    CONSTRAINT ck_usuario_banderas CHECK (activo IN (0, 1) AND eliminado IN (0, 1)),
-    CONSTRAINT ck_usuario_auditoria CHECK (
-        CHAR_LENGTH(TRIM(usuario_creacion)) > 0
-        AND ((usuario_actualizacion IS NULL AND fecha_actualizacion IS NULL)
-            OR (usuario_actualizacion IS NOT NULL AND CHAR_LENGTH(TRIM(usuario_actualizacion)) > 0
-                AND fecha_actualizacion IS NOT NULL AND fecha_actualizacion >= fecha_creacion))
-    )
+    CONSTRAINT ck_usuario_pedidos_entregados CHECK (cantidad_pedidos_entregados >= 0)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 CREATE TABLE DIRECCION_ENVIO (
@@ -101,16 +84,7 @@ CREATE TABLE DIRECCION_ENVIO (
         CHAR_LENGTH(TRIM(alias)) > 0 AND CHAR_LENGTH(TRIM(calle)) > 0
         AND CHAR_LENGTH(TRIM(distrito)) > 0 AND CHAR_LENGTH(TRIM(ciudad)) > 0
     ),
-    CONSTRAINT ck_direccion_predeterminada CHECK (NOT predeterminada OR (activo AND NOT eliminado)),
-    CONSTRAINT ck_direccion_envio_banderas CHECK (
-        predeterminada IN (0, 1) AND activo IN (0, 1) AND eliminado IN (0, 1)
-    ),
-    CONSTRAINT ck_direccion_envio_auditoria CHECK (
-        CHAR_LENGTH(TRIM(usuario_creacion)) > 0
-        AND ((usuario_actualizacion IS NULL AND fecha_actualizacion IS NULL)
-            OR (usuario_actualizacion IS NOT NULL AND CHAR_LENGTH(TRIM(usuario_actualizacion)) > 0
-                AND fecha_actualizacion IS NOT NULL AND fecha_actualizacion >= fecha_creacion))
-    )
+    CONSTRAINT ck_direccion_predeterminada CHECK (NOT predeterminada OR (activo AND NOT eliminado))
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 CREATE TABLE CATEGORIA (
@@ -124,19 +98,9 @@ CREATE TABLE CATEGORIA (
     usuario_actualizacion VARCHAR(254) NULL,
     fecha_actualizacion DATETIME NULL,
     eliminado BOOLEAN NOT NULL DEFAULT FALSE,
-    CONSTRAINT ck_categoria_imagen CHECK (
-        imagen IS NULL OR CHAR_LENGTH(TRIM(imagen)) BETWEEN 1 AND 2048
-    ),
     PRIMARY KEY (id),
     UNIQUE KEY uk_categoria_nombre (nombre),
-    CONSTRAINT ck_categoria_nombre CHECK (CHAR_LENGTH(TRIM(nombre)) > 0),
-    CONSTRAINT ck_categoria_banderas CHECK (activo IN (0, 1) AND eliminado IN (0, 1)),
-    CONSTRAINT ck_categoria_auditoria CHECK (
-        CHAR_LENGTH(TRIM(usuario_creacion)) > 0
-        AND ((usuario_actualizacion IS NULL AND fecha_actualizacion IS NULL)
-            OR (usuario_actualizacion IS NOT NULL AND CHAR_LENGTH(TRIM(usuario_actualizacion)) > 0
-                AND fecha_actualizacion IS NOT NULL AND fecha_actualizacion >= fecha_creacion))
-    )
+    CONSTRAINT ck_categoria_nombre CHECK (CHAR_LENGTH(TRIM(nombre)) > 0)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 CREATE TABLE AUTOR (
@@ -150,19 +114,9 @@ CREATE TABLE AUTOR (
     usuario_actualizacion VARCHAR(254) NULL,
     fecha_actualizacion DATETIME NULL,
     eliminado BOOLEAN NOT NULL DEFAULT FALSE,
-    CONSTRAINT ck_autor_imagen CHECK (
-        imagen IS NULL OR CHAR_LENGTH(TRIM(imagen)) BETWEEN 1 AND 2048
-    ),
     PRIMARY KEY (id),
     KEY idx_autor_nombre (nombre),
-    CONSTRAINT ck_autor_nombre CHECK (CHAR_LENGTH(TRIM(nombre)) > 0),
-    CONSTRAINT ck_autor_banderas CHECK (activo IN (0, 1) AND eliminado IN (0, 1)),
-    CONSTRAINT ck_autor_auditoria CHECK (
-        CHAR_LENGTH(TRIM(usuario_creacion)) > 0
-        AND ((usuario_actualizacion IS NULL AND fecha_actualizacion IS NULL)
-            OR (usuario_actualizacion IS NOT NULL AND CHAR_LENGTH(TRIM(usuario_actualizacion)) > 0
-                AND fecha_actualizacion IS NOT NULL AND fecha_actualizacion >= fecha_creacion))
-    )
+    CONSTRAINT ck_autor_nombre CHECK (CHAR_LENGTH(TRIM(nombre)) > 0)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 CREATE TABLE EDITORIAL (
@@ -176,19 +130,9 @@ CREATE TABLE EDITORIAL (
     usuario_actualizacion VARCHAR(254) NULL,
     fecha_actualizacion DATETIME NULL,
     eliminado BOOLEAN NOT NULL DEFAULT FALSE,
-    CONSTRAINT ck_editorial_imagen CHECK (
-        imagen IS NULL OR CHAR_LENGTH(TRIM(imagen)) BETWEEN 1 AND 2048
-    ),
     PRIMARY KEY (id),
     UNIQUE KEY uk_editorial_nombre (nombre),
-    CONSTRAINT ck_editorial_nombre CHECK (CHAR_LENGTH(TRIM(nombre)) > 0),
-    CONSTRAINT ck_editorial_banderas CHECK (activo IN (0, 1) AND eliminado IN (0, 1)),
-    CONSTRAINT ck_editorial_auditoria CHECK (
-        CHAR_LENGTH(TRIM(usuario_creacion)) > 0
-        AND ((usuario_actualizacion IS NULL AND fecha_actualizacion IS NULL)
-            OR (usuario_actualizacion IS NOT NULL AND CHAR_LENGTH(TRIM(usuario_actualizacion)) > 0
-                AND fecha_actualizacion IS NOT NULL AND fecha_actualizacion >= fecha_creacion))
-    )
+    CONSTRAINT ck_editorial_nombre CHECK (CHAR_LENGTH(TRIM(nombre)) > 0)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 CREATE TABLE LIBRO (
@@ -221,9 +165,6 @@ CREATE TABLE LIBRO (
     usuario_actualizacion VARCHAR(254) NULL,
     fecha_actualizacion DATETIME NULL,
     eliminado BOOLEAN NOT NULL DEFAULT FALSE,
-    CONSTRAINT ck_libro_imagen CHECK (
-        portada IS NULL OR CHAR_LENGTH(TRIM(portada)) BETWEEN 1 AND 2048
-    ),
     PRIMARY KEY (id),
     UNIQUE KEY uk_libro_isbn (isbn),
     KEY idx_libro_categoria (id_categoria),
@@ -253,14 +194,7 @@ CREATE TABLE LIBRO (
         numero_vetos BETWEEN 0 AND 4 AND (NOT vetado_directamente OR numero_vetos >= 1)
     ),
     CONSTRAINT ck_libro_stock CHECK (stock_fisico >= 0),
-    CONSTRAINT ck_libro_precio CHECK (precio_base > 0),
-    CONSTRAINT ck_libro_banderas CHECK (vetado_directamente IN (0, 1) AND eliminado IN (0, 1)),
-    CONSTRAINT ck_libro_auditoria CHECK (
-        CHAR_LENGTH(TRIM(usuario_creacion)) > 0
-        AND ((usuario_actualizacion IS NULL AND fecha_actualizacion IS NULL)
-            OR (usuario_actualizacion IS NOT NULL AND CHAR_LENGTH(TRIM(usuario_actualizacion)) > 0
-                AND fecha_actualizacion IS NOT NULL AND fecha_actualizacion >= fecha_creacion))
-    )
+    CONSTRAINT ck_libro_precio CHECK (precio_base > 0)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 CREATE TABLE LIBRO_GUARDADO (
@@ -280,14 +214,7 @@ CREATE TABLE LIBRO_GUARDADO (
     CONSTRAINT fk_libro_guardado_usuario FOREIGN KEY (id_usuario)
         REFERENCES USUARIO (id),
     CONSTRAINT fk_libro_guardado_libro FOREIGN KEY (id_libro)
-        REFERENCES LIBRO (id),
-    CONSTRAINT ck_libro_guardado_banderas CHECK (favorito IN (0, 1) AND eliminado IN (0, 1)),
-    CONSTRAINT ck_libro_guardado_auditoria CHECK (
-        CHAR_LENGTH(TRIM(usuario_creacion)) > 0
-        AND ((usuario_actualizacion IS NULL AND fecha_actualizacion IS NULL)
-            OR (usuario_actualizacion IS NOT NULL AND CHAR_LENGTH(TRIM(usuario_actualizacion)) > 0
-                AND fecha_actualizacion IS NOT NULL AND fecha_actualizacion >= fecha_creacion))
-    )
+        REFERENCES LIBRO (id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 CREATE TABLE RESENA (
@@ -316,14 +243,7 @@ CREATE TABLE RESENA (
         REFERENCES USUARIO (id),
     CONSTRAINT ck_resena_comentario CHECK (CHAR_LENGTH(TRIM(comentario)) > 0),
     CONSTRAINT ck_resena_votos CHECK (cantidad_votos_utiles >= 0),
-    CONSTRAINT ck_resena_puntuacion CHECK (puntuacion BETWEEN 1 AND 5),
-    CONSTRAINT ck_resena_banderas CHECK (eliminado IN (0, 1) AND activo IN (0, 1)),
-    CONSTRAINT ck_resena_auditoria CHECK (
-        CHAR_LENGTH(TRIM(usuario_creacion)) > 0
-        AND ((usuario_actualizacion IS NULL AND fecha_actualizacion IS NULL)
-            OR (usuario_actualizacion IS NOT NULL AND CHAR_LENGTH(TRIM(usuario_actualizacion)) > 0
-                AND fecha_actualizacion IS NOT NULL AND fecha_actualizacion >= fecha_creacion))
-    )
+    CONSTRAINT ck_resena_puntuacion CHECK (puntuacion BETWEEN 1 AND 5)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 CREATE TABLE METODO_PAGO (
@@ -362,15 +282,6 @@ CREATE TABLE METODO_PAGO (
         OR (tipo_metodo = 'BILLETERA_DIGITAL' AND numero_telefono_cifrado IS NOT NULL
             AND CHAR_LENGTH(TRIM(numero_telefono_cifrado)) > 0
             AND numero_tarjeta_cifrado IS NULL AND tipo_tarjeta IS NULL)
-    ),
-    CONSTRAINT ck_metodo_pago_banderas CHECK (
-        activo IN (0, 1) AND predeterminado IN (0, 1) AND eliminado IN (0, 1)
-    ),
-    CONSTRAINT ck_metodo_pago_auditoria CHECK (
-        CHAR_LENGTH(TRIM(usuario_creacion)) > 0
-        AND ((usuario_actualizacion IS NULL AND fecha_actualizacion IS NULL)
-            OR (usuario_actualizacion IS NOT NULL AND CHAR_LENGTH(TRIM(usuario_actualizacion)) > 0
-                AND fecha_actualizacion IS NOT NULL AND fecha_actualizacion >= fecha_creacion))
     )
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -391,14 +302,7 @@ CREATE TABLE DESCUENTO (
     CONSTRAINT fk_descuento_libro FOREIGN KEY (id_libro)
         REFERENCES LIBRO (id),
     CONSTRAINT ck_descuento_porcentaje CHECK (porcentaje > 0 AND porcentaje <= 100),
-    CONSTRAINT ck_descuento_vigencia CHECK (fecha_fin > fecha_inicio),
-    CONSTRAINT ck_descuento_banderas CHECK (activo IN (0, 1) AND eliminado IN (0, 1)),
-    CONSTRAINT ck_descuento_auditoria CHECK (
-        CHAR_LENGTH(TRIM(usuario_creacion)) > 0
-        AND ((usuario_actualizacion IS NULL AND fecha_actualizacion IS NULL)
-            OR (usuario_actualizacion IS NOT NULL AND CHAR_LENGTH(TRIM(usuario_actualizacion)) > 0
-                AND fecha_actualizacion IS NOT NULL AND fecha_actualizacion >= fecha_creacion))
-    )
+    CONSTRAINT ck_descuento_vigencia CHECK (fecha_fin > fecha_inicio)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 CREATE TABLE CUPON (
@@ -422,14 +326,7 @@ CREATE TABLE CUPON (
         REFERENCES USUARIO (id),
     CONSTRAINT ck_cupon_porcentaje CHECK (porcentaje > 0 AND porcentaje <= 100),
     CONSTRAINT ck_cupon_minimo CHECK (monto_minimo >= 0),
-    CONSTRAINT ck_cupon_vigencia CHECK (fecha_fin > fecha_inicio),
-    CONSTRAINT ck_cupon_banderas CHECK (activo IN (0, 1) AND eliminado IN (0, 1) AND consumido IN (0, 1)),
-    CONSTRAINT ck_cupon_auditoria CHECK (
-        CHAR_LENGTH(TRIM(usuario_creacion)) > 0
-        AND ((usuario_actualizacion IS NULL AND fecha_actualizacion IS NULL)
-            OR (usuario_actualizacion IS NOT NULL AND CHAR_LENGTH(TRIM(usuario_actualizacion)) > 0
-                AND fecha_actualizacion IS NOT NULL AND fecha_actualizacion >= fecha_creacion))
-    )
+    CONSTRAINT ck_cupon_vigencia CHECK (fecha_fin > fecha_inicio)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 CREATE TABLE PEDIDO (
@@ -487,12 +384,9 @@ CREATE TABLE PEDIDO (
         AND descuento_libros <= subtotal_productos AND descuento_cupon >= 0
         AND descuento_cupon <= subtotal_productos - descuento_libros
         AND costo_envio >= 0 AND total >= 0
-        AND total = subtotal_productos - descuento_libros - descuento_cupon + costo_envio
     ),
     CONSTRAINT ck_pedido_porcentajes CHECK (
         porcentaje_cupon BETWEEN 0 AND 100 AND porcentaje_envio BETWEEN 0 AND 100
-        AND descuento_cupon = ROUND((subtotal_productos - descuento_libros) * porcentaje_cupon / 100, 2)
-        AND costo_envio = ROUND((subtotal_productos - descuento_libros) * porcentaje_envio / 100, 2)
     ),
     CONSTRAINT ck_pedido_cupon CHECK (
         (id_cupon IS NULL AND porcentaje_cupon = 0 AND descuento_cupon = 0)
@@ -501,24 +395,7 @@ CREATE TABLE PEDIDO (
     CONSTRAINT ck_pedido_identificadores CHECK (
         CHAR_LENGTH(TRIM(identificador_transaccion)) > 0 AND CHAR_LENGTH(TRIM(codigo_seguimiento)) > 0
     ),
-    CONSTRAINT ck_pedido_fechas CHECK (
-        fecha_entrega_estimada >= fecha_pago
-        AND (fecha_salida IS NULL OR fecha_salida >= fecha_pago)
-        AND (fecha_entrega IS NULL OR (fecha_salida IS NOT NULL AND fecha_entrega >= fecha_salida))
-    ),
-    CONSTRAINT ck_pedido_estado_fechas CHECK (
-        (estado IN ('EN_ALMACEN', 'CANCELADO') AND fecha_salida IS NULL AND fecha_entrega IS NULL)
-        OR (estado = 'EN_CAMINO' AND fecha_salida IS NOT NULL AND fecha_entrega IS NULL)
-        OR (estado IN ('ENTREGADO', 'DEVUELTO') AND fecha_salida IS NOT NULL AND fecha_entrega IS NOT NULL)
-    ),
-    CONSTRAINT ck_pedido_contadores CHECK (cantidad_total_libros > 0 AND numero_intentos >= 0),
-    CONSTRAINT ck_pedido_banderas CHECK (activo IN (0, 1) AND eliminado IN (0, 1)),
-    CONSTRAINT ck_pedido_auditoria CHECK (
-        CHAR_LENGTH(TRIM(usuario_creacion)) > 0
-        AND ((usuario_actualizacion IS NULL AND fecha_actualizacion IS NULL)
-            OR (usuario_actualizacion IS NOT NULL AND CHAR_LENGTH(TRIM(usuario_actualizacion)) > 0
-                AND fecha_actualizacion IS NOT NULL AND fecha_actualizacion >= fecha_creacion))
-    )
+    CONSTRAINT ck_pedido_contadores CHECK (cantidad_total_libros > 0 AND numero_intentos >= 0)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 CREATE TABLE ITEM_PEDIDO (
@@ -548,13 +425,6 @@ CREATE TABLE ITEM_PEDIDO (
     CONSTRAINT ck_porcentaje_item CHECK (
         porcentaje_descuento BETWEEN 0 AND 100
         AND precio_unitario = ROUND(precio_base * (100 - porcentaje_descuento) / 100, 2)
-    ),
-    CONSTRAINT ck_item_pedido_banderas CHECK (eliminado IN (0, 1)),
-    CONSTRAINT ck_item_pedido_auditoria CHECK (
-        CHAR_LENGTH(TRIM(usuario_creacion)) > 0
-        AND ((usuario_actualizacion IS NULL AND fecha_actualizacion IS NULL)
-            OR (usuario_actualizacion IS NOT NULL AND CHAR_LENGTH(TRIM(usuario_actualizacion)) > 0
-                AND fecha_actualizacion IS NOT NULL AND fecha_actualizacion >= fecha_creacion))
     )
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -590,13 +460,6 @@ CREATE TABLE SEGUIMIENTO (
             AND id_autor IS NULL AND id_editorial IS NULL)
         OR (tipo_seguimiento = 'EDITORIAL' AND id_editorial IS NOT NULL
             AND id_autor IS NULL AND id_categoria IS NULL)
-    ),
-    CONSTRAINT ck_seguimiento_banderas CHECK (eliminado IN (0, 1)),
-    CONSTRAINT ck_seguimiento_auditoria CHECK (
-        CHAR_LENGTH(TRIM(usuario_creacion)) > 0
-        AND ((usuario_actualizacion IS NULL AND fecha_actualizacion IS NULL)
-            OR (usuario_actualizacion IS NOT NULL AND CHAR_LENGTH(TRIM(usuario_actualizacion)) > 0
-                AND fecha_actualizacion IS NOT NULL AND fecha_actualizacion >= fecha_creacion))
     )
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -613,14 +476,7 @@ CREATE TABLE VOTO_UTIL (
     UNIQUE KEY uk_voto_util (id_usuario, id_resena),
     KEY idx_voto_resena (id_resena, eliminado),
     CONSTRAINT fk_voto_usuario FOREIGN KEY (id_usuario) REFERENCES USUARIO (id),
-    CONSTRAINT fk_voto_resena FOREIGN KEY (id_resena) REFERENCES RESENA (id),
-    CONSTRAINT ck_voto_util_banderas CHECK (eliminado IN (0, 1)),
-    CONSTRAINT ck_voto_util_auditoria CHECK (
-        CHAR_LENGTH(TRIM(usuario_creacion)) > 0
-        AND ((usuario_actualizacion IS NULL AND fecha_actualizacion IS NULL)
-            OR (usuario_actualizacion IS NOT NULL AND CHAR_LENGTH(TRIM(usuario_actualizacion)) > 0
-                AND fecha_actualizacion IS NOT NULL AND fecha_actualizacion >= fecha_creacion))
-    )
+    CONSTRAINT fk_voto_resena FOREIGN KEY (id_resena) REFERENCES RESENA (id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 CREATE TABLE SOLICITUD (
@@ -668,14 +524,7 @@ CREATE TABLE SOLICITUD (
         (estado = 'PENDIENTE' AND fecha_resolucion IS NULL)
         OR (estado <> 'PENDIENTE' AND fecha_resolucion IS NOT NULL AND fecha_resolucion >= fecha_creacion)
     ),
-    CONSTRAINT ck_solicitud_retiro CHECK (NOT eliminado OR estado = 'PENDIENTE'),
-    CONSTRAINT ck_solicitud_banderas CHECK (eliminado IN (0, 1)),
-    CONSTRAINT ck_solicitud_auditoria CHECK (
-        CHAR_LENGTH(TRIM(usuario_creacion)) > 0
-        AND ((usuario_actualizacion IS NULL AND fecha_actualizacion IS NULL)
-            OR (usuario_actualizacion IS NOT NULL AND CHAR_LENGTH(TRIM(usuario_actualizacion)) > 0
-                AND fecha_actualizacion IS NOT NULL AND fecha_actualizacion >= fecha_creacion))
-    )
+    CONSTRAINT ck_solicitud_retiro CHECK (NOT eliminado OR estado = 'PENDIENTE')
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- Las FK usan RESTRICT por defecto: el borrado logico conserva relaciones e historia.

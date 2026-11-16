@@ -5,91 +5,59 @@ namespace Web.Componentes.Paginas.Cuenta;
 
 public partial class MisSeguimientos
 {
-    [Inject] protected CuentaServicio Cuenta { get; set; } = default!;
-
-    [Inject] protected CatalogoServicio Catalogo { get; set; } = default!;
+    [Inject] private HttpClientUtils Api { get; set; } = default!;
 
     protected override async Task CargarDatos()
     {
         if (Sesion.Usuario is null)
+        {
+            Referencias.Clear();
+            totalResultados = 0;
             return;
-        await Cuenta.CargarSeguimientos();
-        Sesion.Notificar();
+        }
+        var datos = await Api.Post<ResultadoPaginadoDTO<TarjetaReferenciaDTO>>(
+            "cuenta/seguimientos/busqueda", new ConsultaSeguimientosDTO
+            {
+                Tipo = CuentaServicio.TipoSeguimiento(vista.Tipo),
+                Orden = vista.Orden == "reciente" ? "MAS_RECIENTES" : "NOMBRE_ASCENDENTE",
+                Pagina = vista.Pagina,
+                TamanioPagina = TamanoPagina
+            });
+        Referencias = datos.Items.Select(dto => Presentacion.Referencia(dto, vista.Tipo)).ToList();
+        totalResultados = datos.TotalResultados;
     }
+
     private const string ClaveVista = "cuenta:mis-seguimientos";
-    private string Tipo { get; set; } = "autores";
-    private string Orden { get; set; } = "nombre";
-    private int Pagina { get; set; } = 1;
+    private VistaSeguimientos vista = new();
 
     private const int TamanoPagina = 12;
-    private int TotalPaginas => Math.Max(1, (int)Math.Ceiling(Referencias.Count / (double)TamanoPagina));
-
-    private List<Referencia> Referencias
-    {
-        get
-        {
-            if (Sesion.Usuario is null)
-                return [];
-            var referencias = Catalogo.Referencias.Where(referencia => referencia.Tipo == Tipo && Cuenta.Seguimientos.Contains($"{referencia.Tipo}:{referencia.Id}"));
-            if (Orden == "reciente")
-                return referencias.OrderByDescending(referencia => Cuenta.OrdenSeguimientos[$"{referencia.Tipo}:{referencia.Id}"]).ToList();
-            return referencias.OrderBy(referencia => referencia.Nombre).ToList();
-        }
-    }
-
-    private IEnumerable<Referencia> ReferenciasPagina => Referencias.Skip((Pagina - 1) * TamanoPagina)
-        .Take(TamanoPagina);
+    private long totalResultados;
+    private int TotalPaginas => Math.Max(1, (int)((totalResultados + TamanoPagina - 1) / TamanoPagina));
+    private List<Referencia> Referencias = [];
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        if (Sesion.EstadoVistas.TryGetValue(ClaveVista, out var guardado)
-            && guardado is VistaSeguimientos vista)
-        {
-            Tipo = vista.Tipo;
-            Orden = vista.Orden;
-            Pagina = Sesion.Usuario is null ? vista.Pagina : Math.Min(vista.Pagina, TotalPaginas);
-        }
+        if (Sesion.EstadoVistas.TryGetValue(ClaveVista, out var guardado) && guardado is VistaSeguimientos almacenada)
+            vista = almacenada;
+        Sesion.EstadoVistas[ClaveVista] = vista;
     }
 
-    private void GuardarVista() => Sesion.EstadoVistas[ClaveVista] = new VistaSeguimientos
+    private async Task MostrarTipo(string tipo)
     {
-        Tipo = Tipo,
-        Orden = Orden,
-        Pagina = Pagina
-
-    };
-    private void MostrarAutores()
+        vista.Tipo = tipo;
+        await ReiniciarPagina();
+    }
+    private async Task ReiniciarPagina()
     {
-        Tipo = "autores";
-        Pagina = 1;
-        GuardarVista();
+        vista.Pagina = 1;
+        await ActualizarDatos();
     }
 
-    private void MostrarCategorias()
+    private async Task CambiarPagina(int pagina)
     {
-        Tipo = "categorias";
-        Pagina = 1;
-        GuardarVista();
-    }
-
-    private void MostrarEditoriales()
-    {
-        Tipo = "editoriales";
-        Pagina = 1;
-        GuardarVista();
-    }
-
-    private void ReiniciarPagina()
-    {
-        Pagina = 1;
-        GuardarVista();
-    }
-
-    private void CambiarPagina(int pagina)
-    {
-        Pagina = pagina;
-        GuardarVista();
+        vista.Pagina = pagina;
+        await ActualizarDatos();
     }
 
     private class VistaSeguimientos

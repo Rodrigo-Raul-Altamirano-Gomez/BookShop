@@ -13,17 +13,9 @@ public final class TransactionContext {
         Connection conexion = connectionHolder.get();
         if (conexion == null) {
             conexion = DBManager.getConnection();
-            try {
-                conexion.setAutoCommit(false);
-            } catch (SQLException e) {
-                try {
-                    conexion.close();
-                } catch (SQLException cierre) {
-                    e.addSuppressed(cierre);
-                }
-                throw e;
-            }
+            // Business siempre cierra el contexto en finally, también si falla el inicio.
             connectionHolder.set(conexion);
+            conexion.setAutoCommit(false);
         }
         return conexion;
     }
@@ -46,13 +38,12 @@ public final class TransactionContext {
 
     public static void close() {
         Connection conexion = connectionHolder.get();
+        connectionHolder.remove();
         if (conexion != null) {
             try {
                 conexion.close();
             } catch (SQLException e) {
                 e.printStackTrace();
-            } finally {
-                connectionHolder.remove();
             }
         }
     }

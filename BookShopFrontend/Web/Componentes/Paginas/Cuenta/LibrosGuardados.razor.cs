@@ -5,6 +5,8 @@ namespace Web.Componentes.Paginas.Cuenta;
 public partial class LibrosGuardados
 {
     private const string ClavePestana = "libros-guardados:pestana-favoritos";
+    private string TextoBusqueda = "", Busqueda = "";
+    private void Buscar() => Busqueda = TextoBusqueda.Trim();
     private bool PestanaFavoritos { get; set; }
 
     protected override void OnInitialized()
@@ -14,15 +16,9 @@ public partial class LibrosGuardados
             PestanaFavoritos = favoritos;
     }
 
-    private void MostrarDeseados()
+    private void MostrarLista(bool favoritos)
     {
-        PestanaFavoritos = false;
-        Sesion.EstadoVistas[ClavePestana] = false;
-    }
-
-    private void MostrarFavoritos()
-    {
-        PestanaFavoritos = true;
-        Sesion.EstadoVistas[ClavePestana] = true;
+        PestanaFavoritos = favoritos;
+        Sesion.EstadoVistas[ClavePestana] = favoritos;
     }
 }

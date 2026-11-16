@@ -68,7 +68,11 @@ public class DetalleLibroDTO
     {
     }
 
-    public DetalleLibroDTO(TarjetaLibroDTO libro, int idAutor, int idCategoria, string nombreCategoria, int idEditorial, string nombreEditorial, string idioma, string sinopsis, string isbn, int anioEdicion, int numeroPaginas, double? peso, double? alto, double? ancho, string saga, int? numeroTomo, int stockDisponible, ValoracionLibroDTO valoracion, bool favorito, bool deseado)
+    public DetalleLibroDTO(
+        TarjetaLibroDTO libro, int idAutor, int idCategoria, string nombreCategoria, int idEditorial,
+        string nombreEditorial, string idioma, string sinopsis, string isbn, int anioEdicion, int numeroPaginas,
+        double? peso, double? alto, double? ancho, string saga, int? numeroTomo, int stockDisponible,
+        ValoracionLibroDTO valoracion, bool favorito, bool deseado)
     {
         Libro = libro;
         IdAutor = idAutor;

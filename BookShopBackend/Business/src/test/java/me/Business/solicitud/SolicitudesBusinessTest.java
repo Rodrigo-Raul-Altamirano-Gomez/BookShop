@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import java.time.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-import me.Business.compra.PedidoBOImpl;
+import me.Business.compra.PedidoBO;
 import me.Business.compra.ProveedorConfiguracion;
 import me.Business.exceptions.*;
 import me.DAO.catalogo.*;
@@ -31,23 +31,39 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class SolicitudesBusinessTest {
+
     private final LocalDateTime fecha = LocalDateTime.of(2026, 10, 7, 10, 0);
-    private final ConfiguracionDTO parametros = new ConfiguracionDTO(new BigDecimal("5"), 30, 3, 5,
-            new BigDecimal("10"), new BigDecimal("100"), 30);
+
+    private final ConfiguracionDTO parametros = new ConfiguracionDTO(new BigDecimal("5"), 30, 3, 5, new BigDecimal("10"), new BigDecimal("100"), 30);
+
     private SolicitudDAO solicitudes;
+
     private PedidoDAO pedidos;
+
     private ResenaDAO resenas;
+
     private LibroDAO libros;
+
     private CuponDAO cupones;
+
     private UsuarioDAO usuarios;
+
     private Usuario cliente;
+
     private Usuario admin;
+
     private Pedido pedido;
+
     private Resena resena;
+
     private SolicitudBOImpl negocio;
+
     private AtomicReference<Solicitud> registro;
+
     private Connection conexion;
+
     private MockedStatic<DBManager> manager;
+
     private Clock reloj;
 
     @BeforeEach
@@ -62,8 +78,13 @@ class SolicitudesBusinessTest {
         manager = mockStatic(DBManager.class);
         manager.when(DBManager::getConnection).thenReturn(conexion);
         reloj = Clock.fixed(fecha.atZone(ZoneId.of("America/Lima")).toInstant(), ZoneId.of("America/Lima"));
-        cliente = new Usuario(); cliente.setId(1); cliente.setEmail("ana@test");
-        admin = new Usuario(); admin.setId(9); admin.setEmail("admin@admin.bookshop"); admin.setRol(Rol.ADMIN);
+        cliente = new Usuario();
+        cliente.setId(1);
+        cliente.setEmail("ana@test");
+        admin = new Usuario();
+        admin.setId(9);
+        admin.setEmail("admin@admin.bookshop");
+        admin.setRol(Rol.ADMIN);
         when(usuarios.leer(1)).thenReturn(cliente);
         when(usuarios.leer(9)).thenReturn(admin);
         pedido = new Pedido();
@@ -74,19 +95,24 @@ class SolicitudesBusinessTest {
         pedido.setFechaPago(fecha.minusDays(31));
         pedido.setTotal(new BigDecimal("63.00"));
         pedido.setCantidadTotalLibros(2);
-        Libro libro = new Libro(); libro.setId(3);
-        Item item = new Item(0, libro, 2); item.setPrecioBase(new BigDecimal("50.00")); item.setPrecioUnitario(new BigDecimal("30.00"));
+        Libro libro = new Libro();
+        libro.setId(3);
+        Item item = new Item(0, libro, 2);
+        item.setPrecioBase(new BigDecimal("50.00"));
+        item.setPrecioUnitario(new BigDecimal("30.00"));
         pedido.setItems(List.of(item));
-        Cupon cupon = new Cupon(); cupon.setId(5); pedido.setCupon(cupon);
+        Cupon cupon = new Cupon();
+        cupon.setId(5);
+        pedido.setCupon(cupon);
         when(pedidos.leer(10)).thenReturn(pedido);
-        when(pedidos.leerParaActualizar(10)).thenReturn(pedido);
+        when(pedidos.leer(10)).thenReturn(pedido);
         when(pedidos.incrementarIntentos(eq(10), anyInt(), eq("ana@test"))).thenReturn(true);
         when(pedidos.actualizarEstado(any(), any())).thenReturn(true);
         when(libros.reponerStock(anyInt(), anyInt(), anyString())).thenReturn(true);
         when(cupones.liberar(anyInt(), any(), anyString())).thenReturn(true);
         resena = new Resena(4, 2, "Texto original", libro, cliente);
         when(resenas.leer(4)).thenReturn(resena);
-        when(resenas.leerParaActualizar(4)).thenReturn(resena);
+        when(resenas.leer(4)).thenReturn(resena);
         when(resenas.eliminar(4, "admin@admin.bookshop")).thenReturn(true);
         registro = new AtomicReference<>();
         doAnswer(inv -> {
@@ -96,29 +122,25 @@ class SolicitudesBusinessTest {
             return null;
         }).when(solicitudes).insertar(any());
         when(solicitudes.leer(7)).thenAnswer(inv -> registro.get());
-        when(solicitudes.leerParaActualizar(7)).thenAnswer(inv -> registro.get());
+        when(solicitudes.leer(7)).thenAnswer(inv -> registro.get());
         when(solicitudes.resolver(eq(7), any(), any(), eq("admin@admin.bookshop"))).thenAnswer(inv -> {
             registro.get().resolver(inv.getArgument(1), inv.getArgument(3), inv.getArgument(2));
             return true;
         });
         when(solicitudes.obtenerDetalleDevolucion(7)).thenAnswer(inv -> {
             SolicitudDevolucion solicitud = (SolicitudDevolucion) registro.get();
-            return new DetalleDevolucionDTO(resumen(solicitud), new DatosDevolucionDTO(solicitud.getMotivo(), solicitud.getComentario()),
-                    new ResumenPedidoDTO(10, pedido.getFechaPago(), pedido.getEstado(), 2, pedido.getTotal()), solicitud.getFechaResolucion());
+            return new DetalleDevolucionDTO(resumen(solicitud), new DatosDevolucionDTO(solicitud.getMotivo(), solicitud.getComentario()), new ResumenPedidoDTO(10, pedido.getFechaPago(), pedido.getEstado(), 2, pedido.getTotal()), solicitud.getFechaResolucion());
         });
         when(solicitudes.obtenerDetalleReporteResena(eq(7), anyBoolean())).thenAnswer(inv -> {
             SolicitudReporteResena solicitud = (SolicitudReporteResena) registro.get();
             boolean actuales = inv.getArgument(1);
-            return new DetalleReporteResenaDTO(resumen(solicitud), new DatosReporteResenaDTO(solicitud.getMotivo(), solicitud.getComentario()),
-                    new ResenaReportadaDTO(4, "Ana", "Libro", new DatosResenaDTO(solicitud.getPuntuacionOriginal(), solicitud.getComentarioOriginal())),
-                    actuales ? new DatosResenaDTO(resena.getPuntuacion(), resena.getComentario()) : null, resena.estaDisponible(), solicitud.getFechaResolucion());
+            return new DetalleReporteResenaDTO(resumen(solicitud), new DatosReporteResenaDTO(solicitud.getMotivo(), solicitud.getComentario()), new ResenaReportadaDTO(4, "Ana", "Libro", new DatosResenaDTO(solicitud.getPuntuacionOriginal(), solicitud.getComentarioOriginal())), actuales ? new DatosResenaDTO(resena.getPuntuacion(), resena.getComentario()) : null, resena.estaDisponible(), solicitud.getFechaResolucion());
         });
         negocio = construir(() -> parametros);
     }
 
     private SolicitudBOImpl construir(ProveedorConfiguracion configuracion) {
-        return new SolicitudBOImpl(solicitudes, pedidos, resenas, libros, cupones, usuarios, reloj,
-                configuracion, mock(PedidoBOImpl.class));
+        return new SolicitudBOImpl(solicitudes, pedidos, resenas, libros, cupones, usuarios, reloj, configuracion, mock(PedidoBO.class));
     }
 
     private ResumenSolicitudDTO resumen(Solicitud solicitud) {
@@ -129,16 +151,45 @@ class SolicitudesBusinessTest {
     @AfterEach
     void cerrar() {
         TransactionContext.close();
-        if (manager != null) manager.close();
+        if (manager != null)
+            manager.close();
     }
 
     @Test
     void formularioInvalidoNoAbreTransaccionNiConsumeIntento() throws Exception {
         assertThrows(ValidacionException.class, () -> negocio.enviarDevolucion(1, 10, new DatosDevolucionDTO(null, "Comentario")));
         verifyNoInteractions(conexion);
-        verify(pedidos, never()).leerParaActualizar(anyInt());
+        verify(pedidos, never()).leer(anyInt());
         verify(pedidos, never()).incrementarIntentos(anyInt(), anyInt(), anyString());
         verify(solicitudes, never()).insertar(any());
+    }
+
+    @Test
+    void devolucionAjenaNoConsumeIntentosNiRegistraSolicitud() throws Exception {
+        assertThrows(AccesoDenegadoException.class, () -> negocio.comprobarDevolucion(9, 10));
+        assertThrows(AccesoDenegadoException.class, () -> negocio.enviarDevolucion(9, 10,
+            new DatosDevolucionDTO(MotivoDevolucion.OTRO, null)));
+        verify(pedidos, never()).incrementarIntentos(anyInt(), anyInt(), anyString());
+        verify(solicitudes, never()).insertar(any());
+    }
+
+    @Test
+    void solicitudAjenaNoPuedeConsultarseEditarNiRetirarse() throws Exception {
+        Usuario otro = new Usuario();
+        otro.setId(2);
+        when(usuarios.leer(2)).thenReturn(otro);
+        registro.set(new SolicitudReporteResena(7, cliente, resena, MotivoReporteResena.OTRO, null));
+        assertThrows(AccesoDenegadoException.class, () -> negocio.consultarReporte(2, 7));
+        assertThrows(AccesoDenegadoException.class, () -> negocio.editarReporte(2, 7,
+            new DatosReporteResenaDTO(MotivoReporteResena.OTRO, null)));
+        assertThrows(AccesoDenegadoException.class, () -> negocio.retirar(2, 7));
+        registro.set(new SolicitudDevolucion(7, cliente, pedido, MotivoDevolucion.OTRO, null));
+        assertThrows(AccesoDenegadoException.class, () -> negocio.consultarDevolucion(2, 7));
+        assertThrows(AccesoDenegadoException.class, () -> negocio.consultarPedidoReferencia(2, 7));
+        assertThrows(AccesoDenegadoException.class, () -> negocio.editarDevolucion(2, 7,
+            new DatosDevolucionDTO(MotivoDevolucion.OTRO, null)));
+        verify(solicitudes, never()).modificar(any());
+        verify(solicitudes, never()).eliminar(anyInt(), anyString());
     }
 
     @Test
@@ -148,7 +199,7 @@ class SolicitudesBusinessTest {
         assertEquals(EstadoPedido.ENTREGADO, resultado.pedido().estado());
         assertEquals("Portada dañada", resultado.datos().comentario());
         var orden = inOrder(pedidos, solicitudes, conexion);
-        orden.verify(pedidos).leerParaActualizar(10);
+        orden.verify(pedidos).leer(10);
         orden.verify(pedidos).incrementarIntentos(10, 3, "ana@test");
         orden.verify(solicitudes).insertar(any());
         orden.verify(conexion).commit();
@@ -188,7 +239,9 @@ class SolicitudesBusinessTest {
         solicitud.setFechaCreacion(fecha.minusDays(29));
         registro.set(solicitud);
         pedido.setFechaEntrega(fecha.minusDays(60));
-        negocio = construir(() -> { throw new NegocioException("No debe leerse configuracion al resolver pendiente"); });
+        negocio = construir(() -> {
+            throw new NegocioException("No debe leerse configuracion al resolver pendiente");
+        });
         var resuelta = negocio.resolverDevolucion(9, 7, EstadoSolicitud.ACEPTADA);
         assertEquals(EstadoSolicitud.ACEPTADA, resuelta.solicitud().estado());
         assertEquals(EstadoPedido.DEVUELTO, resuelta.pedido().estado());
@@ -214,7 +267,6 @@ class SolicitudesBusinessTest {
         verify(pedidos, never()).incrementarIntentos(anyInt(), anyInt(), anyString());
         var administrativa = negocio.consultarReporte(9, 7);
         assertEquals("Texto corregido", administrativa.contenidoActual().comentario());
-        assertThrows(AccesoDenegadoException.class, () -> negocio.resolverReporte(1, 7, EstadoSolicitud.ACEPTADA));
     }
 
     @Test
@@ -224,8 +276,8 @@ class SolicitudesBusinessTest {
         when(resenas.eliminar(4, "admin@admin.bookshop")).thenThrow(new SQLException("Fallo de moderacion"));
         assertThrows(PersistenciaException.class, () -> negocio.resolverReporte(9, 7, EstadoSolicitud.ACEPTADA));
         var orden = inOrder(solicitudes, resenas, conexion);
-        orden.verify(solicitudes).leerParaActualizar(7);
-        orden.verify(resenas).leerParaActualizar(4);
+        orden.verify(solicitudes).leer(7);
+        orden.verify(resenas).leer(4);
         orden.verify(solicitudes).resolver(7, EstadoSolicitud.ACEPTADA, fecha, "admin@admin.bookshop");
         orden.verify(resenas).eliminar(4, "admin@admin.bookshop");
         orden.verify(conexion).rollback();

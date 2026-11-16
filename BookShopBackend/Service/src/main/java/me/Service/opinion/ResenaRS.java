@@ -24,22 +24,23 @@ import me.Service.Sesion;
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
 public class ResenaRS {
+
     @Inject
     private Servicios servicios;
+
     @Context
     private HttpServletRequest peticion;
 
     @POST
     @Path("libro/{idLibro}/busqueda")
-    public ResultadoPaginadoDTO<ResenaDTO> listarPorLibro(
-            @PathParam("idLibro") int idLibro,
-            ConsultaResenasDTO consulta) throws NegocioException {
+    public ResultadoPaginadoDTO<ResenaDTO> listarPorLibro(@PathParam("idLibro") int idLibro,
+        ConsultaResenasDTO consulta) throws NegocioException {
         return servicios.getResenaBO().listarPorLibro(Sesion.obtenerIdUsuario(peticion), idLibro, consulta);
     }
 
     @GET
     @Path("libro/{idLibro}/valoracion")
     public ValoracionLibroDTO obtenerValoracion(@PathParam("idLibro") int idLibro) throws NegocioException {
-        return servicios.getResenaBO().obtenerValoracion(Sesion.obtenerIdUsuario(peticion), idLibro);
+        return servicios.getResenaBO().obtenerValoracion(idLibro);
     }
 }

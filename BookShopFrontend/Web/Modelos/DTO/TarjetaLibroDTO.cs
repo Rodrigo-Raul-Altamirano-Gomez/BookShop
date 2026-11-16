@@ -32,7 +32,9 @@ public class TarjetaLibroDTO
     {
     }
 
-    public TarjetaLibroDTO(int id, string titulo, string? portada, string nombreAutor, decimal precioOriginal, decimal precioConDescuento, decimal porcentajeDescuento, bool activo)
+    public TarjetaLibroDTO(
+        int id, string titulo, string? portada, string nombreAutor, decimal precioOriginal,
+        decimal precioConDescuento, decimal porcentajeDescuento, bool activo)
     {
         Id = id;
         Titulo = titulo;
