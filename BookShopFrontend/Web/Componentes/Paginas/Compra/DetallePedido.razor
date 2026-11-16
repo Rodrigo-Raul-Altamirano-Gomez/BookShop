@@ -47,12 +47,24 @@
             <p class="alert alert-danger py-2 mt-3 text-center" role="alert">@errorComprobante</p>
         }
         <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">
-            <button class="btn btn-secondary d-flex align-items-center gap-2" @onclick="DescargarComprobante"
+            <button class="btn btn-secondary d-flex align-items-center gap-2" @onclick="VerComprobante"
+                disabled="@descargando">
+                <Icono Nombre="eye" />
+                @(descargando ? "Generando comprobante…" : "Ver comprobante (PDF)")
+            </button>
+            <button class="btn btn-outline-secondary d-flex align-items-center gap-2" @onclick="DescargarComprobante"
                 disabled="@descargando">
                 <Icono Nombre="report" />
-                @(descargando ? "Generando comprobante…" : "Descargar comprobante (PDF)")
+                Descargar
             </button>
             <a class="btn btn-primary" href="/catalogo">Seguir explorando</a>
         </div>
     }
 </div>
+@if (urlComprobante is not null)
+{
+    <Modal Titulo="@($"Comprobante del pedido #{Id}")" Amplio="true" AlCerrar="CerrarComprobante">
+        <iframe src="@urlComprobante" title="Comprobante del pedido @Id en PDF"
+            style="width: 100%; height: 75vh; border: 0;"></iframe>
+    </Modal>
+}

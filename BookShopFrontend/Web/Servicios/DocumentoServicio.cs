@@ -26,6 +26,17 @@ public class DocumentoServicio
         Descargar($"documentos/usuarios?mes={anio:D4}-{mes:D2}{Cantidad(cantidad)}",
             $"reporte-usuarios-{anio:D4}-{mes:D2}.pdf");
 
+    // Genera el comprobante en el backend y devuelve una URL local para mostrarlo dentro de la página.
+    public async Task<string> UrlComprobante(int idPedido)
+    {
+        var contenido = await api.GetArchivo($"documentos/comprobantes/{idPedido}");
+        using var flujo = new MemoryStream(contenido);
+        using var referencia = new DotNetStreamReference(flujo);
+        return await js.InvokeAsync<string>("bookshopUrlPdf", referencia);
+    }
+
+    public ValueTask LiberarUrl(string url) => js.InvokeVoidAsync("bookshopLiberarUrl", url);
+
     private static string Cantidad(int? cantidad) => cantidad is null ? "" : $"&cantidad={cantidad}";
 
     private async Task Descargar(string ruta, string nombreArchivo)

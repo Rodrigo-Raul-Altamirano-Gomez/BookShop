@@ -52,3 +52,10 @@ window.bookshopDescargar = async (nombreArchivo, flujo) => {
     enlace.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
+
+// Visor de PDF dentro de la aplicación: convierte el flujo en una URL local para un <iframe>.
+window.bookshopUrlPdf = async (flujo) => {
+    const datos = await flujo.arrayBuffer();
+    return URL.createObjectURL(new Blob([datos], { type: 'application/pdf' }));
+};
+window.bookshopLiberarUrl = (url) => URL.revokeObjectURL(url);
