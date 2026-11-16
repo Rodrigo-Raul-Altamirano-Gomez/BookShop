@@ -1,0 +1,83 @@
+@inject DocumentoServicio Documentos
+<Modal Titulo="Reportes" Amplio="true" AlCerrar="AlCerrar" Ocupado="@generando">
+    <div class="nav nav-tabs mb-4" role="tablist" aria-label="Tipo de reporte">
+        <button class="nav-link @(pestana == "libros" ? "active" : "")" role="tab"
+            aria-selected="@(pestana == "libros")" disabled="@generando" @onclick='() => pestana = "libros"'>Libros</button>
+        <button class="nav-link @(pestana == "usuarios" ? "active" : "")" role="tab"
+            aria-selected="@(pestana == "usuarios")" disabled="@generando" @onclick='() => pestana = "usuarios"'>Usuarios</button>
+    </div>
+    <form @onsubmit="Generar" @onsubmit:preventDefault>
+        @if (pestana == "libros")
+        {
+            <p>Libros ordenados por el monto vendido en el período.</p>
+            <div class="row g-3 mb-3">
+                <label class="form-label col-sm-6">Desde
+                    <input class="form-control" type="date" @bind="inicio" required />
+                </label>
+                <label class="form-label col-sm-6">Hasta
+                    <input class="form-control" type="date" @bind="fin" required />
+                </label>
+            </div>
+            <label class="form-label d-block mb-3">Cantidad máxima de libros
+                <input class="form-control" type="number" min="1" @bind="cantidadLibros" placeholder="Sin límite" />
+            </label>
+        }
+        else
+        {
+            <p>Usuarios ordenados por su gasto del mes, con tiempo de uso y preferencias de compra.</p>
+            <label class="form-label d-block mb-3">Mes
+                <input class="form-control" type="month" @bind="mes" @bind:format="yyyy-MM" required />
+            </label>
+            <label class="form-label d-block mb-3">Cantidad máxima de usuarios
+                <input class="form-control" type="number" min="1" @bind="cantidadUsuarios" placeholder="Sin límite" />
+            </label>
+        }
+        @if (error is not null)
+        {
+            <p class="alert alert-danger" role="alert">@error</p>
+        }
+        <div class="modal-footer px-0 pb-0">
+            <button class="btn btn-secondary" type="button" @onclick="AlCerrar" disabled="@generando">Cancelar</button>
+            <button class="btn btn-primary" type="submit" disabled="@generando">@(generando ? "Generando…" : "Descargar PDF")</button>
+        </div>
+    </form>
+</Modal>
+
+@code {
+    [Parameter] public EventCallback AlCerrar { get; set; }
+    private string pestana = "libros";
+    private DateTime? inicio, fin, mes;
+    private int? cantidadLibros, cantidadUsuarios;
+    private bool generando;
+    private string? error;
+
+    protected override void OnInitialized()
+    {
+        var hoy = DateTime.Today;
+        inicio = new DateTime(hoy.Year, hoy.Month, 1);
+        fin = hoy;
+        mes = inicio.Value.AddMonths(-1);
+    }
+
+    private async Task Generar()
+    {
+        generando = true;
+        error = null;
+        try
+        {
+            if (pestana == "libros")
+                await Documentos.DescargarVentasLibros(DateOnly.FromDateTime(inicio!.Value), DateOnly.FromDateTime(fin!.Value), cantidadLibros);
+            else
+                await Documentos.DescargarUsuarios(mes!.Value.Year, mes.Value.Month, cantidadUsuarios);
+        }
+        catch (InvalidOperationException e)
+        {
+            error = e.Message;
+        }
+        catch (JSException)
+        {
+            error = "El navegador no pudo guardar el archivo.";
+        }
+        generando = false;
+    }
+}

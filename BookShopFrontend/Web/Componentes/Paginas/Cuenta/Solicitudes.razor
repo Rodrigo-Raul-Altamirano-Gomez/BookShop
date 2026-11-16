@@ -1,0 +1,158 @@
+@page "/mis-solicitudes"
+@page "/moderacion"
+@inherits PaginaCuenta
+<PageTitle>@Titulo · BookShop</PageTitle>
+<div class="container py-4">
+    <h1>@Titulo</h1>
+    @if (Sesion.Usuario is null)
+    {
+        <p>Inicia sesión para consultar las solicitudes.</p>
+        <button class="btn btn-primary" @onclick="Sesion.MostrarAcceso">Iniciar sesión</button>
+    }
+    else if (EsModeracion && !Sesion.EsAdministrador)
+    {
+        <p class="alert alert-warning">Solo los administradores pueden acceder a moderación.</p>
+    }
+    else
+    {
+        <div class="nav nav-tabs my-4" role="tablist" aria-label="Tipos de solicitudes">
+            <button class="nav-link @(consulta.Tipo == "DEVOLUCION" ? "active" : "")" role="tab"
+                aria-selected="@(consulta.Tipo == "DEVOLUCION")" disabled="@(CargandoDatos || procesando)"
+                @onclick='() => MostrarTipo("DEVOLUCION")'>Devoluciones</button>
+            <button class="nav-link @(consulta.Tipo == "REPORTE_RESENA" ? "active" : "")" role="tab"
+                aria-selected="@(consulta.Tipo == "REPORTE_RESENA")" disabled="@(CargandoDatos || procesando)"
+                @onclick='() => MostrarTipo("REPORTE_RESENA")'>Reportes de reseñas</button>
+        </div>
+        <fieldset class="d-flex flex-wrap gap-3 mb-4" disabled="@(CargandoDatos || procesando)">
+            <legend class="fs-6">Estados · sin selección se muestran todos</legend>
+            @foreach (string estado in estados)
+            {
+                @if (estado != "CERRADA" || consulta.Tipo == "REPORTE_RESENA")
+                {
+                    <label class="form-check-label">
+                        <input class="form-check-input me-1" type="checkbox" checked="@consulta.Estados.Contains(estado)"
+                            @onchange="() => CambiarEstado(estado)" />@TextoEstado(estado)
+                    </label>
+                }
+            }
+        </fieldset>
+        <Cargando EnCurso="@CargandoDatos" Error="@ErrorCarga" AlReintentar="ActualizarDatos">
+            <p>@resultado.TotalResultados solicitudes</p>
+            @if (resultado.Items.Count == 0)
+            {
+                <p>No hay solicitudes en esta lista.</p>
+            }
+            @foreach (var solicitud in resultado.Items)
+            {
+                <article class="card p-4 mb-3">
+                    <div class="d-flex flex-wrap justify-content-between gap-2">
+                        <h2 class="h4">Solicitud #@solicitud.Id</h2>
+                        <span>@TextoEstado(solicitud.Estado)</span>
+                    </div>
+                    <p>@solicitud.FechaSolicitud.ToString("dd/MM/yyyy HH:mm")</p>
+                    @if (EsModeracion)
+                    {
+                        <p>Solicitante: @solicitud.NombreSolicitante</p>
+                    }
+                    <p>@solicitud.Motivo · @(solicitud.Tipo == "DEVOLUCION" ? "Pedido" : "Reseña") #@solicitud.IdReferencia</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button class="btn btn-secondary" @onclick="() => Consultar(solicitud)" disabled="@procesando">Consultar</button>
+                        @if (!EsModeracion && solicitud.Estado == "PENDIENTE")
+                        {
+                            <button class="btn btn-secondary" @onclick="() => Editar(solicitud)" disabled="@procesando">Editar</button>
+                            <button class="btn btn-outline-danger" @onclick="() => Retirar(solicitud)" disabled="@procesando">Retirar</button>
+                        }
+                    </div>
+                </article>
+            }
+            <Paginacion Pagina="consulta.Pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
+        </Cargando>
+    }
+
+    @if (seleccionada is not null && !editando && pedidoReferencia is null && !verResena)
+    {
+        <Modal Titulo="@($"Solicitud #{seleccionada.Id}")" AlCerrar="CerrarDetalle" Ocupado="@procesando">
+            <p>Creada: @seleccionada.FechaSolicitud.ToString("dd/MM/yyyy HH:mm") · @TextoEstado(seleccionada.Estado)</p>
+            @if (EsModeracion)
+            {
+                <p>Solicitante: @seleccionada.NombreSolicitante</p>
+            }
+            <p><strong>Motivo:</strong> @seleccionada.Motivo</p>
+            @if (devolucion is not null)
+            {
+                <p><strong>Comentario:</strong> @(string.IsNullOrWhiteSpace(devolucion.Datos.Comentario) ? "Sin comentario adicional." : devolucion.Datos.Comentario)</p>
+                <p>Pedido #@devolucion.Pedido.Id · @devolucion.Pedido.FechaPago.ToString("dd/MM/yyyy HH:mm")</p>
+                <p>@devolucion.Pedido.CantidadLibros ejemplares · @Presentacion.Dinero(devolucion.Pedido.Total) · @Presentacion.EstadoPedido(devolucion.Pedido.Estado)</p>
+                @if (devolucion.FechaResolucion.HasValue)
+                {
+                    <p>Resuelta: @devolucion.FechaResolucion.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                }
+                <button class="btn btn-secondary" @onclick="VerPedido" disabled="@procesando">Ver pedido</button>
+            }
+            @if (reporte is not null)
+            {
+                <p><strong>Comentario:</strong> @(string.IsNullOrWhiteSpace(reporte.Datos.Comentario) ? "Sin comentario adicional." : reporte.Datos.Comentario)</p>
+                @if (reporte.FechaResolucion.HasValue)
+                {
+                    <p>Resuelta: @reporte.FechaResolucion.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                }
+                <p>Reseña #@reporte.ResenaReportada.IdResena · @reporte.ResenaReportada.NombreUsuario · @reporte.ResenaReportada.TituloLibro</p>
+                @if (EsModeracion)
+                {
+                    <h3 class="h5">Contenido original reportado</h3>
+                    <p>@reporte.ResenaReportada.ContenidoOriginal.Puntuacion de 5 estrellas</p>
+                    <p>@reporte.ResenaReportada.ContenidoOriginal.Comentario</p>
+                    <h3 class="h5">Contenido actual · @(reporte.ResenaActiva ? "Reseña activa" : "Reseña retirada")</h3>
+                    @if (reporte.ContenidoActual is not null)
+                    {
+                        <p>@reporte.ContenidoActual.Puntuacion de 5 estrellas</p>
+                        <p>@reporte.ContenidoActual.Comentario</p>
+                    }
+                }
+                <button class="btn btn-secondary" @onclick="() => verResena = true">Ver reseña</button>
+            }
+            @if (EsModeracion && seleccionada.Estado == "PENDIENTE")
+            {
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <button class="btn btn-primary" @onclick='() => Resolver("ACEPTADA")' disabled="@procesando">Aceptar</button>
+                    <button class="btn btn-outline-danger" @onclick='() => Resolver("RECHAZADA")' disabled="@procesando">Rechazar</button>
+                    @if (reporte is not null && (!reporte.ResenaActiva
+                        || reporte.ContenidoActual?.Puntuacion != reporte.ResenaReportada.ContenidoOriginal.Puntuacion
+                        || reporte.ContenidoActual?.Comentario != reporte.ResenaReportada.ContenidoOriginal.Comentario))
+                    {
+                        <button class="btn btn-secondary" @onclick='() => Resolver("CERRADA")' disabled="@procesando">Cerrar sin intervención</button>
+                    }
+                </div>
+            }
+            @if (errorOperacion is not null)
+            {
+                <p class="alert alert-danger mt-3" role="alert">@errorOperacion</p>
+            }
+        </Modal>
+    }
+    @if (editando && devolucion is not null)
+    {
+        <FormularioDevolucion Titulo="Editar solicitud de devolución" Valor="devolucion.Datos"
+            AlGuardar="GuardarDevolucion" AlCerrar="CerrarDetalle" />
+    }
+    @if (editando && reporte is not null)
+    {
+        <FormularioReporteResena Titulo="Editar reporte de reseña" Valor="reporte.Datos"
+            AlGuardar="GuardarReporte" AlCerrar="CerrarDetalle" />
+    }
+    @if (pedidoReferencia is not null)
+    {
+        <Modal Titulo="Consulta del pedido" Amplio="true" AlCerrar="() => pedidoReferencia = null">
+            <DetallePedidoContenido Pedido="pedidoReferencia" />
+        </Modal>
+    }
+    @if (verResena && reporte is not null)
+    {
+        <Modal Titulo="Reseña original reportada" AlCerrar="() => verResena = false">
+            <p>Reseña #@reporte.ResenaReportada.IdResena · @reporte.ResenaReportada.NombreUsuario</p>
+            <h3 class="h5">@reporte.ResenaReportada.TituloLibro</h3>
+            <p>@reporte.ResenaReportada.ContenidoOriginal.Puntuacion de 5 estrellas</p>
+            <p>@reporte.ResenaReportada.ContenidoOriginal.Comentario</p>
+        </Modal>
+    }
+</div>

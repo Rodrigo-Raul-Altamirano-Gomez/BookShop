@@ -1,0 +1,5 @@
+.portadas img {
+    width: 44px;
+    height: 64px;
+    object-fit: cover;
+}

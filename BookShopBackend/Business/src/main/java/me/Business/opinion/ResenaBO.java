@@ -13,8 +13,6 @@ public interface ResenaBO {
 
     int publicar(int idActor, int idLibro, DatosResenaDTO datos) throws NegocioException;
 
-    DatosResenaDTO obtenerParaEditar(int idActor, int idResena) throws NegocioException;
-
     void modificar(int idActor, int idResena, DatosResenaDTO datos) throws NegocioException;
 
     void eliminarPropia(int idActor, int idResena) throws NegocioException;

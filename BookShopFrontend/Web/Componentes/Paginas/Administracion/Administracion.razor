@@ -1,0 +1,36 @@
+@page "/administracion"
+@inherits Web.Componentes.Paginas.Cuenta.PaginaCuenta
+<PageTitle>Administración · BookShop</PageTitle>
+<div class="container py-4">
+    <h1 class="page-heading">Administración</h1>
+    @if (Sesion.Usuario is null)
+    {
+        <p>Inicia sesión con una cuenta de administrador.</p>
+        <button class="btn btn-primary" @onclick="Sesion.MostrarAcceso">Iniciar sesión</button>
+    }
+    else if (!Sesion.EsAdministrador)
+    {
+        <p class="alert alert-warning">Solo los administradores pueden acceder a esta pantalla.</p>
+        <a class="btn btn-secondary" href="/catalogo">Volver al catálogo</a>
+    }
+    else
+    {
+        <div class="d-flex flex-wrap gap-3">
+            <a class="btn btn-secondary" href="/administracion/libros">Libros</a>
+            <a class="btn btn-secondary" href="/administracion/autores">Autores</a>
+            <a class="btn btn-secondary" href="/administracion/categorias">Categorías</a>
+            <a class="btn btn-secondary" href="/administracion/editoriales">Editoriales</a>
+            <a class="btn btn-secondary" href="/moderacion">Moderación</a>
+            <a class="btn btn-secondary" href="/administracion/configuracion">Configuración</a>
+            <button class="btn btn-primary" @onclick="() => reportesAbiertos = true">Reportes</button>
+        </div>
+        @if (reportesAbiertos)
+        {
+            <ModalReportes AlCerrar="() => reportesAbiertos = false" />
+        }
+    }
+</div>
+
+@code {
+    private bool reportesAbiertos;
+}

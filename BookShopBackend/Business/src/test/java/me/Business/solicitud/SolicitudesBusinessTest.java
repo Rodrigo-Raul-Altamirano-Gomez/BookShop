@@ -40,6 +40,8 @@ class SolicitudesBusinessTest {
 
     private PedidoDAO pedidos;
 
+    private PedidoBO referencias;
+
     private ResenaDAO resenas;
 
     private LibroDAO libros;
@@ -70,6 +72,7 @@ class SolicitudesBusinessTest {
     void preparar() throws Exception {
         solicitudes = mock(SolicitudDAO.class);
         pedidos = mock(PedidoDAO.class);
+        referencias = mock(PedidoBO.class);
         resenas = mock(ResenaDAO.class);
         libros = mock(LibroDAO.class);
         cupones = mock(CuponDAO.class);
@@ -105,13 +108,11 @@ class SolicitudesBusinessTest {
         cupon.setId(5);
         pedido.setCupon(cupon);
         when(pedidos.leer(10)).thenReturn(pedido);
-        when(pedidos.leer(10)).thenReturn(pedido);
         when(pedidos.incrementarIntentos(eq(10), anyInt(), eq("ana@test"))).thenReturn(true);
         when(pedidos.actualizarEstado(any(), any())).thenReturn(true);
         when(libros.reponerStock(anyInt(), anyInt(), anyString())).thenReturn(true);
         when(cupones.liberar(anyInt(), any(), anyString())).thenReturn(true);
         resena = new Resena(4, 2, "Texto original", libro, cliente);
-        when(resenas.leer(4)).thenReturn(resena);
         when(resenas.leer(4)).thenReturn(resena);
         when(resenas.eliminar(4, "admin@admin.bookshop")).thenReturn(true);
         registro = new AtomicReference<>();
@@ -121,7 +122,6 @@ class SolicitudesBusinessTest {
             registro.set(nueva);
             return null;
         }).when(solicitudes).insertar(any());
-        when(solicitudes.leer(7)).thenAnswer(inv -> registro.get());
         when(solicitudes.leer(7)).thenAnswer(inv -> registro.get());
         when(solicitudes.resolver(eq(7), any(), any(), eq("admin@admin.bookshop"))).thenAnswer(inv -> {
             registro.get().resolver(inv.getArgument(1), inv.getArgument(3), inv.getArgument(2));
@@ -140,7 +140,7 @@ class SolicitudesBusinessTest {
     }
 
     private SolicitudBOImpl construir(ProveedorConfiguracion configuracion) {
-        return new SolicitudBOImpl(solicitudes, pedidos, resenas, libros, cupones, usuarios, reloj, configuracion, mock(PedidoBO.class));
+        return new SolicitudBOImpl(solicitudes, pedidos, resenas, libros, cupones, usuarios, reloj, configuracion, referencias);
     }
 
     private ResumenSolicitudDTO resumen(Solicitud solicitud) {
@@ -194,6 +194,9 @@ class SolicitudesBusinessTest {
 
     @Test
     void ultimoInstanteDelPlazoAdmiteSolicitudYMantienePedidoEntregado() throws Exception {
+        negocio.comprobarDevolucion(1, 10);
+        verify(pedidos, never()).incrementarIntentos(anyInt(), anyInt(), anyString());
+        clearInvocations(pedidos);
         var resultado = negocio.enviarDevolucion(1, 10, new DatosDevolucionDTO(MotivoDevolucion.LIBRO_DANADO, "  Portada dañada  "));
         assertEquals(EstadoSolicitud.PENDIENTE, resultado.solicitud().estado());
         assertEquals(EstadoPedido.ENTREGADO, resultado.pedido().estado());
@@ -254,6 +257,93 @@ class SolicitudesBusinessTest {
     }
 
     @Test
+    void editarYRetirarNoRestituyenIntentosYNuevaSolicitudConsumeOtro() throws Exception {
+        when(pedidos.incrementarIntentos(eq(10), anyInt(), eq("ana@test"))).thenAnswer(inv -> {
+            pedido.setNumeroIntentos(pedido.getNumeroIntentos() + 1);
+            return true;
+        });
+        when(solicitudes.eliminar(7, "ana@test")).thenAnswer(inv -> {
+            registro.get().retirar("ana@test", fecha);
+            return true;
+        });
+        negocio.enviarDevolucion(1, 10, new DatosDevolucionDTO(MotivoDevolucion.OTRO, null));
+        assertEquals(1, pedido.getNumeroIntentos());
+        var editada = negocio.editarDevolucion(1, 7,
+            new DatosDevolucionDTO(MotivoDevolucion.LIBRO_DANADO, "Aclaración"));
+        assertEquals(MotivoDevolucion.LIBRO_DANADO, editada.datos().motivo());
+        negocio.retirar(1, 7);
+        assertEquals(1, pedido.getNumeroIntentos());
+        assertThrows(RecursoNoEncontradoException.class, () -> negocio.consultarDevolucion(1, 7));
+        negocio.enviarDevolucion(1, 10, new DatosDevolucionDTO(MotivoDevolucion.OTRO, null));
+        assertEquals(2, pedido.getNumeroIntentos());
+        verify(pedidos, times(2)).incrementarIntentos(10, 3, "ana@test");
+    }
+
+    @Test
+    void rechazarDevolucionConservaPedidoStockCuponEIntentosYNoPermiteEditarResultado() throws Exception {
+        pedido.setNumeroIntentos(2);
+        registro.set(new SolicitudDevolucion(7, cliente, pedido, MotivoDevolucion.OTRO, null));
+        var resultado = negocio.resolverDevolucion(9, 7, EstadoSolicitud.RECHAZADA);
+        assertEquals(EstadoSolicitud.RECHAZADA, resultado.solicitud().estado());
+        assertEquals(fecha, resultado.fechaResolucion());
+        assertEquals(EstadoPedido.ENTREGADO, pedido.getEstado());
+        assertEquals(2, pedido.getNumeroIntentos());
+        verify(pedidos, never()).actualizarEstado(any(), any());
+        verify(pedidos, never()).incrementarIntentos(anyInt(), anyInt(), anyString());
+        verifyNoInteractions(libros, cupones);
+        assertThrows(ConflictoException.class, () -> negocio.editarDevolucion(1, 7,
+            new DatosDevolucionDTO(MotivoDevolucion.OTRO, "Cambio")));
+        assertThrows(ConflictoException.class, () -> negocio.retirar(1, 7));
+        assertThrows(ConflictoException.class, () -> negocio.resolverDevolucion(9, 7, EstadoSolicitud.ACEPTADA));
+        verify(solicitudes, never()).modificar(any());
+        verify(solicitudes, never()).eliminar(anyInt(), anyString());
+    }
+
+    @Test
+    void solicitudResueltaConservaLaConsultaDeReferenciaSinOperaciones() throws Exception {
+        SolicitudDevolucion solicitud = new SolicitudDevolucion(7, cliente, pedido, MotivoDevolucion.OTRO, null);
+        solicitud.setEstado(EstadoSolicitud.RECHAZADA);
+        registro.set(solicitud);
+        var cabecera = new ResumenPedidoDTO(10, pedido.getFechaPago(), pedido.getEstado(), 2, pedido.getTotal());
+        var detalle = new me.Model.dto.compra.DetallePedidoDTO(cabecera, null, null, null,
+            "TRANSACCIÓN", "SEGUIMIENTO", null, null, pedido.getFechaEntrega(), false, false);
+        when(referencias.consultarReferencia(10)).thenReturn(detalle);
+        assertSame(detalle, negocio.consultarPedidoReferencia(1, 7));
+        assertFalse(detalle.puedeCancelar());
+        assertFalse(detalle.puedeSolicitarDevolucion());
+        verify(referencias).consultarReferencia(10);
+        verify(pedidos, never()).actualizarEstado(any(), any());
+    }
+
+    @Test
+    void reporteCompruebaPendienteAntesDelFormularioYAlEnviar() throws Exception {
+        negocio.comprobarReporte(1, 4);
+        verify(solicitudes, never()).insertar(any());
+        when(solicitudes.existeReportePendiente(1, 4)).thenReturn(true);
+        assertThrows(ConflictoException.class, () -> negocio.comprobarReporte(1, 4));
+        assertThrows(ConflictoException.class, () -> negocio.enviarReporte(1, 4,
+            new DatosReporteResenaDTO(MotivoReporteResena.OTRO, null)));
+        verify(solicitudes, never()).insertar(any());
+        verify(conexion, never()).commit();
+    }
+
+    @Test
+    void reporteExigeMotivoYResenaDisponiblePeroAdmiteComentarioOpcional() throws Exception {
+        assertThrows(ValidacionException.class, () -> negocio.enviarReporte(1, 4,
+            new DatosReporteResenaDTO(null, "Comentario")));
+        verify(solicitudes, never()).insertar(any());
+        var enviada = negocio.enviarReporte(1, 4, new DatosReporteResenaDTO(MotivoReporteResena.OTRO, "  "));
+        assertNull(enviada.datos().comentario());
+        assertEquals(EstadoSolicitud.PENDIENTE, enviada.solicitud().estado());
+
+        resena.setEliminado(true);
+        assertThrows(RecursoNoEncontradoException.class, () -> negocio.comprobarReporte(1, 4));
+        assertThrows(RecursoNoEncontradoException.class, () -> negocio.enviarReporte(1, 4,
+            new DatosReporteResenaDTO(MotivoReporteResena.OTRO, null)));
+        verify(solicitudes, times(1)).insertar(any());
+    }
+
+    @Test
     void editarReporteConservaOriginalYNoExponeActualACliente() throws Exception {
         negocio.enviarReporte(1, 4, new DatosReporteResenaDTO(MotivoReporteResena.CONTENIDO_OFENSIVO, null));
         SolicitudReporteResena reporte = (SolicitudReporteResena) registro.get();
@@ -267,6 +357,39 @@ class SolicitudesBusinessTest {
         verify(pedidos, never()).incrementarIntentos(anyInt(), anyInt(), anyString());
         var administrativa = negocio.consultarReporte(9, 7);
         assertEquals("Texto corregido", administrativa.contenidoActual().comentario());
+        resena.setEliminado(true);
+        var retirada = negocio.consultarReporte(1, 7);
+        assertEquals(new DatosResenaDTO(2, "Texto original"), retirada.resenaReportada().contenidoOriginal());
+        assertFalse(retirada.resenaActiva());
+    }
+
+    @Test
+    void aceptarReporteRetiraLaResenaUnaSolaVezYConservaElOriginal() throws Exception {
+        registro.set(new SolicitudReporteResena(7, cliente, resena, MotivoReporteResena.CONTENIDO_OFENSIVO, null));
+        when(resenas.eliminar(4, "admin@admin.bookshop")).thenAnswer(inv -> {
+            resena.setEliminado(true);
+            return true;
+        });
+        var resultado = negocio.resolverReporte(9, 7, EstadoSolicitud.ACEPTADA);
+        assertEquals(EstadoSolicitud.ACEPTADA, resultado.solicitud().estado());
+        assertEquals(fecha, resultado.fechaResolucion());
+        assertEquals(new DatosResenaDTO(2, "Texto original"), resultado.resenaReportada().contenidoOriginal());
+        assertFalse(resultado.resenaActiva());
+        assertThrows(ConflictoException.class, () -> negocio.resolverReporte(9, 7, EstadoSolicitud.ACEPTADA));
+        verify(resenas, times(1)).eliminar(4, "admin@admin.bookshop");
+    }
+
+    @Test
+    void cerrarReporteRequiereQueElContenidoOriginalYaNoEstePublicado() throws Exception {
+        registro.set(new SolicitudReporteResena(7, cliente, resena, MotivoReporteResena.OTRO, null));
+        assertThrows(ConflictoException.class, () -> negocio.resolverReporte(9, 7, EstadoSolicitud.CERRADA));
+        resena.setComentario("Contenido corregido");
+        var resultado = negocio.resolverReporte(9, 7, EstadoSolicitud.CERRADA);
+        assertEquals(EstadoSolicitud.CERRADA, resultado.solicitud().estado());
+        assertTrue(resultado.resenaActiva());
+        assertEquals("Texto original", resultado.resenaReportada().contenidoOriginal().comentario());
+        assertEquals("Contenido corregido", resultado.contenidoActual().comentario());
+        verify(resenas, never()).eliminar(anyInt(), anyString());
     }
 
     @Test

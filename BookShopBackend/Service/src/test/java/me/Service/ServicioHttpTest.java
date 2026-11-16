@@ -5,7 +5,12 @@ import java.util.List;
 import java.util.Map;
 import java.math.BigDecimal;
 import java.io.StringReader;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import me.Business.documentos.ComprobanteBO;
+import me.Business.documentos.ReporteBO;
+import me.Model.dto.catalogo.ConsultaReporteLibrosDTO;
 import jakarta.json.Json;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -16,6 +21,13 @@ import me.Business.catalogo.LibroBO;
 import me.Business.compra.CarritoBO;
 import me.Business.compra.CuponBO;
 import me.Business.compra.PedidoBO;
+import me.Business.opinion.ResenaBO;
+import me.Business.opinion.VotoUtilBO;
+import me.Business.recomendacion.RecomendacionBO;
+import me.Business.solicitud.SolicitudBO;
+import me.Model.dto.catalogo.ConsultaRecomendacionesDTO;
+import me.Model.dto.catalogo.RecomendacionesDTO;
+import me.Model.dto.catalogo.OrdenLibro;
 import me.Business.exceptions.CuentaInactivaException;
 import me.Business.exceptions.CredencialesInvalidasException;
 import me.Business.exceptions.PersistenciaException;
@@ -28,9 +40,28 @@ import me.Business.usuario.UsuarioBO;
 import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.dto.catalogo.FiltroLibroDTO;
 import me.Model.dto.catalogo.TarjetaLibroDTO;
+import me.Model.dto.compra.DatosCancelacionDTO;
 import me.Model.dto.compra.DetallePedidoDTO;
+import me.Model.dto.compra.FiltroPedidoDTO;
+import me.Model.dto.compra.OrdenPedido;
 import me.Model.dto.compra.ResumenPedidoDTO;
+import me.Model.dto.compra.TarjetaPedidoDTO;
+import me.Model.dto.opinion.ConsultaResenasDTO;
+import me.Model.dto.opinion.DatosResenaDTO;
+import me.Model.dto.opinion.OrdenResena;
+import me.Model.dto.opinion.ResenaDTO;
+import me.Model.dto.solicitud.DatosDevolucionDTO;
+import me.Model.dto.solicitud.DatosReporteResenaDTO;
+import me.Model.dto.solicitud.DetalleDevolucionDTO;
+import me.Model.dto.solicitud.DetalleReporteResenaDTO;
+import me.Model.dto.solicitud.FiltroSolicitudDTO;
+import me.Model.dto.solicitud.ResenaReportadaDTO;
+import me.Model.dto.solicitud.ResumenSolicitudDTO;
+import me.Model.dto.solicitud.TipoSolicitud;
 import me.Model.entities.compra.EstadoPedido;
+import me.Model.entities.solicitud.EstadoSolicitud;
+import me.Model.entities.solicitud.MotivoDevolucion;
+import me.Model.entities.solicitud.MotivoReporteResena;
 import me.Model.dto.usuario.AccesoUsuarioDTO;
 import me.Model.dto.usuario.CredencialesDTO;
 import me.Model.entities.usuario.Rol;
@@ -45,6 +76,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -74,6 +106,12 @@ class ServicioHttpTest {
         when(servicios.getDireccionEnvioBO()).thenReturn(mock(DireccionEnvioBO.class));
         when(servicios.getMetodoPagoBO()).thenReturn(mock(MetodoPagoBO.class));
         when(servicios.getSeguimientoBO()).thenReturn(mock(SeguimientoBO.class));
+        when(servicios.getComprobanteBO()).thenReturn(mock(ComprobanteBO.class));
+        when(servicios.getReporteBO()).thenReturn(mock(ReporteBO.class));
+        when(servicios.getRecomendacionBO()).thenReturn(mock(RecomendacionBO.class));
+        when(servicios.getResenaBO()).thenReturn(mock(ResenaBO.class));
+        when(servicios.getVotoUtilBO()).thenReturn(mock(VotoUtilBO.class));
+        when(servicios.getSolicitudBO()).thenReturn(mock(SolicitudBO.class));
         request = mock(HttpServletRequest.class);
         sesion = mock(HttpSession.class);
         atributos = new HashMap<>();
@@ -119,6 +157,353 @@ class ServicioHttpTest {
     void cerrar() throws Exception {
         if (http != null)
             http.tearDown();
+    }
+
+    @Test
+    void popularesAbreUnConjuntoYConsultaConservaElIdentificador() throws Exception {
+        var pagina = new ResultadoPaginadoDTO<TarjetaLibroDTO>(List.of(), 0, 1, 12);
+        var consulta = new ConsultaRecomendacionesDTO(OrdenLibro.RECOMENDADOS_PRIMERO, 1, 12);
+        when(servicios.getRecomendacionBO().abrirPopulares(consulta)).thenReturn(new RecomendacionesDTO("conjunto", pagina));
+        when(servicios.getRecomendacionBO().consultar(eq(0), eq("conjunto"), any())).thenReturn(pagina);
+        try (Response respuesta = http.target("recomendaciones/populares").request().post(Entity.json("{\"orden\":\"RECOMENDADOS_PRIMERO\",\"pagina\":1,\"tamanioPagina\":12}"))) {
+            assertEquals(200, respuesta.getStatus());
+            var json = Json.createReader(new StringReader(respuesta.readEntity(String.class))).readObject();
+            assertEquals("conjunto", json.getString("idConsulta"));
+            assertTrue(json.containsKey("resultados"));
+        }
+        try (Response respuesta = http.target("recomendaciones/consultas/conjunto").request().post(Entity.json("{\"orden\":\"PRECIO_ASCENDENTE\",\"pagina\":2,\"tamanioPagina\":12}"))) {
+            assertEquals(200, respuesta.getStatus());
+            verify(servicios.getRecomendacionBO()).consultar(0, "conjunto", new ConsultaRecomendacionesDTO(OrdenLibro.PRECIO_ASCENDENTE, 2, 12));
+        }
+        try (Response respuesta = http.target("recomendaciones/consultas/conjunto").request().delete()) {
+            assertEquals(204, respuesta.getStatus());
+            verify(servicios.getRecomendacionBO()).descartar(0, "conjunto");
+        }
+    }
+
+    @Test
+    void paraTiRequiereSesionYConsultaElHistorialDelUsuarioActual() throws Exception {
+        try (Response respuesta = http.target("recomendaciones/para-ti").request().post(Entity.json("{}"))) {
+            assertEquals(401, respuesta.getStatus());
+            verifyNoInteractions(servicios.getRecomendacionBO());
+        }
+        when(request.getSession(false)).thenReturn(sesion);
+        atributos.put("bookshop.actor", 7);
+        when(servicios.getRecomendacionBO().puedeMostrarParaTi(7)).thenReturn(true);
+        try (Response respuesta = http.target("recomendaciones/para-ti/disponible").request().get()) {
+            assertEquals(200, respuesta.getStatus());
+            assertEquals("true", respuesta.readEntity(String.class));
+        }
+        var consulta = new ConsultaRecomendacionesDTO(OrdenLibro.RECOMENDADOS_PRIMERO, 1, 12);
+        when(servicios.getRecomendacionBO().abrirParaTi(7, consulta)).thenReturn(new RecomendacionesDTO("propio", new ResultadoPaginadoDTO<>(List.of(), 0, 1, 12)));
+        try (Response respuesta = http.target("recomendaciones/para-ti").request().post(Entity.json("{\"orden\":\"RECOMENDADOS_PRIMERO\",\"pagina\":1,\"tamanioPagina\":12}"))) {
+            assertEquals(200, respuesta.getStatus());
+            verify(servicios.getRecomendacionBO()).abrirParaTi(7, consulta);
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "GET, resenas/libro/3/publicacion/permitida",
+        "POST, resenas/libro/3",
+        "PUT, resenas/4",
+        "DELETE, resenas/4",
+        "POST, resenas/propias/busqueda",
+        "PUT, resenas/4/voto",
+        "DELETE, resenas/4/voto",
+        "GET, solicitudes/reportes/resena/4/permitido",
+        "POST, solicitudes/reportes/resena/4"
+    })
+    void accionesRF10RequierenSesion(String metodo, String ruta) {
+        try (Response respuesta = http.target(ruta).request().method(metodo)) {
+            assertEquals(401, respuesta.getStatus());
+            verifyNoInteractions(servicios.getResenaBO(), servicios.getVotoUtilBO(), servicios.getSolicitudBO());
+        }
+    }
+
+    @Test
+    void publicarYEditarResenaUsanLaIdentidadDeSesion() throws Exception {
+        when(request.getSession(false)).thenReturn(sesion);
+        atributos.put("bookshop.actor", 7);
+        var datos = new DatosResenaDTO(4, "Comentario");
+        when(servicios.getResenaBO().publicar(7, 3, datos)).thenReturn(42);
+
+        try (Response respuesta = http.target("resenas/libro/3/publicacion/permitida").request().get()) {
+            assertEquals(204, respuesta.getStatus());
+            verify(servicios.getResenaBO()).verificarPuedePublicar(7, 3);
+        }
+        try (Response respuesta = http.target("resenas/libro/3").request().post(Entity.json(datos))) {
+            assertEquals(200, respuesta.getStatus());
+            assertEquals("42", respuesta.readEntity(String.class));
+        }
+        try (Response respuesta = http.target("resenas/42").request().put(Entity.json(datos))) {
+            assertEquals(204, respuesta.getStatus());
+            verify(servicios.getResenaBO()).modificar(7, 42, datos);
+        }
+        try (Response respuesta = http.target("resenas/42").request().delete()) {
+            assertEquals(204, respuesta.getStatus());
+            verify(servicios.getResenaBO()).eliminarPropia(7, 42);
+        }
+        var consulta = new ConsultaResenasDTO(OrdenResena.VOTOS_UTILES_DESCENDENTE, 2, 10);
+        when(servicios.getResenaBO().listarPropias(7, consulta))
+            .thenReturn(new ResultadoPaginadoDTO<ResenaDTO>(List.of(), 12, 2, 10));
+        try (Response respuesta = http.target("resenas/propias/busqueda").request().post(Entity.json(consulta))) {
+            assertEquals(200, respuesta.getStatus());
+            var json = Json.createReader(new StringReader(respuesta.readEntity(String.class))).readObject();
+            assertEquals(12, json.getInt("totalResultados"));
+            assertEquals(2, json.getInt("pagina"));
+            verify(servicios.getResenaBO()).listarPropias(7, consulta);
+        }
+    }
+
+    @Test
+    void votoUtilDevuelveSiCambioAlMarcarYRetirarSinCuerpo() throws Exception {
+        when(request.getSession(false)).thenReturn(sesion);
+        atributos.put("bookshop.actor", 7);
+        when(servicios.getVotoUtilBO().cambiarVoto(7, 4, true)).thenReturn(true, false);
+        when(servicios.getVotoUtilBO().cambiarVoto(7, 4, false)).thenReturn(true, false);
+        for (String metodo : List.of("PUT", "DELETE")) {
+            for (boolean cambio : List.of(true, false)) {
+                try (Response respuesta = http.target("resenas/4/voto").request().method(metodo)) {
+                    assertEquals(200, respuesta.getStatus());
+                    assertEquals(Boolean.toString(cambio), respuesta.readEntity(String.class));
+                }
+            }
+        }
+        verify(servicios.getVotoUtilBO(), times(2)).cambiarVoto(7, 4, true);
+        verify(servicios.getVotoUtilBO(), times(2)).cambiarVoto(7, 4, false);
+    }
+
+    @Test
+    void reportarCompruebaAntesDelFormularioYEnviaMotivoYComentario() throws Exception {
+        when(request.getSession(false)).thenReturn(sesion);
+        atributos.put("bookshop.actor", 7);
+        var datos = new DatosReporteResenaDTO(MotivoReporteResena.PUBLICIDAD_O_SPAM, "Enlaces ajenos al libro");
+        var resumen = new ResumenSolicitudDTO(9, TipoSolicitud.REPORTE_RESENA,
+            LocalDateTime.of(2026, 10, 7, 10, 0), EstadoSolicitud.PENDIENTE, null, "Publicidad o spam", 4);
+        var original = new ResenaReportadaDTO(4, "Ana", "Libro", new DatosResenaDTO(2, "Contenido original"));
+        var detalle = new DetalleReporteResenaDTO(resumen, datos, original, null, true, null);
+        when(servicios.getSolicitudBO().enviarReporte(7, 4, datos)).thenReturn(detalle);
+
+        try (Response respuesta = http.target("solicitudes/reportes/resena/4/permitido").request().get()) {
+            assertEquals(204, respuesta.getStatus());
+            verify(servicios.getSolicitudBO()).comprobarReporte(7, 4);
+        }
+        try (Response respuesta = http.target("solicitudes/reportes/resena/4").request().post(Entity.json(datos))) {
+            assertEquals(200, respuesta.getStatus());
+            var json = Json.createReader(new StringReader(respuesta.readEntity(String.class))).readObject();
+            assertEquals(9, json.getJsonObject("solicitud").getInt("id"));
+            assertEquals("Contenido original", json.getJsonObject("resenaReportada")
+                .getJsonObject("contenidoOriginal").getString("comentario"));
+            verify(servicios.getSolicitudBO()).enviarReporte(7, 4, datos);
+        }
+        SolicitudBO solicitudes = servicios.getSolicitudBO();
+        doThrow(new me.Business.exceptions.ConflictoException("Ya tienes un reporte pendiente de esta reseña."))
+            .when(solicitudes).comprobarReporte(7, 4);
+        try (Response respuesta = http.target("solicitudes/reportes/resena/4/permitido").request().get()) {
+            assertEquals(409, respuesta.getStatus());
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "POST, pedidos/busqueda",
+        "PUT, pedidos/3/seguimiento",
+        "POST, pedidos/3/cancelacion",
+        "GET, solicitudes/devoluciones/pedido/3/permitido",
+        "POST, solicitudes/devoluciones/pedido/3",
+        "POST, solicitudes/propias/busqueda",
+        "GET, solicitudes/devoluciones/9",
+        "GET, solicitudes/reportes/9",
+        "PUT, solicitudes/devoluciones/9",
+        "PUT, solicitudes/reportes/9",
+        "DELETE, solicitudes/9",
+        "GET, solicitudes/9/pedido",
+        "POST, solicitudes/moderacion/busqueda",
+        "PUT, solicitudes/devoluciones/9/resolucion",
+        "PUT, solicitudes/reportes/9/resolucion"
+    })
+    void accionesRF03RequierenSesion(String metodo, String ruta) {
+        try (Response respuesta = http.target(ruta).request().method(metodo)) {
+            assertEquals(401, respuesta.getStatus());
+            verifyNoInteractions(servicios.getPedidoBO(), servicios.getSolicitudBO());
+        }
+    }
+
+    @Test
+    void historialSeguimientoYCancelacionUsanSesionYConservanElCuerpoDelFormulario() throws Exception {
+        when(request.getSession(false)).thenReturn(sesion);
+        atributos.put("bookshop.actor", 7);
+        var fecha = LocalDateTime.of(2026, 10, 7, 10, 0);
+        var pedido = new ResumenPedidoDTO(3, fecha, EstadoPedido.EN_ALMACEN, 2, new BigDecimal("35.68"));
+        var filtro = new FiltroPedidoDTO(List.of(EstadoPedido.EN_ALMACEN, EstadoPedido.CANCELADO),
+            OrdenPedido.TOTAL_DESCENDENTE, 2, 10);
+        var tarjeta = new TarjetaPedidoDTO(pedido, List.of("portada"));
+        when(servicios.getPedidoBO().listar(7, filtro)).thenReturn(new ResultadoPaginadoDTO<>(List.of(tarjeta), 12, 2, 10));
+        var detalle = new DetallePedidoDTO(pedido, null, null, null, "TRANSACCIÓN", "SEGUIMIENTO",
+            fecha.plusSeconds(90), null, null, true, false);
+        when(servicios.getPedidoBO().actualizarSeguimiento(7, 3)).thenReturn(detalle);
+        when(servicios.getPedidoBO().cancelar(7, 3, "Ya no lo necesito")).thenReturn(detalle);
+
+        try (Response respuesta = http.target("pedidos/busqueda").request().post(Entity.json(filtro))) {
+            assertEquals(200, respuesta.getStatus());
+            var json = Json.createReader(new StringReader(respuesta.readEntity(String.class))).readObject();
+            assertEquals(12, json.getInt("totalResultados"));
+            assertEquals("portada", json.getJsonArray("items").getJsonObject(0).getJsonArray("portadas").getString(0));
+            verify(servicios.getPedidoBO()).listar(7, filtro);
+        }
+        try (Response respuesta = http.target("pedidos/3/seguimiento").request().method("PUT")) {
+            assertEquals(200, respuesta.getStatus());
+            verify(servicios.getPedidoBO()).actualizarSeguimiento(7, 3);
+        }
+        try (Response respuesta = http.target("pedidos/3/cancelacion").request()
+            .post(Entity.json(new DatosCancelacionDTO("Ya no lo necesito")))) {
+            assertEquals(200, respuesta.getStatus());
+            verify(servicios.getPedidoBO()).cancelar(7, 3, "Ya no lo necesito");
+        }
+    }
+
+    @Test
+    void devolucionSeCompruebaAntesDelFormularioYLasSolicitudesSeConsultanPorSuTipo() throws Exception {
+        when(request.getSession(false)).thenReturn(sesion);
+        atributos.put("bookshop.actor", 7);
+        var datos = new DatosDevolucionDTO(MotivoDevolucion.LIBRO_DANADO, "Portada dañada");
+        var resumen = new ResumenSolicitudDTO(9, TipoSolicitud.DEVOLUCION,
+            LocalDateTime.of(2026, 10, 7, 10, 0), EstadoSolicitud.PENDIENTE, null, "Libro dañado", 3);
+        var pedido = new ResumenPedidoDTO(3, resumen.fechaSolicitud(), EstadoPedido.ENTREGADO, 2, BigDecimal.TEN);
+        var detalle = new DetalleDevolucionDTO(resumen, datos, pedido, null);
+        when(servicios.getSolicitudBO().enviarDevolucion(7, 3, datos)).thenReturn(detalle);
+        when(servicios.getSolicitudBO().consultarDevolucion(7, 9)).thenReturn(detalle);
+        when(servicios.getSolicitudBO().editarDevolucion(7, 9, datos)).thenReturn(detalle);
+
+        try (Response respuesta = http.target("solicitudes/devoluciones/pedido/3/permitido").request().get()) {
+            assertEquals(204, respuesta.getStatus());
+            verify(servicios.getSolicitudBO()).comprobarDevolucion(7, 3);
+        }
+        try (Response respuesta = http.target("solicitudes/devoluciones/pedido/3").request().post(Entity.json(datos))) {
+            assertEquals(200, respuesta.getStatus());
+            verify(servicios.getSolicitudBO()).enviarDevolucion(7, 3, datos);
+        }
+        try (Response respuesta = http.target("solicitudes/devoluciones/9").request().get()) {
+            assertEquals(200, respuesta.getStatus());
+            verify(servicios.getSolicitudBO()).consultarDevolucion(7, 9);
+        }
+        try (Response respuesta = http.target("solicitudes/devoluciones/9").request().put(Entity.json(datos))) {
+            assertEquals(200, respuesta.getStatus());
+            verify(servicios.getSolicitudBO()).editarDevolucion(7, 9, datos);
+        }
+        try (Response respuesta = http.target("solicitudes/reportes/10").request().get()) {
+            assertEquals(204, respuesta.getStatus());
+            verify(servicios.getSolicitudBO()).consultarReporte(7, 10);
+        }
+        var reporte = new DatosReporteResenaDTO(MotivoReporteResena.OTRO, "Aclaración");
+        try (Response respuesta = http.target("solicitudes/reportes/10").request().put(Entity.json(reporte))) {
+            assertEquals(204, respuesta.getStatus());
+            verify(servicios.getSolicitudBO()).editarReporte(7, 10, reporte);
+        }
+        try (Response respuesta = http.target("solicitudes/9").request().delete()) {
+            assertEquals(204, respuesta.getStatus());
+            verify(servicios.getSolicitudBO()).retirar(7, 9);
+        }
+        try (Response respuesta = http.target("solicitudes/9/pedido").request().get()) {
+            assertEquals(204, respuesta.getStatus());
+            verify(servicios.getSolicitudBO()).consultarPedidoReferencia(7, 9);
+        }
+    }
+
+    @Test
+    void listasYModeracionRecibenFiltrosYResolucionesSinOtrasConsultasDeRol() throws Exception {
+        when(request.getSession(false)).thenReturn(sesion);
+        atributos.put("bookshop.actor", 7);
+        var filtro = new FiltroSolicitudDTO(TipoSolicitud.REPORTE_RESENA,
+            List.of(EstadoSolicitud.PENDIENTE, EstadoSolicitud.CERRADA), 2, 10);
+        when(servicios.getSolicitudBO().listarPropias(7, filtro)).thenReturn(new ResultadoPaginadoDTO<>(List.of(), 12, 2, 10));
+        when(servicios.getSolicitudBO().listarModeracion(filtro)).thenReturn(new ResultadoPaginadoDTO<>(List.of(), 12, 2, 10));
+        try (Response respuesta = http.target("solicitudes/propias/busqueda").request().post(Entity.json(filtro))) {
+            assertEquals(200, respuesta.getStatus());
+            verify(servicios.getSolicitudBO()).listarPropias(7, filtro);
+        }
+        try (Response respuesta = http.target("solicitudes/moderacion/busqueda").request().post(Entity.json(filtro))) {
+            assertEquals(200, respuesta.getStatus());
+            verify(servicios.getSolicitudBO()).listarModeracion(filtro);
+        }
+        for (EstadoSolicitud resultado : List.of(EstadoSolicitud.ACEPTADA, EstadoSolicitud.RECHAZADA)) {
+            try (Response respuesta = http.target("solicitudes/devoluciones/9/resolucion").queryParam("resultado", resultado).request().method("PUT")) {
+                assertEquals(204, respuesta.getStatus());
+                verify(servicios.getSolicitudBO()).resolverDevolucion(7, 9, resultado);
+            }
+        }
+        for (EstadoSolicitud resultado : List.of(EstadoSolicitud.ACEPTADA, EstadoSolicitud.RECHAZADA, EstadoSolicitud.CERRADA)) {
+            try (Response respuesta = http.target("solicitudes/reportes/10/resolucion").queryParam("resultado", resultado).request().method("PUT")) {
+                assertEquals(204, respuesta.getStatus());
+                verify(servicios.getSolicitudBO()).resolverReporte(7, 10, resultado);
+            }
+        }
+        verifyNoInteractions(servicios.getUsuarioBO());
+    }
+
+    @Test
+    void comprobanteRF17DevuelvePdfDelPedidoDeLaSesion() throws Exception {
+        when(request.getSession(false)).thenReturn(sesion);
+        atributos.put("bookshop.actor", 7);
+        when(servicios.getComprobanteBO().generarPDF(7, 40)).thenReturn("%PDF-1.5".getBytes());
+        try (Response respuesta = http.target("documentos/comprobantes/40").request("application/pdf").get()) {
+            assertEquals(200, respuesta.getStatus());
+            assertEquals("application/pdf", respuesta.getMediaType().toString());
+            assertTrue(respuesta.getHeaderString("Content-Disposition").contains("comprobante-pedido-40.pdf"));
+            assertArrayEquals("%PDF-1.5".getBytes(), respuesta.readEntity(byte[].class));
+        }
+    }
+
+    @Test
+    void comprobanteSinSesionNoLlamaBusiness() {
+        try (Response respuesta = http.target("documentos/comprobantes/40").request("application/pdf").get()) {
+            assertEquals(401, respuesta.getStatus());
+            verifyNoInteractions(servicios.getComprobanteBO());
+        }
+    }
+
+    @Test
+    void comprobanteAjenoConservaElRechazoDeBusiness() throws Exception {
+        when(request.getSession(false)).thenReturn(sesion);
+        atributos.put("bookshop.actor", 7);
+        when(servicios.getComprobanteBO().generarPDF(7, 40))
+            .thenThrow(new me.Business.exceptions.AccesoDenegadoException("El pedido pertenece a otro usuario."));
+        try (Response respuesta = http.target("documentos/comprobantes/40").request("application/pdf").get()) {
+            assertEquals(403, respuesta.getStatus());
+        }
+    }
+
+    @Test
+    void reportesRF18YRF19ConviertenParametros() throws Exception {
+        when(request.getSession(false)).thenReturn(sesion);
+        atributos.put("bookshop.actor", 1);
+        when(servicios.getReporteBO().generarLibrosPDF(any())).thenReturn(new byte[] {1});
+        when(servicios.getReporteBO().generarUsuariosPDF(any(), any())).thenReturn(new byte[] {2});
+        try (Response respuesta = http.target("documentos/ventas-libros").queryParam("inicio", "2026-10-01")
+                .queryParam("fin", "2026-10-31").queryParam("cantidad", 5).request("application/pdf").get()) {
+            assertEquals(200, respuesta.getStatus());
+            verify(servicios.getReporteBO()).generarLibrosPDF(new ConsultaReporteLibrosDTO(
+                    LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 31), 5));
+        }
+        try (Response respuesta = http.target("documentos/usuarios").queryParam("mes", "2026-10")
+                .request("application/pdf").get()) {
+            assertEquals(200, respuesta.getStatus());
+            verify(servicios.getReporteBO()).generarUsuariosPDF(YearMonth.of(2026, 10), null);
+        }
+        try (Response respuesta = http.target("documentos/usuarios").queryParam("mes", "octubre")
+                .request("application/pdf").get()) {
+            assertEquals(400, respuesta.getStatus());
+        }
+    }
+
+    @Test
+    void reporteSinSesionNoLlamaBusiness() {
+        try (Response respuesta = http.target("documentos/usuarios").queryParam("mes", "2026-10")
+                .request("application/pdf").get()) {
+            assertEquals(401, respuesta.getStatus());
+            verifyNoInteractions(servicios.getReporteBO());
+        }
     }
 
     @Test
@@ -257,7 +642,7 @@ class ServicioHttpTest {
 
     @Test
     void noExponeRequisitosExcluidos() {
-        for (String ruta : List.of("solicitudes", "configuracion", "documentos/reportes/usuarios/datos", "libros/123/gestion", "recomendaciones/para-ti/disponibilidad")) {
+        for (String ruta : List.of("configuracion", "documentos/reportes/usuarios/datos", "libros/123/gestion", "recomendaciones/para-ti/disponibilidad")) {
             try (Response respuesta = http.target(ruta).request().get()) {
                 assertEquals(404, respuesta.getStatus(), ruta);
             }

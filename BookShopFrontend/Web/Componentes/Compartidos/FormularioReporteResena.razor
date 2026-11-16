@@ -1,0 +1,55 @@
+<Modal Titulo="@Titulo" AlCerrar="AlCerrar" Ocupado="@guardando">
+    <form @onsubmit="Guardar" @onsubmit:preventDefault>
+        <label class="form-label d-block mb-3">Motivo
+            <select class="form-select" @bind="borrador.Motivo" required>
+                <option value="" disabled>Selecciona un motivo</option>
+                <option value="CONTENIDO_OFENSIVO">Contenido ofensivo</option>
+                <option value="PUBLICIDAD_O_SPAM">Publicidad o spam</option>
+                <option value="CONTENIDO_AJENO_AL_LIBRO">Contenido ajeno al libro</option>
+                <option value="OTRO">Otro</option>
+            </select>
+        </label>
+        <label class="form-label d-block mb-3">Comentario adicional
+            <textarea class="form-control" rows="4" @bind="borrador.Comentario"></textarea>
+        </label>
+        @if (error is not null)
+        {
+            <p class="alert alert-danger" role="alert">@error</p>
+        }
+        <div class="modal-footer px-0 pb-0">
+            <button class="btn btn-secondary" type="button" @onclick="AlCerrar" disabled="@guardando">Cancelar</button>
+            <button class="btn btn-primary" type="submit" disabled="@guardando">@(Valor is null ? "Enviar reporte" : "Guardar cambios")</button>
+        </div>
+    </form>
+</Modal>
+
+@code {
+    [Parameter] public string Titulo { get; set; } = "Reportar reseña";
+    [Parameter] public DatosReporteResenaDTO? Valor { get; set; }
+    [Parameter] public EventCallback<DatosReporteResenaDTO> AlGuardar { get; set; }
+    [Parameter] public EventCallback AlCerrar { get; set; }
+    private DatosReporteResenaDTO borrador = new();
+    private bool guardando;
+    private string? error;
+
+    protected override void OnInitialized()
+    {
+        if (Valor is not null)
+            borrador = new DatosReporteResenaDTO { Motivo = Valor.Motivo, Comentario = Valor.Comentario };
+    }
+
+    private async Task Guardar()
+    {
+        guardando = true;
+        error = null;
+        try
+        {
+            await AlGuardar.InvokeAsync(borrador);
+        }
+        catch (InvalidOperationException e)
+        {
+            error = e.Message;
+        }
+        guardando = false;
+    }
+}

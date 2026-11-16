@@ -2,9 +2,9 @@
 
 Proyecto académico de una tienda de libros: backend Java 25 con servicios REST Jakarta EE y frontend Blazor en .NET 10 con Bootstrap.
 
-El frontend consume la API desde el proyecto Web para los doce requisitos elegidos. Las imágenes se guardan como URLs; los archivos actuales del catálogo están en `BookShopFrontend/Web/wwwroot/images/catalogo`.
+El frontend consume la API desde el proyecto Web. Las imágenes se guardan como URLs; los archivos actuales del catálogo están en `BookShopFrontend/Web/wwwroot/images/catalogo`.
 
-El entregable abarca RF01, RF02, RF05, RF06, RF07, RF08, RF09, RF11, RF12, RF14, RF15 y RF16. Las funcionalidades fuera de este alcance muestran un aviso de pendiente.
+El entregable incluye los recorridos de RF01, RF02, RF03 y RF05 a RF19. De RF04 se incluyen Administración, Reportes y la moderación de solicitudes; siguen pendientes las pantallas de mantenimiento del catálogo, configuración y Todas las reseñas. Esto no equivale a certificar cada condición de los diecinueve requisitos: por ejemplo, las imágenes todavía se manejan como URLs.
 
 ## Estructura
 
@@ -58,6 +58,10 @@ Los recursos REST delegan las reglas en Business, que utiliza los DAO para acced
 
 Las pantallas Blazor están en `Componentes`, con marcado `.razor`, lógica `.razor.cs` y estilos `.razor.css`. Los servicios de Web gestionan las llamadas REST, la sesión y los datos compartidos. El componente `Cargando` muestra la espera o el error mientras se consultan datos.
 
+Inicio ofrece Más populares y, con tres pedidos válidos, Para ti. Sus páginas calculan una consulta al abrir y reutilizan sus libros al ordenar o paginar. El detalle del libro permite publicar, votar y reportar reseñas; Cuenta reúne Mis reseñas, Mis pedidos y Mis solicitudes.
+
+El seguimiento avanza únicamente al pulsar Actualizar seguimiento: treinta segundos desde el pago para salir y sesenta desde la salida para entregar. Business guarda juntos la entrega y su premio, o la cancelación/devolución con la reposición y el cupón. Mis solicitudes permite editar o retirar pendientes; Moderación permite resolverlas. Las referencias modales muestran información sin acciones sobre el pedido o la reseña.
+
 DAO y Business conservan una interfaz y su implementación por responsabilidad. Business coordina las operaciones: cambiar una referencia y sus vetos, guardar un pedido y sus líneas, o registrar un voto y actualizar su contador. Los DAO ejecutan las consultas SQL y convierten sus resultados en entidades o DTO. Business confirma o revierte las operaciones que deben guardarse juntas mediante DBManager.
 
 En Web, la pantalla de compra conserva la preparación recibida del backend y utiliza su selección directamente. Los filtros guardados en la sesión son los mismos que utiliza la pantalla, para volver del detalle sin copiar su estado. Favorito y Deseado pertenecen al detalle del libro. Las reseñas y la confirmación del pedido muestran los DTO recibidos, sin modelos intermedios que repitan los mismos datos.
@@ -74,7 +78,7 @@ Las entidades de Model muestran encapsulamiento y relaciones entre objetos; los 
 
 El servidor atiende peticiones en distintos hilos. Carrito y Pedido utilizan `synchronized` sobre el mismo carrito para que cambiar cantidades y pagar no se ejecuten simultáneamente sobre sus datos. El mapa de carritos tiene un monitor para crear un único carrito por usuario. Las consultas de recomendaciones guardadas utilizan el monitor de su instancia. La prueba `CarritoConcurrenciaTest` ejecuta dos hilos sobre el mismo carrito y comprueba que se conservan las cantidades.
 
-Las transacciones de DBManager mantienen juntas las escrituras relacionadas en la base de datos. Los monitores protegen los objetos compartidos en memoria; ambas responsabilidades se mantienen separadas. No se incorporan semáforos ni tareas en segundo plano sin una necesidad concreta. JasperReports queda fuera de esta etapa.
+Las transacciones de DBManager mantienen juntas las escrituras relacionadas en la base de datos. Los monitores protegen los objetos compartidos en memoria; ambas responsabilidades se mantienen separadas. No se incorporan semáforos ni tareas en segundo plano sin una necesidad concreta. JasperReports genera el comprobante y los dos reportes a partir de plantillas JRXML, sin guardar los PDF en la base.
 
 ## Verificación local
 
@@ -88,3 +92,5 @@ Las pruebas aisladas no sustituyen la revisión del sistema desplegado.
 Con el backend y una base de desarrollo disponibles, `dotnet run --project BookShopFrontend/Pruebas -- --real` ejecuta pruebas integradas que crean un usuario, una dirección, una tarjeta ficticia y un pedido. Esos datos permanecen en la base.
 
 Las credenciales, claves, respaldos, archivos temporales y resultados de compilación se excluyen de Git.
+
+Los administradores acceden desde Cuenta a Administración y abren Reportes en un modal con pestañas Libros y Usuarios. El frontend controla ese acceso por rol. Los endpoints de documentos exigen sesión; el comprobante conserva la comprobación de propiedad del pedido, y los reportes no añaden una comprobación administrativa en Business. Las plantillas se compilan al generar cada PDF, sin caché adicional.

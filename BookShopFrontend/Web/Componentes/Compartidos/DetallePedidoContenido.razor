@@ -1,0 +1,160 @@
+@{
+    var resumen = Pedido.Resumen;
+    var direccion = Pedido.DireccionEnvio;
+    var metodo = Pedido.MetodoPago;
+}
+<header class="order-detail-heading text-center">
+    <h2>Pedido #@Pedido.Pedido.Id</h2>
+    <p class="text-body-secondary">Fecha de pago: @Pedido.Pedido.FechaPago.ToString("dd/MM/yyyy HH:mm")</p>
+    <span class="badge bookshop-status success">@Presentacion.EstadoPedido(Pedido.Pedido.Estado)</span>
+</header>
+<div class="row g-4 order-summary">
+    <section class="col-lg-8">
+        <div class="card bookshop-panel p-4 h-100">
+            <h2>Resumen del pedido</h2>
+            <div class="table-responsive">
+                <table class="table align-middle line-table">
+                    <thead>
+                        <tr>
+                            <th>Libro</th>
+                            <th>Cantidad</th>
+                            <th>Precio unitario</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var linea in resumen.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="line-book d-flex align-items-center gap-3">
+                                        <img
+                                            src="@(linea.Portada ?? "/images/book-placeholder.svg")"
+                                            alt="@(linea.Titulo)"
+                                            />
+                                        <strong>@linea.Titulo</strong>
+                                    </div>
+                                </td>
+                                <td>@linea.Cantidad</td>
+                                <td>
+                                    <div class="line-price d-flex flex-column align-items-start">
+                                        @if (linea.PorcentajeDescuento > 0)
+                                        {
+                                            <del>@Presentacion.Dinero(linea.PrecioOriginal)</del>
+                                        }
+                                        <strong>@Presentacion.Dinero(linea.PrecioUnitario)</strong>
+                                    </div>
+                                </td>
+                                <td>@Presentacion.Dinero(linea.Subtotal)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="order-data">
+                <h3>Dirección de envío</h3>
+                <strong>@direccion.Alias</strong>
+                <p>
+                    @direccion.Calle
+                    <br />
+                    @direccion.Distrito, @direccion.Ciudad
+                    <br />
+                    @direccion.Referencia
+                </p>
+                <h3>Método de pago</h3>
+                <p>
+                    @metodo.Alias · @metodo.Proveedor
+                    <br />
+                    @metodo.NumeroEnmascarado
+                    <br />
+                    @metodo.Titular
+                </p>
+                <p class="text-body-secondary small">Transacción: @Pedido.IdentificadorTransaccion</p>
+            </div>
+        </div>
+    </section>
+    <section class="col-lg-4">
+        <div class="card bookshop-panel p-4 order-amount h-100">
+            <h2>Importe pagado</h2>
+            <div class="summary-lines d-grid gap-3">
+                <div class="d-flex justify-content-between gap-3">
+                    <span>Productos</span>
+                    <span>@Presentacion.Dinero(resumen.SubtotalProductos)</span>
+                </div>
+                <div class="discount d-flex justify-content-between gap-3">
+                    <span>Descuentos de libros</span>
+                    <span>− @Presentacion.Dinero(resumen.DescuentoLibros)</span>
+                </div>
+                <div class="d-flex justify-content-between gap-3">
+                    <span>Subtotal</span>
+                    <span>@Presentacion.Dinero((resumen.SubtotalProductos - resumen.DescuentoLibros))</span>
+                </div>
+                <hr />
+                <div class="discount d-flex justify-content-between gap-3">
+                    <span>Cupón</span>
+                    <span>− @Presentacion.Dinero(resumen.DescuentoCupon)</span>
+                </div>
+                <div class="d-flex justify-content-between gap-3">
+                    <span>Envío</span>
+                    <span>@Presentacion.Dinero(resumen.CostoEnvio)</span>
+                </div>
+                <div class="total d-flex justify-content-between gap-3">
+                    <span>Total pagado</span>
+                    <span>@Presentacion.Dinero(resumen.Total)</span>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+@if (Pedido.Pedido.Estado is not ("CANCELADO" or "DEVUELTO"))
+{
+    <section class="card bookshop-panel p-4 tracking-panel">
+        <div class="section-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <h2>Seguimiento del pedido</h2>
+            <span class="text-body-secondary small">@Pedido.CodigoSeguimiento</span>
+        </div>
+        @if (Pedido.Pedido.Estado != "ENTREGADO")
+        {
+            <ol class="tracking-steps d-flex justify-content-between gap-2 list-unstyled">
+                <li class="complete d-flex flex-column align-items-center gap-2">
+                    <span>1</span>
+                    En almacén
+                </li>
+                <li class="d-flex flex-column align-items-center gap-2
+                    @(Pedido.Pedido.Estado == "EN_CAMINO" ? "complete" : "")">
+                    <span>2</span>
+                    En camino
+                </li>
+                <li class="d-flex flex-column align-items-center gap-2">
+                    <span>3</span>
+                    Entregado
+                </li>
+            </ol>
+        }
+        <div class="tracking-dates row g-3">
+            <div class="col-md-4 d-flex flex-column gap-1">
+                <span>Entrega estimada</span>
+                <strong>@(Pedido.FechaEntregaEstimada?.ToString("dd/MM/yyyy HH:mm") ?? "—")</strong>
+            </div>
+            @if (Pedido.FechaSalida is DateTime fechaSalida)
+            {
+                <div class="col-md-4 d-flex flex-column gap-1">
+                    <span>Fecha de salida</span>
+                    <strong>@fechaSalida.ToString("dd/MM/yyyy HH:mm")</strong>
+                </div>
+            }
+            @if (Pedido.FechaEntrega is DateTime fechaEntrega)
+            {
+                <div class="col-md-4 d-flex flex-column gap-1">
+                    <span>Fecha de entrega</span>
+                    <strong>@fechaEntrega.ToString("dd/MM/yyyy HH:mm")</strong>
+                </div>
+            }
+        </div>
+    </section>
+}
+
+
+@code {
+    [Parameter, EditorRequired] public DetallePedidoDTO Pedido { get; set; } = null!;
+}

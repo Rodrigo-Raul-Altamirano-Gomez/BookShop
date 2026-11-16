@@ -25,6 +25,9 @@ public partial class EstructuraPrincipal : IDisposable
     [
         ("Mi perfil", "user", "/mi-perfil"),
         ("Deseados y favoritos", "heart", "/deseados"),
+        ("Mis reseñas", "star", "/mis-resenas"),
+        ("Mis pedidos", "cart", "/mis-pedidos"),
+        ("Mis solicitudes", "follow", "/mis-solicitudes"),
         ("Mis seguimientos", "follow", "/mis-seguimientos"),
         ("Datos de compra", "card", "/datos-compra")
     ];

@@ -412,11 +412,10 @@ public class SolicitudBOImpl implements SolicitudBO {
         return consultarReporte(idActor, idSolicitud);
     }
 
-    private String validarComentario(String comentario) throws ValidacionException {
+    private String validarComentario(String comentario) {
         if (comentario == null || comentario.isBlank())
             return null;
-        String valido = comentario.strip();
-        return valido;
+        return comentario.strip();
     }
 
     private void comprobarAcceso(Solicitud solicitud, Usuario actor) throws NegocioException {

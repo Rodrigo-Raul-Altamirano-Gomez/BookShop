@@ -21,6 +21,7 @@ public class ReporteBOImpl implements ReporteBO {
     private final LibroDAO libroDAO;
     private final UsuarioDAO usuarioDAO;
     private final Clock reloj;
+    private final GeneradorPDF generador = new GeneradorPDF();
 
     public ReporteBOImpl() {
         this(new LibroDAOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")));
@@ -65,4 +66,15 @@ public class ReporteBOImpl implements ReporteBO {
             throw new PersistenciaException("No se pudieron preparar los datos de actividad.", e);
         }
     }
+
+    @Override
+    public byte[] generarLibrosPDF(ConsultaReporteLibrosDTO consulta) throws NegocioException {
+        return generador.ventasLibros(prepararLibros(consulta));
+    }
+
+    @Override
+    public byte[] generarUsuariosPDF(YearMonth mes, Integer cantidadMaxima) throws NegocioException {
+        return generador.usuarios(prepararUsuarios(mes, cantidadMaxima));
+    }
+
 }

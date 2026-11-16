@@ -99,14 +99,12 @@ class CompraBusinessTest {
         usuario.setEmail("ana@test");
         usuario.setCantidadPedidosEntregados(4);
         when(usuarios.leer(1)).thenReturn(usuario);
-        when(usuarios.leer(1)).thenReturn(usuario);
         when(usuarios.incrementarPedidosEntregados(1, "ana@test")).thenReturn(true);
         libro = new Libro();
         libro.setId(3);
         libro.setTitulo("Libro con centavos");
         libro.setPrecioBase(new BigDecimal("19.99"));
         libro.setStockFisico(20);
-        when(libros.leer(3)).thenReturn(libro);
         when(libros.leer(3)).thenReturn(libro);
         when(libros.descontarStock(eq(3), anyInt(), eq("ana@test"))).thenReturn(true);
         when(libros.reponerStock(eq(3), anyInt(), anyString())).thenReturn(true);
@@ -122,7 +120,6 @@ class CompraBusinessTest {
         direccion.setCiudad("Lima");
         direccion.setPredeterminada(true);
         when(direcciones.leer(1)).thenReturn(direccion);
-        when(direcciones.leer(1)).thenReturn(direccion);
         when(direcciones.listarPorUsuario(1, 1, 1)).thenReturn(new ResultadoPaginadoDTO<>(List.of(new DireccionEnvioDTO(1, "Casa", "Calle 1", "Distrito", "Lima", null, true)), 1, 1, 1));
         metodo = new TarjetaBancaria();
         metodo.setId(1);
@@ -134,7 +131,6 @@ class CompraBusinessTest {
         metodo.setFechaVencimiento(LocalDate.of(2030, 1, 1));
         metodo.setPredeterminado(true);
         when(metodos.leer(1)).thenReturn(metodo);
-        when(metodos.leer(1)).thenReturn(metodo);
         when(metodos.listarPorUsuario(1, 1, 1)).thenReturn(new ResultadoPaginadoDTO<>(List.of(metodo), 1, 1, 1));
         doAnswer(inv -> {
             Pedido pedido = inv.getArgument(0);
@@ -142,7 +138,6 @@ class CompraBusinessTest {
             registrado.set(pedido);
             return null;
         }).when(pedidos).insertar(any());
-        when(pedidos.leer(20)).thenAnswer(inv -> registrado.get());
         when(pedidos.leer(20)).thenAnswer(inv -> registrado.get());
         when(pedidos.actualizarEstado(any(), any())).thenReturn(true);
         when(pedidos.obtenerItemsDTO(20)).thenAnswer(inv -> registrado.get().getItems().stream().map(item -> new ItemDTO(item.getLibro().getId(), libro.getTitulo(), null, item.getCantidad(), item.getPrecioBase(), item.getPrecioUnitario(), item.getPorcentajeDescuento(), item.getSubTotal(), null, null)).toList());
@@ -368,6 +363,73 @@ class CompraBusinessTest {
         verify(cupones, times(1)).insertar(premio.capture());
         assertEquals(fecha.plusSeconds(90).plusDays(30), premio.getValue().getFechaFin());
         verify(pedidos, times(2)).actualizarEstado(any(), any());
+    }
+
+    @Test
+    void consultarAunqueHayaPasadoElPlazoNoAvanzaNiPremia() throws Exception {
+        carrito.agregar(1, 3, 2);
+        negocio.preparar(1);
+        negocio.pagar(1);
+        clearInvocations(pedidos, usuarios, cupones, conexion);
+        reloj.avanzar(500);
+        var propio = negocio.consultar(1, 20);
+        var referencia = negocio.consultarReferencia(20);
+        assertEquals(EstadoPedido.EN_ALMACEN, propio.pedido().estado());
+        assertEquals(EstadoPedido.EN_ALMACEN, referencia.pedido().estado());
+        assertNull(propio.fechaSalida());
+        assertNull(propio.fechaEntrega());
+        assertEquals(fecha.plusSeconds(90), propio.fechaEntregaEstimada());
+        assertTrue(propio.puedeCancelar());
+        assertFalse(referencia.puedeCancelar());
+        assertFalse(referencia.puedeSolicitarDevolucion());
+        verify(pedidos, never()).actualizarEstado(any(), any());
+        verify(usuarios, never()).incrementarPedidosEntregados(anyInt(), anyString());
+        verify(cupones, never()).insertar(any());
+        verify(conexion, never()).commit();
+    }
+
+    @Test
+    void actualizarTardeAvanzaUnaEtapaYCuentaElSiguientePlazoDesdeLaSalidaReal() throws Exception {
+        carrito.agregar(1, 3, 2);
+        negocio.preparar(1);
+        negocio.pagar(1);
+        reloj.avanzar(500);
+        assertEquals(EstadoPedido.EN_CAMINO, negocio.actualizarSeguimiento(1, 20).pedido().estado());
+        assertEquals(fecha.plusSeconds(500), registrado.get().getFechaSalida());
+        assertEquals(EstadoPedido.EN_CAMINO, negocio.actualizarSeguimiento(1, 20).pedido().estado());
+        reloj.avanzar(59);
+        assertEquals(EstadoPedido.EN_CAMINO, negocio.actualizarSeguimiento(1, 20).pedido().estado());
+        reloj.avanzar(1);
+        assertEquals(EstadoPedido.ENTREGADO, negocio.actualizarSeguimiento(1, 20).pedido().estado());
+        assertEquals(fecha.plusSeconds(560), registrado.get().getFechaEntrega());
+        verify(usuarios, times(1)).incrementarPedidosEntregados(1, "ana@test");
+        verify(pedidos, times(2)).actualizarEstado(any(), any());
+    }
+
+    @Test
+    void cancelacionConCuponLiberaUnaSolaVezYConservaLoCobrado() throws Exception {
+        Cupon cupon = new Cupon();
+        cupon.setId(9);
+        cupon.setUsuario(usuario);
+        cupon.setPorcentaje(new BigDecimal("10"));
+        cupon.setMontoMinimo(BigDecimal.ZERO);
+        cupon.setFechaInicio(fecha.minusDays(1));
+        cupon.setFechaFin(fecha.plusDays(30));
+        when(cupones.leer(9)).thenReturn(cupon);
+        when(cupones.consumir(9, 1, fecha, "ana@test")).thenReturn(true);
+        carrito.agregar(1, 3, 2);
+        negocio.preparar(1);
+        negocio.seleccionar(1, new SeleccionCompraDTO(1, 1, 9));
+        var pagado = negocio.pagar(1);
+        var cancelado = negocio.cancelar(1, 20, "Ya no lo necesito");
+        assertEquals(pagado.resumen().total(), cancelado.resumen().total());
+        assertEquals(new BigDecimal("32.28"), cancelado.pedido().total());
+        assertEquals(9, cancelado.resumen().idCupon());
+        assertThrows(ConflictoException.class, () -> negocio.cancelar(1, 20, "Repetir"));
+        assertEquals(EstadoPedido.CANCELADO, negocio.actualizarSeguimiento(1, 20).pedido().estado());
+        verify(libros, times(1)).reponerStock(3, 2, "ana@test");
+        verify(cupones, times(1)).liberar(9, fecha, "ana@test");
+        verify(usuarios, never()).incrementarPedidosEntregados(anyInt(), anyString());
     }
 
     @Test

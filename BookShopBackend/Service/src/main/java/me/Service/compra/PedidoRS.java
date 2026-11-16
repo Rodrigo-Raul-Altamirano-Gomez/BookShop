@@ -13,9 +13,13 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import me.Business.exceptions.NegocioException;
+import me.Model.dto.ResultadoPaginadoDTO;
+import me.Model.dto.compra.DatosCancelacionDTO;
 import me.Model.dto.compra.DetallePedidoDTO;
+import me.Model.dto.compra.FiltroPedidoDTO;
 import me.Model.dto.compra.PreparacionCompraDTO;
 import me.Model.dto.compra.SeleccionCompraDTO;
+import me.Model.dto.compra.TarjetaPedidoDTO;
 import me.Service.Servicios;
 import me.Service.Sesion;
 
@@ -30,10 +34,31 @@ public class PedidoRS {
     @Context
     private HttpServletRequest peticion;
 
+    @POST
+    @Path("busqueda")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public ResultadoPaginadoDTO<TarjetaPedidoDTO> listar(FiltroPedidoDTO filtro) throws NegocioException {
+        return servicios.getPedidoBO().listar(Sesion.exigirIdUsuario(peticion), filtro);
+    }
+
     @GET
     @Path("{id}")
     public DetallePedidoDTO consultar(@PathParam("id") int id) throws NegocioException {
         return servicios.getPedidoBO().consultar(Sesion.exigirIdUsuario(peticion), id);
+    }
+
+    @PUT
+    @Path("{id}/seguimiento")
+    public DetallePedidoDTO actualizarSeguimiento(@PathParam("id") int id) throws NegocioException {
+        return servicios.getPedidoBO().actualizarSeguimiento(Sesion.exigirIdUsuario(peticion), id);
+    }
+
+    @POST
+    @Path("{id}/cancelacion")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public DetallePedidoDTO cancelar(@PathParam("id") int id, DatosCancelacionDTO datos) throws NegocioException {
+        return servicios.getPedidoBO().cancelar(Sesion.exigirIdUsuario(peticion), id,
+            datos == null ? null : datos.motivo());
     }
 
     @POST

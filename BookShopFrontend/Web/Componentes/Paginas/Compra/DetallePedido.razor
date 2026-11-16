@@ -1,192 +1,78 @@
 @inherits Web.Componentes.Paginas.Cuenta.PaginaCuenta
 @page "/confirmacion/{Id:int}"
-<PageTitle>Pedido confirmado · BookShop</PageTitle>
-<Cargando EnCurso="@CargandoDatos" Error="@ErrorCarga">
+@page "/pedidos/{Id:int}"
+<PageTitle>Detalle del pedido · BookShop</PageTitle>
+<Cargando EnCurso="@CargandoDatos" Error="@ErrorCarga" AlReintentar="ActualizarDatos">
 <div class="container py-4">
     <nav aria-label="Ruta de navegación">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/">Inicio</a></li>
-            <li class="breadcrumb-item"><a href="/catalogo">Catálogo</a></li>
-            <li class="breadcrumb-item active"
-                aria-current="page">Pedido #@Id</li>
+            <li class="breadcrumb-item"><a href="/mis-pedidos">Mis pedidos</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Pedido #@Id</li>
         </ol>
     </nav>
     @if (Sesion.Usuario is null)
     {
-        <div class="empty-state card border-0 text-center align-items-center py-5">
-            <h1>Detalle del pedido</h1>
-            <button class="btn btn-primary" @onclick="Sesion.MostrarAcceso">Iniciar sesión</button>
-        </div>
+        <h1>Detalle del pedido</h1>
+        <button class="btn btn-primary" @onclick="Sesion.MostrarAcceso">Iniciar sesión</button>
     }
-    else if (pedido is null)
+    else if (pedido is not null)
     {
-        <div class="empty-state card border-0 text-center align-items-center py-5">
-            <h1>No encontramos este pedido</h1>
-            <a class="btn btn-secondary" href="/catalogo">Volver al catálogo</a>
-        </div>
-    }
-    else
-    {
-        var resumen = pedido.Resumen;
-        var direccion = pedido.DireccionEnvio;
-        var metodo = pedido.MetodoPago;
-        <header class="order-detail-heading text-center">
-            <span class="success-circle d-inline-flex align-items-center justify-content-center">
-                <Icono Nombre="check" />
-            </span>
-            <h1>Tu pedido ha sido registrado</h1>
-            <p>Gracias por elegir BookShop.</p>
-            <p class="text-body-secondary">Fecha de pago: @pedido.Pedido.FechaPago.ToString("dd/MM/yyyy HH:mm")</p>
-            <span class="badge bookshop-status success">@EstadoPedido</span>
-        </header>
-        <div class="row g-4 order-summary">
-            <section class="col-lg-8">
-                <div class="card bookshop-panel p-4 h-100">
-                    <h2>Resumen del pedido</h2>
-                    <div class="table-responsive">
-                        <table class="table align-middle line-table">
-                            <thead>
-                                <tr>
-                                    <th>Libro</th>
-                                    <th>Cantidad</th>
-                                    <th>Precio unitario</th>
-                                    <th>Subtotal</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var linea in resumen.Items)
-                                {
-                                    <tr>
-                                        <td>
-                                            <div class="line-book d-flex align-items-center gap-3">
-                                                <img
-                                                    src="@(linea.Portada ?? "/images/book-placeholder.svg")"
-                                                    alt="@(linea.Titulo)"
-                                                    />
-                                                <strong>@linea.Titulo</strong>
-                                            </div>
-                                        </td>
-                                        <td>@linea.Cantidad</td>
-                                        <td>
-                                            <div class="line-price d-flex flex-column align-items-start">
-                                                @if (linea.PorcentajeDescuento > 0)
-                                                {
-                                                    <del>@Presentacion.Dinero(linea.PrecioOriginal)</del>
-                                                }
-                                                <strong>@Presentacion.Dinero(linea.PrecioUnitario)</strong>
-                                            </div>
-                                        </td>
-                                        <td>@Presentacion.Dinero(linea.Subtotal)</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="order-data">
-                        <h3>Dirección de envío</h3>
-                        <strong>@direccion.Alias</strong>
-                        <p>
-                            @direccion.Calle
-                            <br />
-                            @direccion.Distrito, @direccion.Ciudad
-                            <br />
-                            @direccion.Referencia
-                        </p>
-                        <h3>Método de pago</h3>
-                        <p>
-                            @metodo.Alias · @metodo.Proveedor
-                            <br />
-                            @metodo.NumeroEnmascarado
-                            <br />
-                            @metodo.Titular
-                        </p>
-                        <p class="text-body-secondary small">Transacción: @pedido.IdentificadorTransaccion</p>
-                    </div>
-                </div>
-            </section>
-            <section class="col-lg-4">
-                <div class="card bookshop-panel p-4 order-amount h-100">
-                    <h2>Importe pagado</h2>
-                    <div class="summary-lines d-grid gap-3">
-                        <div class="d-flex justify-content-between gap-3">
-                            <span>Productos</span>
-                            <span>@Presentacion.Dinero(resumen.SubtotalProductos)</span>
-                        </div>
-                        <div class="discount d-flex justify-content-between gap-3">
-                            <span>Descuentos de libros</span>
-                            <span>− @Presentacion.Dinero(resumen.DescuentoLibros)</span>
-                        </div>
-                        <div class="d-flex justify-content-between gap-3">
-                            <span>Subtotal</span>
-                            <span>@Presentacion.Dinero((resumen.SubtotalProductos - resumen.DescuentoLibros))</span>
-                        </div>
-                        <hr />
-                        <div class="discount d-flex justify-content-between gap-3">
-                            <span>Cupón</span>
-                            <span>− @Presentacion.Dinero(resumen.DescuentoCupon)</span>
-                        </div>
-                        <div class="d-flex justify-content-between gap-3">
-                            <span>Envío</span>
-                            <span>@Presentacion.Dinero(resumen.CostoEnvio)</span>
-                        </div>
-                        <div class="total d-flex justify-content-between gap-3">
-                            <span>Total pagado</span>
-                            <span>@Presentacion.Dinero(resumen.Total)</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div>
-        @if (pedido.Pedido.Estado is not ("CANCELADO" or "DEVUELTO"))
+        @if (Navegacion.Uri.Contains("/confirmacion/"))
         {
-            <section class="card bookshop-panel p-4 tracking-panel">
-                <div class="section-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
-                    <h2>Seguimiento del pedido</h2>
-                    <span class="text-body-secondary small">@pedido.CodigoSeguimiento</span>
-                </div>
-                @if (pedido.Pedido.Estado != "ENTREGADO")
-                {
-                    <ol class="tracking-steps d-flex justify-content-between gap-2 list-unstyled">
-                        <li class="complete d-flex flex-column align-items-center gap-2">
-                            <span>1</span>
-                            En almacén
-                        </li>
-                        <li class="d-flex flex-column align-items-center gap-2
-                            @(pedido.Pedido.Estado == "EN_CAMINO" ? "complete" : "")">
-                            <span>2</span>
-                            En camino
-                        </li>
-                        <li class="d-flex flex-column align-items-center gap-2">
-                            <span>3</span>
-                            Entregado
-                        </li>
-                    </ol>
-                }
-                <div class="tracking-dates row g-3">
-                    <div class="col-md-4 d-flex flex-column gap-1">
-                        <span>Entrega estimada</span>
-                        <strong>@(pedido.FechaEntregaEstimada?.ToString("dd/MM/yyyy HH:mm") ?? "—")</strong>
-                    </div>
-                    @if (pedido.FechaSalida is DateTime fechaSalida)
-                    {
-                        <div class="col-md-4 d-flex flex-column gap-1">
-                            <span>Fecha de salida</span>
-                            <strong>@fechaSalida.ToString("dd/MM/yyyy HH:mm")</strong>
-                        </div>
-                    }
-                    @if (pedido.FechaEntrega is DateTime fechaEntrega)
-                    {
-                        <div class="col-md-4 d-flex flex-column gap-1">
-                            <span>Fecha de entrega</span>
-                            <strong>@fechaEntrega.ToString("dd/MM/yyyy HH:mm")</strong>
-                        </div>
-                    }
-                </div>
-            </section>
+            <h1 class="text-center">Tu pedido ha sido registrado</h1>
+            <p class="text-center">Gracias por elegir BookShop.</p>
         }
-
-        <div class="text-center mt-4"><a class="btn btn-primary" href="/catalogo">Seguir explorando</a></div>
+        else
+        {
+            <h1 class="visually-hidden">Detalle del pedido</h1>
+        }
+        <DetallePedidoContenido Pedido="pedido" />
+        <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">
+            @if (pedido.Pedido.Estado is "EN_ALMACEN" or "EN_CAMINO")
+            {
+                <button class="btn btn-primary" @onclick="ActualizarSeguimiento" disabled="@procesando">Actualizar seguimiento</button>
+            }
+            @if (pedido.PuedeCancelar)
+            {
+                <button class="btn btn-outline-danger" @onclick="AbrirCancelacion" disabled="@procesando">Cancelar pedido</button>
+            }
+            @if (pedido.PuedeSolicitarDevolucion)
+            {
+                <button class="btn btn-secondary" @onclick="AbrirDevolucion" disabled="@procesando">Solicitar devolución</button>
+            }
+            <button class="btn btn-secondary" @onclick="DescargarComprobante" disabled="@generandoComprobante">
+                @(generandoComprobante ? "Generando comprobante…" : "Descargar comprobante (PDF)")
+            </button>
+            <a class="btn btn-secondary" href="/mis-pedidos">Mis pedidos</a>
+            <a class="btn btn-primary" href="/catalogo">Seguir explorando</a>
+        </div>
+        @if (errorComprobante is not null)
+        {
+            <p class="alert alert-danger py-2 mt-3 text-center" role="alert">@errorComprobante</p>
+        }
+    }
+    @if (formularioCancelacion)
+    {
+        <Modal Titulo="Cancelar pedido" AlCerrar="() => formularioCancelacion = false" Ocupado="@procesando">
+            <form @onsubmit="CancelarPedido" @onsubmit:preventDefault>
+                <label class="form-label d-block mb-3">Motivo
+                    <textarea class="form-control" rows="4" @bind="cancelacion.Motivo" required></textarea>
+                </label>
+                @if (errorCancelacion is not null)
+                {
+                    <p class="alert alert-danger" role="alert">@errorCancelacion</p>
+                }
+                <div class="modal-footer px-0 pb-0">
+                    <button class="btn btn-secondary" type="button" @onclick="() => formularioCancelacion = false" disabled="@procesando">Volver</button>
+                    <button class="btn btn-danger" type="submit" disabled="@procesando">Cancelar pedido</button>
+                </div>
+            </form>
+        </Modal>
+    }
+    @if (formularioDevolucion)
+    {
+        <FormularioDevolucion AlGuardar="EnviarDevolucion" AlCerrar="() => formularioDevolucion = false" />
     }
 </div>
-
 </Cargando>

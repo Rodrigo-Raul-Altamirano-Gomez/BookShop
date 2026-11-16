@@ -1,0 +1,54 @@
+<Modal Titulo="@Titulo" AlCerrar="AlCerrar" Ocupado="@guardando">
+    <form @onsubmit="Guardar" @onsubmit:preventDefault>
+        <label class="form-label d-block mb-3">Puntuación
+            <select class="form-select" @bind="borrador.Puntuacion" required>
+                @for (int estrellas = 1; estrellas <= 5; estrellas++)
+                {
+                    <option value="@estrellas">@estrellas estrellas</option>
+                }
+            </select>
+        </label>
+        <label class="form-label d-block mb-3">Comentario
+            <textarea class="form-control" rows="5" @bind="borrador.Comentario" required></textarea>
+        </label>
+        @if (error is not null)
+        {
+            <p class="alert alert-danger" role="alert">@error</p>
+        }
+        <div class="modal-footer px-0 pb-0">
+            <button class="btn btn-secondary" type="button" @onclick="AlCerrar" disabled="@guardando">Cancelar</button>
+            <button class="btn btn-primary" type="submit" disabled="@guardando">Guardar reseña</button>
+        </div>
+    </form>
+</Modal>
+
+@code {
+    [Parameter] public string Titulo { get; set; } = "Escribir reseña";
+    [Parameter] public ResenaDTO? Valor { get; set; }
+    [Parameter] public EventCallback<DatosResenaDTO> AlGuardar { get; set; }
+    [Parameter] public EventCallback AlCerrar { get; set; }
+    private DatosResenaDTO borrador = new();
+    private bool guardando;
+    private string? error;
+
+    protected override void OnInitialized()
+    {
+        if (Valor is not null)
+            borrador = new DatosResenaDTO { Puntuacion = Valor.Puntuacion, Comentario = Valor.Comentario };
+    }
+
+    private async Task Guardar()
+    {
+        guardando = true;
+        error = null;
+        try
+        {
+            await AlGuardar.InvokeAsync(borrador);
+        }
+        catch (InvalidOperationException e)
+        {
+            error = e.Message;
+        }
+        guardando = false;
+    }
+}

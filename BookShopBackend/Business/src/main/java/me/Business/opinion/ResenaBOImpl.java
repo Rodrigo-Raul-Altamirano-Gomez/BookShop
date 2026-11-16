@@ -71,16 +71,11 @@ public class ResenaBOImpl implements ResenaBO {
     @Override
     public int publicar(int idActor, int idLibro, DatosResenaDTO datos) throws NegocioException {
         try {
-            Usuario actor = usuarioDAO.leer(idActor);
             DatosResenaDTO validos = validarDatos(datos);
-            Libro libro = libroDAO.leer(idLibro);
-            if (libro == null || !libro.isActivo())
-                throw new RecursoNoEncontradoException("El libro no esta disponible.");
-            if (resenaDAO.existePublicada(idActor, idLibro))
-                throw new ConflictoException("Ya tiene una resena publicada para este libro.");
-            if (!pedidoDAO.haCompradoLibro(idActor, idLibro))
-                throw new AccesoDenegadoException("Necesita una compra confirmada que no este cancelada ni" +
-                    " devuelta.");
+            verificarPuedePublicar(idActor, idLibro);
+            Usuario actor = usuarioDAO.leer(idActor);
+            Libro libro = new Libro();
+            libro.setId(idLibro);
             Resena resena = new Resena();
             resena.setLibro(libro);
             resena.setUsuario(actor);
@@ -94,22 +89,6 @@ public class ResenaBOImpl implements ResenaBO {
             return resena.getId();
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo publicar la resena.", e);
-        }
-    }
-
-    @Override
-    public DatosResenaDTO obtenerParaEditar(int idActor, int id) throws NegocioException {
-        try {
-            Resena resena = resenaDAO.leer(id);
-            if (resena == null || resena.isEliminado())
-                throw new RecursoNoEncontradoException("La resena no esta disponible.");
-            if (idActor != resena.getUsuario().getId())
-                throw new AccesoDenegadoException("La reseña pertenece a otro usuario.");
-            if (!resena.isActivo())
-                throw new ConflictoException("La resena no esta publicada.");
-            return new DatosResenaDTO(resena.getPuntuacion(), resena.getComentario());
-        } catch (SQLException e) {
-            throw new PersistenciaException("No se pudo consultar la resena propia.", e);
         }
     }
 

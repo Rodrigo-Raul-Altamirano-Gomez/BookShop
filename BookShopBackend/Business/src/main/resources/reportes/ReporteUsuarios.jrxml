@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- RF19 - Usuarios ordenados por el gasto de un mes (JasperReports 7.0.6).
+     Paleta y tipografía del proyecto BookShop (wwwroot/app.css): verde #0B453A, texto #172332, gris #66717E.
+     Ábrelo en Jaspersoft Studio 7.x y pulsa Compile para generar el .jasper en esta misma carpeta. -->
+<jasperReport name="ReporteUsuarios" language="java" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="782" leftMargin="30" rightMargin="30" topMargin="30" bottomMargin="24" whenNoDataType="AllSectionsNoDetail" uuid="ff39cbb2-5654-4acf-b8f7-3bf548bbe831">
+	<property name="net.sf.jasperreports.export.pdf.metadata.title" value="Reporte de usuarios por gasto - BookShop"/>
+	<property name="net.sf.jasperreports.export.pdf.metadata.author" value="BookShop"/>
+	<property name="net.sf.jasperreports.export.pdf.metadata.subject" value="Usuarios ordenados por monto gastado en el mes"/>
+	<style name="Normal" default="true" forecolor="#172332" fontName="DejaVu Sans" fontSize="8.0" bold="false" italic="false" underline="false" strikeThrough="false"/>
+	<style name="Negrita" style="Normal" bold="true"/>
+	<style name="Marca" forecolor="#0B453A" fontName="DejaVu Serif" fontSize="20.0" bold="true" italic="false" underline="false" strikeThrough="false"/>
+	<style name="Subtitulo" forecolor="#0B453A" fontName="DejaVu Sans" fontSize="11.0" bold="true" italic="false" underline="false" strikeThrough="false"/>
+	<style name="Seccion" forecolor="#66717E" fontName="DejaVu Sans" fontSize="7.5" bold="true" italic="false" underline="false" strikeThrough="false"/>
+	<style name="Cabecera" mode="Opaque" forecolor="#FFFFFF" backcolor="#0B453A" fontName="DejaVu Sans" fontSize="8.0" bold="true" italic="false" underline="false" strikeThrough="false"/>
+	<style name="Bloque" mode="Opaque" forecolor="#172332" backcolor="#EEF3EC" fontName="DejaVu Sans" fontSize="9.0" bold="false" italic="false" underline="false" strikeThrough="false"/>
+	<style name="Fila" mode="Opaque" forecolor="#172332" backcolor="#FFFFFF" fontName="DejaVu Sans" fontSize="8.0" bold="false" italic="false" underline="false" strikeThrough="false">
+		<conditionalStyle backcolor="#FAFBF7">
+			<conditionExpression><![CDATA[$V{REPORT_COUNT} % 2 == 0]]></conditionExpression>
+		</conditionalStyle>
+	</style>
+	<style name="FilaNegrita" style="Fila" bold="true"/>
+	<style name="Descuento" forecolor="#B43D3D" fontName="DejaVu Sans" fontSize="9.0" bold="false" italic="false" underline="false" strikeThrough="false"/>
+	<style name="Total" forecolor="#07352D" fontName="DejaVu Sans" fontSize="11.0" bold="true" italic="false" underline="false" strikeThrough="false"/>
+	<style name="FilaTotal" mode="Opaque" forecolor="#07352D" backcolor="#EEF3EC" fontName="DejaVu Sans" fontSize="9.0" bold="true" italic="false" underline="false" strikeThrough="false"/>
+	<style name="Pie" forecolor="#66717E" fontName="DejaVu Sans" fontSize="7.5" bold="false" italic="false" underline="false" strikeThrough="false"/>
+	<parameter name="mes" class="java.lang.String"/>
+	<parameter name="limite" class="java.lang.String"/>
+	<parameter name="cantidadResultados" class="java.lang.Integer"/>
+	<parameter name="fechaGeneracion" class="java.lang.String"/>
+	<field name="posicion" class="java.lang.Integer"/>
+	<field name="nombre" class="java.lang.String"/>
+	<field name="email" class="java.lang.String"/>
+	<field name="estado" class="java.lang.String"/>
+	<field name="totalGastado" class="java.math.BigDecimal"/>
+	<field name="tiempoUso" class="java.lang.String"/>
+	<field name="categoria" class="java.lang.String"/>
+	<field name="autor" class="java.lang.String"/>
+	<field name="editorial" class="java.lang.String"/>
+	<variable name="totalGasto" calculation="Sum" class="java.math.BigDecimal">
+		<expression><![CDATA[$F{totalGastado}]]></expression>
+	</variable>
+	<title height="78">
+		<element kind="staticText" uuid="3450605d-c751-4857-a0e1-aaf6a47930ca" x="0" y="0" width="250" height="26" style="Marca">
+			<text><![CDATA[BookShop]]></text>
+		</element>
+		<element kind="staticText" uuid="df28c3e9-7187-47cb-9b4d-a4a7242abcf3" x="250" y="4" width="532" height="20" hTextAlign="Right" style="Subtitulo">
+			<text><![CDATA[REPORTE DE USUARIOS POR MONTO GASTADO]]></text>
+		</element>
+		<element kind="line" uuid="2c997219-c496-47ad-9b09-cf6f2bbf9253" x="0" y="32" width="782" height="1" forecolor="#0B453A"/>
+		<element kind="textField" uuid="fa1ee90a-944e-46fe-8520-4f233e5049da" x="0" y="40" width="390" height="14" style="Negrita">
+			<expression><![CDATA["Mes: " + $P{mes}]]></expression>
+		</element>
+		<element kind="textField" uuid="a5d21558-b725-47a3-9cb5-ef14775f0df8" x="390" y="40" width="392" height="14" hTextAlign="Right" style="Normal">
+			<expression><![CDATA["Resultados: " + $P{cantidadResultados} + "  ·  Límite: " + $P{limite}]]></expression>
+		</element>
+		<element kind="staticText" uuid="a4e38a95-917f-4712-8aa6-d2004f9c9ea8" x="0" y="56" width="782" height="14" style="Pie">
+			<text><![CDATA[Gasto válido del mes, envío incluido. Incluye usuarios sin compras. Excluye compras canceladas y devueltas.]]></text>
+		</element>
+	</title>
+	<columnHeader height="26">
+		<element kind="staticText" uuid="67c275bb-f7bc-414e-86f6-3386ef523372" x="0" y="0" width="28" height="26" hTextAlign="Center" vTextAlign="Middle" style="Cabecera">
+			<text><![CDATA[N.°]]></text>
+		</element>
+		<element kind="staticText" uuid="12a21763-45e2-4785-80d0-df6ec2591ed7" x="28" y="0" width="150" height="26" vTextAlign="Middle" style="Cabecera">
+			<text><![CDATA[Usuario]]></text>
+			<box leftPadding="5"/>
+		</element>
+		<element kind="staticText" uuid="94c61932-0aa9-474e-89b4-7c8a22f5aa07" x="178" y="0" width="54" height="26" hTextAlign="Center" vTextAlign="Middle" style="Cabecera">
+			<text><![CDATA[Estado]]></text>
+		</element>
+		<element kind="staticText" uuid="ccc37640-40d2-4bb2-8ab3-f1be3b7704cb" x="232" y="0" width="80" height="26" hTextAlign="Right" vTextAlign="Middle" style="Cabecera">
+			<text><![CDATA[Gasto del mes]]></text>
+			<box rightPadding="5"/>
+		</element>
+		<element kind="staticText" uuid="dc96d580-846c-4530-9831-f1c0a7dff606" x="312" y="0" width="70" height="26" hTextAlign="Center" vTextAlign="Middle" style="Cabecera">
+			<text><![CDATA[Tiempo de uso]]></text>
+		</element>
+		<element kind="staticText" uuid="4b3a38f8-f4ea-4970-a86e-b1e837719375" x="382" y="0" width="134" height="26" vTextAlign="Middle" style="Cabecera">
+			<text><![CDATA[Categoría más comprada]]></text>
+			<box leftPadding="5"/>
+		</element>
+		<element kind="staticText" uuid="2b270c1d-4338-4cef-9f3b-a1448e4e303f" x="516" y="0" width="133" height="26" vTextAlign="Middle" style="Cabecera">
+			<text><![CDATA[Autor más comprado]]></text>
+			<box leftPadding="5"/>
+		</element>
+		<element kind="staticText" uuid="4a376fc1-a808-4e9d-9bdc-d9b0071f3b88" x="649" y="0" width="133" height="26" vTextAlign="Middle" style="Cabecera">
+			<text><![CDATA[Editorial más comprada]]></text>
+			<box leftPadding="5"/>
+		</element>
+	</columnHeader>
+	<detail>
+		<band height="29" splitType="Prevent">
+			<element kind="textField" uuid="3fc4f6e4-f850-4879-9dfd-5d10c4cfa377" stretchType="ContainerHeight" x="0" y="0" width="28" height="28" hTextAlign="Center" vTextAlign="Middle" style="Fila">
+				<expression><![CDATA[$F{posicion}]]></expression>
+			</element>
+			<element kind="textField" uuid="d73a8b63-cfc2-42c8-822e-437ad25f81e5" textAdjust="StretchHeight" x="28" y="0" width="150" height="28" vTextAlign="Middle" style="Fila">
+				<expression><![CDATA[$F{nombre} + "\n" + $F{email}]]></expression>
+				<box topPadding="3" leftPadding="5" bottomPadding="3"/>
+			</element>
+			<element kind="textField" uuid="fccace21-77a9-4e87-9058-ffc96e66512d" stretchType="ContainerHeight" x="178" y="0" width="54" height="28" hTextAlign="Center" vTextAlign="Middle" style="Fila">
+				<expression><![CDATA[$F{estado}]]></expression>
+			</element>
+			<element kind="textField" uuid="0c393119-09af-4bc3-866f-3cb1f7fccf72" stretchType="ContainerHeight" x="232" y="0" width="80" height="28" pattern="S/ #,##0.00" hTextAlign="Right" vTextAlign="Middle" style="FilaNegrita">
+				<expression><![CDATA[$F{totalGastado}]]></expression>
+				<box rightPadding="5"/>
+			</element>
+			<element kind="textField" uuid="15e82ab6-8b7b-491b-90eb-a0dc17935282" stretchType="ContainerHeight" x="312" y="0" width="70" height="28" hTextAlign="Center" vTextAlign="Middle" style="Fila">
+				<expression><![CDATA[$F{tiempoUso}]]></expression>
+			</element>
+			<element kind="textField" textAdjust="StretchHeight" uuid="0705edf5-7d5e-43c9-9841-10c80330b362" stretchType="ContainerHeight" x="382" y="0" width="134" height="28" vTextAlign="Middle" style="Fila">
+				<expression><![CDATA[$F{categoria}]]></expression>
+				<box leftPadding="5"/>
+			</element>
+			<element kind="textField" textAdjust="StretchHeight" uuid="f214bfad-3d56-4f9c-8bf8-cf8face977e9" stretchType="ContainerHeight" x="516" y="0" width="133" height="28" vTextAlign="Middle" style="Fila">
+				<expression><![CDATA[$F{autor}]]></expression>
+				<box leftPadding="5"/>
+			</element>
+			<element kind="textField" textAdjust="StretchHeight" uuid="40a0e563-4c3f-4dd0-9c23-01d2faf53e27" stretchType="ContainerHeight" x="649" y="0" width="133" height="28" vTextAlign="Middle" style="Fila">
+				<expression><![CDATA[$F{editorial}]]></expression>
+				<box leftPadding="5"/>
+			</element>
+			<element kind="line" uuid="ad296537-4c57-439b-9f0d-3bbf392481a4" positionType="Float" x="0" y="28" width="782" height="1" forecolor="#DFE5E0"/>
+		</band>
+	</detail>
+	<pageFooter height="24">
+		<element kind="line" uuid="9d19c0da-74f2-47c5-a5f8-6ab472586ed4" x="0" y="2" width="782" height="1" forecolor="#DFE5E0"/>
+		<element kind="textField" uuid="57c29395-f221-4887-9ea0-0e9bf47c8160" x="0" y="8" width="592" height="14" style="Pie">
+			<expression><![CDATA["BookShop · Reporte generado el " + $P{fechaGeneracion}]]></expression>
+		</element>
+		<element kind="textField" uuid="62cd54d9-7ef7-45cd-8392-52b8ba4a4343" x="592" y="8" width="140" height="14" hTextAlign="Right" style="Pie">
+			<expression><![CDATA["Página " + $V{PAGE_NUMBER} + " de"]]></expression>
+		</element>
+		<element kind="textField" uuid="1fc5164f-c437-4471-99d7-dfd9d7883971" evaluationTime="Report" x="732" y="8" width="50" height="14" style="Pie">
+			<expression><![CDATA[" " + $V{PAGE_NUMBER}]]></expression>
+		</element>
+	</pageFooter>
+	<summary height="50">
+		<element kind="staticText" uuid="aab088a1-fdfb-4e8a-8f35-b51ff09aa697" x="0" y="6" width="232" height="22" vTextAlign="Middle" style="FilaTotal">
+			<text><![CDATA[TOTAL GASTADO EN EL MES]]></text>
+			<box leftPadding="5"/>
+		</element>
+		<element kind="textField" uuid="dc241e15-46f8-407c-b9f9-f663b28be322" x="232" y="6" width="80" height="22" pattern="S/ #,##0.00" hTextAlign="Right" vTextAlign="Middle" style="FilaTotal">
+			<expression><![CDATA[$V{totalGasto} == null ? java.math.BigDecimal.ZERO : $V{totalGasto}]]></expression>
+			<box rightPadding="5"/>
+		</element>
+		<element kind="staticText" uuid="dd608202-2706-428f-96fe-c5908302795e" x="312" y="6" width="470" height="22" style="FilaTotal">
+			<text><![CDATA[]]></text>
+		</element>
+		<element kind="staticText" uuid="d507bd98-e67e-4dc0-9a16-3694d2f64870" x="0" y="32" width="782" height="14" style="Pie">
+			<printWhenExpression><![CDATA[$P{cantidadResultados} == 0]]></printWhenExpression>
+			<text><![CDATA[No hay usuarios para el mes seleccionado.]]></text>
+		</element>
+	</summary>
+</jasperReport>

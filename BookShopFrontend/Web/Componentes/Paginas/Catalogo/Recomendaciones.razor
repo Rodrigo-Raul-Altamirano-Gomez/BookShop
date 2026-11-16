@@ -1,0 +1,45 @@
+@page "/populares"
+@page "/para-ti"
+<PageTitle>@Titulo · BookShop</PageTitle>
+<div class="container py-4">
+    <h1>@Titulo</h1>
+    @if (personal && Sesion.Usuario is null)
+    {
+        <p>Inicia sesión para consultar tus recomendaciones.</p>
+        <button class="btn btn-primary" @onclick="Sesion.MostrarAcceso">Iniciar sesión</button>
+    }
+    else
+    {
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 my-4">
+            <span>@resultados.TotalResultados libros</span>
+            <label class="d-flex align-items-center gap-2">Ordenar por:
+                <select class="form-select" @bind="consulta.Orden" @bind:after="Ordenar" disabled="@(cargando || idConsulta is null)">
+                    <option value="RECOMENDADOS_PRIMERO">Recomendados primero</option>
+                    @foreach (var orden in ExploradorCatalogo.OpcionesOrden)
+                    {
+                        @if (orden.Key != "MAS_VENDIDOS")
+                        {
+                            <option value="@orden.Key">@orden.Value</option>
+                        }
+                    }
+                </select>
+            </label>
+        </div>
+        <Cargando EnCurso="@cargando" Error="@error" AlReintentar="() => idConsulta is null ? Abrir() : Consultar()">
+            @if (resultados.Items.Count == 0)
+            {
+                <p>No hay recomendaciones disponibles.</p>
+            }
+            else
+            {
+                <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
+                    @foreach (var libro in resultados.Items)
+                    {
+                        <TarjetaLibro Libro="Presentacion.Libro(libro)" />
+                    }
+                </div>
+                <Paginacion Pagina="consulta.Pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
+            }
+        </Cargando>
+    }
+</div>

@@ -70,4 +70,15 @@ class DatosDocumentoBOTest {
         assertNull(dto.comprador().imagen());
         assertEquals(LocalDateTime.of(2026, 10, 6, 23, 30), dto.fechaGeneracion());
     }
+
+    @Test
+    void comprobanteDePedidoAjenoSeRechazaAntesDeGenerarPDF() throws Exception {
+        PedidoBO pedidos = mock(PedidoBO.class);
+        UsuarioDAO usuarios = mock(UsuarioDAO.class);
+        when(usuarios.leer(1)).thenReturn(usuario(1, Rol.CLIENTE));
+        when(pedidos.consultar(1, 40)).thenThrow(new AccesoDenegadoException("El pedido pertenece a otra cuenta."));
+        var bo = new ComprobanteBOImpl(pedidos, usuarios, reloj);
+        assertThrows(AccesoDenegadoException.class, () -> bo.generarPDF(1, 40));
+        verify(pedidos).consultar(1, 40);
+    }
 }

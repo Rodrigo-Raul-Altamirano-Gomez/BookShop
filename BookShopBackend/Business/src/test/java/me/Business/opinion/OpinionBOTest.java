@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import me.Business.exceptions.AccesoDenegadoException;
 import me.Business.exceptions.ConflictoException;
-import me.Business.exceptions.CuentaInactivaException;
 import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.RecursoNoEncontradoException;
 import me.Business.exceptions.ValidacionException;
@@ -33,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.eq;
@@ -84,14 +84,12 @@ class OpinionBOTest {
         libro.setId(5);
         when(libros.leer(5)).thenReturn(libro);
         when(pedidos.haCompradoLibro(1, 5)).thenReturn(true);
-        when(pedidos.haCompradoLibro(1, 5)).thenReturn(true);
         resena = new Resena();
         resena.setId(7);
         resena.setLibro(libro);
         resena.setUsuario(usuario);
         resena.setPuntuacion(4);
         resena.setComentario("Anterior");
-        when(resenas.leer(7)).thenReturn(resena);
         when(resenas.leer(7)).thenReturn(resena);
         bo = new ResenaBOImpl(resenas, libros, pedidos, usuarios, reloj);
     }
@@ -100,9 +98,13 @@ class OpinionBOTest {
     void verificaElegibilidadAntesDelFormularioSinEscribir() throws Exception {
         bo.verificarPuedePublicar(1, 5);
         verify(resenas, never()).insertar(any());
-        verify(resenas, never()).insertar(any());
         when(pedidos.haCompradoLibro(1, 5)).thenReturn(false);
         assertThrows(AccesoDenegadoException.class, () -> bo.verificarPuedePublicar(1, 5));
+        assertThrows(AccesoDenegadoException.class, () -> bo.publicar(1, 5, new DatosResenaDTO(3, "Texto")));
+        when(pedidos.haCompradoLibro(1, 5)).thenReturn(true);
+        when(resenas.existePublicada(1, 5)).thenReturn(true);
+        assertThrows(ConflictoException.class, () -> bo.verificarPuedePublicar(1, 5));
+        verify(resenas, never()).insertar(any());
     }
 
     @Test
@@ -115,29 +117,29 @@ class OpinionBOTest {
             ((Resena) llamada.getArgument(0)).setId(8);
             return null;
         }).when(resenas).insertar(any());
-        try (MockedStatic<TransactionContext> contexto = mockStatic(TransactionContext.class)) {
-            assertEquals(8, bo.publicar(1, 5, new DatosResenaDTO(5, " Nueva ")));
-            ArgumentCaptor<Resena> captor = ArgumentCaptor.forClass(Resena.class);
-            verify(resenas).insertar(captor.capture());
-            assertEquals("Nueva", captor.getValue().getComentario());
-            assertEquals(LocalDateTime.of(2026, 10, 6, 23, 30), captor.getValue().getFecha());
-            verify(resenas, never()).modificar(any());
-        }
+        clearInvocations(libros, resenas, pedidos);
+        assertEquals(8, bo.publicar(1, 5, new DatosResenaDTO(5, " Nueva ")));
+        verify(libros).leer(5);
+        verify(resenas).existePublicada(1, 5);
+        verify(pedidos).haCompradoLibro(1, 5);
+        ArgumentCaptor<Resena> captor = ArgumentCaptor.forClass(Resena.class);
+        verify(resenas).insertar(captor.capture());
+        assertEquals("Nueva", captor.getValue().getComentario());
+        assertEquals(LocalDateTime.of(2026, 10, 6, 23, 30), captor.getValue().getFecha());
+        verify(resenas, never()).modificar(any());
     }
 
     @Test
-    void falloAlInsertarPublicacionRevierteYConservaCausa() throws Exception {
+    void falloAlInsertarPublicacionConservaCausa() throws Exception {
         SQLException fallo = new SQLException("Conexion perdida", "08001");
         doThrow(fallo).when(resenas).insertar(any());
-        try (MockedStatic<TransactionContext> contexto = mockStatic(TransactionContext.class)) {
-            PersistenciaException error = assertThrows(PersistenciaException.class, () -> bo.publicar(1, 5, new DatosResenaDTO(3, "Texto")));
-            assertSame(fallo, error.getCause());
-            contexto.verify(TransactionContext::commit, never());
-        }
+        PersistenciaException error = assertThrows(PersistenciaException.class, () -> bo.publicar(1, 5, new DatosResenaDTO(3, "Texto")));
+        assertSame(fallo, error.getCause());
     }
 
     @Test
     void edicionPropiaNoVuelveAExigirCompraDespuesDeCancelacion() throws Exception {
+        when(pedidos.haCompradoLibro(1, 5)).thenReturn(false);
         bo.modificar(1, 7, new DatosResenaDTO(2, "Editado"));
         verify(resenas).modificar(resena);
         verifyNoInteractions(pedidos);
@@ -150,6 +152,30 @@ class OpinionBOTest {
         assertThrows(AccesoDenegadoException.class, () -> bo.modificar(2, 7, new DatosResenaDTO(5, "Ajena")));
         assertThrows(AccesoDenegadoException.class, () -> bo.modificar(3, 7, new DatosResenaDTO(5, "Admin")));
         verify(resenas, never()).modificar(any());
+    }
+
+    @Test
+    void noPuedeModificarUnaResenaRetiradaONoPublicada() throws Exception {
+        resena.setActivo(false);
+        assertThrows(ConflictoException.class, () -> bo.modificar(1, 7, new DatosResenaDTO(5, "Editado")));
+        resena.setActivo(true);
+        resena.setEliminado(true);
+        assertThrows(RecursoNoEncontradoException.class, () -> bo.modificar(1, 7, new DatosResenaDTO(5, "Editado")));
+        when(resenas.leer(7)).thenReturn(null);
+        assertThrows(RecursoNoEncontradoException.class, () -> bo.modificar(1, 7, new DatosResenaDTO(5, "Editado")));
+        verify(resenas, never()).modificar(any());
+    }
+
+    @Test
+    void eliminarPropiaCompruebaElDuenoAntesDeRetirarla() throws Exception {
+        when(resenas.eliminar(7, "cliente@test")).thenReturn(true);
+        try (MockedStatic<TransactionContext> contexto = mockStatic(TransactionContext.class)) {
+            assertThrows(AccesoDenegadoException.class, () -> bo.eliminarPropia(2, 7));
+            verify(resenas, never()).eliminar(eq(7), any());
+            bo.eliminarPropia(1, 7);
+            verify(resenas).eliminar(7, "cliente@test");
+            contexto.verify(TransactionContext::commit);
+        }
     }
 
     @Test
@@ -195,5 +221,17 @@ class OpinionBOTest {
         resena.setEliminado(true);
         assertThrows(RecursoNoEncontradoException.class, () -> votosBO.cambiarVoto(1, 7, true));
         verifyNoInteractions(votos);
+    }
+
+    @Test
+    void retirarVotoRepetidoNoVuelveARestarDelContador() throws Exception {
+        VotoUtilBOImpl votosBO = new VotoUtilBOImpl(votos, resenas, libros, usuarios);
+        when(votos.cambiarVoto(1, 7, false, "cliente@test")).thenReturn(true, false);
+        try (MockedStatic<TransactionContext> contexto = mockStatic(TransactionContext.class)) {
+            assertTrue(votosBO.cambiarVoto(1, 7, false));
+            assertFalse(votosBO.cambiarVoto(1, 7, false));
+            verify(resenas, times(1)).cambiarCantidadVotos(7, -1, "cliente@test");
+            contexto.verify(TransactionContext::commit, times(2));
+        }
     }
 }

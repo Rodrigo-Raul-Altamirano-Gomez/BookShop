@@ -32,6 +32,8 @@ public partial class DetalleLibro : IDisposable
     private int cantidad = 1, idAnterior, paginaResenas = 1;
     private bool sinopsisCompleta, fichaExpandida;
     private bool Deseado, Favorito;
+    private bool formularioResena;
+    private int? resenaAReportar;
     private List<ResenaDTO> resenas = [];
     private double Promedio => Libro?.Valoracion.Promedio ?? 0;
     private string EstiloPromedio => $"--relleno:{(Promedio * 20).ToString(CultureInfo.InvariantCulture)}%";
@@ -54,6 +56,8 @@ public partial class DetalleLibro : IDisposable
         {
             cantidad = paginaResenas = 1;
             sinopsisCompleta = fichaExpandida = false;
+            formularioResena = false;
+            resenaAReportar = null;
 
             var detalle = await Api.Get<DetalleLibroDTO>($"libros/{Id}");
             detalleLibro = detalle;
@@ -201,5 +205,76 @@ public partial class DetalleLibro : IDisposable
             errorCarga = e.Message;
         }
         cargando = false;
+    }
+
+    private async Task EscribirResena()
+    {
+        if (!Sesion.RequerirAcceso())
+            return;
+        procesando = true;
+        try
+        {
+            await Api.Get<object>($"resenas/libro/{Id}/publicacion/permitida");
+            formularioResena = true;
+        }
+        catch (InvalidOperationException e)
+        {
+            Sesion.Avisar(e.Message);
+        }
+        procesando = false;
+    }
+
+    private async Task PublicarResena(DatosResenaDTO datos)
+    {
+        await Api.Post<int>($"resenas/libro/{Id}", datos);
+        formularioResena = false;
+        paginaResenas = 1;
+        await CargarResenas();
+        Libro!.Valoracion = await Api.Get<ValoracionLibroDTO>($"resenas/libro/{Id}/valoracion");
+    }
+
+    private async Task AlternarVoto(ResenaDTO resena)
+    {
+        if (!Sesion.RequerirAcceso())
+            return;
+        procesando = true;
+        try
+        {
+            string ruta = $"resenas/{resena.Id}/voto";
+            if (resena.VotoUtilPropio)
+                await Api.Delete<bool>(ruta);
+            else
+                await Api.Put<bool>(ruta);
+            await CargarResenas();
+        }
+        catch (InvalidOperationException e)
+        {
+            Sesion.Avisar(e.Message);
+        }
+        procesando = false;
+    }
+
+    private async Task ReportarResena(int idResena)
+    {
+        if (!Sesion.RequerirAcceso())
+            return;
+        procesando = true;
+        try
+        {
+            await Api.Get<object>($"solicitudes/reportes/resena/{idResena}/permitido");
+            resenaAReportar = idResena;
+        }
+        catch (InvalidOperationException e)
+        {
+            Sesion.Avisar(e.Message);
+        }
+        procesando = false;
+    }
+
+    private async Task EnviarReporte(DatosReporteResenaDTO datos)
+    {
+        await Api.Post<object>($"solicitudes/reportes/resena/{resenaAReportar}", datos);
+        resenaAReportar = null;
+        Sesion.Avisar("Reporte enviado para moderación.");
     }
 }

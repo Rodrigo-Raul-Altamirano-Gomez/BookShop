@@ -38,6 +38,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -51,6 +52,7 @@ import me.DBManager.TransactionContext;
 import me.Model.dto.catalogo.*;
 import me.Model.dto.solicitud.FiltroSolicitudDTO;
 import me.Model.dto.compra.FiltroPedidoDTO;
+import me.Model.dto.compra.OrdenPedido;
 import me.Model.dto.usuario.TipoSeguimiento;
 import me.Model.entities.catalogo.*;
 import me.Model.entities.opinion.*;
@@ -293,6 +295,23 @@ class ConsultasIntegracionTest {
         assertEquals(anterior.getId(), segundaPagina.items().getFirst().pedido().id());
         assertEquals(List.of("https://example.test/primero.png"), segundaPagina.items().getFirst().portadas());
         assertTrue(pedidos.listarPorUsuario(2, FiltroPedidoDTO.porDefecto()).items().isEmpty());
+
+        anterior.setEstado(EstadoPedido.CANCELADO);
+        anterior.setUsuarioActualizacion("ana@test");
+        reciente.setEstado(EstadoPedido.EN_CAMINO);
+        reciente.setUsuarioActualizacion("ana@test");
+        assertTrue(pedidos.actualizarEstado(anterior, EstadoPedido.EN_ALMACEN));
+        assertTrue(pedidos.actualizarEstado(reciente, EstadoPedido.EN_ALMACEN));
+        TransactionContext.commit();
+        TransactionContext.close();
+        var estados = List.of(EstadoPedido.CANCELADO, EstadoPedido.EN_CAMINO);
+        var ascendente = pedidos.listarPorUsuario(1, new FiltroPedidoDTO(estados, OrdenPedido.TOTAL_ASCENDENTE, 1, 1));
+        var descendente = pedidos.listarPorUsuario(1, new FiltroPedidoDTO(estados, OrdenPedido.TOTAL_DESCENDENTE, 1, 1));
+        assertEquals(2, ascendente.totalResultados());
+        assertEquals(anterior.getId(), ascendente.items().getFirst().pedido().id());
+        assertEquals(reciente.getId(), descendente.items().getFirst().pedido().id());
+        assertEquals(1, pedidos.listarPorUsuario(1,
+            new FiltroPedidoDTO(List.of(EstadoPedido.CANCELADO), OrdenPedido.TOTAL_ASCENDENTE, 1, 10)).totalResultados());
     }
 
     @Test
@@ -350,8 +369,27 @@ class ConsultasIntegracionTest {
         assertEquals(1, dao.leer(resena.getId()).getCantidadVotosUtiles());
         assertTrue(votos.cambiarVoto(2, resena.getId(), false, "sin@test"));
         dao.cambiarCantidadVotos(resena.getId(), -1, "sin@test");
+        assertFalse(votos.cambiarVoto(2, resena.getId(), false, "sin@test"));
         TransactionContext.commit();
         assertEquals(0, dao.leer(resena.getId()).getCantidadVotosUtiles());
+        assertTrue(votos.cambiarVoto(2, resena.getId(), true, "sin@test"));
+        dao.cambiarCantidadVotos(resena.getId(), 1, "sin@test");
+        TransactionContext.commit();
+        assertEquals(1, dao.leer(resena.getId()).getCantidadVotosUtiles());
+        var votada = dao.listar(libro.getId(), 0, 2, ConsultaResenasDTO.porDefecto()).items().getFirst();
+        assertTrue(votada.votoUtilPropio());
+        try (var sentencia = conexion.prepareStatement("SELECT COUNT(*) FROM VOTO_UTIL WHERE id_usuario=2 AND id_resena=?")) {
+            sentencia.setInt(1, resena.getId());
+            try (var resultado = sentencia.executeQuery()) {
+                resultado.next();
+                assertEquals(1, resultado.getInt(1));
+            }
+        }
+        assertTrue(dao.eliminar(resena.getId(), "ana@test"));
+        TransactionContext.commit();
+        assertEquals(0, dao.listar(libro.getId(), 0, 2, ConsultaResenasDTO.porDefecto()).totalResultados());
+        assertEquals(0, dao.obtenerValoracion(libro.getId()).cantidadResenas());
+        assertTrue(dao.listarValoraciones().isEmpty());
     }
 
     @Test
@@ -417,11 +455,46 @@ class ConsultasIntegracionTest {
         resena.setPuntuacion(5);
         resena.setComentario("Bueno");
         resena.setUsuarioCreacion("ana@test");
-        new ResenaDAOImpl().insertar(resena);
+        ResenaDAO dao = new ResenaDAOImpl();
+        dao.insertar(resena);
         var detalle = new LibroDAOImpl().obtenerDetalle(libro.getId(), 1, FECHA);
-        assertTrue(new ResenaDAOImpl().existePublicada(1, libro.getId()));
+        assertTrue(dao.existePublicada(1, libro.getId()));
         assertEquals(1L, detalle.valoracion().cantidadCincoEstrellas());
         assertEquals(5.0, detalle.valoracion().promedio());
+
+        assertTrue(dao.eliminar(resena.getId(), "ana@test"));
+        TransactionContext.commit();
+        TransactionContext.close();
+        assertFalse(dao.existePublicada(1, libro.getId()));
+        Resena nueva = new Resena(0, 3, "Segunda publicación", libro, usuario);
+        nueva.setUsuarioCreacion("ana@test");
+        dao.insertar(nueva);
+        assertNotEquals(resena.getId(), nueva.getId());
+        assertTrue(dao.leer(resena.getId()).isEliminado());
+        assertTrue(dao.existePublicada(1, libro.getId()));
+        assertEquals(nueva.getId(), dao.listar(libro.getId(), 0, 1, ConsultaResenasDTO.porDefecto()).items().getFirst().id());
+        assertEquals(1, dao.obtenerValoracion(libro.getId()).cantidadResenas());
+    }
+
+    @Test
+    void compraParaPublicarResenaDependeDelEstadoActualDelPedido() throws Exception {
+        Libro libro = registrarLibro("Compra válida", "Español", "50.00");
+        Pedido pedido = registrarPedido(libro);
+        PedidoDAO dao = new PedidoDAOImpl();
+        assertTrue(dao.haCompradoLibro(1, libro.getId()));
+        assertFalse(dao.haCompradoLibro(2, libro.getId()));
+        EstadoPedido anterior = EstadoPedido.EN_ALMACEN;
+        for (EstadoPedido estado : List.of(EstadoPedido.EN_CAMINO, EstadoPedido.ENTREGADO,
+            EstadoPedido.CANCELADO, EstadoPedido.DEVUELTO)) {
+            pedido.setEstado(estado);
+            pedido.setUsuarioActualizacion("ana@test");
+            assertTrue(dao.actualizarEstado(pedido, anterior));
+            TransactionContext.commit();
+            TransactionContext.close();
+            assertEquals(estado == EstadoPedido.EN_CAMINO || estado == EstadoPedido.ENTREGADO,
+                dao.haCompradoLibro(1, libro.getId()), estado.toString());
+            anterior = estado;
+        }
     }
 
     @Test
@@ -578,6 +651,73 @@ class ConsultasIntegracionTest {
     }
 
     @Test
+    void rollbackDeCancelacionConservaPedidoStockYCuponConsumido() throws Exception {
+        Libro libro = registrarLibro("Cancelación", "Español", "50.00");
+        Pedido pedido = registrarPedido(libro);
+        PedidoDAO pedidos = new PedidoDAOImpl();
+        LibroDAO libros = new LibroDAOImpl();
+        CuponDAO cupones = new CuponDAOImpl();
+        Cupon cupon = new Cupon(0, pedido.getUsuario(), BigDecimal.TEN, BigDecimal.ZERO,
+            FECHA.minusDays(1), FECHA.plusDays(30));
+        cupon.setUsuarioCreacion("ana@test");
+        cupones.insertar(cupon);
+        assertTrue(cupones.consumir(cupon.getId(), 1, FECHA, "ana@test"));
+        assertTrue(libros.descontarStock(libro.getId(), 2, "ana@test"));
+        try (var sentencia = TransactionContext.getConnection().prepareStatement(
+            "UPDATE PEDIDO SET id_cupon=?,porcentaje_cupon=10,descuento_cupon=6,total=54 WHERE id=?")) {
+            sentencia.setInt(1, cupon.getId());
+            sentencia.setInt(2, pedido.getId());
+            sentencia.executeUpdate();
+        }
+        TransactionContext.commit();
+        TransactionContext.close();
+
+        pedido.setEstado(EstadoPedido.CANCELADO);
+        pedido.setUsuarioActualizacion("ana@test");
+        assertTrue(pedidos.actualizarEstado(pedido, EstadoPedido.EN_ALMACEN));
+        assertTrue(libros.reponerStock(libro.getId(), 2, "ana@test"));
+        assertTrue(cupones.liberar(cupon.getId(), FECHA, "ana@test"));
+        TransactionContext.rollback();
+        TransactionContext.close();
+        assertEquals(EstadoPedido.EN_ALMACEN, pedidos.leer(pedido.getId()).getEstado());
+        assertEquals(8, libros.leer(libro.getId()).getStockFisico());
+        assertTrue(cupones.leer(cupon.getId()).isConsumido());
+        assertEquals(0, new BigDecimal("54.00").compareTo(pedidos.leer(pedido.getId()).getTotal()));
+    }
+
+    @Test
+    void rollbackDePrimeraEntregaRevierteEstadoContadorYPremio() throws Exception {
+        Pedido pedido = registrarPedido(registrarLibro("Entrega", "Español", "50.00"));
+        PedidoDAO pedidos = new PedidoDAOImpl();
+        UsuarioDAO usuarios = new UsuarioDAOImpl();
+        CuponDAO cupones = new CuponDAOImpl();
+        pedido.setEstado(EstadoPedido.EN_CAMINO);
+        pedido.setFechaSalida(FECHA.plusSeconds(30));
+        pedido.setUsuarioActualizacion("ana@test");
+        assertTrue(pedidos.actualizarEstado(pedido, EstadoPedido.EN_ALMACEN));
+        try (var sentencia = TransactionContext.getConnection().createStatement()) {
+            sentencia.executeUpdate("UPDATE USUARIO SET cantidad_pedidos_entregados=4 WHERE id=1");
+        }
+        TransactionContext.commit();
+        TransactionContext.close();
+
+        pedido.setEstado(EstadoPedido.ENTREGADO);
+        pedido.setFechaEntrega(FECHA.plusSeconds(90));
+        assertTrue(pedidos.actualizarEstado(pedido, EstadoPedido.EN_CAMINO));
+        assertTrue(usuarios.incrementarPedidosEntregados(1, "ana@test"));
+        Cupon cupon = new Cupon(0, pedido.getUsuario(), BigDecimal.TEN, new BigDecimal("100"),
+            pedido.getFechaEntrega(), pedido.getFechaEntrega().plusDays(30));
+        cupon.setUsuarioCreacion("ana@test");
+        cupones.insertar(cupon);
+        TransactionContext.rollback();
+        TransactionContext.close();
+        assertEquals(EstadoPedido.EN_CAMINO, pedidos.leer(pedido.getId()).getEstado());
+        assertNull(pedidos.leer(pedido.getId()).getFechaEntrega());
+        assertEquals(4, usuarios.leer(1).getCantidadPedidosEntregados());
+        assertNull(cupones.leer(cupon.getId()));
+    }
+
+    @Test
     void vigenciasYSolapamientoIncluyenLimitesYSinEscriturasAlLeer() throws Exception {
         Libro libro = registrarLibro("Libro", "Español", "50.00");
         Descuento descuento = new Descuento();
@@ -638,7 +778,7 @@ class ConsultasIntegracionTest {
     }
 
     @Test
-    void recomendacionesNoCarganImagenesYTarjetasConservanElOrdenSolicitado() throws Exception {
+    void recomendacionesLeenLibrosActivosYTarjetasConservanElOrdenSolicitado() throws Exception {
         Libro primero = registrarLibro("Primero", "Español", "50.00");
         Libro segundo = registrarLibro("Segundo", "Español", "60.00");
         LibroDAO dao = new LibroDAOImpl();
@@ -652,6 +792,30 @@ class ConsultasIntegracionTest {
         dao.cambiarVetoDirecto(segundo.getId(), true, "admin");
         assertEquals(1, dao.listarTarjetasPorIds(List.of(segundo.getId(), primero.getId()), FECHA).size());
         assertTrue(dao.listarTarjetasPorIds(List.of(), FECHA).isEmpty());
+    }
+
+    @Test
+    void historialDeRecomendacionesIncluyeLosTresEstadosValidosSinContarCanceladosNiDevueltos() throws Exception {
+        Libro libro = registrarLibro("Historial", "Español", "50.00");
+        PedidoDAO dao = new PedidoDAOImpl();
+        List<Integer> idsPedidos = new ArrayList<>();
+        for (EstadoPedido estado : List.of(EstadoPedido.EN_ALMACEN, EstadoPedido.EN_CAMINO,
+            EstadoPedido.ENTREGADO, EstadoPedido.CANCELADO, EstadoPedido.DEVUELTO)) {
+            Pedido pedido = registrarPedido(libro);
+            idsPedidos.add(pedido.getId());
+            if (estado != EstadoPedido.EN_ALMACEN) {
+                pedido.setEstado(estado);
+                pedido.setUsuarioActualizacion("ana@test");
+                assertTrue(dao.actualizarEstado(pedido, EstadoPedido.EN_ALMACEN));
+                TransactionContext.commit();
+                TransactionContext.close();
+            }
+        }
+
+        var ventas = dao.listarDetalleVentas(null);
+        assertEquals(idsPedidos.subList(0, 3), ventas.stream().map(venta -> venta.idPedido()).toList());
+        assertEquals(List.of(2, 2, 2), ventas.stream().map(venta -> venta.cantidad()).toList());
+        assertTrue(dao.listarDetalleVentas(FECHA.toLocalDate().plusDays(1)).isEmpty());
     }
 
     @Test

@@ -186,6 +186,7 @@
         <section class="reviews-panel card bookshop-panel" id="resenas">
             <div class="section-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
                 <h2>Reseñas</h2>
+                <button class="btn btn-secondary" @onclick="EscribirResena" disabled="@procesando">Escribir reseña</button>
             </div>
             <div class="reviews-layout row g-4">
                 <div class="reviews-summary col-12 col-lg-3">
@@ -240,7 +241,13 @@
                                 </span>
                                 <p>@resena.Comentario</p>
                             </div>
-                            <span class="text-body-secondary">@resena.CantidadVotosUtiles votos útiles</span>
+                            <div class="d-flex flex-column align-items-end gap-2">
+                                <span class="text-body-secondary">@resena.CantidadVotosUtiles votos útiles</span>
+                                <button class="btn btn-outline-secondary btn-sm" @onclick="() => AlternarVoto(resena)" disabled="@procesando">
+                                    @(resena.VotoUtilPropio ? "Quitar voto útil" : "Voto útil")
+                                </button>
+                                <button class="btn btn-link btn-sm" @onclick="() => ReportarResena(resena.Id)" disabled="@procesando">Reportar</button>
+                            </div>
                         </article>
                     }
                     <Paginacion
@@ -253,4 +260,12 @@
         </section>
     }
 </div>
+@if (formularioResena)
+{
+    <FormularioResena AlGuardar="PublicarResena" AlCerrar="() => formularioResena = false" />
+}
+@if (resenaAReportar is not null)
+{
+    <FormularioReporteResena AlGuardar="EnviarReporte" AlCerrar="() => resenaAReportar = null" />
+}
 </Cargando>

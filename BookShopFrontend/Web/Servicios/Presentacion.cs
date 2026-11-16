@@ -8,6 +8,16 @@ public static class Presentacion
     public static string Dinero(decimal valor) =>
         "S/ " + valor.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("es-PE"));
 
+    public static string EstadoPedido(string estado) => estado switch
+    {
+        "EN_ALMACEN" => "En almacén",
+        "EN_CAMINO" => "En camino",
+        "ENTREGADO" => "Entregado",
+        "CANCELADO" => "Cancelado",
+        "DEVUELTO" => "Devuelto",
+        _ => estado
+    };
+
     public static Libro Libro(TarjetaLibroDTO dto) => new()
     {
         Id = dto.Id,

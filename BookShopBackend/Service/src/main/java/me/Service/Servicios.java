@@ -16,10 +16,18 @@ import me.Business.compra.CuponBO;
 import me.Business.compra.CuponBOImpl;
 import me.Business.compra.PedidoBO;
 import me.Business.compra.PedidoBOImpl;
+import me.Business.documentos.ComprobanteBO;
+import me.Business.documentos.ComprobanteBOImpl;
+import me.Business.documentos.ReporteBO;
+import me.Business.documentos.ReporteBOImpl;
 import me.Business.opinion.ResenaBO;
 import me.Business.opinion.ResenaBOImpl;
+import me.Business.opinion.VotoUtilBO;
+import me.Business.opinion.VotoUtilBOImpl;
 import me.Business.recomendacion.RecomendacionBO;
 import me.Business.recomendacion.RecomendacionBOImpl;
+import me.Business.solicitud.SolicitudBO;
+import me.Business.solicitud.SolicitudBOImpl;
 import me.Business.usuario.DireccionEnvioBO;
 import me.Business.usuario.DireccionEnvioBOImpl;
 import me.Business.usuario.LibroGuardadoBO;
@@ -49,7 +57,11 @@ public class Servicios {
     private final CuponBO cuponBO;
     private final PedidoBO pedidoBO;
     private final ResenaBO resenaBO;
+    private final VotoUtilBO votoUtilBO;
+    private final SolicitudBO solicitudBO;
     private final RecomendacionBO recomendacionBO;
+    private final ComprobanteBO comprobanteBO;
+    private final ReporteBO reporteBO;
 
     public Servicios() {
         usuarioBO = new UsuarioBOImpl();
@@ -65,7 +77,19 @@ public class Servicios {
         cuponBO = new CuponBOImpl();
         pedidoBO = new PedidoBOImpl();
         resenaBO = new ResenaBOImpl();
+        votoUtilBO = new VotoUtilBOImpl();
+        solicitudBO = new SolicitudBOImpl();
         recomendacionBO = new RecomendacionBOImpl();
+        comprobanteBO = new ComprobanteBOImpl();
+        reporteBO = new ReporteBOImpl();
+    }
+
+    public ComprobanteBO getComprobanteBO() {
+        return comprobanteBO;
+    }
+
+    public ReporteBO getReporteBO() {
+        return reporteBO;
     }
 
     public UsuarioBO getUsuarioBO() {
@@ -118,6 +142,14 @@ public class Servicios {
 
     public ResenaBO getResenaBO() {
         return resenaBO;
+    }
+
+    public VotoUtilBO getVotoUtilBO() {
+        return votoUtilBO;
+    }
+
+    public SolicitudBO getSolicitudBO() {
+        return solicitudBO;
     }
 
     public RecomendacionBO getRecomendacionBO() {
