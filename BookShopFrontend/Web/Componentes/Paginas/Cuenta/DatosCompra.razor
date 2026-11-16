@@ -40,21 +40,21 @@
                 class="nav-link bookshop-tab @(Pestana == "direcciones" ? "active" : "")"
                 role="tab"
                 aria-selected="@(Pestana == "direcciones")"
-                @onclick="MostrarDirecciones">
+                @onclick='() => MostrarPestana("direcciones")'>
                 Direcciones
             </button>
             <button
                 class="nav-link bookshop-tab @(Pestana == "metodos" ? "active" : "")"
                 role="tab"
                 aria-selected="@(Pestana == "metodos")"
-                @onclick="MostrarMetodos">
+                @onclick='() => MostrarPestana("metodos")'>
                 Métodos de pago
             </button>
             <button
                 class="nav-link bookshop-tab @(Pestana == "cupones" ? "active" : "")"
                 role="tab"
                 aria-selected="@(Pestana == "cupones")"
-                @onclick="MostrarCupones">
+                @onclick='() => MostrarPestana("cupones")'>
                 Cupones
             </button>
         </div>

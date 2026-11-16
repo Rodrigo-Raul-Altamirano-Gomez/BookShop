@@ -66,8 +66,8 @@
                                             <button
                                                 class="selection-card btn btn-outline-secondary w-100 h-100
                                                     d-flex gap-3 text-start
-                                                    @(direccionId == direccion.Id ? "selected" : "")"
-                                                @onclick="() => Seleccionar(direccion.Id, metodoId, cuponId)" disabled="@procesando">
+                                                    @(Seleccion.IdDireccionEnvio == direccion.Id ? "selected" : "")"
+                                                @onclick="() => Seleccionar(direccion.Id, Seleccion.IdMetodoPago, Seleccion.IdCupon)" disabled="@procesando">
                                                 <span class="radio-mark">
                                                 </span>
                                                 <div>
@@ -139,9 +139,9 @@
                                             <button
                                                 class="selection-card btn btn-outline-secondary w-100 h-100
                                                     d-flex gap-3 text-start
-                                                    @(metodoId == metodo.Id ? "selected" : "")"
+                                                    @(Seleccion.IdMetodoPago == metodo.Id ? "selected" : "")"
                                                 disabled="@(!metodo.Vigente || procesando)"
-                                                @onclick="() => Seleccionar(direccionId, metodo.Id, cuponId)">
+                                                @onclick="() => Seleccionar(Seleccion.IdDireccionEnvio, metodo.Id, Seleccion.IdCupon)">
                                                 <span class="radio-mark">
                                                 </span>
                                                 <div>
@@ -210,8 +210,8 @@
                                         <button
                                             class="selection-card btn btn-outline-secondary w-100 h-100
                                                 d-flex gap-3 text-start
-                                                @(cuponId == cupon?.Id ? "selected" : "")"
-                                            @onclick="() => Seleccionar(direccionId, metodoId, cupon?.Id)" disabled="@procesando">
+                                                @(Seleccion.IdCupon == (cupon?.Id ?? 0) ? "selected" : "")"
+                                            @onclick="() => Seleccionar(Seleccion.IdDireccionEnvio, Seleccion.IdMetodoPago, cupon?.Id ?? 0)" disabled="@procesando">
                                             <span class="radio-mark">
                                             </span>
                                             <div>
@@ -320,7 +320,7 @@
                     }
                     <button
                         class="btn btn-primary"
-                        disabled="@(Compras.Preparacion?.PuedePagar != true || procesando)"
+                        disabled="@(preparacion?.PuedePagar != true || procesando)"
                         @onclick="Confirmar">
                         @(procesando ? "Procesando…" : "Confirmar y pagar")
                     </button>

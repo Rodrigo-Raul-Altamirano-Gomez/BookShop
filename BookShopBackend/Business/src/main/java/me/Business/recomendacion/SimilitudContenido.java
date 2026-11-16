@@ -1,13 +1,11 @@
 package me.Business.recomendacion;
 
 import java.text.Normalizer;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import me.Model.entities.catalogo.Libro;
 
@@ -18,8 +16,7 @@ final class SimilitudContenido {
 
     static Map<Integer, Double> puntuar(Libro referencia, List<Libro> libros) {
         Map<Integer, Double> puntos = new HashMap<>();
-        Set<String> palabrasReferencia = separarPalabras(referencia.getTitulo() + " " +
-            Objects.toString(referencia.getSinopsis(), ""));
+        Set<String> palabrasReferencia = separarPalabras(referencia.getTitulo() + " " + referencia.getSinopsis());
         for (Libro libro : libros) {
             if (libro.getId() == referencia.getId())
                 continue;
@@ -30,13 +27,12 @@ final class SimilitudContenido {
                 valor += 3;
             if (libro.getEditorial().getId() == referencia.getEditorial().getId())
                 valor += 2;
-            if (libro.getProveedor() != null && libro.getProveedor().equalsIgnoreCase(referencia.getProveedor()))
+            if (libro.getProveedor().equalsIgnoreCase(referencia.getProveedor()))
                 valor += 1;
             if (libro.getSaga() != null && !libro.getSaga().isBlank() &&
                 libro.getSaga().equalsIgnoreCase(referencia.getSaga()))
                 valor += 3;
-            Set<String> palabras = separarPalabras(libro.getTitulo() + " " +
-                Objects.toString(libro.getSinopsis(), ""));
+            Set<String> palabras = separarPalabras(libro.getTitulo() + " " + libro.getSinopsis());
             Set<String> union = new HashSet<>(palabrasReferencia);
             union.addAll(palabras);
             palabras.retainAll(palabrasReferencia);
@@ -57,9 +53,8 @@ final class SimilitudContenido {
     private static Set<String> separarPalabras(String texto) {
         String limpio = Normalizer.normalize(texto.toLowerCase(Locale.ROOT),
             Normalizer.Form.NFD).replaceAll("\\p{M}", "");
-        Set<String> palabras = new HashSet<>(Arrays.asList(limpio.split("[^\\p{L}\\p{N}]+")));
         Set<String> significativas = new HashSet<>();
-        for (String palabra : palabras) {
+        for (String palabra : limpio.split("[^\\p{L}\\p{N}]+")) {
             if (palabra.length() >= 3)
                 significativas.add(palabra);
         }

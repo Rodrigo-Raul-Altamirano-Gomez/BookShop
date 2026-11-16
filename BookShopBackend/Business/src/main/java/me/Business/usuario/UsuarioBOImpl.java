@@ -10,7 +10,6 @@ import java.util.Locale;
 import me.Business.exceptions.ConflictoException;
 import me.Business.exceptions.CredencialesInvalidasException;
 import me.Business.exceptions.NegocioException;
-import me.Business.exceptions.CuentaInactivaException;
 import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.RecursoNoEncontradoException;
 import me.Business.exceptions.ValidacionException;
@@ -43,25 +42,19 @@ public class UsuarioBOImpl implements UsuarioBO {
     public AccesoUsuarioDTO registrar(RegistroUsuarioDTO datos) throws NegocioException {
         if (datos == null)
             throw new ValidacionException("registro", "Los datos del registro son obligatorios.");
-        String nombre = datos.nombre() == null ? "" : datos.nombre().strip();
-        if (nombre.isEmpty())
-            throw new ValidacionException("nombre", "Este campo es obligatorio.");
-        if (nombre.length() > 250)
-            throw new ValidacionException("nombre", "El máximo es 250 caracteres.");
-        String email = correo(datos.email());
+        String nombre = datos.nombre().strip();
+        String email = datos.email().strip().toLowerCase(Locale.ROOT);
         if (datos.fechaNacimiento() == null || datos.fechaNacimiento().isAfter(LocalDate.now(reloj))) {
             throw new ValidacionException("fechaNacimiento",
-                "La datos.fechaNacimiento() de nacimiento debe existir y no estar en el futuro.");
+                "La fecha de nacimiento debe existir y no estar en el futuro.");
         }
         if (datos.contrasenia() == null || datos.contrasenia().length() < 8) {
             throw new ValidacionException("contrasenia", "La contrasenia debe tener al menos ocho caracteres.");
         }
         if (!datos.contrasenia().equals(datos.confirmacionContrasenia())) {
             throw new ValidacionException("confirmacionContrasenia",
-                "La datos.confirmacionContrasenia() debe coincidir con la contrasenia.");
+                "La confirmación debe coincidir con la contrasenia.");
         }
-        if (datos.imagen() != null && datos.imagen().length() > 2048)
-            throw new ValidacionException("imagen", "La URL admite hasta 2048 caracteres.");
         try {
             if (usuarioDAO.obtenerPorEmail(email) != null) {
                 throw new ConflictoException("El correo ya pertenece a una cuenta.");
@@ -105,27 +98,16 @@ public class UsuarioBOImpl implements UsuarioBO {
         if (credenciales == null || credenciales.contrasenia() == null) {
             throw new CredencialesInvalidasException("El correo o la contrasenia no son correctos.");
         }
-        String email = correo(credenciales.email());
+        String email = credenciales.email().strip().toLowerCase(Locale.ROOT);
         try {
             Usuario usuario = usuarioDAO.obtenerPorEmail(email);
-            if (usuario == null || usuario.isEliminado() ||
+            if (usuario == null ||
                 !ProteccionDatos.verificar(credenciales.contrasenia(), usuario.getContrasenia())) {
                 throw new CredencialesInvalidasException("El correo o la contrasenia no son correctos.");
             }
             return usuario;
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudieron comprobar las credenciales.", e);
-        }
-    }
-
-    @Override
-    public void comprobarActivo(int idActor) throws NegocioException {
-        try {
-            Usuario usuario = usuarioDAO.leer(idActor);
-            if (usuario == null || !usuario.estaDisponible())
-                throw new CuentaInactivaException("La cuenta está desactivada.");
-        } catch (SQLException e) {
-            throw new PersistenciaException("No se pudo comprobar la cuenta.", e);
         }
     }
 
@@ -147,14 +129,10 @@ public class UsuarioBOImpl implements UsuarioBO {
             Usuario usuario = usuarioDAO.leer(idActor);
             if (datos == null)
                 throw new ValidacionException("perfil", "Los datos del perfil son obligatorios.");
-            String nombre = datos.nombre() == null ? "" : datos.nombre().strip();
-            if (nombre.isEmpty())
-                throw new ValidacionException("nombre", "Este campo es obligatorio.");
-            if (nombre.length() > 250)
-                throw new ValidacionException("nombre", "El máximo es 250 caracteres.");
+            String nombre = datos.nombre().strip();
             if (datos.fechaNacimiento() == null || datos.fechaNacimiento().isAfter(LocalDate.now(reloj))) {
                 throw new ValidacionException("fechaNacimiento",
-                    "La datos.fechaNacimiento() de nacimiento debe existir y no estar en el futuro.");
+                    "La fecha de nacimiento debe existir y no estar en el futuro.");
             }
             usuario.setNombre(nombre);
             usuario.setFechaNacimiento(datos.fechaNacimiento().atStartOfDay());
@@ -170,8 +148,6 @@ public class UsuarioBOImpl implements UsuarioBO {
     public PerfilUsuarioDTO cambiarImagen(int idActor, String imagen) throws NegocioException {
         try {
             Usuario usuario = usuarioDAO.leer(idActor);
-            if (imagen != null && imagen.length() > 2048)
-                throw new ValidacionException("imagen", "La URL admite hasta 2048 caracteres.");
             if (!usuarioDAO.cambiarImagen(idActor, imagen, usuario.getEmail())) {
                 throw new ConflictoException("La cuenta ya no permite cambiar la imagen.");
             }
@@ -197,7 +173,7 @@ public class UsuarioBOImpl implements UsuarioBO {
             }
             if (!datos.contraseniaNueva().equals(datos.confirmacionContrasenia())) {
                 throw new ValidacionException("confirmacionContrasenia",
-                    "La datos.confirmacionContrasenia() debe coincidir con la contrasenia.");
+                    "La confirmación debe coincidir con la contrasenia.");
             }
             String hash = ProteccionDatos.hash(datos.contraseniaNueva());
             if (!usuarioDAO.cambiarContrasenia(idActor, hash, usuario.getEmail())) {
@@ -237,16 +213,4 @@ public class UsuarioBOImpl implements UsuarioBO {
         }
     }
 
-    private String correo(String valor) throws ValidacionException {
-        String email = valor == null ? "" : valor.strip();
-        if (email.isEmpty())
-            throw new ValidacionException("email", "Este campo es obligatorio.");
-        if (email.length() > 254)
-            throw new ValidacionException("email", "El máximo es 254 caracteres.");
-        email = email.toLowerCase(Locale.ROOT);
-        if (!email.matches("[^\\s@]+@[^\\s@]+")) {
-            throw new ValidacionException("email", "El correo no tiene un formato valido.");
-        }
-        return email;
-    }
 }

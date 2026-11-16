@@ -10,7 +10,7 @@
     </nav>
     <h1>Comparar libros</h1>
     <a href="/catalogo" class="back-link">← Volver al catálogo</a>
-    @if (PrimerLibro is null || SegundoLibro is null || PrimerLibro.Id == SegundoLibro.Id)
+    @if (LibrosComparados.Count != 2)
     {
         <div class="empty-state">
             <Icono Nombre="compare" />
@@ -21,6 +21,8 @@
     }
     else
     {
+        var PrimerLibro = LibrosComparados[0];
+        var SegundoLibro = LibrosComparados[1];
         <div class="comparison-cards row g-4">
             @foreach (var libro in LibrosComparados)
             {
@@ -68,11 +70,11 @@
                         @foreach (var libro in LibrosComparados)
                         {
                             <td>
-                                @if (CantidadResenas(libro) > 0)
+                                @if (libro.Valoracion.CantidadResenas > 0)
                                 {
                                     <span class="stars">★★★★★</span>
-                                    <span>@PromedioResenas(libro).ToString("N1") / 5</span>
-                                    <small>(@CantidadResenas(libro) reseñas)</small>
+                                    <span>@libro.Valoracion.Promedio.ToString("N1") / 5</span>
+                                    <small>(@libro.Valoracion.CantidadResenas reseñas)</small>
                                 }
                                 else
                                 {

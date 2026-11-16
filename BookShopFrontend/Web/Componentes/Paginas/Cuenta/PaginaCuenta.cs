@@ -35,10 +35,7 @@ public class PaginaCuenta : ComponentBase, IDisposable
         {
             ErrorCarga = e.Message;
         }
-        finally
-        {
-            CargandoDatos = false;
-        }
+        CargandoDatos = false;
     }
 
     protected virtual Task CargarDatos() => Task.CompletedTask;

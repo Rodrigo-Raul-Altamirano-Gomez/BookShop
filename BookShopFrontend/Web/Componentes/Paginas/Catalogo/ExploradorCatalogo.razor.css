@@ -2,15 +2,6 @@
     white-space:nowrap;
     font-size:13px
 }
-.price-fields label {
-    font-size:12px;
-    display:grid;
-    gap:6px
-}
-.price-fields input {
-    min-width:0;
-    width:100%
-}
 .active-filters {
     border-top:1px solid var(--line);
     padding-top:17px

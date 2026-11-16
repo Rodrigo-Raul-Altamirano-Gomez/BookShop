@@ -20,8 +20,11 @@ final class AsociacionCompras {
             pedidos.get(venta.idPedido()).add(venta.idLibro());
         }
         Map<Integer, Integer> frecuencias = new HashMap<>();
-        for (Set<Integer> libros : pedidos.values()) for (int id : libros) frecuencias.put(id,
-            frecuencias.getOrDefault(id, 0) + 1);
+        for (Set<Integer> libros : pedidos.values()) {
+            for (int id : libros) {
+                frecuencias.put(id, frecuencias.getOrDefault(id, 0) + 1);
+            }
+        }
         Map<Integer, Double> puntos = new HashMap<>();
         for (int origen : carrito) {
             int cantidadOrigen = frecuencias.getOrDefault(origen, 0);
@@ -31,8 +34,11 @@ final class AsociacionCompras {
             for (Set<Integer> libros : pedidos.values()) {
                 if (!libros.contains(origen))
                     continue;
-                for (int candidato : libros) if (!carrito.contains(candidato))
-                    conjuntos.put(candidato, conjuntos.getOrDefault(candidato, 0) + 1);
+                for (int candidato : libros) {
+                    if (!carrito.contains(candidato)) {
+                        conjuntos.put(candidato, conjuntos.getOrDefault(candidato, 0) + 1);
+                    }
+                }
             }
             for (Map.Entry<Integer, Integer> par : conjuntos.entrySet()) {
                 double confianza = (double) par.getValue() / cantidadOrigen;

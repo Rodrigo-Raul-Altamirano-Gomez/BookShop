@@ -484,49 +484,9 @@ hr {
     font-size:13px;
     margin:9px 0;
 }
-.filter-group .search-options input {
-    min-width:0;
-    font-size:12px;
-    padding:8px;
-}
-.filter-group .search-options .btn {
-    padding:8px 10px;
-}
-.filter-group .more-options {
-    background:none;
-    border:0;
-    padding:0;
-    color:var(--green);
-    font-size:13px;
-    text-decoration:underline;
-}
-.chip .icon {
-    width:12px;
-    height:12px;
-}
 .btn .icon {
     width:18px;
     height:18px;
-}
-.filters>.btn {
-    width:100%;
-    margin-bottom:9px;
-}
-.status-amber {
-    background:#fff0d8;
-    color:#95671e;
-}
-.status-blue {
-    background:#e4eef8;
-    color:#366e9d;
-}
-.status-green {
-    background:#e3f1e3;
-    color:#37723b;
-}
-.status-red {
-    background:#f5e7e2;
-    color:#995540;
 }
 .dialog-open {
     overflow:hidden;
@@ -580,18 +540,6 @@ hr {
     object-fit:cover;
     border-radius:50%;
 }
-.photo-input {
-    position:relative;
-    overflow:hidden;
-    cursor:pointer;
-}
-.photo-input input {
-    position:absolute;
-    inset:0;
-    opacity:0;
-    cursor:pointer;
-    width:100%!important;
-}
 .review-row {
     padding:23px 0;
     border-bottom:1px solid var(--line);
@@ -604,15 +552,6 @@ hr {
     height:48px;
     object-fit:cover;
     border-radius:50%;
-}
-.review-row .review-body {
-    flex:1;
-    min-width:0;
-}
-.review-row h3 {
-    font-size:18px;
-    color:var(--ink);
-    margin-bottom:5px;
 }
 .stars {
     color:#d69432;
@@ -694,14 +633,6 @@ hr {
 }
 .line-price del {
     font-size:12px;
-}
-.document-preview {
-    font-size:13px;
-}
-.loading-state {
-    padding:40px;
-    text-align:center;
-    color:var(--muted);
 }
 @media(max-width:1050px) {
     .brand {
@@ -919,41 +850,6 @@ hr {
     color:var(--muted);
     font-size:12px;
 }
-.order-covers {
-    min-width:150px;
-    padding-right:12px;
-}
-.order-covers img {
-    width:55px;
-    height:82px;
-    object-fit:cover;
-    border:2px solid #fff;
-    border-radius:3px;
-    box-shadow:0 3px 7px #223e2820;
-    margin-right:-14px;
-    transform:rotate(-6deg);
-}
-.order-covers img:nth-child(2) {
-    transform:rotate(4deg);
-}
-.order-covers span {
-    border-radius:50%;
-    background:var(--soft);
-    padding:8px;
-    margin-left:8px;
-    font-size:12px;
-}
-.order-card-info h3 {
-    font-size:23px;
-    margin:0 0 8px;
-}
-.order-card-info p {
-    margin:0 0 7px;
-    font-size:13px;
-}
-.order-card-actions .btn {
-    font-size:13px;
-}
 .order-detail-heading {
     text-align:center;
     margin:12px 0 36px;
@@ -976,15 +872,6 @@ hr {
 .success-circle .icon {
     width:35px;
     height:35px;
-}
-.receipt-total {
-    text-align:right;
-    margin-top:25px;
-    font-size:20px;
-}
-.bookshop-status.warning {
-    background:#fff0d8;
-    color:#95671e;
 }
 .bookshop-status.success {
     background:#e3f1e3;

@@ -8,8 +8,8 @@
                     Titulo="Categorías"
                     Singular="categoría"
                     Opciones="OpcionesCategorias"
-                    Seleccionados="categorias"
-                    SeleccionCambiada="SeleccionarCategoria"
+                    Seleccionados="vista.Categorias"
+                    SeleccionCambiada="valor => SeleccionarFiltro(vista.Categorias, valor)"
                     />
             }
             @if (TipoAmbito != "autores")
@@ -18,8 +18,8 @@
                     Titulo="Autores"
                     Singular="autor"
                     Opciones="OpcionesAutores"
-                    Seleccionados="autores"
-                    SeleccionCambiada="SeleccionarAutor"
+                    Seleccionados="vista.Autores"
+                    SeleccionCambiada="valor => SeleccionarFiltro(vista.Autores, valor)"
                     />
             }
             @if (TipoAmbito != "editoriales")
@@ -28,16 +28,16 @@
                     Titulo="Editoriales"
                     Singular="editorial"
                     Opciones="OpcionesEditoriales"
-                    Seleccionados="editoriales"
-                    SeleccionCambiada="SeleccionarEditorial"
+                    Seleccionados="vista.Editoriales"
+                    SeleccionCambiada="valor => SeleccionarFiltro(vista.Editoriales, valor)"
                     />
             }
             <FiltroReferencias
                 Titulo="Idiomas"
                 Singular="idioma"
                 Opciones="OpcionesIdiomas"
-                Seleccionados="idiomas"
-                SeleccionCambiada="SeleccionarIdioma"
+                Seleccionados="vista.Idiomas"
+                SeleccionCambiada="valor => SeleccionarFiltro(vista.Idiomas, valor)"
                 />
             <div class="filter-group">
                 <h3>Precio</h3>
@@ -48,7 +48,7 @@
                         max="@LimitePrecio"
                         step="0.01"
                         aria-label="Precio mínimo"
-                        @bind="minimo"
+                        @bind="vista.Minimo"
                         @bind:after="AjustarMinimo"
                         />
                     <input class="form-range"
@@ -57,7 +57,7 @@
                         max="@LimitePrecio"
                         step="0.01"
                         aria-label="Precio máximo"
-                        @bind="maximo"
+                        @bind="vista.Maximo"
                         @bind:after="AjustarMaximo"
                         />
                 </div>
@@ -68,7 +68,7 @@
                             type="number"
                             min="0"
                             step="0.01"
-                            @bind="minimo"
+                            @bind="vista.Minimo"
                             @bind:after="AjustarMinimo"
                             />
                     </label>
@@ -78,7 +78,7 @@
                             type="number"
                             min="0"
                             step="0.01"
-                            @bind="maximo"
+                            @bind="vista.Maximo"
                             @bind:after="AjustarMaximo"
                             />
                     </label>
@@ -87,38 +87,38 @@
             <div class="filter-group active-filters border-top pt-3">
                 <h3>Filtros activos</h3>
                 <div class="d-flex flex-wrap gap-2">
-                    @foreach (var item in categorias)
+                    @foreach (var item in vista.Categorias)
                     {
                         <button
                             class="btn btn-sm btn-outline-secondary rounded-pill"
-                            @onclick="() => SeleccionarCategoria(item)">
+                            @onclick="() => SeleccionarFiltro(vista.Categorias, item)">
                             @item
                             <Icono Nombre="close" />
                         </button>
                     }
-                    @foreach (var item in autores)
+                    @foreach (var item in vista.Autores)
                     {
                         <button
                             class="btn btn-sm btn-outline-secondary rounded-pill"
-                            @onclick="() => SeleccionarAutor(item)">
+                            @onclick="() => SeleccionarFiltro(vista.Autores, item)">
                             @item
                             <Icono Nombre="close" />
                         </button>
                     }
-                    @foreach (var item in editoriales)
+                    @foreach (var item in vista.Editoriales)
                     {
                         <button
                             class="btn btn-sm btn-outline-secondary rounded-pill"
-                            @onclick="() => SeleccionarEditorial(item)">
+                            @onclick="() => SeleccionarFiltro(vista.Editoriales, item)">
                             @item
                             <Icono Nombre="close" />
                         </button>
                     }
-                    @foreach (var item in idiomas)
+                    @foreach (var item in vista.Idiomas)
                     {
                         <button
                             class="btn btn-sm btn-outline-secondary rounded-pill"
-                            @onclick="() => SeleccionarIdioma(item)">
+                            @onclick="() => SeleccionarFiltro(vista.Idiomas, item)">
                             @item
                             <Icono Nombre="close" />
                         </button>
@@ -126,7 +126,7 @@
                     @if (precioFiltrado)
                     {
                         <button class="btn btn-sm btn-outline-secondary rounded-pill" @onclick="QuitarPrecio">
-                            S/ @minimo – S/ @maximo
+                            S/ @vista.Minimo – S/ @vista.Maximo
                             <Icono Nombre="close" />
                         </button>
                     }
@@ -147,7 +147,7 @@
 
             <label class="sort-label d-flex align-items-center gap-2">
                 Ordenar por:
-                <select class="form-select" aria-label="Ordenar libros" disabled="@cargando" @bind="orden" @bind:after="ActualizarResultados">
+                <select class="form-select" aria-label="Ordenar libros" disabled="@cargando" @bind="vista.Orden" @bind:after="ActualizarResultados">
                     @foreach (var order in OpcionesOrden)
                     {
                         <option value="@order.Key">@order.Value</option>
@@ -176,7 +176,7 @@
                         <TarjetaLibro Libro="libro" />
                     }
                 </div>
-                <Paginacion Pagina="pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
+                <Paginacion Pagina="vista.Pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
             }
         </Cargando>
     </section>

@@ -4,16 +4,6 @@
     object-fit: cover;
     background: #edf4f1;
 }
-.photo-picker {
-    cursor: pointer;
-}
-.photo-picker ::deep input[type=file] {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    width: 100%;
-    cursor: pointer;
-}
 .profile-data dt {
     color: #65766f;
     font-size: 14px;

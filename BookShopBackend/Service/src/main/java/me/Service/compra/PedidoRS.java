@@ -33,31 +33,31 @@ public class PedidoRS {
     @GET
     @Path("{id}")
     public DetallePedidoDTO consultar(@PathParam("id") int id) throws NegocioException {
-        return servicios.getPedidoBO().consultar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), id);
+        return servicios.getPedidoBO().consultar(Sesion.exigirIdUsuario(peticion), id);
     }
 
     @POST
     @Path("preparacion")
     public PreparacionCompraDTO preparar() throws NegocioException {
-        return servicios.getPedidoBO().preparar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()));
+        return servicios.getPedidoBO().preparar(Sesion.exigirIdUsuario(peticion));
     }
 
     @GET
     @Path("preparacion")
     public PreparacionCompraDTO consultarPreparacion() throws NegocioException {
-        return servicios.getPedidoBO().consultarPreparacion(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()));
+        return servicios.getPedidoBO().consultarPreparacion(Sesion.exigirIdUsuario(peticion));
     }
 
     @PUT
     @Path("preparacion")
     @Consumes(MediaType.APPLICATION_JSON)
     public PreparacionCompraDTO seleccionar(SeleccionCompraDTO seleccion) throws NegocioException {
-        return servicios.getPedidoBO().seleccionar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), seleccion);
+        return servicios.getPedidoBO().seleccionar(Sesion.exigirIdUsuario(peticion), seleccion);
     }
 
     @POST
     @Path("confirmacion")
     public DetallePedidoDTO pagar() throws NegocioException {
-        return servicios.getPedidoBO().pagar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()));
+        return servicios.getPedidoBO().pagar(Sesion.exigirIdUsuario(peticion));
     }
 }

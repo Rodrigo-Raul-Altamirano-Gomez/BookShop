@@ -42,12 +42,12 @@
                         <div class="photo-actions d-flex flex-wrap gap-2">
                             <input class="form-control" type="url" @bind="urlFoto"
                                 placeholder="https://…/foto.jpg" aria-label="URL de la foto de perfil" />
-                            <button class="btn btn-secondary" @onclick="GuardarFoto"
-                                disabled="@(CargandoImagen || procesando || string.IsNullOrWhiteSpace(urlFoto))">
+                            <button class="btn btn-secondary" @onclick="() => GuardarFoto(false)"
+                                disabled="@(procesando || string.IsNullOrWhiteSpace(urlFoto))">
                                 <Icono Nombre="edit" />
                                 Guardar foto
                             </button>
-                            <button class="btn btn-secondary" @onclick="QuitarFoto" disabled="@(CargandoImagen || procesando)">
+                            <button class="btn btn-secondary" @onclick="() => GuardarFoto(true)" disabled="@procesando">
                                 Quitar
                             </button>
                         </div>
@@ -105,15 +105,15 @@
 @if (ModalAbierto == "perfil")
 {
     <Modal Titulo="Editar datos personales" AlCerrar="Cerrar" Ocupado="@procesando">
-        <form @onsubmit="GuardarPerfil" @onsubmit:preventDefault novalidate>
+        <form @onsubmit="GuardarPerfil" @onsubmit:preventDefault>
             <label class="field form-label d-block mb-3">
                 Nombre completo *
-                <input class="form-control" @bind="Nombre" @bind:event="oninput"
-                    maxlength="100" autocomplete="name" />
+                <input class="form-control" required @bind="Nombre" @bind:event="oninput"
+                    maxlength="250" autocomplete="name" />
             </label>
             <label class="field form-label d-block mb-3">
                 Fecha de nacimiento *
-                <input class="form-control" type="date" @bind="Nacimiento" />
+                <input class="form-control" type="date" required @bind="Nacimiento" />
             </label>
             @if (MensajeError.Length > 0)
             {
@@ -121,7 +121,7 @@
             }
             <div class="modal-footer px-0 pb-0 d-flex flex-wrap gap-2 justify-content-end">
                 <button type="button" class="btn btn-secondary" @onclick="Cerrar" disabled="@procesando">Cancelar</button>
-                <button class="btn btn-primary" type="submit" disabled="@(procesando || string.IsNullOrWhiteSpace(Nombre))">
+                <button class="btn btn-primary" type="submit" disabled="@procesando">
                     Guardar cambios
                 </button>
             </div>
@@ -131,13 +131,13 @@
 @if (ModalAbierto == "password")
 {
     <Modal Titulo="Cambiar contraseña" AlCerrar="Cerrar" Ocupado="@procesando">
-        <form @onsubmit="GuardarContrasena" @onsubmit:preventDefault novalidate>
+        <form @onsubmit="GuardarContrasena" @onsubmit:preventDefault>
             <label class="field form-label d-block mb-3">
                 Contraseña actual *
                 <div class="input-group">
                     <input class="form-control"
                         type="@TipoContrasena"
-                        @bind="ContrasenaActual"
+                        required @bind="ContrasenaActual"
                         @bind:event="oninput"
                         autocomplete="current-password"
                         />
@@ -154,7 +154,7 @@
                 Nueva contraseña *
                 <input class="form-control"
                     type="@TipoContrasena"
-                    @bind="NuevaContrasena"
+                    required @bind="NuevaContrasena"
                     @bind:event="oninput"
                     autocomplete="new-password"
                     />
@@ -163,7 +163,7 @@
                 Confirmar nueva contraseña *
                 <input class="form-control"
                     type="@TipoContrasena"
-                    @bind="ConfirmacionContrasena"
+                    required @bind="ConfirmacionContrasena"
                     @bind:event="oninput"
                     autocomplete="new-password"
                     />
@@ -174,7 +174,7 @@
             }
             <div class="modal-footer px-0 pb-0 d-flex flex-wrap gap-2 justify-content-end">
                 <button type="button" class="btn btn-secondary" @onclick="Cerrar" disabled="@procesando">Cancelar</button>
-                <button type="submit" class="btn btn-primary" disabled="@(procesando || !ContrasenasCompletas)">
+                <button type="submit" class="btn btn-primary" disabled="@procesando">
                     Guardar cambios
                 </button>
             </div>
@@ -185,13 +185,13 @@
 {
     <Modal Titulo="Desactivar cuenta" AlCerrar="Cerrar" Ocupado="@procesando">
         <p>Tu cuenta quedará desactivada. Conservarás tus datos, pedidos y listas para cuando decidas volver.</p>
-        <form @onsubmit="Desactivar" @onsubmit:preventDefault novalidate>
+        <form @onsubmit="Desactivar" @onsubmit:preventDefault>
             <label class="field form-label d-block mb-3">
                 Contraseña *
                 <div class="input-group">
                     <input class="form-control"
                         type="@TipoContrasena"
-                        @bind="ContrasenaActual"
+                        required @bind="ContrasenaActual"
                         @bind:event="oninput"
                         autocomplete="current-password"
                         />
@@ -210,7 +210,7 @@
             }
             <div class="modal-footer px-0 pb-0 d-flex flex-wrap gap-2 justify-content-end">
                 <button type="button" class="btn btn-secondary" @onclick="Cerrar" disabled="@procesando">Cancelar</button>
-                <button type="submit" class="btn btn-danger" disabled="@(procesando || ContrasenaActual.Length == 0)">
+                <button type="submit" class="btn btn-danger" disabled="@procesando">
                     Desactivar cuenta
                 </button>
             </div>

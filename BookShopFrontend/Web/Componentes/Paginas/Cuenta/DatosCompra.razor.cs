@@ -67,21 +67,9 @@ public partial class DatosCompra
         return "neutral";
     }
 
-    private void MostrarDirecciones()
+    private void MostrarPestana(string pestana)
     {
-        Pestana = "direcciones";
-        Pagina = 1;
-    }
-
-    private void MostrarMetodos()
-    {
-        Pestana = "metodos";
-        Pagina = 1;
-    }
-
-    private void MostrarCupones()
-    {
-        Pestana = "cupones";
+        Pestana = pestana;
         Pagina = 1;
     }
 
@@ -137,7 +125,6 @@ public partial class DatosCompra
         }
         catch (InvalidOperationException e)
         {
-            Sesion.Error = e.Message;
             Sesion.Avisar(e.Message);
         }
     }
@@ -153,7 +140,6 @@ public partial class DatosCompra
         }
         catch (InvalidOperationException e)
         {
-            Sesion.Error = e.Message;
             Sesion.Avisar(e.Message);
         }
     }
@@ -168,7 +154,6 @@ public partial class DatosCompra
         }
         catch (InvalidOperationException e)
         {
-            Sesion.Error = e.Message;
             Sesion.Avisar(e.Message);
         }
     }
@@ -183,7 +168,6 @@ public partial class DatosCompra
         }
         catch (InvalidOperationException e)
         {
-            Sesion.Error = e.Message;
             Sesion.Avisar(e.Message);
         }
     }

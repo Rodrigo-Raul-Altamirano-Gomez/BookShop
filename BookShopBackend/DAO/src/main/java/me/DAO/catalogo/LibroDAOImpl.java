@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import me.DBManager.DBManager;
 import me.DBManager.TransactionContext;
-import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.dto.catalogo.ConsultaReporteLibrosDTO;
 import me.Model.dto.catalogo.DatosLibroDTO;
 import me.Model.dto.catalogo.DetalleLibroDTO;
@@ -27,6 +26,7 @@ import me.Model.dto.catalogo.ResumenVentasLibroDTO;
 import me.Model.dto.catalogo.TarjetaLibroDTO;
 import me.Model.dto.catalogo.TarjetaReferenciaDTO;
 import me.Model.dto.opinion.ValoracionLibroDTO;
+import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.entities.catalogo.Autor;
 import me.Model.entities.catalogo.Categoria;
 import me.Model.entities.catalogo.Editorial;
@@ -312,32 +312,32 @@ public class LibroDAOImpl implements LibroDAO {
                 " AND p.estado NOT IN ('CANCELADO','DEVUELTO') AND p.fecha_pago>=? AND p.fecha_pago<=?" +
                 " GROUP BY i.id_libro) v ON v.id_libro=l.id";
         }
-        StringBuilder condiciones = new StringBuilder(" WHERE l.eliminado=FALSE");
+        String condiciones = " WHERE l.eliminado=FALSE";
         if (filtro.soloActivos())
-            condiciones.append(" AND l.activo=TRUE");
-        if (filtro.titulo() != null && !filtro.titulo().isBlank())
-            condiciones.append(" AND LOWER(l.titulo) LIKE LOWER(?) ESCAPE '!'");
+            condiciones += " AND l.activo=TRUE";
+        if (!titulo.isEmpty())
+            condiciones += " AND LOWER(l.titulo) LIKE LOWER(?) ESCAPE '!'";
         if (!filtro.idsAutores().isEmpty())
-            condiciones.append(" AND l.id_autor IN (").append(String.join(",",
-                Collections.nCopies(filtro.idsAutores().size(), "?"))).append(')');
+            condiciones += " AND l.id_autor IN (" + String.join(",",
+                Collections.nCopies(filtro.idsAutores().size(), "?")) + ")";
         if (!filtro.idsCategorias().isEmpty())
-            condiciones.append(" AND l.id_categoria IN (").append(String.join(",",
-                Collections.nCopies(filtro.idsCategorias().size(), "?"))).append(')');
+            condiciones += " AND l.id_categoria IN (" + String.join(",",
+                Collections.nCopies(filtro.idsCategorias().size(), "?")) + ")";
         if (!filtro.idsEditoriales().isEmpty())
-            condiciones.append(" AND l.id_editorial IN (").append(String.join(",",
-                Collections.nCopies(filtro.idsEditoriales().size(), "?"))).append(')');
+            condiciones += " AND l.id_editorial IN (" + String.join(",",
+                Collections.nCopies(filtro.idsEditoriales().size(), "?")) + ")";
         if (!filtro.idiomas().isEmpty())
-            condiciones.append(" AND l.idioma IN (").append(String.join(",",
-                Collections.nCopies(filtro.idiomas().size(), "?"))).append(')');
+            condiciones += " AND l.idioma IN (" + String.join(",",
+                Collections.nCopies(filtro.idiomas().size(), "?")) + ")";
         if (filtro.precioMinimo() != null)
-            condiciones.append(" AND ").append(PRECIO_FINAL).append(">=?");
+            condiciones += " AND " + PRECIO_FINAL + ">=?";
         if (filtro.precioMaximo() != null)
-            condiciones.append(" AND ").append(PRECIO_FINAL).append("<=?");
+            condiciones += " AND " + PRECIO_FINAL + "<=?";
         if (filtro.soloNuevos())
-            condiciones.append(" AND l.fecha_creacion>=? AND l.fecha_creacion<=?");
+            condiciones += " AND l.fecha_creacion>=? AND l.fecha_creacion<=?";
         if (idUsuario > 0)
-            condiciones.append(" AND EXISTS(SELECT 1 FROM LIBRO_GUARDADO g WHERE g.id_libro=l.id" +
-                " AND g.id_usuario=? AND g.favorito=? AND g.eliminado=FALSE)");
+            condiciones += " AND EXISTS(SELECT 1 FROM LIBRO_GUARDADO g WHERE g.id_libro=l.id" +
+                " AND g.id_usuario=? AND g.favorito=? AND g.eliminado=FALSE)";
         String sqlContar = "SELECT COUNT(*)" + tablas + condiciones;
         String sqlLibros = "SELECT " + COLUMNAS_TARJETA + tablas + condiciones + " ORDER BY " +
             orden(filtro.orden()) + " LIMIT ? OFFSET ?";
@@ -356,7 +356,7 @@ public class LibroDAOImpl implements LibroDAO {
                     sentencia.setTimestamp(parametro++, Timestamp.valueOf(fecha.minusDays(30)));
                     sentencia.setTimestamp(parametro++, Timestamp.valueOf(fecha));
                 }
-                if (filtro.titulo() != null && !filtro.titulo().isBlank())
+                if (!titulo.isEmpty())
                     sentencia.setString(parametro++, textoBuscado);
                 for (Integer idAutor : filtro.idsAutores()) sentencia.setInt(parametro++, idAutor);
                 for (Integer idCategoria : filtro.idsCategorias()) sentencia.setInt(parametro++, idCategoria);
@@ -382,11 +382,7 @@ public class LibroDAOImpl implements LibroDAO {
             consultar.setInt(parametro++, filtro.tamanioPagina());
             consultar.setLong(parametro, (long) (filtro.pagina() - 1) * filtro.tamanioPagina());
             try (ResultSet resultado = consultar.executeQuery()) {
-                while (resultado.next()) libros.add(new TarjetaLibroDTO(resultado.getInt("id"),
-                    resultado.getString("titulo"), resultado.getString("portada"),
-                    resultado.getString("nombre_autor"), resultado.getBigDecimal("precio_base"),
-                    resultado.getBigDecimal("precio_final").setScale(2),
-                    resultado.getBigDecimal("porcentaje"), resultado.getBoolean("activo")));
+                while (resultado.next()) libros.add(mapearTarjeta(resultado));
             }
         }
         return new ResultadoPaginadoDTO<>(libros, total, filtro.pagina(), filtro.tamanioPagina());
@@ -428,36 +424,25 @@ public class LibroDAOImpl implements LibroDAO {
             sentencia.setTimestamp(2, Timestamp.valueOf(fecha));
             sentencia.setInt(3, id);
             try (ResultSet resultado = sentencia.executeQuery()) {
-                return resultado.next() ? new TarjetaLibroDTO(resultado.getInt("id"),
-                    resultado.getString("titulo"), resultado.getString("portada"),
-                    resultado.getString("nombre_autor"), resultado.getBigDecimal("precio_base"),
-                    resultado.getBigDecimal("precio_final").setScale(2),
-                    resultado.getBigDecimal("porcentaje"), resultado.getBoolean("activo")) : null;
+                return resultado.next() ? mapearTarjeta(resultado) : null;
             }
         }
     }
 
     @Override
     public DetalleLibroDTO obtenerDetalle(int id, int idUsuario, LocalDateTime fecha) throws SQLException {
+        ValoracionLibroDTO valoracion = new ResenaDAOImpl().obtenerValoracion(id);
         String sql = "SELECT " + COLUMNAS_TARJETA + ",l.id_autor,l.id_categoria,c.nombre AS nombre_categoria,"
             + " l.id_editorial,e.nombre AS nombre_editorial,l.idioma,l.sinopsis,l.isbn,l.anio_edicion," +
             " l.numero_paginas,l.peso,l.alto,l.ancho,l.saga,l.numero_tomo,l.stock_fisico," +
             " EXISTS(SELECT 1 FROM LIBRO_GUARDADO g WHERE g.id_libro=l.id AND g.id_usuario=?" +
             " AND g.favorito=TRUE AND g.eliminado=FALSE) AS favorito," +
             " EXISTS(SELECT 1 FROM LIBRO_GUARDADO g WHERE g.id_libro=l.id AND g.id_usuario=?" +
-            " AND g.favorito=FALSE AND g.eliminado=FALSE) AS deseado," +
-            " COALESCE(r.una,0) AS una,COALESCE(r.dos,0) AS dos,COALESCE(r.tres,0) AS tres," +
-            " COALESCE(r.cuatro,0) AS cuatro,COALESCE(r.cinco,0) AS cinco" +
+            " AND g.favorito=FALSE AND g.eliminado=FALSE) AS deseado" +
             " FROM LIBRO l JOIN AUTOR a ON a.id=l.id_autor" +
             " LEFT JOIN (SELECT id_libro,MAX(porcentaje) AS porcentaje FROM DESCUENTO WHERE eliminado=FALSE" +
             " AND fecha_inicio<=? AND fecha_fin>=? GROUP BY id_libro) d ON d.id_libro=l.id" +
             " JOIN CATEGORIA c ON c.id=l.id_categoria JOIN EDITORIAL e ON e.id=l.id_editorial" +
-            " LEFT JOIN (SELECT id_libro,SUM(CASE WHEN puntuacion=1 THEN 1 ELSE 0 END) AS una," +
-            " SUM(CASE WHEN puntuacion=2 THEN 1 ELSE 0 END) AS dos,SUM(CASE WHEN puntuacion=3 THEN 1" +
-            " ELSE 0 END) AS tres," +
-            " SUM(CASE WHEN puntuacion=4 THEN 1 ELSE 0 END) AS cuatro,SUM(CASE WHEN puntuacion=5 THEN" +
-            " 1 ELSE 0 END) AS cinco" +
-            " FROM RESENA WHERE activo=TRUE AND eliminado=FALSE GROUP BY id_libro) r ON r.id_libro=l.id" +
             " WHERE l.id=? AND l.eliminado=FALSE";
         try (Connection conexion = DBManager.getConnection();
             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
@@ -469,14 +454,7 @@ public class LibroDAOImpl implements LibroDAO {
             try (ResultSet resultado = sentencia.executeQuery()) {
                 if (!resultado.next())
                     return null;
-                ValoracionLibroDTO valoracion = new ValoracionLibroDTO(id, resultado.getLong("una"),
-                    resultado.getLong("dos"), resultado.getLong("tres"), resultado.getLong("cuatro"),
-                    resultado.getLong("cinco"));
-                TarjetaLibroDTO tarjeta = new TarjetaLibroDTO(resultado.getInt("id"),
-                    resultado.getString("titulo"), resultado.getString("portada"),
-                    resultado.getString("nombre_autor"), resultado.getBigDecimal("precio_base"),
-                    resultado.getBigDecimal("precio_final").setScale(2),
-                    resultado.getBigDecimal("porcentaje"), resultado.getBoolean("activo"));
+                TarjetaLibroDTO tarjeta = mapearTarjeta(resultado);
                 return new DetalleLibroDTO(tarjeta, resultado.getInt("id_autor"),
                     resultado.getInt("id_categoria"), resultado.getString("nombre_categoria"),
                     resultado.getInt("id_editorial"), resultado.getString("nombre_editorial"),
@@ -537,7 +515,7 @@ public class LibroDAOImpl implements LibroDAO {
     @Override
     public ResultadoPaginadoDTO<String> buscarIdiomas(String nombre, boolean soloActivos, int pagina, int
         tamanioPagina) throws SQLException {
-        String texto = nombre == null ? "" : nombre.trim();
+        String texto = nombre == null ? "" : nombre.strip();
         // En LIKE, estos caracteres deben buscarse como texto literal.
         String textoBuscado = texto.replace("!", "!!");
         textoBuscado = textoBuscado.replace("%", "!%");
@@ -608,11 +586,7 @@ public class LibroDAOImpl implements LibroDAO {
             for (Integer id : unicos) sentencia.setInt(parametro++, id);
             try (ResultSet resultado = sentencia.executeQuery()) {
                 while (resultado.next()) {
-                    TarjetaLibroDTO tarjeta = new TarjetaLibroDTO(resultado.getInt("id"),
-                        resultado.getString("titulo"), resultado.getString("portada"),
-                        resultado.getString("nombre_autor"), resultado.getBigDecimal("precio_base"),
-                        resultado.getBigDecimal("precio_final").setScale(2),
-                        resultado.getBigDecimal("porcentaje"), resultado.getBoolean("activo"));
+                    TarjetaLibroDTO tarjeta = mapearTarjeta(resultado);
                     tarjetas.put(tarjeta.id(), tarjeta);
                 }
             }
@@ -648,6 +622,13 @@ public class LibroDAOImpl implements LibroDAO {
             }
         }
         return ventas;
+    }
+
+    private TarjetaLibroDTO mapearTarjeta(ResultSet resultado) throws SQLException {
+        return new TarjetaLibroDTO(resultado.getInt("id"), resultado.getString("titulo"),
+            resultado.getString("portada"), resultado.getString("nombre_autor"),
+            resultado.getBigDecimal("precio_base"), resultado.getBigDecimal("precio_final").setScale(2),
+            resultado.getBigDecimal("porcentaje"), resultado.getBoolean("activo"));
     }
 
     private Libro mapearLibro(ResultSet resultado) throws SQLException {

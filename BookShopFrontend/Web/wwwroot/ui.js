@@ -1,41 +1,38 @@
-// Accesibilidad de diálogos: foco inicial, Escape, tabulación y retorno al disparador.
-(() => {
-    const priorFocus = new Map();
-    const selector = 'button:not([disabled]), a[href], input:not([disabled]), '
-        + 'select:not([disabled]), textarea:not([disabled]), [tabindex="0"]';
-    const visible = dialog => [...dialog.querySelectorAll(selector)].filter(el => el.getClientRects().length);
-    new MutationObserver(() => {
-        const dialogs = [...document.querySelectorAll('[role="dialog"]')];
-        for (const dialog of dialogs) if (!priorFocus.has(dialog)) {
-            priorFocus.set(dialog, document.activeElement);
-            requestAnimationFrame(() => {
-                if (dialog.isConnected)
-                    (dialog.querySelector('input') || visible(dialog)[0])?.focus();
-            });
+// Un solo diálogo de la aplicación: foco al abrir, Escape y tabulación dentro de él.
+let dialogoAbierto = null;
+let focoAnterior = null;
+const controles = 'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled])';
+
+new MutationObserver(() => {
+    const dialogos = document.querySelectorAll('[role="dialog"]');
+    const actual = dialogos[dialogos.length - 1] || null;
+    if (actual !== dialogoAbierto) {
+        if (actual) {
+            focoAnterior = document.activeElement;
+            actual.querySelector('input, button')?.focus();
+        } else {
+            focoAnterior?.focus();
         }
-        for (const [dialog, previous] of priorFocus) if (!dialog.isConnected) {
-            priorFocus.delete(dialog);
-            if (previous?.isConnected) previous.focus();
-        }
-        document.body.classList.toggle('dialog-open', dialogs.length > 0);
-    }).observe(document.body, { childList: true, subtree: true });
-    document.addEventListener('keydown', event => {
-        const dialog = [...document.querySelectorAll('[role="dialog"]')].at(-1);
-        if (!dialog) return;
-        if (event.key === 'Escape') {
+        dialogoAbierto = actual;
+    }
+    document.body.classList.toggle('dialog-open', actual !== null);
+}).observe(document.body, { childList: true, subtree: true });
+
+document.addEventListener('keydown', event => {
+    if (!dialogoAbierto) return;
+    if (event.key === 'Escape') {
+        event.preventDefault();
+        dialogoAbierto.querySelector('.modal-close')?.click();
+    }
+    if (event.key === 'Tab') {
+        const elementos = dialogoAbierto.querySelectorAll(controles);
+        const primero = elementos[0], ultimo = elementos[elementos.length - 1];
+        if (event.shiftKey && document.activeElement === primero) {
             event.preventDefault();
-            dialog.querySelector('.modal-close')?.click();
+            ultimo?.focus();
+        } else if (!event.shiftKey && document.activeElement === ultimo) {
+            event.preventDefault();
+            primero?.focus();
         }
-        if (event.key === 'Tab') {
-            const controls = visible(dialog), first = controls[0], last = controls.at(-1);
-            if (event.shiftKey && document.activeElement === first) {
-                event.preventDefault();
-                last?.focus();
-            }
-            else if (!event.shiftKey && document.activeElement === last) {
-                event.preventDefault();
-                first?.focus();
-            }
-        }
-    });
-})();
+    }
+});

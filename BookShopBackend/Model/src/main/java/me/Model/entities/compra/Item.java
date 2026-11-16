@@ -75,9 +75,6 @@ public class Item {
     }
 
     public void setCantidad(int cantidad) {
-        if (cantidad < 0) {
-            throw new IllegalArgumentException("La cantidad no puede ser negativa.");
-        }
         this.cantidad = cantidad;
         subTotal = BigDecimal.ZERO;
         if (precioUnitario != null)
@@ -159,9 +156,4 @@ public class Item {
         this.fechaActualizacion = fechaActualizacion;
     }
 
-    public BigDecimal getDescuentoTotal() {
-        if (precioBase == null || precioUnitario == null)
-            return BigDecimal.ZERO;
-        return precioBase.subtract(precioUnitario).multiply(BigDecimal.valueOf(cantidad));
-    }
 }

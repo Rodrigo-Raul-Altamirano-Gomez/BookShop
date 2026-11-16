@@ -14,26 +14,9 @@ public partial class FormularioPago
     [Parameter]
     public EventCallback AlCerrar { get; set; }
     private MetodoPago Borrador { get; set; } = new();
-    private string Numero { get; set; } = "";
     private DateOnly? FechaVencimiento { get; set; }
     private string MensajeError { get; set; } = "";
     private bool Guardando { get; set; }
-    private bool Completo
-    {
-        get
-        {
-            if (string.IsNullOrWhiteSpace(Borrador.Titular))
-                return false;
-            if (string.IsNullOrWhiteSpace(Borrador.Proveedor))
-                return false;
-            if (Valor is null && string.IsNullOrWhiteSpace(Numero))
-                return false;
-            if (Borrador.Tipo == "Tarjeta" && !FechaVencimiento.HasValue)
-                return false;
-            return true;
-        }
-    }
-
     protected override void OnInitialized()
     {
         if (Valor is not null)
@@ -58,14 +41,14 @@ public partial class FormularioPago
     private void MostrarTarjeta()
     {
         Borrador.Tipo = "Tarjeta";
-        Numero = "";
+        Borrador.Numero = "";
         MensajeError = "";
     }
 
     private void MostrarBilletera()
     {
         Borrador.Tipo = "Billetera";
-        Numero = "";
+        Borrador.Numero = "";
         MensajeError = "";
     }
 
@@ -73,13 +56,6 @@ public partial class FormularioPago
     {
         if (Guardando)
             return;
-        if (!Completo)
-        {
-            MensajeError = "Completa los campos obligatorios.";
-            return;
-        }
-
-        Borrador.Numero = string.IsNullOrWhiteSpace(Numero) ? null : Numero.Trim();
         if (FechaVencimiento.HasValue && Borrador.Tipo == "Tarjeta")
             Borrador.Vencimiento = FechaVencimiento.Value;
         Guardando = true;
@@ -87,15 +63,11 @@ public partial class FormularioPago
         try
         {
             await AlGuardar.InvokeAsync(Borrador);
-            Numero = "";
         }
         catch (InvalidOperationException e)
         {
             MensajeError = e.Message;
         }
-        finally
-        {
-            Guardando = false;
-        }
+        Guardando = false;
     }
 }

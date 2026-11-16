@@ -41,6 +41,6 @@ public class ResenaRS {
     @GET
     @Path("libro/{idLibro}/valoracion")
     public ValoracionLibroDTO obtenerValoracion(@PathParam("idLibro") int idLibro) throws NegocioException {
-        return servicios.getResenaBO().obtenerValoracion(Sesion.obtenerIdUsuario(peticion), idLibro);
+        return servicios.getResenaBO().obtenerValoracion(idLibro);
     }
 }

@@ -12,11 +12,12 @@ public partial class Compra : Web.Componentes.Paginas.Cuenta.PaginaCuenta
 
     [Inject] protected CuentaServicio Cuenta { get; set; } = default!;
 
-    private int? direccionId, metodoId, cuponId;
+    private PreparacionCompraDTO? preparacion;
+    private SeleccionCompraDTO Seleccion => preparacion?.Seleccion ?? new SeleccionCompraDTO();
     private int indiceDireccion, indiceMetodo, indiceCupon;
     private bool formularioDireccion, formularioMetodo, procesando;
     private string? errorPago;
-    private ResumenCompraDTO? Resumen => Compras.Preparacion?.Resumen;
+    private ResumenCompraDTO? Resumen => preparacion?.Resumen;
     private decimal Productos => Resumen?.SubtotalProductos ?? 0;
     private decimal Subtotal => Productos - (Resumen?.DescuentoLibros ?? 0);
     private decimal DescuentoCupon => Resumen?.DescuentoCupon ?? 0;
@@ -36,6 +37,7 @@ public partial class Compra : Web.Componentes.Paginas.Cuenta.PaginaCuenta
 
     protected override async Task CargarDatos()
     {
+        preparacion = null;
         if (Sesion.Usuario is null)
             return;
         await Cuenta.CargarDatosCompra();
@@ -44,10 +46,7 @@ public partial class Compra : Web.Componentes.Paginas.Cuenta.PaginaCuenta
 
     private void MostrarPreparacion(PreparacionCompraDTO preparacion)
     {
-        Compras.Preparacion = preparacion;
-        direccionId = preparacion.Seleccion.IdDireccionEnvio == 0 ? null : preparacion.Seleccion.IdDireccionEnvio;
-        metodoId = preparacion.Seleccion.IdMetodoPago == 0 ? null : preparacion.Seleccion.IdMetodoPago;
-        cuponId = preparacion.Seleccion.IdCupon == 0 ? null : preparacion.Seleccion.IdCupon;
+        this.preparacion = preparacion;
         Compras.MostrarCarrito(preparacion.Resumen);
     }
     private async Task GuardarDireccion(Direccion direccion)
@@ -55,7 +54,7 @@ public partial class Compra : Web.Componentes.Paginas.Cuenta.PaginaCuenta
         int id = await Cuenta.GuardarDireccion(direccion);
         formularioDireccion = false;
         indiceDireccion = Cuenta.Direcciones.FindIndex(d => d.Id == id);
-        await Seleccionar(id, metodoId, cuponId);
+        await Seleccionar(id, Seleccion.IdMetodoPago, Seleccion.IdCupon);
     }
 
     private async Task GuardarMetodo(MetodoPago metodo)
@@ -63,10 +62,10 @@ public partial class Compra : Web.Componentes.Paginas.Cuenta.PaginaCuenta
         int id = await Cuenta.GuardarMetodo(metodo);
         formularioMetodo = false;
         indiceMetodo = Cuenta.Metodos.FindIndex(m => m.Id == id);
-        await Seleccionar(direccionId, id, cuponId);
+        await Seleccionar(Seleccion.IdDireccionEnvio, id, Seleccion.IdCupon);
     }
 
-    private async Task Seleccionar(int? direccion, int? metodo, int? cupon)
+    private async Task Seleccionar(int direccion, int metodo, int cupon)
     {
         if (procesando)
             return;
@@ -77,52 +76,53 @@ public partial class Compra : Web.Componentes.Paginas.Cuenta.PaginaCuenta
             MostrarPreparacion(await Api.Put<PreparacionCompraDTO>("pedidos/preparacion",
                 new SeleccionCompraDTO
                 {
-                    IdDireccionEnvio = direccion ?? 0,
-                    IdMetodoPago = metodo ?? 0,
-                    IdCupon = cupon ?? 0
+                    IdDireccionEnvio = direccion,
+                    IdMetodoPago = metodo,
+                    IdCupon = cupon
                 }));
         }
         catch (InvalidOperationException e)
         {
             errorPago = e.Message;
         }
-        finally
-        {
-            procesando = false;
-        }
+        procesando = false;
     }
 
     private async Task Confirmar()
     {
-        if (procesando || Compras.Preparacion?.PuedePagar != true)
+        if (procesando || preparacion?.PuedePagar != true)
             return;
         procesando = true;
         errorPago = null;
+        DetallePedidoDTO? detalle = null;
         try
         {
-            var detalle = await Api.Post<DetallePedidoDTO>("pedidos/confirmacion");
-            // El pedido ya fue confirmado; no se envía otra confirmación ni se altera su detalle.
-            Compras.MostrarCarrito(new ResumenCompraDTO());
-            Compras.Preparacion = null;
-            Navegacion.NavigateTo($"/confirmacion/{detalle.Pedido.Id}");
+            detalle = await Api.Post<DetallePedidoDTO>("pedidos/confirmacion");
         }
         catch (InvalidOperationException e)
         {
             errorPago = e.Message;
+        }
+
+        if (detalle is not null)
+        {
+            // El pedido ya fue confirmado; no se envía otra confirmación ni se altera su detalle.
+            Compras.MostrarCarrito(new ResumenCompraDTO());
+            preparacion = null;
+            Navegacion.NavigateTo($"/confirmacion/{detalle.Pedido.Id}");
+        }
+        else if (Sesion.Usuario is not null)
+        {
             // Si negocio actualizó los importes, mostrar la preparación vigente antes del reintento.
-            if (Sesion.Usuario is not null)
+            try
             {
-                try
-                {
-                    MostrarPreparacion(await Api.Get<PreparacionCompraDTO>("pedidos/preparacion"));
-                }
-                catch (InvalidOperationException)
-                { Compras.Preparacion = null; }
+                MostrarPreparacion(await Api.Get<PreparacionCompraDTO>("pedidos/preparacion"));
+            }
+            catch (InvalidOperationException)
+            {
+                preparacion = null;
             }
         }
-        finally
-        {
-            procesando = false;
-        }
+        procesando = false;
     }
 }

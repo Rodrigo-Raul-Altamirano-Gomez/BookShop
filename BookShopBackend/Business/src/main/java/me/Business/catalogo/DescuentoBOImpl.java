@@ -5,6 +5,8 @@ import java.sql.SQLException;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
 import me.Business.exceptions.AccesoDenegadoException;
 import me.Business.exceptions.ConflictoException;
 import me.Business.exceptions.NegocioException;
@@ -21,6 +23,7 @@ import me.DBManager.TransactionContext;
 import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.dto.catalogo.DatosDescuentoDTO;
 import me.Model.dto.catalogo.DescuentoDTO;
+import me.Model.dto.catalogo.EstadoDescuento;
 import me.Model.entities.catalogo.Descuento;
 import me.Model.entities.catalogo.Libro;
 import me.Model.entities.usuario.Usuario;
@@ -29,6 +32,7 @@ public class DescuentoBOImpl implements DescuentoBO {
 
     private final DescuentoDAO descuentoDAO;
     private final LibroDAO libroDAO;
+    private final UsuarioDAO usuarioDAO;
     private final Clock reloj;
 
     public DescuentoBOImpl() {
@@ -47,7 +51,7 @@ public class DescuentoBOImpl implements DescuentoBO {
     public int guardar(int idActor, int idLibro, DatosDescuentoDTO datos) throws NegocioException {
         try {
             Usuario actor = usuarioDAO.leer(idActor);
-            if (idLibro < 1 || datos == null || datos.id() < 0)
+            if (datos == null)
                 throw new ValidacionException("descuento", "Seleccione un libro y descuento validos.");
             if (datos.eliminar() && datos.id() == 0)
                 return 0;
@@ -112,7 +116,7 @@ public class DescuentoBOImpl implements DescuentoBO {
     }
 
     @Override
-    public ResultadoPaginadoDTO<DescuentoDTO> listarPorLibro(int idActor, int idLibro, int pagina, int
+    public ResultadoPaginadoDTO<DescuentoDTO> listarPorLibro(int idLibro, int pagina, int
         tamanio) throws NegocioException {
         if (pagina < 1 || tamanio < 1)
             throw new ValidacionException("pagina", "La página y su tamaño deben ser positivos.");
@@ -120,11 +124,21 @@ public class DescuentoBOImpl implements DescuentoBO {
             Libro libro = libroDAO.leer(idLibro);
             if (libro == null || libro.isEliminado())
                 throw new RecursoNoEncontradoException("El libro no esta disponible.");
-            return descuentoDAO.listarPorLibro(idLibro, LocalDateTime.now(reloj), pagina, tamanio);
+            ResultadoPaginadoDTO<Descuento> datos = descuentoDAO.listarPorLibro(idLibro, pagina, tamanio);
+            LocalDateTime ahora = LocalDateTime.now(reloj);
+            List<DescuentoDTO> descuentos = new ArrayList<>();
+            for (Descuento descuento : datos.items()) {
+                EstadoDescuento estado = EstadoDescuento.VIGENTE;
+                if (ahora.isBefore(descuento.getFechaInicio()))
+                    estado = EstadoDescuento.PROXIMO;
+                else if (ahora.isAfter(descuento.getFechaFin()))
+                    estado = EstadoDescuento.VENCIDO;
+                descuentos.add(new DescuentoDTO(descuento.getId(), descuento.getPorcentaje(),
+                    descuento.getFechaInicio(), descuento.getFechaFin(), estado));
+            }
+            return new ResultadoPaginadoDTO<>(descuentos, datos.totalResultados(), pagina, tamanio);
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudieron consultar los descuentos.", e);
         }
     }
-
-    private final UsuarioDAO usuarioDAO;
 }

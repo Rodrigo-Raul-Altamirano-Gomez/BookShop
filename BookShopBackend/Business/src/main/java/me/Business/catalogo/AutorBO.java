@@ -20,7 +20,7 @@ public interface AutorBO {
 
     void eliminar(int idActor, int id) throws NegocioException;
 
-    ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscar(int idActor, FiltroReferenciaDTO filtro) throws
+    ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscar(FiltroReferenciaDTO filtro) throws
         NegocioException;
 
     DetalleReferenciaDTO obtenerDetalle(int idActor, int id) throws NegocioException;

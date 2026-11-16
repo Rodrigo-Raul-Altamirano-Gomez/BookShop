@@ -2,8 +2,6 @@ package me.DAO.catalogo;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
 import me.DAO.CrudDAO;
 import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.dto.catalogo.DetalleReferenciaDTO;
@@ -23,6 +21,5 @@ public interface EditorialDAO extends CrudDAO<Editorial> {
 
     boolean existeNombre(String nombre, int idExcluir) throws SQLException;
 
-    Map<Integer, TarjetaReferenciaDTO> obtenerMasCompradas(List<Integer> idsUsuarios, LocalDate inicio,
-        LocalDate fin) throws SQLException;
+    TarjetaReferenciaDTO obtenerMasComprada(int idUsuario, LocalDate inicio, LocalDate fin) throws SQLException;
 }

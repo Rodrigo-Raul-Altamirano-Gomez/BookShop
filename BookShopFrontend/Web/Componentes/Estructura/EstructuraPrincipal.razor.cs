@@ -21,7 +21,6 @@ public partial class EstructuraPrincipal : IDisposable
     private string textoBusqueda = "";
     private bool cuentaAbierta, accesoAbierto;
     private string? aviso, informacion;
-    private CancellationTokenSource? temporizadorAviso;
     private static readonly (string Etiqueta, string Icono, string Ruta)[] EnlacesCuenta =
     [
         ("Mi perfil", "user", "/mi-perfil"),
@@ -101,34 +100,14 @@ public partial class EstructuraPrincipal : IDisposable
             + "compras utilizan un pago simulado para fines académicos.")
     };
 
-    private async void MostrarAviso(string mensaje)
+    private void MostrarAviso(string mensaje)
     {
-        temporizadorAviso?.Cancel();
-        temporizadorAviso?.Dispose();
-        temporizadorAviso = new();
-        var token = temporizadorAviso.Token;
-        await InvokeAsync(() =>
-        {
-            aviso = mensaje;
-            StateHasChanged();
-        });
-        try
-        {
-            await Task.Delay(5000, token);
-            await InvokeAsync(() =>
-            {
-                aviso = null;
-                StateHasChanged();
-            });
-        }
-        catch (OperationCanceledException)
-        {
-        }
+        aviso = mensaje;
+        Actualizar();
     }
 
     private void CerrarAviso()
     {
-        temporizadorAviso?.Cancel();
         aviso = null;
     }
 
@@ -138,7 +117,5 @@ public partial class EstructuraPrincipal : IDisposable
         Sesion.AccesoSolicitado -= AbrirAcceso;
         Sesion.AvisoSolicitado -= MostrarAviso;
         Navegacion.LocationChanged -= CambioUbicacion;
-        temporizadorAviso?.Cancel();
-        temporizadorAviso?.Dispose();
     }
 }

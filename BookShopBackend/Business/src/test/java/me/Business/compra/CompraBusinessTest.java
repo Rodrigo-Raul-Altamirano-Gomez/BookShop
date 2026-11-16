@@ -40,6 +40,8 @@ class CompraBusinessTest {
 
     private PedidoDAO pedidos;
 
+    private ItemPedidoDAO items;
+
     private DireccionEnvioDAO direcciones;
 
     private MetodoPagoDAO metodos;
@@ -78,6 +80,7 @@ class CompraBusinessTest {
         descuentos = mock(DescuentoDAO.class);
         usuarios = mock(UsuarioDAO.class);
         pedidos = mock(PedidoDAO.class);
+        items = mock(ItemPedidoDAO.class);
         direcciones = mock(DireccionEnvioDAO.class);
         metodos = mock(MetodoPagoDAO.class);
         cupones = mock(CuponDAO.class);
@@ -120,7 +123,7 @@ class CompraBusinessTest {
         direccion.setPredeterminada(true);
         when(direcciones.leer(1)).thenReturn(direccion);
         when(direcciones.leer(1)).thenReturn(direccion);
-        when(direcciones.listarPorUsuario(1, 1, 100)).thenReturn(new ResultadoPaginadoDTO<>(List.of(new DireccionEnvioDTO(1, "Casa", "Calle 1", "Distrito", "Lima", null, true)), 1, 1, 100));
+        when(direcciones.listarPorUsuario(1, 1, 1)).thenReturn(new ResultadoPaginadoDTO<>(List.of(new DireccionEnvioDTO(1, "Casa", "Calle 1", "Distrito", "Lima", null, true)), 1, 1, 1));
         metodo = new TarjetaBancaria();
         metodo.setId(1);
         metodo.setUsuario(usuario);
@@ -132,7 +135,7 @@ class CompraBusinessTest {
         metodo.setPredeterminado(true);
         when(metodos.leer(1)).thenReturn(metodo);
         when(metodos.leer(1)).thenReturn(metodo);
-        when(metodos.listarPorUsuario(1, 1, 100)).thenReturn(new ResultadoPaginadoDTO<>(List.of(metodo), 1, 1, 100));
+        when(metodos.listarPorUsuario(1, 1, 1)).thenReturn(new ResultadoPaginadoDTO<>(List.of(metodo), 1, 1, 1));
         doAnswer(inv -> {
             Pedido pedido = inv.getArgument(0);
             pedido.setId(20);
@@ -144,7 +147,7 @@ class CompraBusinessTest {
         when(pedidos.actualizarEstado(any(), any())).thenReturn(true);
         when(pedidos.obtenerItemsDTO(20)).thenAnswer(inv -> registrado.get().getItems().stream().map(item -> new ItemDTO(item.getLibro().getId(), libro.getTitulo(), null, item.getCantidad(), item.getPrecioBase(), item.getPrecioUnitario(), item.getPorcentajeDescuento(), item.getSubTotal(), null, null)).toList());
         carrito = new CarritoBOImpl(libros, descuentos, reloj, () -> parametros);
-        negocio = new PedidoBOImpl(pedidos, libros, descuentos, usuarios, direcciones, metodos, cupones, solicitudes, carrito, reloj, () -> azar.get(), () -> parametros);
+        negocio = new PedidoBOImpl(pedidos, items, libros, usuarios, direcciones, metodos, cupones, solicitudes, carrito, reloj, () -> azar.get(), () -> parametros);
     }
 
     @AfterEach
@@ -186,12 +189,46 @@ class CompraBusinessTest {
     }
 
     @Test
+    void agregarYCambiarCantidadMantienenOrdenYNoAplicanCambiosSiFallaOtraLinea() throws Exception {
+        Libro otro = new Libro();
+        otro.setId(4);
+        otro.setTitulo("Otro libro");
+        otro.setPrecioBase(new BigDecimal("10.00"));
+        otro.setStockFisico(10);
+        when(libros.leer(4)).thenReturn(otro);
+        carrito.agregar(1, 3, 1);
+        carrito.agregar(1, 4, 2);
+        var resumen = carrito.agregar(1, 3, 2);
+        assertEquals(List.of(3, 4), resumen.items().stream().map(ItemDTO::idLibro).toList());
+        assertEquals(3, resumen.items().getFirst().cantidad());
+        var preparacion = negocio.preparar(1);
+        when(libros.leer(4)).thenThrow(new SQLException("Fallo al actualizar otra linea"));
+        assertThrows(PersistenciaException.class, () -> carrito.cambiarCantidad(1, 3, 5));
+        assertSame(preparacion, negocio.consultarPreparacion(1));
+        doReturn(otro).when(libros).leer(4);
+        assertEquals(3, carrito.consultar(1).items().getFirst().cantidad());
+    }
+
+    @Test
+    void prepararNoEligeRegistrosSinMarcaNiMetodoPredeterminadoVencido() throws Exception {
+        carrito.agregar(1, 3, 1);
+        when(direcciones.listarPorUsuario(1, 1, 1)).thenReturn(new ResultadoPaginadoDTO<>(List.of(
+            new DireccionEnvioDTO(1, "Casa", "Calle 1", "Distrito", "Lima", null, false)), 1, 1, 1));
+        metodo.setFechaVencimiento(fecha.toLocalDate().minusDays(1));
+        var preparacion = negocio.preparar(1);
+        assertEquals(new SeleccionCompraDTO(0, 0, 0), preparacion.seleccion());
+        assertFalse(preparacion.puedePagar());
+        verify(direcciones).listarPorUsuario(1, 1, 1);
+        verify(metodos).listarPorUsuario(1, 1, 1);
+    }
+
+    @Test
     void relojInyectadoUtcUsaFechaLimaParaVencimientoYPago() throws Exception {
         Clock utc = Clock.fixed(Instant.parse("2026-10-08T01:00:00Z"), ZoneOffset.UTC);
         LocalDateTime ahoraLima = LocalDateTime.of(2026, 10, 7, 20, 0);
         metodo.setFechaVencimiento(ahoraLima.toLocalDate());
         carrito = new CarritoBOImpl(libros, descuentos, utc, () -> parametros);
-        negocio = new PedidoBOImpl(pedidos, libros, descuentos, usuarios, direcciones, metodos, cupones, solicitudes, carrito, utc, () -> azar.get(), () -> parametros);
+        negocio = new PedidoBOImpl(pedidos, items, libros, usuarios, direcciones, metodos, cupones, solicitudes, carrito, utc, () -> azar.get(), () -> parametros);
         carrito.agregar(1, 3, 1);
         assertTrue(negocio.preparar(1).puedePagar());
         assertTrue(negocio.pagar(1).metodoPago().vigente());
@@ -254,6 +291,20 @@ class CompraBusinessTest {
     }
 
     @Test
+    void libroRetiradoSigueVisibleYNoSeConfirmaElPedido() throws Exception {
+        carrito.agregar(1, 3, 2);
+        negocio.preparar(1);
+        when(libros.leer(3)).thenReturn(null);
+        assertThrows(ConflictoException.class, () -> negocio.pagar(1));
+        ItemDTO linea = negocio.consultarPreparacion(1).resumen().items().getFirst();
+        assertEquals(3, linea.idLibro());
+        assertEquals(2, linea.cantidad());
+        assertFalse(linea.activo());
+        verify(pedidos, never()).insertar(any());
+        verify(libros, never()).descontarStock(anyInt(), anyInt(), anyString());
+    }
+
+    @Test
     void falloDeDatosDespuesDeCommitNoPermiteCobrarDeNuevo() throws Exception {
         carrito.agregar(1, 3, 2);
         negocio.preparar(1);
@@ -268,12 +319,28 @@ class CompraBusinessTest {
     }
 
     @Test
+    void compraConservaImportesHistoricosAlCambiarCatalogoYCarrito() throws Exception {
+        carrito.agregar(1, 3, 2);
+        negocio.preparar(1);
+        negocio.pagar(1);
+        libro.setPrecioBase(new BigDecimal("50.00"));
+        carrito.agregar(1, 3, 5);
+        var historico = negocio.consultar(1, 20);
+        assertEquals(2, historico.resumen().cantidadLibros());
+        assertEquals(new BigDecimal("19.99"), historico.resumen().items().getFirst().precioOriginal());
+        assertEquals(new BigDecimal("16.99"), historico.resumen().items().getFirst().precioUnitario());
+        assertEquals(new BigDecimal("35.68"), historico.pedido().total());
+        assertEquals(5, carrito.consultar(1).cantidadLibros());
+    }
+
+    @Test
     void falloAlInsertarRevierteTransaccionSinVaciarCarrito() throws Exception {
         carrito.agregar(1, 3, 2);
         negocio.preparar(1);
-        doThrow(new SQLException("Fallo de items")).when(pedidos).insertar(any());
+        doThrow(new SQLException("Fallo de items")).when(items).insertar(eq(20), any());
         assertThrows(PersistenciaException.class, () -> negocio.pagar(1));
         verify(libros).descontarStock(3, 2, "ana@test");
+        verify(pedidos).insertar(any());
         verify(conexion).rollback();
         verify(conexion, never()).commit();
         assertEquals(2, carrito.consultar(1).cantidadLibros());

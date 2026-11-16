@@ -31,25 +31,12 @@ public partial class DetalleLibro : IDisposable
     private bool procesando;
     private int cantidad = 1, idAnterior, paginaResenas = 1;
     private bool sinopsisCompleta, fichaExpandida;
-    private bool Deseado => Cuenta.Deseados.Contains(Id);
-    private bool Favorito => Cuenta.Favoritos.Contains(Id);
-    private List<Resena> resenas = [];
-    private double Promedio
-    {
-        get
-        {
-            if (totalResenas == 0)
-                return 0;
-            long puntos = 0;
-            for (int estrellas = 1; estrellas <= 5; estrellas++)
-                puntos += estrellas * CantidadEstrellas(estrellas);
-            return puntos / (double)totalResenas;
-        }
-    }
+    private bool Deseado, Favorito;
+    private List<ResenaDTO> resenas = [];
+    private double Promedio => Libro?.Valoracion.Promedio ?? 0;
     private string EstiloPromedio => $"--relleno:{(Promedio * 20).ToString(CultureInfo.InvariantCulture)}%";
     private int PaginasResenas => Math.Max(1, (int)((totalResenas + 9) / 10));
     private List<Libro> LibrosSimilares = [];
-    private ValoracionLibroDTO? valoracion;
     private DetalleLibroDTO? detalleLibro;
     private long totalResenas;
 
@@ -71,15 +58,8 @@ public partial class DetalleLibro : IDisposable
             var detalle = await Api.Get<DetalleLibroDTO>($"libros/{Id}");
             detalleLibro = detalle;
             Libro = Presentacion.Libro(detalle);
-            valoracion = detalle.Valoracion;
-            if (detalle.Favorito)
-                Cuenta.Favoritos.Add(Id);
-            else
-                Cuenta.Favoritos.Remove(Id);
-            if (detalle.Deseado)
-                Cuenta.Deseados.Add(Id);
-            else
-                Cuenta.Deseados.Remove(Id);
+            Favorito = detalle.Favorito;
+            Deseado = detalle.Deseado;
             var similares = await Api.Get<List<TarjetaLibroDTO>>($"recomendaciones/similares/{Id}");
             LibrosSimilares = similares.Select(Presentacion.Libro).ToList();
             await CargarResenas();
@@ -90,10 +70,7 @@ public partial class DetalleLibro : IDisposable
         {
             errorCarga = e.Message;
         }
-        finally
-        {
-            cargando = false;
-        }
+        cargando = false;
     }
     private async Task CargarResenas()
     {
@@ -105,26 +82,15 @@ public partial class DetalleLibro : IDisposable
                 TamanioPagina = 10
             });
         totalResenas = datos.TotalResultados;
-        resenas = datos.Items.Where(dto => dto.Activo).Select(dto => new Resena
-        {
-            Id = dto.Id,
-            IdLibro = dto.IdLibro,
-            Usuario = dto.NombreUsuario,
-            FotoUsuario = dto.ImagenUsuario ?? "/images/user-placeholder.svg",
-            Fecha = dto.Fecha,
-            Puntuacion = dto.Puntuacion,
-            Comentario = dto.Comentario,
-            Votos = dto.CantidadVotosUtiles,
-            Activo = dto.Activo
-        }).ToList();
+        resenas = datos.Items;
     }
     private long CantidadEstrellas(int puntuacion) => puntuacion switch
     {
-        1 => valoracion?.CantidadUnaEstrella ?? 0,
-        2 => valoracion?.CantidadDosEstrellas ?? 0,
-        3 => valoracion?.CantidadTresEstrellas ?? 0,
-        4 => valoracion?.CantidadCuatroEstrellas ?? 0,
-        _ => valoracion?.CantidadCincoEstrellas ?? 0
+        1 => Libro?.Valoracion.CantidadUnaEstrella ?? 0,
+        2 => Libro?.Valoracion.CantidadDosEstrellas ?? 0,
+        3 => Libro?.Valoracion.CantidadTresEstrellas ?? 0,
+        4 => Libro?.Valoracion.CantidadCuatroEstrellas ?? 0,
+        _ => Libro?.Valoracion.CantidadCincoEstrellas ?? 0
     };
 
     private async void ActualizarVista()
@@ -175,50 +141,29 @@ public partial class DetalleLibro : IDisposable
         {
             Sesion.Avisar(e.Message);
         }
-        finally
-        {
-            procesando = false;
-        }
+        procesando = false;
     }
 
-    private async Task AlternarDeseado()
+    private async Task AlternarGuardado(bool favorito)
     {
         if (procesando) return;
+        if (!Sesion.RequerirAcceso())
+            return;
         procesando = true;
         try
         {
-            await Cuenta.AlternarGuardado(Id, false);
-            Sesion.Notificar();
+            bool guardar = favorito ? !Favorito : !Deseado;
+            await Cuenta.CambiarGuardado(Id, favorito, guardar);
+            if (favorito)
+                Favorito = guardar;
+            else
+                Deseado = guardar;
         }
         catch (InvalidOperationException e)
         {
-            Sesion.Error = e.Message;
             Sesion.Avisar(e.Message);
         }
-        finally
-        {
-            procesando = false;
-        }
-    }
-
-    private async Task AlternarFavorito()
-    {
-        if (procesando) return;
-        procesando = true;
-        try
-        {
-            await Cuenta.AlternarGuardado(Id, true);
-            Sesion.Notificar();
-        }
-        catch (InvalidOperationException e)
-        {
-            Sesion.Error = e.Message;
-            Sesion.Avisar(e.Message);
-        }
-        finally
-        {
-            procesando = false;
-        }
+        procesando = false;
     }
 
     private void Comparar()
@@ -255,9 +200,6 @@ public partial class DetalleLibro : IDisposable
         {
             errorCarga = e.Message;
         }
-        finally
-        {
-            cargando = false;
-        }
+        cargando = false;
     }
 }

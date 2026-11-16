@@ -22,25 +22,25 @@
             Billetera
         </button>
     </div>
-    <form @onsubmit="Guardar" @onsubmit:preventDefault novalidate>
+    <form @onsubmit="Guardar" @onsubmit:preventDefault>
         <label class="field form-label d-block mb-3">
             Titular *
             <input
                 class="form-control"
-                @bind="Borrador.Titular"
+                required @bind="Borrador.Titular"
                 @bind:event="oninput"
-                maxlength="100"
+                maxlength="150"
                 autocomplete="cc-name"
             />
         </label>
         <div class="row g-3">
             <label class="field form-label d-block mb-3 col-md-6">
                 Proveedor *
-                <input class="form-control" @bind="Borrador.Proveedor" @bind:event="oninput" maxlength="60" />
+                <input class="form-control" required @bind="Borrador.Proveedor" @bind:event="oninput" maxlength="100" />
             </label>
             <label class="field form-label d-block mb-3 col-md-6">
                 Alias
-                <input class="form-control" @bind="Borrador.Alias" @bind:event="oninput" maxlength="60" />
+                <input class="form-control" @bind="Borrador.Alias" @bind:event="oninput" maxlength="100" />
             </label>
         </div>
         @if (Borrador.Tipo == "Tarjeta")
@@ -56,10 +56,9 @@
         <label class="field form-label d-block mb-3">
             @(Borrador.Tipo == "Tarjeta" ? "Número de tarjeta" : "Número de celular") @(Valor is null ? "*" : "")
             <input class="form-control"
-                @bind="Numero"
+                required="@(Valor is null)" @bind="Borrador.Numero"
                 @bind:event="oninput"
                 inputmode="numeric"
-                maxlength="24"
                 autocomplete="off"
                 placeholder="@(Valor is null ? "Ingresa el número completo" :
                     "Deja vacío para conservar el número registrado")"
@@ -73,7 +72,7 @@
         {
             <label class="field form-label d-block mb-3">
                 Fecha de vencimiento *
-                <input class="form-control" type="date" @bind="FechaVencimiento" />
+                <input class="form-control" type="date" required @bind="FechaVencimiento" />
             </label>
         }
         <label class="form-check form-check-label my-3">
@@ -86,7 +85,7 @@
         }
         <div class="modal-footer px-0 pb-0 mt-4">
             <button type="button" class="btn btn-secondary" @onclick="AlCerrar" disabled="@Guardando">Cancelar</button>
-            <button type="submit" class="btn btn-primary" disabled="@(!Completo || Guardando)">
+            <button type="submit" class="btn btn-primary" disabled="@Guardando">
                 @(Valor is null ? "Guardar método" : "Guardar cambios")
             </button>
         </div>

@@ -22,6 +22,7 @@ public class VotoUtilBOImpl implements VotoUtilBO {
     private final VotoUtilDAO votoUtilDAO;
     private final ResenaDAO resenaDAO;
     private final LibroDAO libroDAO;
+    private final UsuarioDAO usuarioDAO;
 
     public VotoUtilBOImpl() {
         this(new VotoUtilDAOImpl(), new ResenaDAOImpl(), new LibroDAOImpl(), new UsuarioDAOImpl());
@@ -46,6 +47,8 @@ public class VotoUtilBOImpl implements VotoUtilBO {
                 throw new RecursoNoEncontradoException("El libro no esta disponible.");
             // Las referencias no prohiben votar la resena propia; la relacion impide duplicados.
             boolean cambio = votoUtilDAO.cambiarVoto(idActor, idResena, marcar, actor.getEmail());
+            if (cambio)
+                resenaDAO.cambiarCantidadVotos(idResena, marcar ? 1 : -1, actor.getEmail());
             TransactionContext.commit();
             return cambio;
         } catch (SQLException e) {
@@ -59,5 +62,4 @@ public class VotoUtilBOImpl implements VotoUtilBO {
         }
     }
 
-    private final UsuarioDAO usuarioDAO;
 }

@@ -45,15 +45,6 @@ public class VotoUtilDAOImpl implements VotoUtilDAO {
                     throw new SQLException("No se pudo actualizar el voto.");
             }
         }
-        try (PreparedStatement sentencia =
-            conexion.prepareStatement("UPDATE RESENA SET cantidad_votos_utiles = cantidad_votos_utiles + ?," +
-            " usuario_actualizacion = ?, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ?")) {
-            sentencia.setInt(1, marcar ? 1 : -1);
-            sentencia.setString(2, actor);
-            sentencia.setInt(3, idResena);
-            if (sentencia.executeUpdate() != 1)
-                throw new SQLException("No se pudo actualizar el contador de votos.");
-        }
         return true;
     }
 }

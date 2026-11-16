@@ -4,7 +4,6 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
@@ -35,31 +34,22 @@ public class LibroGuardadoRS {
 
     @PUT
     @Path("{idLibro}")
-    public void guardar(@PathParam("idLibro") int idLibro, @QueryParam("favorito") String favorito) throws
+    public void guardar(@PathParam("idLibro") int idLibro, @QueryParam("favorito") boolean favorito) throws
         NegocioException {
-        if (!"true".equalsIgnoreCase(favorito) && !"false".equalsIgnoreCase(favorito))
-            throw new BadRequestException("Selecciona Favoritos o Deseados.");
-        boolean esFavorito = Boolean.parseBoolean(favorito);
-        servicios.getLibroGuardadoBO().guardar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), idLibro, esFavorito);
+        servicios.getLibroGuardadoBO().guardar(Sesion.exigirIdUsuario(peticion), idLibro, favorito);
     }
 
     @DELETE
     @Path("{idLibro}")
-    public boolean retirar(@PathParam("idLibro") int idLibro, @QueryParam("favorito") String favorito) throws
+    public boolean retirar(@PathParam("idLibro") int idLibro, @QueryParam("favorito") boolean favorito) throws
         NegocioException {
-        if (!"true".equalsIgnoreCase(favorito) && !"false".equalsIgnoreCase(favorito))
-            throw new BadRequestException("Selecciona Favoritos o Deseados.");
-        boolean esFavorito = Boolean.parseBoolean(favorito);
-        return servicios.getLibroGuardadoBO().retirar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), idLibro, esFavorito);
+        return servicios.getLibroGuardadoBO().retirar(Sesion.exigirIdUsuario(peticion), idLibro, favorito);
     }
 
     @POST
     @Path("busqueda")
-    public ResultadoPaginadoDTO<TarjetaLibroDTO> listar(@QueryParam("favorito") String favorito,
+    public ResultadoPaginadoDTO<TarjetaLibroDTO> listar(@QueryParam("favorito") boolean favorito,
         FiltroLibroDTO filtro) throws NegocioException {
-        if (!"true".equalsIgnoreCase(favorito) && !"false".equalsIgnoreCase(favorito))
-            throw new BadRequestException("Selecciona Favoritos o Deseados.");
-        boolean esFavorito = Boolean.parseBoolean(favorito);
-        return servicios.getLibroGuardadoBO().listar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), esFavorito, filtro);
+        return servicios.getLibroGuardadoBO().listar(Sesion.exigirIdUsuario(peticion), favorito, filtro);
     }
 }

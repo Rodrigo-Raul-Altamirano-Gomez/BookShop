@@ -31,6 +31,8 @@ import me.Model.entities.usuario.Usuario;
 
 public class ResenaBOImpl implements ResenaBO {
 
+    private final UsuarioDAO usuarioDAO;
+
     private final ResenaDAO resenaDAO;
     private final LibroDAO libroDAO;
     private final PedidoDAO pedidoDAO;
@@ -182,8 +184,6 @@ public class ResenaBOImpl implements ResenaBO {
             consulta = ConsultaResenasDTO.porDefecto();
         if (consulta.pagina() < 1 || consulta.tamanioPagina() < 1)
             throw new ValidacionException("pagina", "La página y su tamaño deben ser positivos.");
-        if (consulta.orden() == null)
-            throw new ValidacionException("orden", "Seleccione un orden de resenas.");
         if (consulta.orden() != OrdenResena.MAS_RECIENTES)
             throw new ValidacionException("orden", "Las resenas del libro se consultan por fecha reciente.");
         try {
@@ -229,7 +229,7 @@ public class ResenaBOImpl implements ResenaBO {
     }
 
     @Override
-    public ValoracionLibroDTO obtenerValoracion(int idActor, int idLibro) throws NegocioException {
+    public ValoracionLibroDTO obtenerValoracion(int idLibro) throws NegocioException {
         try {
             Libro libro = libroDAO.leer(idLibro);
             if (libro == null || !libro.isActivo())
@@ -248,10 +248,7 @@ public class ResenaBOImpl implements ResenaBO {
         String comentario = datos.comentario() == null ? "" : datos.comentario().strip();
         if (comentario.isEmpty())
             throw new ValidacionException("comentario", "Este campo es obligatorio.");
-        if (comentario.length() > 65535)
-            throw new ValidacionException("comentario", "El máximo es 65535 caracteres.");
         return new DatosResenaDTO(datos.puntuacion(), comentario);
     }
 
-    private final UsuarioDAO usuarioDAO;
 }

@@ -15,6 +15,19 @@ import me.Model.entities.usuario.Usuario;
 public class ResenaDAOImpl implements ResenaDAO {
 
     @Override
+    public void cambiarCantidadVotos(int idResena, int cambio, String usuario) throws SQLException {
+        String sql = "UPDATE RESENA SET cantidad_votos_utiles = cantidad_votos_utiles + ?," +
+            " usuario_actualizacion = ?, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ?";
+        Connection conexion = TransactionContext.getConnection();
+        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setInt(1, cambio);
+            sentencia.setString(2, usuario);
+            sentencia.setInt(3, idResena);
+            sentencia.executeUpdate();
+        }
+    }
+
+    @Override
     public void insertar(Resena resena) throws SQLException {
         String sql = """
             INSERT INTO RESENA (puntuacion, comentario, fecha, id_libro, id_usuario,
@@ -108,8 +121,6 @@ public class ResenaDAOImpl implements ResenaDAO {
     @Override
     public ResultadoPaginadoDTO<ResenaDTO> listar(int idLibro, int idUsuario, int idUsuarioActual,
         ConsultaResenasDTO consulta) throws SQLException {
-        if (consulta == null)
-            consulta = ConsultaResenasDTO.porDefecto();
         // Cero/cero representa Todas las reseñas; Business autoriza ese ámbito.
         String condiciones = " WHERE NOT r.eliminado";
         if (idLibro > 0)

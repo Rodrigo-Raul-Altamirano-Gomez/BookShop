@@ -11,6 +11,8 @@ import me.Business.exceptions.RecursoNoEncontradoException;
 import me.Business.exceptions.ValidacionException;
 import me.DAO.catalogo.CategoriaDAO;
 import me.DAO.catalogo.CategoriaDAOImpl;
+import me.DAO.catalogo.LibroDAO;
+import me.DAO.catalogo.LibroDAOImpl;
 import me.DAO.usuario.UsuarioDAO;
 import me.DAO.usuario.UsuarioDAOImpl;
 import me.DBManager.TransactionContext;
@@ -26,14 +28,17 @@ import me.Model.entities.usuario.Usuario;
 public class CategoriaBOImpl implements CategoriaBO {
 
     private final CategoriaDAO categoriaDAO;
+    private final LibroDAO libroDAO;
+    private final UsuarioDAO usuarioDAO;
     private final Clock reloj;
 
     public CategoriaBOImpl() {
-        this(new CategoriaDAOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")));
+        this(new CategoriaDAOImpl(), new LibroDAOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")));
     }
 
-    public CategoriaBOImpl(CategoriaDAO categoriaDAO, UsuarioDAO usuarioDAO, Clock reloj) {
+    public CategoriaBOImpl(CategoriaDAO categoriaDAO, LibroDAO libroDAO, UsuarioDAO usuarioDAO, Clock reloj) {
         this.categoriaDAO = categoriaDAO;
+        this.libroDAO = libroDAO;
         this.usuarioDAO = usuarioDAO;
         this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
     }
@@ -44,16 +49,14 @@ public class CategoriaBOImpl implements CategoriaBO {
             Usuario actor = usuarioDAO.leer(idActor);
             if (registro == null)
                 throw new ValidacionException("registro", "Complete los datos de la categoría.");
-            DatosReferenciaDTO datos = validarFormulario(registro.datos());
-            if (registro.imagen() != null && registro.imagen().length() > 2048)
-                throw new ValidacionException("imagen", "La URL admite hasta 2048 caracteres.");
+            DatosReferenciaDTO datos = registro.datos();
             Categoria categoria = new Categoria();
-            categoria.setNombre(datos.nombre());
+            categoria.setNombre(datos.nombre().strip());
             categoria.setDescripcion(datos.introduccion());
             categoria.setImagen(registro.imagen());
             categoria.setUsuarioCreacion(actor.getEmail());
             categoria.setFechaCreacion(LocalDateTime.now(reloj));
-            if (categoriaDAO.existeNombre(datos.nombre(), 0))
+            if (categoriaDAO.existeNombre(datos.nombre().strip(), 0))
                 throw new ValidacionException("nombre", "Ya existe una categoria con ese nombre.");
             categoriaDAO.insertar(categoria);
             return categoria.getId();
@@ -66,14 +69,14 @@ public class CategoriaBOImpl implements CategoriaBO {
     public void modificar(int idActor, int id, DatosReferenciaDTO datos) throws NegocioException {
         try {
             Usuario actor = usuarioDAO.leer(idActor);
-            DatosReferenciaDTO validos = validarFormulario(datos);
+
             Categoria categoria = categoriaDAO.leer(id);
             if (categoria == null || categoria.isEliminado())
                 throw new RecursoNoEncontradoException("La categoria no está disponible.");
-            if (categoriaDAO.existeNombre(validos.nombre(), id))
+            if (categoriaDAO.existeNombre(datos.nombre().strip(), id))
                 throw new ValidacionException("nombre", "Ya existe una categoria con ese nombre.");
-            categoria.setNombre(validos.nombre());
-            categoria.setDescripcion(validos.introduccion());
+            categoria.setNombre(datos.nombre().strip());
+            categoria.setDescripcion(datos.introduccion());
             categoria.setUsuarioActualizacion(actor.getEmail());
             categoriaDAO.modificar(categoria);
         } catch (SQLException e) {
@@ -85,8 +88,6 @@ public class CategoriaBOImpl implements CategoriaBO {
     public void cambiarImagen(int idActor, int id, String imagen) throws NegocioException {
         try {
             Usuario actor = usuarioDAO.leer(idActor);
-            if (imagen != null && imagen.length() > 2048)
-                throw new ValidacionException("imagen", "La URL admite hasta 2048 caracteres.");
             Categoria categoria = categoriaDAO.leer(id);
             if (categoria == null || categoria.isEliminado())
                 throw new RecursoNoEncontradoException("La categoria no está disponible.");
@@ -104,8 +105,11 @@ public class CategoriaBOImpl implements CategoriaBO {
             Categoria categoria = categoriaDAO.leer(id);
             if (categoria == null || categoria.isEliminado())
                 throw new RecursoNoEncontradoException("La categoría no esta disponible.");
-            if (categoria.isActivo() != activo && !categoriaDAO.cambiarActivo(id, activo, actor.getEmail()))
-                throw new ConflictoException("La categoría cambio; vuelva a consultarlo.");
+            if (categoria.isActivo() != activo) {
+                if (!categoriaDAO.cambiarActivo(id, activo, actor.getEmail()))
+                    throw new ConflictoException("La categoría cambio; vuelva a consultarlo.");
+                libroDAO.recalcularVetosPorCategoria(id, actor.getEmail());
+            }
             TransactionContext.commit();
         } catch (SQLException e) {
             TransactionContext.rollback();
@@ -127,6 +131,7 @@ public class CategoriaBOImpl implements CategoriaBO {
                 throw new RecursoNoEncontradoException("La categoría no esta disponible.");
             if (!categoriaDAO.eliminar(id, actor.getEmail()))
                 throw new ConflictoException("La categoría cambio; vuelva a consultarlo.");
+            libroDAO.recalcularVetosPorCategoria(id, actor.getEmail());
             TransactionContext.commit();
         } catch (SQLException e) {
             TransactionContext.rollback();
@@ -140,7 +145,7 @@ public class CategoriaBOImpl implements CategoriaBO {
     }
 
     @Override
-    public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscar(int idActor, FiltroReferenciaDTO filtro) throws
+    public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscar(FiltroReferenciaDTO filtro) throws
         NegocioException {
         if (filtro == null)
             filtro = FiltroReferenciaDTO.porDefecto();
@@ -148,15 +153,8 @@ public class CategoriaBOImpl implements CategoriaBO {
             throw new ValidacionException("pagina", "La página y su tamaño deben ser positivos.");
         if (filtro.orden() == null)
             throw new ValidacionException("orden", "Seleccione un orden.");
-        String nombre = filtro.nombre() == null ? null : filtro.nombre().strip();
-        if (nombre != null && nombre.isEmpty())
-            nombre = null;
-        if (nombre != null && nombre.length() > 100)
-            throw new ValidacionException("nombre", "El máximo es 100 caracteres.");
-        FiltroReferenciaDTO valido = new FiltroReferenciaDTO(nombre, filtro.soloActivos(), filtro.orden(),
-            filtro.pagina(), filtro.tamanioPagina());
         try {
-            return categoriaDAO.buscar(valido);
+            return categoriaDAO.buscar(filtro);
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudieron consultar las categorias.", e);
         }
@@ -174,21 +172,4 @@ public class CategoriaBOImpl implements CategoriaBO {
         }
     }
 
-    private DatosReferenciaDTO validarFormulario(DatosReferenciaDTO datos) throws ValidacionException {
-        if (datos == null)
-            throw new ValidacionException("datos", "Complete los datos de la categoría.");
-        String nombre = datos.nombre() == null ? "" : datos.nombre().strip();
-        if (nombre.isEmpty())
-            throw new ValidacionException("nombre", "Este campo es obligatorio.");
-        if (nombre.length() > 100)
-            throw new ValidacionException("nombre", "El máximo es 100 caracteres.");
-        String introduccion = datos.introduccion() == null ? null : datos.introduccion().strip();
-        if (introduccion != null && introduccion.isEmpty())
-            introduccion = null;
-        if (introduccion != null && introduccion.length() > 65535)
-            throw new ValidacionException("introduccion", "El máximo es 65535 caracteres.");
-        return new DatosReferenciaDTO(nombre, introduccion);
-    }
-
-    private final UsuarioDAO usuarioDAO;
 }

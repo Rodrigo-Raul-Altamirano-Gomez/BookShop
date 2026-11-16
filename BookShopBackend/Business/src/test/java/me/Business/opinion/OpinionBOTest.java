@@ -177,9 +177,11 @@ class OpinionBOTest {
         try (MockedStatic<TransactionContext> contexto = mockStatic(TransactionContext.class)) {
             assertTrue(votosBO.cambiarVoto(1, 7, true));
             assertFalse(votosBO.cambiarVoto(1, 7, true));
+            verify(resenas, times(1)).cambiarCantidadVotos(7, 1, "cliente@test");
             contexto.verify(TransactionContext::commit, times(2));
         }
-        doThrow(new SQLException("Fallo contador")).when(votos).cambiarVoto(1, 7, false, "cliente@test");
+        when(votos.cambiarVoto(1, 7, false, "cliente@test")).thenReturn(true);
+        doThrow(new SQLException("Fallo contador")).when(resenas).cambiarCantidadVotos(7, -1, "cliente@test");
         try (MockedStatic<TransactionContext> contexto = mockStatic(TransactionContext.class)) {
             assertThrows(PersistenciaException.class, () -> votosBO.cambiarVoto(1, 7, false));
             contexto.verify(TransactionContext::rollback);
@@ -188,10 +190,8 @@ class OpinionBOTest {
     }
 
     @Test
-    void cuentaInactivaOResenaRetiradaImpidenVoto() throws Exception {
+    void resenaRetiradaImpideVoto() throws Exception {
         VotoUtilBOImpl votosBO = new VotoUtilBOImpl(votos, resenas, libros, usuarios);
-        usuario.setActivo(false);
-        usuario.setActivo(true);
         resena.setEliminado(true);
         assertThrows(RecursoNoEncontradoException.class, () -> votosBO.cambiarVoto(1, 7, true));
         verifyNoInteractions(votos);

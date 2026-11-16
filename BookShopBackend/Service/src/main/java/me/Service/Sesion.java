@@ -6,7 +6,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.ws.rs.NotAuthorizedException;
 import me.Business.exceptions.NegocioException;
-import me.Business.exceptions.CuentaInactivaException;
 import me.Business.usuario.UsuarioBO;
 import me.Model.dto.usuario.AccesoUsuarioDTO;
 
@@ -25,16 +24,10 @@ public final class Sesion {
         return idUsuario == null ? 0 : idUsuario;
     }
 
-    public static int exigirIdUsuario(HttpServletRequest peticion, UsuarioBO usuarios) throws NegocioException {
+    public static int exigirIdUsuario(HttpServletRequest peticion) {
         int idUsuario = obtenerIdUsuario(peticion);
         if (idUsuario <= 0)
             throw new NotAuthorizedException("Se requiere iniciar sesión.", "Sesion");
-        try {
-            usuarios.comprobarActivo(idUsuario);
-        } catch (CuentaInactivaException e) {
-            cerrar(peticion);
-            throw new NotAuthorizedException("La cuenta está desactivada.", "Sesion");
-        }
         return idUsuario;
     }
 
@@ -56,10 +49,8 @@ public final class Sesion {
         if (idUsuario == null || inicioSesion == null) {
             throw new NotAuthorizedException("Se requiere iniciar sesión.", "Sesion");
         }
-        Instant finSesion = Instant.now();
-        Duration tiempoDeUso = Duration.between(inicioSesion, finSesion);
+        Duration tiempoDeUso = Duration.between(inicioSesion, Instant.now());
         usuarioBO.cerrarSesion(idUsuario, tiempoDeUso);
-        sesion.setAttribute(INICIO_SESION, finSesion);
     }
 
     public static void cerrar(HttpServletRequest peticion) {

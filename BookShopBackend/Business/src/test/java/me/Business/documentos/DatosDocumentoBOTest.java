@@ -30,25 +30,20 @@ class DatosDocumentoBOTest {
     void reporteMensualIncluyeMesCompletoYLimaSinGenerarDocumento() throws Exception {
         LibroDAO libros = mock(LibroDAO.class);
         UsuarioDAO usuarios = mock(UsuarioDAO.class);
-        when(usuarios.leer(1)).thenReturn(usuario(1, Rol.ADMIN));
         when(usuarios.listarActividadUsuarios(LocalDate.of(2024, 2, 1), LocalDate.of(2024, 2, 29), null)).thenReturn(List.of());
-        var dto = new ReporteBOImpl(libros, usuarios, reloj).prepararUsuarios(1, YearMonth.of(2024, 2), null);
+        var dto = new ReporteBOImpl(libros, usuarios, reloj).prepararUsuarios(YearMonth.of(2024, 2), null);
         assertEquals(LocalDateTime.of(2026, 10, 6, 23, 30), dto.fechaGeneracion());
         assertEquals(0, dto.cantidadResultados());
         verify(usuarios).listarActividadUsuarios(LocalDate.of(2024, 2, 1), LocalDate.of(2024, 2, 29), null);
     }
 
     @Test
-    void validaPermisosYMaximoAntesDeConsultarDatos() throws Exception {
+    void validaMaximoAntesDeConsultarDatos() throws Exception {
         LibroDAO libros = mock(LibroDAO.class);
         UsuarioDAO usuarios = mock(UsuarioDAO.class);
-        when(usuarios.leer(1)).thenReturn(usuario(1, Rol.CLIENTE));
         var bo = new ReporteBOImpl(libros, usuarios, reloj);
         var consulta = new ConsultaReporteLibrosDTO(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 31), 0);
-        assertThrows(ValidacionException.class, () -> bo.prepararLibros(1, consulta));
-        verifyNoInteractions(libros);
-        when(usuarios.leer(1)).thenReturn(usuario(1, Rol.ADMIN));
-        assertThrows(ValidacionException.class, () -> bo.prepararLibros(1, consulta));
+        assertThrows(ValidacionException.class, () -> bo.prepararLibros(consulta));
         verifyNoInteractions(libros);
     }
 
@@ -56,11 +51,10 @@ class DatosDocumentoBOTest {
     void errorSqlSePropagaComoExcepcionDeNegocio() throws Exception {
         LibroDAO libros = mock(LibroDAO.class);
         UsuarioDAO usuarios = mock(UsuarioDAO.class);
-        when(usuarios.leer(1)).thenReturn(usuario(1, Rol.ADMIN));
         SQLException causa = new SQLException("Falla interna");
         var consulta = new ConsultaReporteLibrosDTO(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 31), 10);
         when(libros.listarVentasLibros(consulta)).thenThrow(causa);
-        var error = assertThrows(PersistenciaException.class, () -> new ReporteBOImpl(libros, usuarios, reloj).prepararLibros(1, consulta));
+        var error = assertThrows(PersistenciaException.class, () -> new ReporteBOImpl(libros, usuarios, reloj).prepararLibros(consulta));
         assertSame(causa, error.getCause());
         assertFalse(error.getMessage().contains("Falla interna"));
     }

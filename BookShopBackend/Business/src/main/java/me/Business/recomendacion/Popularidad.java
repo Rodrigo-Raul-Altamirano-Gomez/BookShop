@@ -17,9 +17,11 @@ final class Popularidad {
     static Map<Integer, Double> puntuar(List<Libro> libros, List<VentaLibroDTO> ventas,
         List<ValoracionLibroDTO> valoraciones, LocalDateTime ahora) {
         Map<Integer, Long> cantidades = new HashMap<>();
-        for (VentaLibroDTO venta : ventas) if (!venta.fechaPago().isBefore(ahora.minusDays(90)) &&
-            !venta.fechaPago().isAfter(ahora))
-            cantidades.put(venta.idLibro(), cantidades.getOrDefault(venta.idLibro(), 0L) + venta.cantidad());
+        for (VentaLibroDTO venta : ventas) {
+            if (!venta.fechaPago().isBefore(ahora.minusDays(90)) && !venta.fechaPago().isAfter(ahora)) {
+                cantidades.put(venta.idLibro(), cantidades.getOrDefault(venta.idLibro(), 0L) + venta.cantidad());
+            }
+        }
         Map<Integer, ValoracionLibroDTO> porLibro = new HashMap<>();
         long resenas = 0, suma = 0;
         for (ValoracionLibroDTO valoracion : valoraciones) {

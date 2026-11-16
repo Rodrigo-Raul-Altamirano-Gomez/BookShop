@@ -9,6 +9,8 @@ import me.Model.entities.opinion.Resena;
 
 public interface ResenaDAO extends CrudDAO<Resena> {
 
+    void cambiarCantidadVotos(int idResena, int cambio, String usuario) throws SQLException;
+
     ResultadoPaginadoDTO<ResenaDTO> listar(int idLibro, int idUsuario, int idUsuarioActual, ConsultaResenasDTO
         consulta) throws SQLException;
 

@@ -16,20 +16,6 @@ public partial class FormularioDireccion
     private Direccion Borrador { get; set; } = new();
     private string MensajeError { get; set; } = "";
     private bool Guardando { get; set; }
-    private bool Completo
-    {
-        get
-        {
-            if (string.IsNullOrWhiteSpace(Borrador.Alias))
-                return false;
-            if (string.IsNullOrWhiteSpace(Borrador.Calle))
-                return false;
-            if (string.IsNullOrWhiteSpace(Borrador.Distrito))
-                return false;
-            return !string.IsNullOrWhiteSpace(Borrador.Ciudad);
-        }
-    }
-
     protected override void OnInitialized()
     {
         if (Valor is not null)
@@ -50,11 +36,6 @@ public partial class FormularioDireccion
     {
         if (Guardando)
             return;
-        if (!Completo)
-        {
-            MensajeError = "Completa los campos obligatorios.";
-            return;
-        }
         Guardando = true;
         MensajeError = "";
         try
@@ -65,9 +46,6 @@ public partial class FormularioDireccion
         {
             MensajeError = e.Message;
         }
-        finally
-        {
-            Guardando = false;
-        }
+        Guardando = false;
     }
 }

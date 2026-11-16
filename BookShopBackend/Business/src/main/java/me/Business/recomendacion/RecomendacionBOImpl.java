@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import me.Business.exceptions.ConflictoException;
 import me.Business.exceptions.NegocioException;
 import me.Business.exceptions.PersistenciaException;
@@ -32,6 +31,7 @@ import me.Model.dto.catalogo.TarjetaLibroDTO;
 import me.Model.dto.compra.VentaLibroDTO;
 import me.Model.dto.opinion.ValoracionLibroDTO;
 import me.Model.entities.catalogo.Libro;
+import me.Business.exceptions.AccesoDenegadoException;
 
 public class RecomendacionBOImpl implements RecomendacionBO {
 
@@ -39,7 +39,7 @@ public class RecomendacionBOImpl implements RecomendacionBO {
     private final PedidoDAO pedidoDAO;
     private final ResenaDAO resenaDAO;
     private final Clock reloj;
-    private final Map<String, ConsultaGuardada> consultas = new ConcurrentHashMap<>();
+    private final Map<String, ConsultaGuardada> consultas = new HashMap<>();
 
     public RecomendacionBOImpl() {
         this(new LibroDAOImpl(), new PedidoDAOImpl(), new ResenaDAOImpl(),
@@ -55,8 +55,6 @@ public class RecomendacionBOImpl implements RecomendacionBO {
 
     @Override
     public List<TarjetaLibroDTO> similares(int idLibro) throws NegocioException {
-        if (idLibro < 1)
-            throw new ValidacionException("idLibro", "Selecciona un libro.");
         try {
             LocalDateTime ahora = LocalDateTime.now(reloj);
             List<Libro> libros = libroDAO.listarParaRecomendaciones();
@@ -79,12 +77,6 @@ public class RecomendacionBOImpl implements RecomendacionBO {
 
     @Override
     public List<TarjetaLibroDTO> complementarios(List<Integer> idsCarrito) throws NegocioException {
-        if (idsCarrito == null)
-            throw new ValidacionException("carrito", "Indica los libros del carrito.");
-        for (Integer id : idsCarrito) {
-            if (id == null || id < 1)
-                throw new ValidacionException("carrito", "Los libros del carrito no son validos.");
-        }
         if (idsCarrito.isEmpty())
             return List.of();
         Set<Integer> carrito = new HashSet<>(idsCarrito);
@@ -118,13 +110,8 @@ public class RecomendacionBOImpl implements RecomendacionBO {
     }
 
     @Override
-    public RecomendacionesDTO abrirPopulares(ConsultaRecomendacionesDTO consulta) throws NegocioException {
-        if (consulta == null || consulta.orden() == null)
-            throw new ValidacionException("consulta", "Selecciona un orden de recomendaciones.");
-        if (consulta.orden() == OrdenLibro.MAS_VENDIDOS)
-            throw new ValidacionException("orden", "Más vendidos corresponde al catálogo.");
-        if (consulta.pagina() < 1 || consulta.tamanioPagina() < 1)
-            throw new ValidacionException("pagina", "La pagina y su tamaño deben ser positivos.");
+    public synchronized RecomendacionesDTO abrirPopulares(ConsultaRecomendacionesDTO consulta) throws NegocioException {
+        validarConsulta(consulta);
         try {
             LocalDateTime ahora = LocalDateTime.now(reloj);
             List<Libro> libros = libroDAO.listarParaRecomendaciones();
@@ -143,14 +130,9 @@ public class RecomendacionBOImpl implements RecomendacionBO {
     }
 
     @Override
-    public RecomendacionesDTO abrirParaTi(int idActor, ConsultaRecomendacionesDTO consulta) throws
+    public synchronized RecomendacionesDTO abrirParaTi(int idActor, ConsultaRecomendacionesDTO consulta) throws
         NegocioException {
-        if (consulta == null || consulta.orden() == null)
-            throw new ValidacionException("consulta", "Selecciona un orden de recomendaciones.");
-        if (consulta.orden() == OrdenLibro.MAS_VENDIDOS)
-            throw new ValidacionException("orden", "Más vendidos corresponde al catálogo.");
-        if (consulta.pagina() < 1 || consulta.tamanioPagina() < 1)
-            throw new ValidacionException("pagina", "La pagina y su tamaño deben ser positivos.");
+        validarConsulta(consulta);
         try {
             LocalDateTime ahora = LocalDateTime.now(reloj);
             List<Libro> libros = libroDAO.listarParaRecomendaciones();
@@ -176,19 +158,14 @@ public class RecomendacionBOImpl implements RecomendacionBO {
     }
 
     @Override
-    public ResultadoPaginadoDTO<TarjetaLibroDTO> consultar(int idActor, String idConsulta,
+    public synchronized ResultadoPaginadoDTO<TarjetaLibroDTO> consultar(int idActor, String idConsulta,
         ConsultaRecomendacionesDTO consulta) throws NegocioException {
-        if (consulta == null || consulta.orden() == null)
-            throw new ValidacionException("consulta", "Selecciona un orden de recomendaciones.");
-        if (consulta.orden() == OrdenLibro.MAS_VENDIDOS)
-            throw new ValidacionException("orden", "Más vendidos corresponde al catálogo.");
-        if (consulta.pagina() < 1 || consulta.tamanioPagina() < 1)
-            throw new ValidacionException("pagina", "La pagina y su tamaño deben ser positivos.");
-        if (idConsulta == null || idConsulta.isBlank())
-            throw new ValidacionException("idConsulta", "Falta la consulta de recomendaciones.");
+        validarConsulta(consulta);
         ConsultaGuardada conjunto = consultas.get(idConsulta);
         if (conjunto == null)
             throw new RecursoNoEncontradoException("Vuelve a abrir las recomendaciones.");
+        if (conjunto.propietario() != 0 && conjunto.propietario() != idActor)
+            throw new AccesoDenegadoException("Las recomendaciones pertenecen a otra cuenta.");
         try {
             return consultarPagina(conjunto, consulta);
         } catch (SQLException e) {
@@ -197,27 +174,29 @@ public class RecomendacionBOImpl implements RecomendacionBO {
     }
 
     @Override
-    public void descartar(int idActor, String idConsulta) throws NegocioException {
-        if (idConsulta == null || idConsulta.isBlank())
-            throw new ValidacionException("idConsulta", "Falta la consulta de recomendaciones.");
+    public synchronized void descartar(int idActor, String idConsulta) throws NegocioException {
         ConsultaGuardada conjunto = consultas.get(idConsulta);
         if (conjunto == null)
             throw new RecursoNoEncontradoException("Vuelve a abrir las recomendaciones.");
+        if (conjunto.propietario() != 0 && conjunto.propietario() != idActor)
+            throw new AccesoDenegadoException("Las recomendaciones pertenecen a otra cuenta.");
         consultas.remove(idConsulta);
     }
 
     private ResultadoPaginadoDTO<TarjetaLibroDTO> consultarPagina(ConsultaGuardada conjunto,
         ConsultaRecomendacionesDTO consulta) throws SQLException {
         LocalDateTime fecha = LocalDateTime.now(reloj);
-        Map<Integer, TarjetaLibroDTO> precios = new HashMap<>();
+        Map<Integer, TarjetaLibroDTO> tarjetasPorId = new HashMap<>();
         for (TarjetaLibroDTO tarjeta : libroDAO.listarTarjetasPorIds(conjunto.ids, fecha))
-            precios.put(tarjeta.id(), tarjeta);
+            tarjetasPorId.put(tarjeta.id(), tarjeta);
         Map<Integer, Libro> atributos = new HashMap<>();
-        for (Libro libro : libroDAO.listarParaRecomendaciones()) atributos.put(libro.getId(), libro);
+        for (Libro libro : libroDAO.listarParaRecomendaciones()) {
+            atributos.put(libro.getId(), libro);
+        }
         // Refresca atributos del conjunto original; no repite el algoritmo ni incorpora otros libros.
         List<Integer> ids = new ArrayList<>();
         for (Integer id : conjunto.ids) {
-            if (precios.containsKey(id) && atributos.containsKey(id))
+            if (tarjetasPorId.containsKey(id) && atributos.containsKey(id))
                 ids.add(id);
         }
         // sort conserva el orden anterior cuando dos libros empatan.
@@ -228,13 +207,13 @@ public class RecomendacionBOImpl implements RecomendacionBO {
                 case MAS_RECIENTES:
                     return libroSegundo.getFechaCreacion().compareTo(libroPrimero.getFechaCreacion());
                 case PRECIO_ASCENDENTE:
-                    return precios.get(primero).precioConDescuento().compareTo(precios.get(
+                    return tarjetasPorId.get(primero).precioConDescuento().compareTo(tarjetasPorId.get(
                         segundo).precioConDescuento());
                 case PRECIO_DESCENDENTE:
-                    return precios.get(segundo).precioConDescuento().compareTo(precios.get(
+                    return tarjetasPorId.get(segundo).precioConDescuento().compareTo(tarjetasPorId.get(
                         primero).precioConDescuento());
                 case TITULO_ASCENDENTE:
-                    return precios.get(primero).titulo().compareToIgnoreCase(precios.get(segundo).titulo());
+                    return tarjetasPorId.get(primero).titulo().compareToIgnoreCase(tarjetasPorId.get(segundo).titulo());
                 case PAGINAS_ASCENDENTE:
                     return Integer.compare(libroPrimero.getNumeroPaginas(), libroSegundo.getNumeroPaginas());
                 case PAGINAS_DESCENDENTE:
@@ -253,15 +232,29 @@ public class RecomendacionBOImpl implements RecomendacionBO {
         int fin = inicio + consulta.tamanioPagina();
         if (fin > ids.size())
             fin = ids.size();
-        List<TarjetaLibroDTO> tarjetas = libroDAO.listarTarjetasPorIds(ids.subList(inicio, fin), fecha);
+        List<TarjetaLibroDTO> tarjetas = new ArrayList<>();
+        for (int i = inicio; i < fin; i++)
+            tarjetas.add(tarjetasPorId.get(ids.get(i)));
         return new ResultadoPaginadoDTO<>(tarjetas, ids.size(), consulta.pagina(), consulta.tamanioPagina());
+    }
+
+    private void validarConsulta(ConsultaRecomendacionesDTO consulta) throws ValidacionException {
+        if (consulta == null || consulta.orden() == null)
+            throw new ValidacionException("consulta", "Selecciona un orden de recomendaciones.");
+        if (consulta.orden() == OrdenLibro.MAS_VENDIDOS)
+            throw new ValidacionException("orden", "Más vendidos corresponde al catálogo.");
+        if (consulta.pagina() < 1 || consulta.tamanioPagina() < 1)
+            throw new ValidacionException("pagina", "La pagina y su tamaño deben ser positivos.");
     }
 
     private List<Integer> ordenarPorPuntuacion(List<Libro> libros, Map<Integer, Double> puntos, Set<Integer>
         excluir) {
         List<Integer> ids = new ArrayList<>();
-        for (Libro libro : libros) if (!excluir.contains(libro.getId()) && puntos.containsKey(libro.getId()))
-            ids.add(libro.getId());
+        for (Libro libro : libros) {
+            if (!excluir.contains(libro.getId()) && puntos.containsKey(libro.getId())) {
+                ids.add(libro.getId());
+            }
+        }
         ids.sort((primero, segundo) -> {
             int comparacion = Double.compare(puntos.get(segundo), puntos.get(primero));
             if (comparacion == 0)

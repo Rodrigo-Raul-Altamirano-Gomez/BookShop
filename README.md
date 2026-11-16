@@ -52,15 +52,31 @@ La clave de cifrado de los métodos de pago está definida en `ProteccionDatos.j
 
 ## Funcionamiento
 
+La [guía para recorrer y explicar el código](docs/Guia_codigo.md) sigue los flujos principales y explica las piezas compartidas.
+
 Los recursos REST delegan las reglas en Business, que utiliza los DAO para acceder a MySQL. El servidor convierte los DTO Java a JSON con JSON-B. Web consume ese JSON con Newtonsoft.Json y clases DTO en `Modelos/DTO`.
 
 Las pantallas Blazor están en `Componentes`, con marcado `.razor`, lógica `.razor.cs` y estilos `.razor.css`. Los servicios de Web gestionan las llamadas REST, la sesión y los datos compartidos. El componente `Cargando` muestra la espera o el error mientras se consultan datos.
 
-La autenticación utiliza una cookie de sesión por circuito Blazor. Una recarga completa requiere iniciar sesión nuevamente. Las llamadas de escritura incluyen la cabecera `X-BookShop-Cliente: web`; las operaciones con sesión usan HTTPS.
+DAO y Business conservan una interfaz y su implementación por responsabilidad. Business coordina las operaciones: cambiar una referencia y sus vetos, guardar un pedido y sus líneas, o registrar un voto y actualizar su contador. Los DAO ejecutan las consultas SQL y convierten sus resultados en entidades o DTO. Business confirma o revierte las operaciones que deben guardarse juntas mediante DBManager.
+
+En Web, la pantalla de compra conserva la preparación recibida del backend y utiliza su selección directamente. Los filtros guardados en la sesión son los mismos que utiliza la pantalla, para volver del detalle sin copiar su estado. Favorito y Deseado pertenecen al detalle del libro. Las reseñas y la confirmación del pedido muestran los DTO recibidos, sin modelos intermedios que repitan los mismos datos.
+
+Los formularios utilizan los campos obligatorios del navegador. El esquema define los límites y las restricciones de los datos; Business conserva reglas de operación como ISBN único, stock, importes y vigencia para pagar, sin repetir validadores completos de los formularios de catálogo y direcciones. Los avisos se cierran con la X. Al perder la conexión, Blazor intenta reconectar y el diálogo permite recargar la página.
+
+La autenticación utiliza una cookie de sesión por circuito Blazor. Una recarga completa requiere iniciar sesión nuevamente. Las operaciones con sesión usan HTTPS.
 
 Las imágenes se reciben y devuelven como texto en los DTO, por ejemplo `"portada": "https://ejemplo.com/libro.jpg"`. Registro y perfil permiten ingresar una URL HTTP/HTTPS o retirar la imagen. La BD guarda texto de hasta 2048 caracteres; las imágenes nuevas deben estar alojadas previamente.
 
-## Pruebas
+## Conceptos del curso en el proyecto
+
+Las entidades de Model muestran encapsulamiento y relaciones entre objetos; los métodos de pago utilizan herencia y polimorfismo. Business y DAO conservan interfaces e implementaciones, organizadas en paquetes y módulos. Los DTO transportan datos entre Java y Blazor mediante REST. Los componentes de la interfaz reúnen HTML, CSS y eventos de C#.
+
+El servidor atiende peticiones en distintos hilos. Carrito y Pedido utilizan `synchronized` sobre el mismo carrito para que cambiar cantidades y pagar no se ejecuten simultáneamente sobre sus datos. El mapa de carritos tiene un monitor para crear un único carrito por usuario. Las consultas de recomendaciones guardadas utilizan el monitor de su instancia. La prueba `CarritoConcurrenciaTest` ejecuta dos hilos sobre el mismo carrito y comprueba que se conservan las cantidades.
+
+Las transacciones de DBManager mantienen juntas las escrituras relacionadas en la base de datos. Los monitores protegen los objetos compartidos en memoria; ambas responsabilidades se mantienen separadas. No se incorporan semáforos ni tareas en segundo plano sin una necesidad concreta. JasperReports queda fuera de esta etapa.
+
+## Verificación local
 
 ```powershell
 mvn -f BookShopBackend/pom.xml verify

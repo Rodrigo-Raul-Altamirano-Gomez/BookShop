@@ -9,7 +9,6 @@ import me.Business.catalogo.LibroBOImpl;
 import me.Business.exceptions.NegocioException;
 import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.RecursoNoEncontradoException;
-import me.Business.exceptions.ValidacionException;
 import me.DAO.catalogo.LibroDAO;
 import me.DAO.catalogo.LibroDAOImpl;
 import me.DAO.usuario.LibroGuardadoDAO;
@@ -23,6 +22,8 @@ import me.Model.entities.catalogo.Libro;
 import me.Model.entities.usuario.Usuario;
 
 public class LibroGuardadoBOImpl implements LibroGuardadoBO {
+
+    private final UsuarioDAO usuarioDAO;
 
     private final LibroGuardadoDAO libroGuardadoDAO;
     private final LibroDAO libroDAO;
@@ -45,8 +46,6 @@ public class LibroGuardadoBOImpl implements LibroGuardadoBO {
     public void guardar(int idActor, int idLibro, boolean favorito) throws NegocioException {
         try {
             Usuario actor = usuarioDAO.leer(idActor);
-            if (idLibro < 1)
-                throw new ValidacionException("idLibro", "Selecciona un libro valido.");
             Libro libro = libroDAO.leer(idLibro);
             if (libro == null || libro.isEliminado())
                 throw new RecursoNoEncontradoException("El libro no existe.");
@@ -62,8 +61,6 @@ public class LibroGuardadoBOImpl implements LibroGuardadoBO {
     public boolean retirar(int idActor, int idLibro, boolean favorito) throws NegocioException {
         try {
             Usuario actor = usuarioDAO.leer(idActor);
-            if (idLibro < 1)
-                throw new ValidacionException("idLibro", "Selecciona un libro valido.");
             // Tambien puede retirarse una relacion propia cuyo libro ya no este disponible.
             return libroGuardadoDAO.retirar(idActor, idLibro, favorito, actor.getEmail());
         } catch (SQLException e) {
@@ -86,5 +83,4 @@ public class LibroGuardadoBOImpl implements LibroGuardadoBO {
         }
     }
 
-    private final UsuarioDAO usuarioDAO;
 }

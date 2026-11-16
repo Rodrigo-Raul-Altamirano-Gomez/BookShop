@@ -16,15 +16,9 @@ public partial class LibrosGuardados
             PestanaFavoritos = favoritos;
     }
 
-    private void MostrarDeseados()
+    private void MostrarLista(bool favoritos)
     {
-        PestanaFavoritos = false;
-        Sesion.EstadoVistas[ClavePestana] = false;
-    }
-
-    private void MostrarFavoritos()
-    {
-        PestanaFavoritos = true;
-        Sesion.EstadoVistas[ClavePestana] = true;
+        PestanaFavoritos = favoritos;
+        Sesion.EstadoVistas[ClavePestana] = favoritos;
     }
 }

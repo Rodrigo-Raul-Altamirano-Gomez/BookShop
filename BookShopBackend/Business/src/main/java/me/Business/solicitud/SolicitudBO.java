@@ -34,7 +34,7 @@ public interface SolicitudBO {
     ResultadoPaginadoDTO<ResumenSolicitudDTO> listarPropias(int idActor, FiltroSolicitudDTO filtro) throws
         NegocioException;
 
-    ResultadoPaginadoDTO<ResumenSolicitudDTO> listarModeracion(int idActor, FiltroSolicitudDTO filtro) throws
+    ResultadoPaginadoDTO<ResumenSolicitudDTO> listarModeracion(FiltroSolicitudDTO filtro) throws
         NegocioException;
 
     DetalleDevolucionDTO consultarDevolucion(int idActor, int idSolicitud) throws NegocioException;

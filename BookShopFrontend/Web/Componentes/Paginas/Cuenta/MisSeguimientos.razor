@@ -14,13 +14,13 @@
     <div class="results-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
         <h1>
             Mis seguimientos
-            <span>@totalResultados @Tipo</span>
+            <span>@totalResultados @vista.Tipo</span>
         </h1>
         @if (Sesion.Usuario is not null)
         {
             <label class="sort-field form-label d-flex align-items-center gap-2">
                 Ordenar por:
-                <select class="form-select" @bind="Orden" @bind:after="ReiniciarPagina">
+                <select class="form-select" @bind="vista.Orden" @bind:after="ReiniciarPagina">
                     <option value="nombre">Nombre A–Z</option>
                     <option value="reciente">Más recientes</option>
                 </select>
@@ -40,24 +40,24 @@
     {
         <div class="nav nav-tabs bookshop-tabs" role="tablist" aria-label="Tipos de seguimiento">
             <button
-                class="nav-link bookshop-tab @(Tipo == "autores" ? "active" : "")"
+                class="nav-link bookshop-tab @(vista.Tipo == "autores" ? "active" : "")"
                 role="tab"
-                aria-selected="@(Tipo == "autores")"
-                @onclick="MostrarAutores">
+                aria-selected="@(vista.Tipo == "autores")"
+                @onclick='() => MostrarTipo("autores")'>
                 Autores
             </button>
             <button
-                class="nav-link bookshop-tab @(Tipo == "categorias" ? "active" : "")"
+                class="nav-link bookshop-tab @(vista.Tipo == "categorias" ? "active" : "")"
                 role="tab"
-                aria-selected="@(Tipo == "categorias")"
-                @onclick="MostrarCategorias">
+                aria-selected="@(vista.Tipo == "categorias")"
+                @onclick='() => MostrarTipo("categorias")'>
                 Categorías
             </button>
             <button
-                class="nav-link bookshop-tab @(Tipo == "editoriales" ? "active" : "")"
+                class="nav-link bookshop-tab @(vista.Tipo == "editoriales" ? "active" : "")"
                 role="tab"
-                aria-selected="@(Tipo == "editoriales")"
-                @onclick="MostrarEditoriales">
+                aria-selected="@(vista.Tipo == "editoriales")"
+                @onclick='() => MostrarTipo("editoriales")'>
                 Editoriales
             </button>
         </div>
@@ -66,7 +66,7 @@
             <div class="empty-state card border-0 text-center align-items-center py-5">
                 <h2>Aún no hay seguimientos en esta lista</h2>
                 <p>Consulta sus páginas para comenzar a seguirlos.</p>
-                <a class="btn btn-primary" href="/referencias/@Tipo">Explorar @Tipo</a>
+                <a class="btn btn-primary" href="/referencias/@vista.Tipo">Explorar @vista.Tipo</a>
             </div>
         }
         else
@@ -77,7 +77,7 @@
                     <TarjetaReferencia Referencia="referencia" />
                 }
             </div>
-            <Paginacion Pagina="Pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
+            <Paginacion Pagina="vista.Pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
         }
     }
 </div>

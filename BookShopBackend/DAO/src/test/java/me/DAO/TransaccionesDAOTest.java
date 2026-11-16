@@ -1,14 +1,20 @@
 package me.DAO;
 
+import me.DAO.usuario.UsuarioDAOImpl;
+
+import me.DAO.catalogo.LibroDAOImpl;
+
+import me.DAO.catalogo.AutorDAOImpl;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import me.DAO.catalogo.AutorDAOImpl;
-import me.DAO.catalogo.LibroDAOImpl;
-import me.DAO.catalogo.VotoUtilDAOImpl;
-import me.DAO.usuario.DireccionEnvioDAOImpl;
-import me.DAO.usuario.UsuarioDAOImpl;
+import me.DAO.catalogo.AutorDAO;
+import me.DAO.catalogo.LibroDAO;
+import me.DAO.catalogo.VotoUtilDAO;
+import me.DAO.usuario.DireccionEnvioDAO;
+import me.DAO.usuario.UsuarioDAO;
 import me.DBManager.DBManager;
 import me.DBManager.TransactionContext;
 import org.junit.jupiter.api.AfterEach;
@@ -90,9 +96,9 @@ class TransaccionesDAOTest {
         ResultSet rs = mock(ResultSet.class);
         when(statement.executeQuery()).thenReturn(rs);
         when(rs.next()).thenReturn(true);
-        assertTrue(new AutorDAOImpl().cambiarActivo(1, false, "admin"));
+        new LibroDAOImpl().recalcularVetosPorAutor(1, "admin");
         var sql = org.mockito.ArgumentCaptor.forClass(String.class);
-        verify(conexion, times(2)).prepareStatement(sql.capture());
+        verify(conexion).prepareStatement(sql.capture());
         String recalculo = sql.getAllValues().getLast();
         assertTrue(recalculo.contains("vetado_directamente"));
         assertTrue(recalculo.contains("a.eliminado"));

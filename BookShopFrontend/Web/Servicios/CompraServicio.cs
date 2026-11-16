@@ -11,7 +11,6 @@ public class CompraServicio
     {
         get; private set;
     }
-    public PreparacionCompraDTO? Preparacion { get; set; }
     public int CantidadCarrito => Resumen?.CantidadLibros ?? 0;
 
     public CompraServicio(HttpClientUtils api, SesionUsuario sesion)
@@ -24,7 +23,6 @@ public class CompraServicio
     private void Limpiar()
     {
         Resumen = null;
-        Preparacion = null;
     }
 
     public void MostrarCarrito(ResumenCompraDTO resumen)
@@ -35,21 +33,16 @@ public class CompraServicio
 
     public async Task AgregarLibro(int idLibro, int cantidad)
     {
-        if (!Sesion.RequerirAcceso())
-            return;
         MostrarCarrito(await api.Post<ResumenCompraDTO>($"carrito/libros/{idLibro}?cantidad={cantidad}"));
-        Preparacion = null;
     }
 
     public async Task CambiarCantidad(int idLibro, int cantidad)
     {
         MostrarCarrito(await api.Put<ResumenCompraDTO>($"carrito/libros/{idLibro}?cantidad={cantidad}"));
-        Preparacion = null;
     }
 
     public async Task VaciarCarrito()
     {
         MostrarCarrito(await api.Delete<ResumenCompraDTO>("carrito"));
-        Preparacion = null;
     }
 }

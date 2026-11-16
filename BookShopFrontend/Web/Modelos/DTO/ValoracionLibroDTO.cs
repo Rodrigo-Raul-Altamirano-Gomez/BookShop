@@ -22,6 +22,21 @@ public class ValoracionLibroDTO
     [JsonProperty("cantidadCincoEstrellas")]
     public long CantidadCincoEstrellas { get; set; }
 
+    public long CantidadResenas => CantidadUnaEstrella + CantidadDosEstrellas + CantidadTresEstrellas
+        + CantidadCuatroEstrellas + CantidadCincoEstrellas;
+
+    public double Promedio
+    {
+        get
+        {
+            if (CantidadResenas == 0)
+                return 0;
+            long puntos = CantidadUnaEstrella + 2 * CantidadDosEstrellas + 3 * CantidadTresEstrellas
+                + 4 * CantidadCuatroEstrellas + 5 * CantidadCincoEstrellas;
+            return puntos / (double)CantidadResenas;
+        }
+    }
+
     public ValoracionLibroDTO()
     {
     }

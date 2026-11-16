@@ -47,7 +47,6 @@ public class Libro {
         this.categoria = categoria;
         this.precioBase = precioBase;
         this.stockFisico = stockFisico;
-        recalcularVetos();
     }
 
     public int getId() {
@@ -199,9 +198,6 @@ public class Libro {
     }
 
     public void setStockFisico(int stockFisico) {
-        if (stockFisico < 0) {
-            throw new IllegalArgumentException("El stock no puede ser negativo.");
-        }
         this.stockFisico = stockFisico;
     }
 
@@ -210,9 +206,6 @@ public class Libro {
     }
 
     public void setNumeroVetos(int numeroVetos) {
-        if (numeroVetos < 0 || numeroVetos > 4) {
-            throw new IllegalArgumentException("El numero de vetos debe estar entre cero y cuatro.");
-        }
         this.numeroVetos = numeroVetos;
     }
 
@@ -269,52 +262,7 @@ public class Libro {
     }
 
     public void setActivo(boolean activo) {
-        if (activo) {
-            retirarVetoDirecto();
-        } else {
-            aplicarVetoDirecto();
-        }
+        vetadoDirectamente = !activo;
     }
 
-    public void aplicarVetoDirecto() {
-        if (vetadoDirectamente)
-            return;
-        vetadoDirectamente = true;
-        numeroVetos++;
-    }
-
-    public void retirarVetoDirecto() {
-        if (!vetadoDirectamente)
-            return;
-        vetadoDirectamente = false;
-        numeroVetos--;
-    }
-
-    public void recalcularVetos() {
-        numeroVetos = vetadoDirectamente ? 1 : 0;
-        if (autor != null && !autor.estaDisponible())
-            numeroVetos++;
-        if (editorial != null && !editorial.estaDisponible())
-            numeroVetos++;
-        if (categoria != null && !categoria.estaDisponible())
-            numeroVetos++;
-    }
-
-    public boolean tieneStockSuficiente(int cantidad) {
-        return isActivo() && cantidad > 0 && stockFisico >= cantidad;
-    }
-
-    public void descontarStock(int cantidad) {
-        if (!tieneStockSuficiente(cantidad)) {
-            throw new IllegalArgumentException("El libro no dispone del stock solicitado.");
-        }
-        stockFisico -= cantidad;
-    }
-
-    public void reponerStock(int cantidad) {
-        if (cantidad <= 0) {
-            throw new IllegalArgumentException("La cantidad debe ser positiva.");
-        }
-        stockFisico = stockFisico + cantidad;
-    }
 }

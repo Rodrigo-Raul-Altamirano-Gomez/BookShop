@@ -33,7 +33,7 @@ public class ReporteBOImpl implements ReporteBO {
     }
 
     @Override
-    public ReporteVentasLibrosDTO prepararLibros(int idActor, ConsultaReporteLibrosDTO consulta) throws
+    public ReporteVentasLibrosDTO prepararLibros(ConsultaReporteLibrosDTO consulta) throws
         NegocioException {
         if (consulta == null || consulta.fechaInicio() == null || consulta.fechaFin() == null)
             throw new ValidacionException("periodo", "Selecciona el inicio y fin del período.");
@@ -51,7 +51,7 @@ public class ReporteBOImpl implements ReporteBO {
     }
 
     @Override
-    public ReporteUsuariosDTO prepararUsuarios(int idActor, YearMonth mes, Integer cantidadMaxima) throws
+    public ReporteUsuariosDTO prepararUsuarios(YearMonth mes, Integer cantidadMaxima) throws
         NegocioException {
         if (mes == null)
             throw new ValidacionException("mes", "Selecciona un mes y año válidos.");

@@ -22,6 +22,8 @@ public interface PedidoBO {
 
     DetallePedidoDTO consultar(int idActor, int idPedido) throws NegocioException;
 
+    DetallePedidoDTO consultarReferencia(int idPedido) throws NegocioException;
+
     DetallePedidoDTO actualizarSeguimiento(int idActor, int idPedido) throws NegocioException;
 
     DetallePedidoDTO cancelar(int idActor, int idPedido, String motivo) throws NegocioException;

@@ -41,13 +41,13 @@ public class DireccionEnvioBOImpl implements DireccionEnvioBO {
     public DireccionEnvioDTO registrar(int idActor, DatosDireccionEnvioDTO datos) throws NegocioException {
         try {
             Usuario actor = usuarioDAO.leer(idActor);
-            DatosDireccionEnvioDTO validos = validarFormulario(datos);
-            DireccionEnvio direccion = new DireccionEnvio(0, actor, validos.alias(), validos.calle(),
-                validos.distrito(), validos.ciudad(), validos.referencia());
+
+            DireccionEnvio direccion = new DireccionEnvio(0, actor, datos.alias(), datos.calle(),
+                datos.distrito(), datos.ciudad(), datos.referencia());
             direccion.setUsuarioCreacion(actor.getEmail());
             direccion.setFechaCreacion(LocalDateTime.now(reloj));
             direccionEnvioDAO.insertar(direccion);
-            if (validos.predeterminada()) {
+            if (datos.predeterminada()) {
                 if (!direccionEnvioDAO.establecerPredeterminado(idActor, direccion.getId(), actor.getEmail())) {
                     throw new ConflictoException("La direccion no puede elegirse como predeterminada.");
                 }
@@ -74,22 +74,22 @@ public class DireccionEnvioBOImpl implements DireccionEnvioBO {
         NegocioException {
         try {
             Usuario actor = usuarioDAO.leer(idActor);
-            DatosDireccionEnvioDTO validos = validarFormulario(datos);
+
             DireccionEnvio direccion = direccionEnvioDAO.leer(idDireccion);
             comprobarPropiedad(direccion, actor);
-            direccion.setAlias(validos.alias());
-            direccion.setCalle(validos.calle());
-            direccion.setDistrito(validos.distrito());
-            direccion.setCiudad(validos.ciudad());
-            direccion.setReferencia(validos.referencia());
+            direccion.setAlias(datos.alias());
+            direccion.setCalle(datos.calle());
+            direccion.setDistrito(datos.distrito());
+            direccion.setCiudad(datos.ciudad());
+            direccion.setReferencia(datos.referencia());
             direccion.setUsuarioActualizacion(actor.getEmail());
             direccionEnvioDAO.modificar(direccion);
-            if (validos.predeterminada() && !direccion.isPredeterminada()) {
+            if (datos.predeterminada() && !direccion.isPredeterminada()) {
                 if (!direccionEnvioDAO.establecerPredeterminado(idActor, idDireccion, actor.getEmail())) {
                     throw new ConflictoException("La direccion no puede elegirse como predeterminada.");
                 }
                 direccion.setPredeterminada(true);
-            } else if (!validos.predeterminada() && direccion.isPredeterminada()) {
+            } else if (!datos.predeterminada() && direccion.isPredeterminada()) {
                 if (!direccionEnvioDAO.quitarPredeterminado(idDireccion, actor.getEmail())) {
                     throw new ConflictoException("La direccion predeterminada cambio mientras se editaba.");
                 }
@@ -170,36 +170,6 @@ public class DireccionEnvioBOImpl implements DireccionEnvioBO {
         }
     }
 
-    private DatosDireccionEnvioDTO validarFormulario(DatosDireccionEnvioDTO datos) throws ValidacionException {
-        if (datos == null)
-            throw new ValidacionException("direccion", "Los datos de la direccion son obligatorios.");
-        String alias = datos.alias() == null ? "" : datos.alias().strip();
-        if (alias.isEmpty())
-            throw new ValidacionException("alias", "Este campo es obligatorio.");
-        if (alias.length() > 100)
-            throw new ValidacionException("alias", "El máximo es 100 caracteres.");
-        String calle = datos.calle() == null ? "" : datos.calle().strip();
-        if (calle.isEmpty())
-            throw new ValidacionException("calle", "Este campo es obligatorio.");
-        if (calle.length() > 255)
-            throw new ValidacionException("calle", "El máximo es 255 caracteres.");
-        String distrito = datos.distrito() == null ? "" : datos.distrito().strip();
-        if (distrito.isEmpty())
-            throw new ValidacionException("distrito", "Este campo es obligatorio.");
-        if (distrito.length() > 100)
-            throw new ValidacionException("distrito", "El máximo es 100 caracteres.");
-        String ciudad = datos.ciudad() == null ? "" : datos.ciudad().strip();
-        if (ciudad.isEmpty())
-            throw new ValidacionException("ciudad", "Este campo es obligatorio.");
-        if (ciudad.length() > 100)
-            throw new ValidacionException("ciudad", "El máximo es 100 caracteres.");
-        String referencia = datos.referencia() == null ? null : datos.referencia().strip();
-        if (referencia != null && referencia.isEmpty())
-            referencia = null;
-        if (referencia != null && referencia.length() > 255)
-            throw new ValidacionException("referencia", "El máximo es 255 caracteres.");
-        return new DatosDireccionEnvioDTO(alias, calle, distrito, ciudad, referencia, datos.predeterminada());
-    }
 
     private void comprobarPropiedad(DireccionEnvio direccion, Usuario actor) throws NegocioException {
         if (direccion == null || direccion.isEliminado()) {

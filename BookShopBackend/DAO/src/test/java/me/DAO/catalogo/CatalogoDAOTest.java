@@ -349,12 +349,19 @@ class CatalogoDAOTest {
         libros.cambiarVetoDirecto(1, true, "admin");
         assertFalse(libros.cambiarVetoDirecto(1, true, "admin"));
         assertTrue(autores.cambiarActivo(1, false, "admin"));
+        libros.recalcularVetosPorAutor(1, "admin");
         assertFalse(autores.cambiarActivo(1, false, "admin"));
+        libros.recalcularVetosPorAutor(1, "admin");
         categorias.cambiarActivo(1, false, "admin");
+        libros.recalcularVetosPorCategoria(1, "admin");
         editoriales.cambiarActivo(1, false, "admin");
+        libros.recalcularVetosPorEditorial(1, "admin");
         autores.cambiarActivo(1, true, "admin");
+        libros.recalcularVetosPorAutor(1, "admin");
         categorias.cambiarActivo(1, true, "admin");
+        libros.recalcularVetosPorCategoria(1, "admin");
         editoriales.cambiarActivo(1, true, "admin");
+        libros.recalcularVetosPorEditorial(1, "admin");
         TransactionContext.rollback();
         TransactionContext.close();
         assertTrue(autores.leer(1).isActivo());
@@ -366,8 +373,11 @@ class CatalogoDAOTest {
     @Test
     void eliminarReferenciasConservaSusLibrosYPropagaElVeto() throws Exception {
         assertTrue(autores.eliminar(1, "admin"));
+        libros.recalcularVetosPorAutor(1, "admin");
         assertFalse(autores.eliminar(1, "admin"));
+        libros.recalcularVetosPorAutor(1, "admin");
         assertFalse(autores.cambiarActivo(1, true, "admin"));
+        libros.recalcularVetosPorAutor(1, "admin");
         TransactionContext.commit();
         TransactionContext.close();
         assertTrue(autores.leer(1).isEliminado());
@@ -397,6 +407,7 @@ class CatalogoDAOTest {
         Connection compartida = TransactionContext.getConnection();
         libros.descontarStock(1, 3, "admin");
         autores.cambiarActivo(1, false, "admin");
+        libros.recalcularVetosPorAutor(1, "admin");
         assertSame(compartida, TransactionContext.getConnection());
         assertFalse(compartida.isClosed());
         assertFalse(compartida.getAutoCommit());
@@ -455,16 +466,14 @@ class CatalogoDAOTest {
     }
 
     @Test
-    void descuentosMuestranTresEstadosYConservanLimitesInclusivos() throws Exception {
+    void descuentosConservanDatosPaginacionYLimitesInclusivos() throws Exception {
         Descuento vigente = promocion(primero, "25", FECHA.minusDays(1), FECHA.plusDays(1));
         registrarDescuento(vigente);
         registrarDescuento(promocion(primero, "10", FECHA.plusDays(2), FECHA.plusDays(3)));
         registrarDescuento(promocion(primero, "5", FECHA.minusDays(3), FECHA.minusDays(2)));
-        var lista = descuentos.listarPorLibro(1, FECHA, 1, 2);
+        var lista = descuentos.listarPorLibro(1, 1, 2);
         assertEquals(3, lista.totalResultados());
         assertEquals(2, lista.items().size());
-        var estados = descuentos.listarPorLibro(1, FECHA, 1, 12).items().stream().map(item -> item.estado()).toList();
-        assertTrue(estados.containsAll(List.of(EstadoDescuento.PROXIMO, EstadoDescuento.VIGENTE, EstadoDescuento.VENCIDO)));
         assertNotNull(descuentos.obtenerVigente(1, vigente.getFechaInicio()));
         assertNotNull(descuentos.obtenerVigente(1, vigente.getFechaFin()));
         assertNull(descuentos.obtenerVigente(1, vigente.getFechaFin().plusSeconds(1)));
@@ -486,24 +495,7 @@ class CatalogoDAOTest {
         assertFalse(descuentos.haySuperposicion(1, 0, FECHA, FECHA.plusDays(1)));
         TransactionContext.commit();
         TransactionContext.close();
-        assertEquals(0, descuentos.listarPorLibro(1, FECHA, 1, 12).totalResultados());
-    }
-
-    @Test
-    void actualizarVigenciasEsExplicitoYNoReviveEliminados() throws Exception {
-        Descuento proximo = promocion(primero, "25", FECHA.plusDays(1), FECHA.plusDays(2));
-        registrarDescuento(proximo);
-        descuentos.actualizarVigencias(FECHA, "sistema");
-        assertFalse(descuentos.leer(proximo.getId()).isActivo());
-        assertNull(descuentos.obtenerVigente(1, FECHA));
-        descuentos.actualizarVigencias(FECHA.plusDays(1), "sistema");
-        assertTrue(descuentos.leer(proximo.getId()).isActivo());
-        assertEquals(new BigDecimal("75.01"), libros.obtenerDetalle(1, 0, FECHA.plusDays(1)).libro().precioConDescuento());
-        descuentos.eliminar(proximo.getId(), "admin");
-        TransactionContext.commit();
-        TransactionContext.close();
-        descuentos.actualizarVigencias(FECHA.plusDays(1), "sistema");
-        assertFalse(descuentos.leer(proximo.getId()).isActivo());
+        assertEquals(0, descuentos.listarPorLibro(1, 1, 12).totalResultados());
     }
 
     @Test
@@ -526,10 +518,31 @@ class CatalogoDAOTest {
         assertEquals("Editorial 1", reporte.getFirst().editorial());
         assertEquals(1, libros.listarVentasLibros(new ConsultaReporteLibrosDTO(dia, dia, 1)).size());
         assertTrue(libros.listarVentasLibros(new ConsultaReporteLibrosDTO(dia.minusDays(2), dia.minusDays(1), null)).isEmpty());
-        assertEquals(1, autores.obtenerMasCompradas(List.of(1, 2), dia, dia).get(1).id());
-        assertEquals(1, categorias.obtenerMasCompradas(List.of(1, 2), dia, dia).get(1).id());
-        assertEquals(1, editoriales.obtenerMasCompradas(List.of(1, 2), dia, dia).get(1).id());
-        assertFalse(autores.obtenerMasCompradas(List.of(1, 2), dia, dia).containsKey(2));
+        assertEquals(1, autores.obtenerMasComprada(1, dia, dia).id());
+        assertEquals(1, categorias.obtenerMasComprada(1, dia, dia).id());
+        assertEquals(1, editoriales.obtenerMasComprada(1, dia, dia).id());
+        assertNull(autores.obtenerMasComprada(2, dia, dia));
+        assertNull(categorias.obtenerMasComprada(2, dia, dia));
+        assertNull(editoriales.obtenerMasComprada(2, dia, dia));
+    }
+
+    @Test
+    void referenciaMasCompradaDesempataPorNombreYDespuesPorId() throws Exception {
+        LocalDate dia = FECHA.toLocalDate();
+        registrarVenta(primero, 1, "EN_ALMACEN", 2, "40.00", FECHA);
+        registrarVenta(segundo, 1, "ENTREGADO", 2, "70.00", FECHA);
+        ejecutar("UPDATE AUTOR SET nombre='Zeta' WHERE id=1");
+        ejecutar("UPDATE AUTOR SET nombre='Alfa' WHERE id=2");
+        ejecutar("UPDATE CATEGORIA SET nombre='Zeta' WHERE id=1");
+        ejecutar("UPDATE CATEGORIA SET nombre='Alfa' WHERE id=2");
+        ejecutar("UPDATE EDITORIAL SET nombre='Zeta' WHERE id=1");
+        ejecutar("UPDATE EDITORIAL SET nombre='Alfa' WHERE id=2");
+        assertEquals(2, autores.obtenerMasComprada(1, dia, dia).id());
+        assertEquals(2, categorias.obtenerMasComprada(1, dia, dia).id());
+        assertEquals(2, editoriales.obtenerMasComprada(1, dia, dia).id());
+        // Los autores sí pueden compartir nombre; el identificador resuelve ese empate.
+        ejecutar("UPDATE AUTOR SET nombre='Alfa' WHERE id=1");
+        assertEquals(1, autores.obtenerMasComprada(1, dia, dia).id());
     }
 
     @Test
@@ -692,7 +705,7 @@ class CatalogoDAOTest {
         TransactionContext.rollback();
         TransactionContext.close();
         assertNull(libros.leer(nuevo.getId()));
-        assertEquals(0, descuentos.listarPorLibro(nuevo.getId(), FECHA, 1, 12).totalResultados());
+        assertEquals(0, descuentos.listarPorLibro(nuevo.getId(), 1, 12).totalResultados());
     }
 
     @Test
@@ -732,12 +745,11 @@ class CatalogoDAOTest {
             editoriales.cambiarImagen(1, null, "admin");
             descuentos.leer(1);
             descuentos.obtenerVigente(1, FECHA);
-            descuentos.listarPorLibro(1, FECHA, 1, 12);
-            descuentos.actualizarVigencias(FECHA, "sistema");
+            descuentos.listarPorLibro(1, 1, 12);
             libros.listarVentasLibros(new ConsultaReporteLibrosDTO(FECHA.toLocalDate(), FECHA.toLocalDate(), null));
-            autores.obtenerMasCompradas(List.of(1), FECHA.toLocalDate(), FECHA.toLocalDate());
-            categorias.obtenerMasCompradas(List.of(1), FECHA.toLocalDate(), FECHA.toLocalDate());
-            editoriales.obtenerMasCompradas(List.of(1), FECHA.toLocalDate(), FECHA.toLocalDate());
+            autores.obtenerMasComprada(1, FECHA.toLocalDate(), FECHA.toLocalDate());
+            categorias.obtenerMasComprada(1, FECHA.toLocalDate(), FECHA.toLocalDate());
+            editoriales.obtenerMasComprada(1, FECHA.toLocalDate(), FECHA.toLocalDate());
             libros.eliminar(3, "admin");
             contexto.verifyNoInteractions();
         }
@@ -810,7 +822,9 @@ class CatalogoDAOTest {
         assertTrue(editoriales.existeNombre("Editorial 1", 0));
         assertFalse(editoriales.existeNombre("Editorial 1", 1));
         categorias.eliminar(1, "admin");
+        libros.recalcularVetosPorCategoria(1, "admin");
         editoriales.eliminar(1, "admin");
+        libros.recalcularVetosPorEditorial(1, "admin");
         TransactionContext.commit();
         TransactionContext.close();
         assertTrue(categorias.existeNombre("Categoria 1", 0));
@@ -856,8 +870,11 @@ class CatalogoDAOTest {
     @Test
     void referenciasDistinguenVetoDeEliminacionEnListasYDetalles() throws Exception {
         autores.cambiarActivo(1, false, "admin");
+        libros.recalcularVetosPorAutor(1, "admin");
         categorias.cambiarActivo(1, false, "admin");
+        libros.recalcularVetosPorCategoria(1, "admin");
         editoriales.cambiarActivo(1, false, "admin");
+        libros.recalcularVetosPorEditorial(1, "admin");
         TransactionContext.commit();
         TransactionContext.close();
         var activos = FiltroReferenciaDTO.porDefecto();
@@ -872,8 +889,11 @@ class CatalogoDAOTest {
         assertFalse(categorias.obtenerDetalle(1, 0).activo());
         assertFalse(editoriales.obtenerDetalle(1, 0).activo());
         autores.eliminar(1, "admin");
+        libros.recalcularVetosPorAutor(1, "admin");
         categorias.eliminar(1, "admin");
+        libros.recalcularVetosPorCategoria(1, "admin");
         editoriales.eliminar(1, "admin");
+        libros.recalcularVetosPorEditorial(1, "admin");
         TransactionContext.commit();
         TransactionContext.close();
         assertNull(autores.obtenerDetalle(1, 0));

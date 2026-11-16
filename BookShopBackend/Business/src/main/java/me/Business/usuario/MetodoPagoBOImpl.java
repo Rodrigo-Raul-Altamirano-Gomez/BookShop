@@ -43,9 +43,8 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
         this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
     }
 
-    // Servicios comparte este BO: altas y ediciones comprueban los números de una en una.
     @Override
-    public synchronized MetodoPagoDTO registrar(int idActor, DatosMetodoPagoDTO datos) throws NegocioException {
+    public MetodoPagoDTO registrar(int idActor, DatosMetodoPagoDTO datos) throws NegocioException {
         try {
             Usuario actor = usuarioDAO.leer(idActor);
             DatosMetodoPagoDTO validos = validarFormulario(datos, false);
@@ -53,7 +52,7 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
             MetodoPago recuperado = null;
             List<MetodoPago> existentes = metodoPagoDAO.listarParaComprobarNumeros(validos.tarjetaBancaria());
             for (MetodoPago existente : existentes) {
-                String numeroExistente = numeroCompleto(existente);
+                String numeroExistente = MetodosPago.numeroCompleto(existente);
                 if (!numeroExistente.equals(validos.numero()))
                     continue;
                 if (existente instanceof BilleteraDigital &&
@@ -101,7 +100,7 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
     }
 
     @Override
-    public synchronized MetodoPagoDTO modificar(int idActor, int idMetodo, DatosMetodoPagoDTO datos) throws NegocioException {
+    public MetodoPagoDTO modificar(int idActor, int idMetodo, DatosMetodoPagoDTO datos) throws NegocioException {
         try {
             Usuario actor = usuarioDAO.leer(idActor);
             DatosMetodoPagoDTO validos = validarFormulario(datos, true);
@@ -112,11 +111,11 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
             if (tarjeta != validos.tarjetaBancaria()) {
                 throw new ValidacionException("tarjetaBancaria", "El subtipo del metodo no puede cambiarse.");
             }
-            String numero = validos.numero() == null ? numeroCompleto(metodo) : validos.numero();
+            String numero = validos.numero() == null ? MetodosPago.numeroCompleto(metodo) : validos.numero();
             for (MetodoPago existente : metodoPagoDAO.listarParaComprobarNumeros(tarjeta)) {
                 if (existente.getId() == idMetodo)
                     continue;
-                String numeroExistente = numeroCompleto(existente);
+                String numeroExistente = MetodosPago.numeroCompleto(existente);
                 if (!numeroExistente.equals(numero))
                     continue;
                 if (existente instanceof BilleteraDigital &&
@@ -247,39 +246,14 @@ public class MetodoPagoBOImpl implements MetodoPagoBO {
             if (datos.fechaVencimiento() == null || datos.fechaVencimiento().isBefore(LocalDate.now(reloj))) {
                 throw new ValidacionException("fechaVencimiento", "La tarjeta debe tener un vencimiento vigente.");
             }
-        } else if (datos.tipoTarjeta() != null || datos.fechaVencimiento() != null) {
-            throw new ValidacionException("fechaVencimiento",
-                "La vigencia de la billetera se determina automaticamente.");
         }
         String titular = datos.titular() == null ? "" : datos.titular().strip();
-        if (titular.isEmpty())
-            throw new ValidacionException("titular", "Este campo es obligatorio.");
-        if (titular.length() > 150)
-            throw new ValidacionException("titular", "El máximo es 150 caracteres.");
         String proveedor = datos.proveedor() == null ? "" : datos.proveedor().strip();
-        if (proveedor.isEmpty())
-            throw new ValidacionException("proveedor", "Este campo es obligatorio.");
-        if (proveedor.length() > 100)
-            throw new ValidacionException("proveedor", "El máximo es 100 caracteres.");
         String alias = datos.alias() == null ? null : datos.alias().strip();
         if (alias != null && alias.isEmpty())
             alias = null;
-        if (alias != null && alias.length() > 100)
-            throw new ValidacionException("alias", "El máximo es 100 caracteres.");
         return new DatosMetodoPagoDTO(datos.tarjetaBancaria(), titular, proveedor, alias, numero,
             datos.tipoTarjeta(), datos.fechaVencimiento(), datos.predeterminado());
-    }
-
-    private String numeroCompleto(MetodoPago metodo) throws NegocioException {
-        String cifrado;
-        if (metodo instanceof TarjetaBancaria) {
-            TarjetaBancaria tarjeta = (TarjetaBancaria) metodo;
-            cifrado = tarjeta.getNumeroTarjetaCifrado();
-        } else {
-            BilleteraDigital billetera = (BilleteraDigital) metodo;
-            cifrado = billetera.getNumeroTelefonoCifrado();
-        }
-        return ProteccionDatos.descifrar(cifrado);
     }
 
     private void asignarDatos(MetodoPago metodo, DatosMetodoPagoDTO datos, String numero, LocalDate hoy)

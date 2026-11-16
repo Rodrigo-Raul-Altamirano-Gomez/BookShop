@@ -35,6 +35,7 @@ public static class Presentacion
         libro.Dimensiones = dto.Alto is null || dto.Ancho is null ? "—" : $"{dto.Alto} × {dto.Ancho} cm";
         libro.Saga = dto.Saga ?? "";
         libro.Tomo = dto.NumeroTomo;
+        libro.Valoracion = dto.Valoracion;
         return libro;
     }
 
@@ -70,50 +71,4 @@ public static class Presentacion
         Predeterminada = dto.Predeterminado,
         Vigente = dto.Vigente
     };
-
-    public static Pedido Pedido(DetallePedidoDTO dto)
-    {
-        var lineas = new List<LineaPedido>();
-        foreach (var item in dto.Resumen.Items)
-        {
-            lineas.Add(new LineaPedido
-            {
-                IdLibro = item.IdLibro,
-                Titulo = item.Titulo,
-                Portada = item.Portada,
-                Cantidad = item.Cantidad,
-                Precio = item.PrecioUnitario,
-                PrecioOriginal = item.PrecioOriginal,
-                Descuento = item.PorcentajeDescuento
-            });
-        }
-        return new Pedido
-        {
-            Id = dto.Pedido.Id,
-            FechaPago = dto.Pedido.FechaPago,
-            Estado = dto.Pedido.Estado switch
-            {
-                "EN_ALMACEN" => "En almacén",
-                "EN_CAMINO" => "En camino",
-                "ENTREGADO" => "Entregado",
-                "CANCELADO" => "Cancelado",
-                "DEVUELTO" => "Devuelto",
-                _ => dto.Pedido.Estado
-            },
-            Direccion = Direccion(dto.DireccionEnvio),
-            Metodo = Metodo(dto.MetodoPago),
-            Productos = dto.Resumen.SubtotalProductos,
-            DescuentoLibro = dto.Resumen.DescuentoLibros,
-            Subtotal = dto.Resumen.SubtotalProductos - dto.Resumen.DescuentoLibros,
-            DescuentoCupon = dto.Resumen.DescuentoCupon,
-            Envio = dto.Resumen.CostoEnvio,
-            Total = dto.Resumen.Total,
-            Transaccion = dto.IdentificadorTransaccion,
-            Seguimiento = dto.CodigoSeguimiento,
-            EntregaEstimada = dto.FechaEntregaEstimada ?? default,
-            FechaSalida = dto.FechaSalida,
-            FechaEntrega = dto.FechaEntrega,
-            Lineas = lineas
-        };
-    }
 }

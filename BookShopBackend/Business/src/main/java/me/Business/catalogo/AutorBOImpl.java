@@ -11,6 +11,8 @@ import me.Business.exceptions.RecursoNoEncontradoException;
 import me.Business.exceptions.ValidacionException;
 import me.DAO.catalogo.AutorDAO;
 import me.DAO.catalogo.AutorDAOImpl;
+import me.DAO.catalogo.LibroDAO;
+import me.DAO.catalogo.LibroDAOImpl;
 import me.DAO.usuario.UsuarioDAO;
 import me.DAO.usuario.UsuarioDAOImpl;
 import me.DBManager.TransactionContext;
@@ -26,14 +28,17 @@ import me.Model.entities.usuario.Usuario;
 public class AutorBOImpl implements AutorBO {
 
     private final AutorDAO autorDAO;
+    private final LibroDAO libroDAO;
+    private final UsuarioDAO usuarioDAO;
     private final Clock reloj;
 
     public AutorBOImpl() {
-        this(new AutorDAOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")));
+        this(new AutorDAOImpl(), new LibroDAOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")));
     }
 
-    public AutorBOImpl(AutorDAO autorDAO, UsuarioDAO usuarioDAO, Clock reloj) {
+    public AutorBOImpl(AutorDAO autorDAO, LibroDAO libroDAO, UsuarioDAO usuarioDAO, Clock reloj) {
         this.autorDAO = autorDAO;
+        this.libroDAO = libroDAO;
         this.usuarioDAO = usuarioDAO;
         this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
     }
@@ -44,11 +49,9 @@ public class AutorBOImpl implements AutorBO {
             Usuario actor = usuarioDAO.leer(idActor);
             if (registro == null)
                 throw new ValidacionException("registro", "Complete los datos del autor.");
-            DatosReferenciaDTO datos = validarFormulario(registro.datos());
-            if (registro.imagen() != null && registro.imagen().length() > 2048)
-                throw new ValidacionException("imagen", "La URL admite hasta 2048 caracteres.");
+            DatosReferenciaDTO datos = registro.datos();
             Autor autor = new Autor();
-            autor.setNombre(datos.nombre());
+            autor.setNombre(datos.nombre().strip());
             autor.setBiografia(datos.introduccion());
             autor.setImagen(registro.imagen());
             autor.setUsuarioCreacion(actor.getEmail());
@@ -64,12 +67,12 @@ public class AutorBOImpl implements AutorBO {
     public void modificar(int idActor, int id, DatosReferenciaDTO datos) throws NegocioException {
         try {
             Usuario actor = usuarioDAO.leer(idActor);
-            DatosReferenciaDTO validos = validarFormulario(datos);
+
             Autor autor = autorDAO.leer(id);
             if (autor == null || autor.isEliminado())
                 throw new RecursoNoEncontradoException("El autor no está disponible.");
-            autor.setNombre(validos.nombre());
-            autor.setBiografia(validos.introduccion());
+            autor.setNombre(datos.nombre().strip());
+            autor.setBiografia(datos.introduccion());
             autor.setUsuarioActualizacion(actor.getEmail());
             autorDAO.modificar(autor);
         } catch (SQLException e) {
@@ -81,8 +84,6 @@ public class AutorBOImpl implements AutorBO {
     public void cambiarImagen(int idActor, int id, String imagen) throws NegocioException {
         try {
             Usuario actor = usuarioDAO.leer(idActor);
-            if (imagen != null && imagen.length() > 2048)
-                throw new ValidacionException("imagen", "La URL admite hasta 2048 caracteres.");
             Autor autor = autorDAO.leer(id);
             if (autor == null || autor.isEliminado())
                 throw new RecursoNoEncontradoException("El autor no está disponible.");
@@ -100,8 +101,11 @@ public class AutorBOImpl implements AutorBO {
             Autor autor = autorDAO.leer(id);
             if (autor == null || autor.isEliminado())
                 throw new RecursoNoEncontradoException("El autor no esta disponible.");
-            if (autor.isActivo() != activo && !autorDAO.cambiarActivo(id, activo, actor.getEmail()))
-                throw new ConflictoException("El autor cambio; vuelva a consultarlo.");
+            if (autor.isActivo() != activo) {
+                if (!autorDAO.cambiarActivo(id, activo, actor.getEmail()))
+                    throw new ConflictoException("El autor cambio; vuelva a consultarlo.");
+                libroDAO.recalcularVetosPorAutor(id, actor.getEmail());
+            }
             TransactionContext.commit();
         } catch (SQLException e) {
             TransactionContext.rollback();
@@ -123,6 +127,7 @@ public class AutorBOImpl implements AutorBO {
                 throw new RecursoNoEncontradoException("El autor no esta disponible.");
             if (!autorDAO.eliminar(id, actor.getEmail()))
                 throw new ConflictoException("El autor cambio; vuelva a consultarlo.");
+            libroDAO.recalcularVetosPorAutor(id, actor.getEmail());
             TransactionContext.commit();
         } catch (SQLException e) {
             TransactionContext.rollback();
@@ -136,7 +141,7 @@ public class AutorBOImpl implements AutorBO {
     }
 
     @Override
-    public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscar(int idActor, FiltroReferenciaDTO filtro) throws
+    public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscar(FiltroReferenciaDTO filtro) throws
         NegocioException {
         if (filtro == null)
             filtro = FiltroReferenciaDTO.porDefecto();
@@ -144,15 +149,8 @@ public class AutorBOImpl implements AutorBO {
             throw new ValidacionException("pagina", "La página y su tamaño deben ser positivos.");
         if (filtro.orden() == null)
             throw new ValidacionException("orden", "Seleccione un orden.");
-        String nombre = filtro.nombre() == null ? null : filtro.nombre().strip();
-        if (nombre != null && nombre.isEmpty())
-            nombre = null;
-        if (nombre != null && nombre.length() > 200)
-            throw new ValidacionException("nombre", "El máximo es 200 caracteres.");
-        FiltroReferenciaDTO valido = new FiltroReferenciaDTO(nombre, filtro.soloActivos(), filtro.orden(),
-            filtro.pagina(), filtro.tamanioPagina());
         try {
-            return autorDAO.buscar(valido);
+            return autorDAO.buscar(filtro);
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudieron consultar los autores.", e);
         }
@@ -170,21 +168,4 @@ public class AutorBOImpl implements AutorBO {
         }
     }
 
-    private DatosReferenciaDTO validarFormulario(DatosReferenciaDTO datos) throws ValidacionException {
-        if (datos == null)
-            throw new ValidacionException("datos", "Complete los datos del autor.");
-        String nombre = datos.nombre() == null ? "" : datos.nombre().strip();
-        if (nombre.isEmpty())
-            throw new ValidacionException("nombre", "Este campo es obligatorio.");
-        if (nombre.length() > 200)
-            throw new ValidacionException("nombre", "El máximo es 200 caracteres.");
-        String introduccion = datos.introduccion() == null ? null : datos.introduccion().strip();
-        if (introduccion != null && introduccion.isEmpty())
-            introduccion = null;
-        if (introduccion != null && introduccion.length() > 65535)
-            throw new ValidacionException("introduccion", "El máximo es 65535 caracteres.");
-        return new DatosReferenciaDTO(nombre, introduccion);
-    }
-
-    private final UsuarioDAO usuarioDAO;
 }

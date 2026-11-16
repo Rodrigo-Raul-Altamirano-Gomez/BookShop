@@ -142,8 +142,6 @@ public class SolicitudDAOImpl implements SolicitudDAO {
     @Override
     public ResultadoPaginadoDTO<ResumenSolicitudDTO> listar(int idUsuario, FiltroSolicitudDTO filtro) throws
         SQLException {
-        if (filtro == null)
-            filtro = FiltroSolicitudDTO.porDefecto();
         String condiciones = " WHERE s.tipo_solicitud = ? AND NOT s.eliminado";
         if (idUsuario > 0)
             condiciones += " AND s.id_usuario = ?";
@@ -270,8 +268,7 @@ public class SolicitudDAOImpl implements SolicitudDAO {
                     DatosResenaDTO(resultado.getInt("puntuacion_actual"),
                     resultado.getString("comentario_actual")) : null;
                 return new DetalleReporteResenaDTO(mapearResumen(resultado), new
-                    DatosReporteResenaDTO(MotivoReporteResena.valueOf(resultado.getString("motivo_re" +
-                    "porte")), resultado.getString("comentario")), referencia, actual,
+                    DatosReporteResenaDTO(MotivoReporteResena.valueOf(resultado.getString("motivo_reporte")), resultado.getString("comentario")), referencia, actual,
                     resultado.getBoolean("resena_activa"), resultado.getObject("fecha_resolucion",
                     LocalDateTime.class));
             }

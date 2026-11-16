@@ -6,18 +6,14 @@ namespace Web.Servicios;
 public class CuentaServicio
 {
     private readonly HttpClientUtils api;
-    private readonly SesionUsuario Sesion;
     public List<Direccion> Direcciones { get; } = [];
     public List<MetodoPago> Metodos { get; } = [];
     public List<Cupon> Cupones { get; } = [];
-    public HashSet<int> Deseados { get; } = [];
-    public HashSet<int> Favoritos { get; } = [];
 
     public CuentaServicio(HttpClientUtils api, SesionUsuario sesion)
     {
         this.api = api;
-        Sesion = sesion;
-        Sesion.Cerrada += Limpiar;
+        sesion.Cerrada += Limpiar;
     }
 
     private void Limpiar()
@@ -25,9 +21,6 @@ public class CuentaServicio
         Direcciones.Clear();
         Metodos.Clear();
         Cupones.Clear();
-        Deseados.Clear();
-        Favoritos.Clear();
-
     }
 
     public async Task CargarDatosCompra()
@@ -130,34 +123,20 @@ public class CuentaServicio
         };
         if (metodo.Tipo == "Tarjeta")
             datos.TipoTarjeta = metodo.TipoTarjeta == "Crédito" ? "CREDITO" : "DEBITO";
-        try
-        {
-            var guardado = id == 0
-                ? await api.Post<MetodoPagoDTO>("cuenta/metodos", datos)
-                : await api.Put<MetodoPagoDTO>($"cuenta/metodos/{id}", datos);
-            await CargarMetodos();
-            return guardado.Id;
-        }
-        finally
-        {
-            metodo.Numero = null;
-        }
+        var guardado = id == 0
+            ? await api.Post<MetodoPagoDTO>("cuenta/metodos", datos)
+            : await api.Put<MetodoPagoDTO>($"cuenta/metodos/{id}", datos);
+        await CargarMetodos();
+        return guardado.Id;
     }
 
-    public async Task AlternarGuardado(int id, bool favorito)
+    public async Task CambiarGuardado(int id, bool favorito, bool guardar)
     {
-        if (!Sesion.RequerirAcceso())
-            return;
-        var lista = favorito ? Favoritos : Deseados;
         string ruta = $"cuenta/libros-guardados/{id}?favorito={favorito.ToString().ToLowerInvariant()}";
-        if (lista.Contains(id))
-            await api.Delete(ruta);
-        else
+        if (guardar)
             await api.Put(ruta);
-        if (lista.Contains(id))
-            lista.Remove(id);
         else
-            lista.Add(id);
+            await api.Delete(ruta);
     }
 
     public static string TipoSeguimiento(string tipo)

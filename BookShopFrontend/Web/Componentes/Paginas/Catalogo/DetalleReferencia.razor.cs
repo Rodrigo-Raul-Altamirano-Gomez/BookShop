@@ -69,10 +69,7 @@ public partial class DetalleReferencia : IDisposable
         {
             errorCarga = e.Message;
         }
-        finally
-        {
-            cargando = false;
-        }
+        cargando = false;
     }
     private async void ActualizarVista()
     {
@@ -97,13 +94,9 @@ public partial class DetalleReferencia : IDisposable
         }
         catch (InvalidOperationException e)
         {
-            Sesion.Error = e.Message;
             Sesion.Avisar(e.Message);
         }
-        finally
-        {
-            procesando = false;
-        }
+        procesando = false;
     }
 
 }

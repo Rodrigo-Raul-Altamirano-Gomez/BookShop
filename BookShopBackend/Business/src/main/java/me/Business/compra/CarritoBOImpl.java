@@ -56,7 +56,7 @@ public class CarritoBOImpl implements CarritoBO {
         this.carritos = carritos;
     }
 
-    // Pedido utiliza el mismo carrito. El bloqueo evita modificarlo mientras se paga.
+    // Pedido utiliza los mismos datos del carrito para preparar y confirmar la compra.
     static class EstadoCarrito {
 
         final Map<Integer, ItemDTO> lineas = new LinkedHashMap<>();
@@ -91,48 +91,14 @@ public class CarritoBOImpl implements CarritoBO {
             throw new ValidacionException("cantidad", "La cantidad debe ser positiva.");
         EstadoCarrito carrito = obtenerCarrito(idUsuario);
         synchronized (carrito) {
-            try {
-                Libro libro = libroDAO.leer(idLibro);
-                if (libro == null)
-                    throw new RecursoNoEncontradoException("El libro no existe.");
-                if (!libro.isActivo())
-                    throw new ConflictoException("El libro no esta disponible.");
-                ItemDTO anterior = carrito.lineas.get(idLibro);
-                long cantidadTotal = cantidad;
-                if (anterior != null)
-                    cantidadTotal += anterior.cantidad();
-                if (cantidadTotal > libro.getStockFisico()) {
-                    throw new StockInsuficienteException("No hay stock suficiente de " + libro.getTitulo() + ".");
-                }
-                Descuento descuento = descuentoDAO.obtenerVigente(idLibro, LocalDateTime.now(reloj));
-                BigDecimal porcentaje = descuento == null ? BigDecimal.ZERO : descuento.getPorcentaje();
-                BigDecimal precioFinal =
-                    libro.getPrecioBase().multiply(BigDecimal.valueOf(100).subtract(porcentaje)).divide(
-                    BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-                ItemDTO linea = new ItemDTO(idLibro, libro.getTitulo(), libro.getPortada(), (int)
-                    cantidadTotal, libro.getPrecioBase(), precioFinal, porcentaje,
-                    precioFinal.multiply(BigDecimal.valueOf(cantidadTotal)), true, libro.getStockFisico());
-                List<ItemDTO> items = new ArrayList<>();
-                boolean reemplazada = false;
-                for (ItemDTO existente : carrito.lineas.values()) {
-                    if (existente.idLibro() == idLibro) {
-                        items.add(linea);
-                        reemplazada = true;
-                    } else {
-                        items.add(consultarLinea(existente.idLibro(), existente.cantidad(), existente));
-                    }
-                }
-                if (!reemplazada)
-                    items.add(linea);
-                ResumenCompraDTO resumen = calcularResumen(items, configuracion.obtener().porcentajeEnvio(),
-                    0, BigDecimal.ZERO);
-                carrito.lineas.put(idLibro, linea);
-                carrito.preparacion = null;
-                carrito.pedidoConfirmado = 0;
-                return resumen;
-            } catch (SQLException e) {
-                throw new PersistenciaException("No se pudo agregar el libro al carrito.", e);
-            }
+            ItemDTO anterior = carrito.lineas.get(idLibro);
+            long cantidadTotal = cantidad;
+            if (anterior != null)
+                cantidadTotal += anterior.cantidad();
+            // La suma usa long para no desbordar antes de comprobar el stock.
+            if (cantidadTotal > Integer.MAX_VALUE)
+                throw new StockInsuficienteException("La cantidad supera el stock disponible.");
+            return guardarCantidad(carrito, idLibro, (int) cantidadTotal);
         }
     }
 
@@ -150,26 +116,34 @@ public class CarritoBOImpl implements CarritoBO {
                 carrito.pedidoConfirmado = 0;
                 return consultarResumen(carrito);
             }
-            ItemDTO linea = consultarLinea(idLibro, cantidad, carrito.lineas.get(idLibro));
-            if (!linea.activo())
-                throw new ConflictoException("El libro no esta disponible.");
-            if (cantidad > linea.stockDisponible()) {
-                throw new StockInsuficienteException("No hay stock suficiente de " + linea.titulo() + ".");
-            }
-            List<ItemDTO> items = new ArrayList<>();
-            for (ItemDTO existente : carrito.lineas.values()) {
-                if (existente.idLibro() == idLibro)
-                    items.add(linea);
-                else
-                    items.add(consultarLinea(existente.idLibro(), existente.cantidad(), existente));
-            }
-            ResumenCompraDTO resumen = calcularResumen(items, configuracion.obtener().porcentajeEnvio(), 0,
-                BigDecimal.ZERO);
-            carrito.lineas.put(idLibro, linea);
-            carrito.preparacion = null;
-            carrito.pedidoConfirmado = 0;
-            return resumen;
+            return guardarCantidad(carrito, idLibro, cantidad);
         }
+    }
+
+    // Agregar y cambiar cantidad validan y recalculan antes de modificar el carrito.
+    private ResumenCompraDTO guardarCantidad(EstadoCarrito carrito, int idLibro, int cantidad)
+        throws NegocioException {
+        ItemDTO anterior = carrito.lineas.get(idLibro);
+        ItemDTO linea = consultarLinea(idLibro, cantidad, anterior);
+        if (!linea.activo())
+            throw new ConflictoException("El libro no esta disponible.");
+        if (cantidad > linea.stockDisponible())
+            throw new StockInsuficienteException("No hay stock suficiente de " + linea.titulo() + ".");
+        List<ItemDTO> items = new ArrayList<>();
+        for (ItemDTO existente : carrito.lineas.values()) {
+            if (existente.idLibro() == idLibro)
+                items.add(linea);
+            else
+                items.add(consultarLinea(existente.idLibro(), existente.cantidad(), existente));
+        }
+        if (anterior == null)
+            items.add(linea);
+        ResumenCompraDTO resumen = calcularResumen(items, configuracion.obtener().porcentajeEnvio(), 0,
+            BigDecimal.ZERO);
+        carrito.lineas.put(idLibro, linea);
+        carrito.preparacion = null;
+        carrito.pedidoConfirmado = 0;
+        return resumen;
     }
 
     @Override
@@ -201,6 +175,8 @@ public class CarritoBOImpl implements CarritoBO {
         try {
             Libro libro = libroDAO.leer(idLibro);
             if (libro == null) {
+                if (anterior == null)
+                    throw new RecursoNoEncontradoException("El libro no existe.");
                 return new ItemDTO(idLibro, anterior.titulo(), anterior.portada(), cantidad,
                     anterior.precioOriginal(), anterior.precioUnitario(), anterior.porcentajeDescuento(),
                     anterior.precioUnitario().multiply(BigDecimal.valueOf(cantidad)), false, 0);
@@ -220,7 +196,7 @@ public class CarritoBOImpl implements CarritoBO {
 
     // Carrito y Pedido utilizan el mismo cálculo de descuentos, envío y total.
     static ResumenCompraDTO calcularResumen(List<ItemDTO> items, BigDecimal porcentajeEnvio, int idCupon,
-        BigDecimal porcentajeCupon) throws ValidacionException {
+        BigDecimal porcentajeCupon) {
         BigDecimal productos = BigDecimal.ZERO;
         BigDecimal subtotal = BigDecimal.ZERO;
         int cantidad = 0;

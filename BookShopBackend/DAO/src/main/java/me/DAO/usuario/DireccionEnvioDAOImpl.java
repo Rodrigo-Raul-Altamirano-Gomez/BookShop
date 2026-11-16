@@ -23,8 +23,6 @@ public class DireccionEnvioDAOImpl implements DireccionEnvioDAO {
         String sql = "INSERT INTO DIRECCION_ENVIO (id_usuario, alias, calle, distrito, ciudad, " +
             "referencia, activo, predeterminada, eliminado, usuario_creacion, fecha_creacion) " +
             "VALUES (?, ?, ?, ?, ?, ?, ?, FALSE, ?, ?, ?)";
-        if (direccion.getFechaCreacion() == null)
-            direccion.setFechaCreacion(LocalDateTime.now());
         // El alta y la eleccion opcional de predeterminada se confirman juntas en Business.
         Connection conexion = TransactionContext.getConnection();
         try (PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -44,7 +42,6 @@ public class DireccionEnvioDAOImpl implements DireccionEnvioDAO {
                     throw new SQLException("No se genero el identificador de la direccion.");
                 direccion.setId(claves.getInt(1));
             }
-            // El cambio de predeterminado comprueba el candidato y bloquea al propietario.
             direccion.setPredeterminada(false);
         }
     }

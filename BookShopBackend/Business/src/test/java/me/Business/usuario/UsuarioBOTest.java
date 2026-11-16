@@ -137,7 +137,7 @@ class UsuarioBOTest {
     }
 
     @Test
-    void desactivarVerificaClaveYLaCuentaInactivaBloqueaOperacionesPersonales() throws Exception {
+    void desactivarVerificaClaveYConservaLaCuenta() throws Exception {
         assertThrows(CredencialesInvalidasException.class, () -> bo.desactivar(1, "incorrecta"));
         verify(usuarios, never()).cambiarActivo(anyInt(), anyBoolean(), anyString());
         when(usuarios.cambiarActivo(1, false, "ana@test")).thenAnswer(inv -> {

@@ -17,29 +17,26 @@ import me.Model.dto.ConfiguracionDTO;
 public class ConfiguracionBOImpl implements ConfiguracionBO {
 
     private final Path archivo;
-    private ConfiguracionDTO configuracion;
 
-    public ConfiguracionBOImpl() throws NegocioException {
+    public ConfiguracionBOImpl() {
         this(Path.of(System.getProperty("bookshop.config.file", "negocio.properties")));
     }
 
-    public ConfiguracionBOImpl(Path archivo) throws NegocioException {
+    public ConfiguracionBOImpl(Path archivo) {
         this.archivo = archivo.toAbsolutePath();
-        this.configuracion = cargar();
     }
 
     public static ConfiguracionDTO actual() throws NegocioException {
-        return new ConfiguracionBOImpl().configuracion;
+        return new ConfiguracionBOImpl().cargar();
     }
 
     @Override
-    public ConfiguracionDTO obtener(int idActor) throws NegocioException {
-        configuracion = cargar();
-        return configuracion;
+    public ConfiguracionDTO obtener() throws NegocioException {
+        return cargar();
     }
 
     @Override
-    public void guardar(int idActor, ConfiguracionDTO datos) throws NegocioException {
+    public void guardar(ConfiguracionDTO datos) throws NegocioException {
         ConfiguracionDTO nueva = validar(datos);
         Properties valores = new Properties();
         valores.setProperty("porcentajeEnvio", nueva.porcentajeEnvio().toPlainString());
@@ -54,8 +51,7 @@ public class ConfiguracionBOImpl implements ConfiguracionBO {
             try (Writer salida = Files.newBufferedWriter(archivo, StandardCharsets.UTF_8)) {
                 valores.store(salida, "Configuracion de negocio BookShop");
             }
-            configuracion = nueva;
-        } catch (IOException | SecurityException e) {
+        } catch (IOException e) {
             throw new ConfiguracionException("No se pudo guardar la configuración.", e);
         }
     }
@@ -73,7 +69,7 @@ public class ConfiguracionBOImpl implements ConfiguracionBO {
                 BigDecimal(valores.getProperty("porcentajeCupon")), new
                 BigDecimal(valores.getProperty("montoMinimoCupon")),
                 Integer.parseInt(valores.getProperty("vigenciaDiasCupon"))));
-        } catch (IOException | IllegalArgumentException | NullPointerException | ValidacionException e) {
+        } catch (Exception e) {
             throw new ConfiguracionException("El archivo de configuración no es válido; no se sobrescribió.", e);
         }
     }

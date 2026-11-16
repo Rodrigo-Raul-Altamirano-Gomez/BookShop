@@ -39,7 +39,7 @@
 </header>
 <main id="main-content" class="site-main">
     <Cargando EnCurso="@Catalogo.Cargando"
-        Error="@(Catalogo.Inicializado ? null : Sesion.Error)" AlReintentar="Catalogo.Inicializar">
+        Error="@Catalogo.Error" AlReintentar="Catalogo.Inicializar">
         @if (Catalogo.Inicializado) { @Body }
     </Cargando>
 </main>

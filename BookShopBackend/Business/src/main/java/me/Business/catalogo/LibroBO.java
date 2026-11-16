@@ -27,23 +27,23 @@ public interface LibroBO {
 
     void eliminar(int idActor, int idLibro) throws NegocioException;
 
-    ResultadoPaginadoDTO<TarjetaLibroDTO> buscar(int idActor, FiltroLibroDTO filtro) throws NegocioException;
+    ResultadoPaginadoDTO<TarjetaLibroDTO> buscar(FiltroLibroDTO filtro) throws NegocioException;
 
-    ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorAutor(int idActor, int idAutor, FiltroLibroDTO filtro)
+    ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorAutor(int idAutor, FiltroLibroDTO filtro)
         throws NegocioException;
 
-    ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorCategoria(int idActor, int idCategoria, FiltroLibroDTO
+    ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorCategoria(int idCategoria, FiltroLibroDTO
         filtro) throws NegocioException;
 
-    ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorEditorial(int idActor, int idEditorial, FiltroLibroDTO
+    ResultadoPaginadoDTO<TarjetaLibroDTO> buscarPorEditorial(int idEditorial, FiltroLibroDTO
         filtro) throws NegocioException;
 
-    ResultadoPaginadoDTO<String> buscarIdiomas(int idActor, String nombre, int pagina, int tamanio) throws
+    ResultadoPaginadoDTO<String> buscarIdiomas(String nombre, int pagina, int tamanio) throws
         NegocioException;
 
     DetalleLibroDTO obtenerDetalle(int idActor, int idLibro) throws NegocioException;
 
-    GestionLibroDTO obtenerGestion(int idActor, int idLibro) throws NegocioException;
+    GestionLibroDTO obtenerGestion(int idLibro) throws NegocioException;
 
     List<DetalleLibroDTO> comparar(int idActor, int primerLibro, int segundoLibro) throws NegocioException;
 }

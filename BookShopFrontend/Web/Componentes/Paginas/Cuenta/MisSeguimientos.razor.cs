@@ -18,19 +18,17 @@ public partial class MisSeguimientos
         var datos = await Api.Post<ResultadoPaginadoDTO<TarjetaReferenciaDTO>>(
             "cuenta/seguimientos/busqueda", new ConsultaSeguimientosDTO
             {
-                Tipo = CuentaServicio.TipoSeguimiento(Tipo),
-                Orden = Orden == "reciente" ? "MAS_RECIENTES" : "NOMBRE_ASCENDENTE",
-                Pagina = Pagina,
+                Tipo = CuentaServicio.TipoSeguimiento(vista.Tipo),
+                Orden = vista.Orden == "reciente" ? "MAS_RECIENTES" : "NOMBRE_ASCENDENTE",
+                Pagina = vista.Pagina,
                 TamanioPagina = TamanoPagina
             });
-        Referencias = datos.Items.Select(dto => Presentacion.Referencia(dto, Tipo)).ToList();
+        Referencias = datos.Items.Select(dto => Presentacion.Referencia(dto, vista.Tipo)).ToList();
         totalResultados = datos.TotalResultados;
     }
 
     private const string ClaveVista = "cuenta:mis-seguimientos";
-    private string Tipo { get; set; } = "autores";
-    private string Orden { get; set; } = "nombre";
-    private int Pagina { get; set; } = 1;
+    private VistaSeguimientos vista = new();
 
     private const int TamanoPagina = 12;
     private long totalResultados;
@@ -40,57 +38,25 @@ public partial class MisSeguimientos
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        if (Sesion.EstadoVistas.TryGetValue(ClaveVista, out var guardado)
-            && guardado is VistaSeguimientos vista)
-        {
-            Tipo = vista.Tipo;
-            Orden = vista.Orden;
-            Pagina = vista.Pagina;
-        }
+        if (Sesion.EstadoVistas.TryGetValue(ClaveVista, out var guardado) && guardado is VistaSeguimientos almacenada)
+            vista = almacenada;
+        Sesion.EstadoVistas[ClaveVista] = vista;
     }
 
-    private void GuardarVista() => Sesion.EstadoVistas[ClaveVista] = new VistaSeguimientos
+    private async Task MostrarTipo(string tipo)
     {
-        Tipo = Tipo,
-        Orden = Orden,
-        Pagina = Pagina
-
-    };
-    private async Task MostrarAutores()
-    {
-        Tipo = "autores";
-        Pagina = 1;
-        GuardarVista();
-        await ActualizarDatos();
+        vista.Tipo = tipo;
+        await ReiniciarPagina();
     }
-
-    private async Task MostrarCategorias()
-    {
-        Tipo = "categorias";
-        Pagina = 1;
-        GuardarVista();
-        await ActualizarDatos();
-    }
-
-    private async Task MostrarEditoriales()
-    {
-        Tipo = "editoriales";
-        Pagina = 1;
-        GuardarVista();
-        await ActualizarDatos();
-    }
-
     private async Task ReiniciarPagina()
     {
-        Pagina = 1;
-        GuardarVista();
+        vista.Pagina = 1;
         await ActualizarDatos();
     }
 
     private async Task CambiarPagina(int pagina)
     {
-        Pagina = pagina;
-        GuardarVista();
+        vista.Pagina = pagina;
         await ActualizarDatos();
     }
 

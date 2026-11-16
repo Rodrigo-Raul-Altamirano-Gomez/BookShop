@@ -8,16 +8,14 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import me.DBManager.DBManager;
 import me.DBManager.TransactionContext;
-import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.dto.catalogo.DetalleReferenciaDTO;
 import me.Model.dto.catalogo.FiltroReferenciaDTO;
 import me.Model.dto.catalogo.OrdenReferencia;
 import me.Model.dto.catalogo.TarjetaReferenciaDTO;
+import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.entities.catalogo.Categoria;
 
 public class CategoriaDAOImpl implements CategoriaDAO {
@@ -90,11 +88,8 @@ public class CategoriaDAOImpl implements CategoriaDAO {
         try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setString(1, usuario);
             sentencia.setInt(2, id);
-            if (sentencia.executeUpdate() != 1)
-                return false;
+            return sentencia.executeUpdate() == 1;
         }
-        new LibroDAOImpl().recalcularVetosPorCategoria(id, usuario);
-        return true;
     }
 
     @Override
@@ -108,11 +103,8 @@ public class CategoriaDAOImpl implements CategoriaDAO {
             sentencia.setString(2, usuario);
             sentencia.setInt(3, id);
             sentencia.setBoolean(4, activo);
-            if (sentencia.executeUpdate() != 1)
-                return false;
+            return sentencia.executeUpdate() == 1;
         }
-        new LibroDAOImpl().recalcularVetosPorCategoria(id, usuario);
-        return true;
     }
 
     @Override
@@ -130,7 +122,7 @@ public class CategoriaDAOImpl implements CategoriaDAO {
 
     @Override
     public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscar(FiltroReferenciaDTO filtro) throws SQLException {
-        String nombre = filtro.nombre() == null ? "" : filtro.nombre().trim();
+        String nombre = filtro.nombre() == null ? "" : filtro.nombre().strip();
         // En LIKE, estos caracteres deben buscarse como texto literal.
         String textoBuscado = nombre.replace("!", "!!");
         textoBuscado = textoBuscado.replace("%", "!%");
@@ -194,32 +186,23 @@ public class CategoriaDAOImpl implements CategoriaDAO {
     }
 
     @Override
-    public Map<Integer, TarjetaReferenciaDTO> obtenerMasCompradas(List<Integer> idsUsuarios, LocalDate inicio,
-        LocalDate fin) throws SQLException {
-        Map<Integer, TarjetaReferenciaDTO> referencias = new LinkedHashMap<>();
-        if (idsUsuarios.isEmpty())
-            return referencias;
-        String marcadores = String.join(",", java.util.Collections.nCopies(idsUsuarios.size(), "?"));
-        String sql = "SELECT p.id_usuario,a.id,a.nombre,SUM(i.cantidad) AS ejemplares FROM PEDIDO p" +
+    public TarjetaReferenciaDTO obtenerMasComprada(int idUsuario, LocalDate inicio, LocalDate fin) throws SQLException {
+        String sql = "SELECT a.id,a.nombre,SUM(i.cantidad) AS ejemplares FROM PEDIDO p" +
             " JOIN ITEM_PEDIDO i ON i.id_pedido=p.id JOIN LIBRO l ON l.id=i.id_libro" +
             " JOIN CATEGORIA a ON a.id=l.id_categoria WHERE p.eliminado=FALSE AND i.eliminado=FALSE" +
             " AND p.estado NOT IN ('CANCELADO','DEVUELTO') AND p.fecha_pago>=? AND p.fecha_pago<?" +
-            " AND p.id_usuario IN (" + marcadores + ") GROUP BY p.id_usuario,a.id,a.nombre" +
-            " ORDER BY p.id_usuario,ejemplares DESC,a.nombre ASC,a.id ASC";
+            " AND p.id_usuario=? GROUP BY a.id,a.nombre" +
+            " ORDER BY ejemplares DESC,a.nombre ASC,a.id ASC LIMIT 1";
         try (Connection conexion = DBManager.getConnection();
             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setTimestamp(1, Timestamp.valueOf(inicio.atStartOfDay()));
             sentencia.setTimestamp(2, Timestamp.valueOf(fin.plusDays(1).atStartOfDay()));
-            int parametro = 3;
-            for (Integer id : idsUsuarios) sentencia.setInt(parametro++, id);
+            sentencia.setInt(3, idUsuario);
             try (ResultSet resultado = sentencia.executeQuery()) {
-                while (resultado.next()) {
-                    referencias.putIfAbsent(resultado.getInt("id_usuario"), new
-                        TarjetaReferenciaDTO(resultado.getInt("id"), resultado.getString("nombre"), null));
-                }
+                return resultado.next() ? new TarjetaReferenciaDTO(resultado.getInt("id"),
+                    resultado.getString("nombre"), null) : null;
             }
         }
-        return referencias;
     }
 
     @Override

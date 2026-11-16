@@ -27,6 +27,8 @@ import me.Model.entities.usuario.Usuario;
 
 public class SeguimientoBOImpl implements SeguimientoBO {
 
+    private final UsuarioDAO usuarioDAO;
+
     private final SeguimientoDAO seguimientoDAO;
     private final AutorDAO autorDAO;
     private final CategoriaDAO categoriaDAO;
@@ -52,8 +54,6 @@ public class SeguimientoBOImpl implements SeguimientoBO {
             Usuario actor = usuarioDAO.leer(idActor);
             if (tipo == null)
                 throw new ValidacionException("tipo", "Selecciona un tipo de seguimiento.");
-            if (idReferencia < 1)
-                throw new ValidacionException("idReferencia", "Selecciona una referencia valida.");
             boolean disponible;
             switch(tipo) {
                 case AUTOR:
@@ -99,8 +99,6 @@ public class SeguimientoBOImpl implements SeguimientoBO {
             Usuario actor = usuarioDAO.leer(idActor);
             if (tipo == null)
                 throw new ValidacionException("tipo", "Selecciona un tipo de seguimiento.");
-            if (idReferencia < 1)
-                throw new ValidacionException("idReferencia", "Selecciona una referencia valida.");
             return seguimientoDAO.retirar(idActor, tipo, idReferencia, actor.getEmail());
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo retirar el seguimiento.", e);
@@ -126,5 +124,4 @@ public class SeguimientoBOImpl implements SeguimientoBO {
         }
     }
 
-    private final UsuarioDAO usuarioDAO;
 }

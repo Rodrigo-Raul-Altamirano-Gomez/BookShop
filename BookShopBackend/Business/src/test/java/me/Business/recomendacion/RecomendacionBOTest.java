@@ -10,7 +10,6 @@ import me.DAO.catalogo.*;
 import me.DAO.usuario.UsuarioDAO;
 import me.DAO.venta.PedidoDAO;
 import me.Model.dto.catalogo.*;
-import me.Model.dto.compra.VentaLibroDTO;
 import me.Model.entities.catalogo.Libro;
 import me.Model.entities.usuario.Usuario;
 import static org.junit.jupiter.api.Assertions.*;
@@ -69,8 +68,8 @@ class RecomendacionBOTest {
         assertEquals(4, segunda.totalResultados());
         verify(pedidos, times(1)).listarDetalleVentas(any());
         verify(resenas, times(1)).listarValoraciones();
-        verify(libros).listarTarjetasPorIds(eq(List.of(4, 3)), any());
-        verify(libros).listarTarjetasPorIds(eq(List.of(2, 1)), any());
+        // Cada consulta obtiene el conjunto una vez y reutiliza las tarjetas al paginar.
+        verify(libros, times(2)).listarTarjetasPorIds(eq(List.of(1, 2, 3, 4)), any());
     }
 
     @Test
@@ -92,6 +91,9 @@ class RecomendacionBOTest {
         assertTrue(bo.puedeMostrarParaTi(1));
         var resultado = bo.abrirParaTi(1, ConsultaRecomendacionesDTO.porDefecto());
         assertFalse(resultado.resultados().items().stream().anyMatch(t -> t.id() == 1));
+        assertThrows(AccesoDenegadoException.class, () -> bo.consultar(2, resultado.idConsulta(), ConsultaRecomendacionesDTO.porDefecto()));
+        assertThrows(AccesoDenegadoException.class, () -> bo.descartar(2, resultado.idConsulta()));
+        assertThrows(AccesoDenegadoException.class, () -> bo.consultar(0, resultado.idConsulta(), ConsultaRecomendacionesDTO.porDefecto()));
         bo.descartar(1, resultado.idConsulta());
         assertThrows(RecursoNoEncontradoException.class, () -> bo.consultar(1, resultado.idConsulta(), ConsultaRecomendacionesDTO.porDefecto()));
     }

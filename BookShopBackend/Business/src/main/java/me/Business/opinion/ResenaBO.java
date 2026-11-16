@@ -30,5 +30,5 @@ public interface ResenaBO {
     ResultadoPaginadoDTO<ResenaDTO> listarAdministracion(int idActor, ConsultaResenasDTO consulta) throws
         NegocioException;
 
-    ValoracionLibroDTO obtenerValoracion(int idActor, int idLibro) throws NegocioException;
+    ValoracionLibroDTO obtenerValoracion(int idLibro) throws NegocioException;
 }

@@ -9,8 +9,8 @@ import me.Model.dto.usuario.ReporteUsuariosDTO;
 // Prepara datos; la generación con Jaspersoft Studio se incorpora en otra fase.
 public interface ReporteBO {
 
-    ReporteVentasLibrosDTO prepararLibros(int idActor, ConsultaReporteLibrosDTO consulta) throws NegocioException;
+    ReporteVentasLibrosDTO prepararLibros(ConsultaReporteLibrosDTO consulta) throws NegocioException;
 
-    ReporteUsuariosDTO prepararUsuarios(int idActor, YearMonth mes, Integer cantidadMaxima) throws
+    ReporteUsuariosDTO prepararUsuarios(YearMonth mes, Integer cantidadMaxima) throws
         NegocioException;
 }

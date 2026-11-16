@@ -56,7 +56,9 @@ public class Main {
 
             System.out.println("\n6. Consultar el pedido persistido y comprobar el carrito");
             DetallePedidoDTO guardado = pedidos.consultar(usuario, idPedido);
-            System.out.println("OK: pedido recuperado, importe conservado y carrito vacío.");
+            System.out.println("Pedido recuperado: " + guardado.pedido().id());
+            System.out.println("Total guardado: S/ " + guardado.pedido().total());
+            System.out.println("Ejemplares que quedan en el carrito: " + carrito.consultar(usuario).cantidadLibros());
         } catch (NegocioException e) {
             System.out.println(e.getMessage());
         } finally {

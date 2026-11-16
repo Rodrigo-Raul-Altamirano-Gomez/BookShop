@@ -85,10 +85,7 @@ public class Errores implements ExceptionMapper<Exception> {
         }
         if (estado >= 500)
             LOG.log(Level.SEVERE, "Error al atender la solicitud REST", error);
-        Response.ResponseBuilder respuesta = Response.status(estado);
-        if (error instanceof WebApplicationException web)
-            respuesta = Response.fromResponse(web.getResponse());
-        return respuesta.status(estado).type(MediaType.APPLICATION_JSON).header("Content-Length",
-            null).entity(new ErrorRespuesta(codigo, mensaje, campo)).build();
+        return Response.status(estado).type(MediaType.APPLICATION_JSON)
+            .entity(new ErrorRespuesta(codigo, mensaje, campo)).build();
     }
 }

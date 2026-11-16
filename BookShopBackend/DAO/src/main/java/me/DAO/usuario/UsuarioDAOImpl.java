@@ -12,13 +12,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import me.DAO.catalogo.AutorDAOImpl;
 import me.DAO.catalogo.CategoriaDAOImpl;
 import me.DAO.catalogo.EditorialDAOImpl;
 import me.DBManager.DBManager;
 import me.DBManager.TransactionContext;
-import me.Model.dto.catalogo.TarjetaReferenciaDTO;
 import me.Model.dto.usuario.PerfilUsuarioDTO;
 import me.Model.dto.usuario.ResumenActividadUsuarioDTO;
 import me.Model.dto.usuario.TarjetaUsuarioDTO;
@@ -32,8 +30,6 @@ public class UsuarioDAOImpl implements UsuarioDAO {
         String sql = "INSERT INTO USUARIO (email, contrasenia, nombre, imagen, fecha_nacimiento, " +
             "activo, rol, tiempo_total, cantidad_pedidos_entregados, eliminado, usuario_creacion," +
             " fecha_creacion) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        if (usuario.getFechaCreacion() == null)
-            usuario.setFechaCreacion(LocalDateTime.now());
         try (Connection conexion = DBManager.getConnection();
             PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             sentencia.setString(1, usuario.getEmail());
@@ -213,7 +209,7 @@ public class UsuarioDAOImpl implements UsuarioDAO {
         // Business llama solo despues de cambiar por primera vez el pedido a ENTREGADO.
         String sql = "UPDATE USUARIO SET cantidad_pedidos_entregados = cantidad_pedidos_entregados + 1, " +
             "usuario_actualizacion = ?, fecha_actualizacion = CURRENT_TIMESTAMP " +
-            "WHERE id = ? AND NOT eliminado AND cantidad_pedidos_entregados < 2147483647";
+            "WHERE id = ? AND NOT eliminado";
         Connection conexion = TransactionContext.getConnection();
         try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setString(1, usuario);
@@ -233,7 +229,6 @@ public class UsuarioDAOImpl implements UsuarioDAO {
             "WHERE NOT u.eliminado ORDER BY total_gastado DESC, u.nombre, u.id" + (maximo == null ? "" :
             " LIMIT ?");
         List<ResumenActividadUsuarioDTO> actividad = new ArrayList<>();
-        List<Integer> idsUsuarios = new ArrayList<>();
         try (Connection conexion = DBManager.getConnection();
             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
             sentencia.setTimestamp(1, Timestamp.valueOf(inicio.atStartOfDay()));
@@ -243,31 +238,18 @@ public class UsuarioDAOImpl implements UsuarioDAO {
             try (ResultSet resultado = sentencia.executeQuery()) {
                 while (resultado.next()) {
                     int id = resultado.getInt("id");
-                    idsUsuarios.add(id);
                     TarjetaUsuarioDTO tarjeta = new TarjetaUsuarioDTO(id, resultado.getString("nombre"),
                         resultado.getString("email"), null);
                     BigDecimal gastado = resultado.getBigDecimal("total_gastado");
+                    // Cada fila se construye completa: no necesita listas y mapas intermedios.
                     actividad.add(new ResumenActividadUsuarioDTO(tarjeta, resultado.getBoolean("activo"),
-                        gastado, Duration.ofSeconds(resultado.getLong("tiempo_total")), null, null, null));
+                        gastado, Duration.ofSeconds(resultado.getLong("tiempo_total")),
+                        new CategoriaDAOImpl().obtenerMasComprada(id, inicio, fin),
+                        new AutorDAOImpl().obtenerMasComprada(id, inicio, fin),
+                        new EditorialDAOImpl().obtenerMasComprada(id, inicio, fin)));
                 }
             }
         }
-        if (actividad.isEmpty())
-            return actividad;
-        // Tres consultas para el conjunto completo; no reconstruyen referencias ni consultan por cada fila.
-        Map<Integer, TarjetaReferenciaDTO> categorias = new
-            CategoriaDAOImpl().obtenerMasCompradas(idsUsuarios, inicio, fin);
-        Map<Integer, TarjetaReferenciaDTO> autores = new AutorDAOImpl().obtenerMasCompradas(idsUsuarios,
-            inicio, fin);
-        Map<Integer, TarjetaReferenciaDTO> editoriales = new
-            EditorialDAOImpl().obtenerMasCompradas(idsUsuarios, inicio, fin);
-        List<ResumenActividadUsuarioDTO> reporte = new ArrayList<>();
-        for (ResumenActividadUsuarioDTO usuario : actividad) {
-            int id = usuario.usuario().id();
-            reporte.add(new ResumenActividadUsuarioDTO(usuario.usuario(), usuario.activo(),
-                usuario.totalGastado(), usuario.tiempoTotal(), categorias.get(id), autores.get(id),
-                editoriales.get(id)));
-        }
-        return reporte;
+        return actividad;
     }
 }

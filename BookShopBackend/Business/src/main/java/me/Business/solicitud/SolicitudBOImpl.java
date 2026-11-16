@@ -7,6 +7,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import me.Business.compra.PedidoBOImpl;
+import me.Business.compra.PedidoBO;
 import me.Business.compra.ProveedorConfiguracion;
 import me.Business.configuracion.ConfiguracionBOImpl;
 import me.Business.exceptions.ConflictoException;
@@ -48,6 +49,7 @@ import me.Model.entities.solicitud.SolicitudDevolucion;
 import me.Model.entities.solicitud.SolicitudReporteResena;
 import me.Model.entities.usuario.Rol;
 import me.Model.entities.usuario.Usuario;
+import me.Business.exceptions.AccesoDenegadoException;
 
 public class SolicitudBOImpl implements SolicitudBO {
 
@@ -56,19 +58,20 @@ public class SolicitudBOImpl implements SolicitudBO {
     private final ResenaDAO resenaDAO;
     private final LibroDAO libroDAO;
     private final CuponDAO cuponDAO;
+    private final UsuarioDAO usuarioDAO;
     private final Clock reloj;
     private final ProveedorConfiguracion configuracion;
-    private final PedidoBOImpl pedidoBO;
+    private final PedidoBO pedidoBO;
 
     public SolicitudBOImpl() {
-        this(new SolicitudDAOImpl(), new PedidoDAOImpl(), new ResenaDAOImpl(), new LibroDAOImpl(), new
-            CuponDAOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")),
+        this(new SolicitudDAOImpl(), new PedidoDAOImpl(), new ResenaDAOImpl(), new LibroDAOImpl(),
+            new CuponDAOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")),
             ConfiguracionBOImpl::actual, new PedidoBOImpl());
     }
 
     public SolicitudBOImpl(SolicitudDAO solicitudDAO, PedidoDAO pedidoDAO, ResenaDAO resenaDAO, LibroDAO
         libroDAO, CuponDAO cuponDAO, UsuarioDAO usuarioDAO, Clock reloj, ProveedorConfiguracion configuracion,
-        PedidoBOImpl pedidoBO) {
+        PedidoBO pedidoBO) {
         this.solicitudDAO = solicitudDAO;
         this.pedidoDAO = pedidoDAO;
         this.resenaDAO = resenaDAO;
@@ -94,6 +97,8 @@ public class SolicitudBOImpl implements SolicitudBO {
         fecha) throws SQLException, NegocioException {
         if (pedido == null || pedido.isEliminado())
             throw new RecursoNoEncontradoException("El pedido no existe.");
+        if (pedido.getUsuario().getId() != idActor)
+            throw new AccesoDenegadoException("El pedido pertenece a otra cuenta.");
         if (pedido.getEstado() != EstadoPedido.ENTREGADO || pedido.getFechaEntrega() == null)
             throw new ConflictoException("Solo puedes solicitar devolucion de un pedido entregado.");
         if (fecha.isBefore(pedido.getFechaEntrega()) ||
@@ -126,15 +131,7 @@ public class SolicitudBOImpl implements SolicitudBO {
             Usuario actor = usuarioDAO.leer(idActor);
             if (datos == null || datos.motivo() == null)
                 throw new ValidacionException("motivo", "Selecciona un motivo de devolucion.");
-            String comentario = datos.comentario();
-            if (comentario != null) {
-                comentario = comentario.trim();
-                if (comentario.isEmpty())
-                    comentario = null;
-                else if (comentario.length() > 5000)
-                    throw new ValidacionException("comentario",
-                        "El comentario admite como maximo 5000 caracteres.");
-            }
+            String comentario = validarComentario(datos.comentario());
             TransactionContext.getConnection();
             Pedido pedido = pedidoDAO.leer(idPedido);
             ConfiguracionDTO parametros = configuracion.obtener();
@@ -167,15 +164,7 @@ public class SolicitudBOImpl implements SolicitudBO {
             Usuario actor = usuarioDAO.leer(idActor);
             if (datos == null || datos.motivo() == null)
                 throw new ValidacionException("motivo", "Selecciona un motivo de reporte.");
-            String comentario = datos.comentario();
-            if (comentario != null) {
-                comentario = comentario.trim();
-                if (comentario.isEmpty())
-                    comentario = null;
-                else if (comentario.length() > 5000)
-                    throw new ValidacionException("comentario",
-                        "El comentario admite como maximo 5000 caracteres.");
-            }
+            String comentario = validarComentario(datos.comentario());
             TransactionContext.getConnection();
             Resena resena = resenaDAO.leer(idResena);
             if (resena == null || !resena.estaDisponible())
@@ -206,18 +195,12 @@ public class SolicitudBOImpl implements SolicitudBO {
             Usuario actor = usuarioDAO.leer(idActor);
             if (datos == null || datos.motivo() == null)
                 throw new ValidacionException("motivo", "Selecciona un motivo de devolucion.");
-            String comentario = datos.comentario();
-            if (comentario != null) {
-                comentario = comentario.trim();
-                if (comentario.isEmpty())
-                    comentario = null;
-                else if (comentario.length() > 5000)
-                    throw new ValidacionException("comentario",
-                        "El comentario admite como maximo 5000 caracteres.");
-            }
+            String comentario = validarComentario(datos.comentario());
             Solicitud solicitud = solicitudDAO.leer(idSolicitud);
             if (solicitud == null || solicitud.isEliminado())
                 throw new RecursoNoEncontradoException("La solicitud no existe.");
+            if (solicitud.getUsuario().getId() != idActor)
+                throw new AccesoDenegadoException("La solicitud pertenece a otra cuenta.");
             if (!solicitud.estaPendiente())
                 throw new ConflictoException("Solo puedes editar o retirar solicitudes pendientes.");
             if (!(solicitud instanceof SolicitudDevolucion devolucion))
@@ -238,18 +221,12 @@ public class SolicitudBOImpl implements SolicitudBO {
             Usuario actor = usuarioDAO.leer(idActor);
             if (datos == null || datos.motivo() == null)
                 throw new ValidacionException("motivo", "Selecciona un motivo de reporte.");
-            String comentario = datos.comentario();
-            if (comentario != null) {
-                comentario = comentario.trim();
-                if (comentario.isEmpty())
-                    comentario = null;
-                else if (comentario.length() > 5000)
-                    throw new ValidacionException("comentario",
-                        "El comentario admite como maximo 5000 caracteres.");
-            }
+            String comentario = validarComentario(datos.comentario());
             Solicitud solicitud = solicitudDAO.leer(idSolicitud);
             if (solicitud == null || solicitud.isEliminado())
                 throw new RecursoNoEncontradoException("La solicitud no existe.");
+            if (solicitud.getUsuario().getId() != idActor)
+                throw new AccesoDenegadoException("La solicitud pertenece a otra cuenta.");
             if (!solicitud.estaPendiente())
                 throw new ConflictoException("Solo puedes editar o retirar solicitudes pendientes.");
             if (!(solicitud instanceof SolicitudReporteResena reporte))
@@ -269,6 +246,8 @@ public class SolicitudBOImpl implements SolicitudBO {
             Solicitud solicitud = solicitudDAO.leer(idSolicitud);
             if (solicitud == null || solicitud.isEliminado())
                 throw new RecursoNoEncontradoException("La solicitud no existe.");
+            if (solicitud.getUsuario().getId() != idActor)
+                throw new AccesoDenegadoException("La solicitud pertenece a otra cuenta.");
             if (!solicitud.estaPendiente())
                 throw new ConflictoException("Solo puedes editar o retirar solicitudes pendientes.");
             if (!solicitudDAO.eliminar(idSolicitud, actor.getEmail()))
@@ -295,7 +274,7 @@ public class SolicitudBOImpl implements SolicitudBO {
     }
 
     @Override
-    public ResultadoPaginadoDTO<ResumenSolicitudDTO> listarModeracion(int idActor, FiltroSolicitudDTO filtro)
+    public ResultadoPaginadoDTO<ResumenSolicitudDTO> listarModeracion(FiltroSolicitudDTO filtro)
         throws NegocioException {
         if (filtro == null)
             filtro = FiltroSolicitudDTO.porDefecto();
@@ -313,9 +292,9 @@ public class SolicitudBOImpl implements SolicitudBO {
     @Override
     public DetalleDevolucionDTO consultarDevolucion(int idActor, int idSolicitud) throws NegocioException {
         try {
+            Usuario actor = usuarioDAO.leer(idActor);
             Solicitud solicitud = solicitudDAO.leer(idSolicitud);
-            if (solicitud == null || solicitud.isEliminado())
-                throw new RecursoNoEncontradoException("La solicitud no existe.");
+            comprobarAcceso(solicitud, actor);
             if (!(solicitud instanceof SolicitudDevolucion))
                 throw new ConflictoException("La solicitud no es una devolucion.");
             return solicitudDAO.obtenerDetalleDevolucion(idSolicitud);
@@ -329,8 +308,7 @@ public class SolicitudBOImpl implements SolicitudBO {
         try {
             Usuario actor = usuarioDAO.leer(idActor);
             Solicitud solicitud = solicitudDAO.leer(idSolicitud);
-            if (solicitud == null || solicitud.isEliminado())
-                throw new RecursoNoEncontradoException("La solicitud no existe.");
+            comprobarAcceso(solicitud, actor);
             if (!(solicitud instanceof SolicitudReporteResena))
                 throw new ConflictoException("La solicitud no es un reporte.");
             boolean administrador = actor.getRol() == Rol.ADMIN;
@@ -343,12 +321,12 @@ public class SolicitudBOImpl implements SolicitudBO {
     @Override
     public DetallePedidoDTO consultarPedidoReferencia(int idActor, int idSolicitud) throws NegocioException {
         try {
+            Usuario actor = usuarioDAO.leer(idActor);
             Solicitud solicitud = solicitudDAO.leer(idSolicitud);
-            if (solicitud == null || solicitud.isEliminado())
-                throw new RecursoNoEncontradoException("La solicitud no existe.");
+            comprobarAcceso(solicitud, actor);
             if (!(solicitud instanceof SolicitudDevolucion devolucion))
                 throw new ConflictoException("La solicitud no referencia un pedido.");
-            return pedidoBO.consultarReferencia(idActor, devolucion.getPedido().getId());
+            return pedidoBO.consultarReferencia(devolucion.getPedido().getId());
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo consultar el pedido de la solicitud.", e);
         }
@@ -434,5 +412,19 @@ public class SolicitudBOImpl implements SolicitudBO {
         return consultarReporte(idActor, idSolicitud);
     }
 
-    private final UsuarioDAO usuarioDAO;
+    private String validarComentario(String comentario) throws ValidacionException {
+        if (comentario == null || comentario.isBlank())
+            return null;
+        String valido = comentario.strip();
+        return valido;
+    }
+
+    private void comprobarAcceso(Solicitud solicitud, Usuario actor) throws NegocioException {
+        if (solicitud == null || solicitud.isEliminado())
+            throw new RecursoNoEncontradoException("La solicitud no existe.");
+        if (actor == null || !actor.estaDisponible() ||
+            (actor.getId() != solicitud.getUsuario().getId() && actor.getRol() != Rol.ADMIN))
+            throw new AccesoDenegadoException("La solicitud pertenece a otra cuenta.");
+    }
+
 }

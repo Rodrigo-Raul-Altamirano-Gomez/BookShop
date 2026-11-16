@@ -14,15 +14,21 @@ final class FiltradoColaborativo {
 
     static Set<Integer> pedidosUsuario(int idUsuario, List<VentaLibroDTO> ventas) {
         Set<Integer> pedidos = new HashSet<>();
-        for (VentaLibroDTO venta : ventas) if (venta.idUsuario() == idUsuario)
-            pedidos.add(venta.idPedido());
+        for (VentaLibroDTO venta : ventas) {
+            if (venta.idUsuario() == idUsuario) {
+                pedidos.add(venta.idPedido());
+            }
+        }
         return pedidos;
     }
 
     static Set<Integer> librosUsuario(int idUsuario, List<VentaLibroDTO> ventas) {
         Set<Integer> libros = new HashSet<>();
-        for (VentaLibroDTO venta : ventas) if (venta.idUsuario() == idUsuario)
-            libros.add(venta.idLibro());
+        for (VentaLibroDTO venta : ventas) {
+            if (venta.idUsuario() == idUsuario) {
+                libros.add(venta.idLibro());
+            }
+        }
         return libros;
     }
 
@@ -45,8 +51,11 @@ final class FiltradoColaborativo {
             if (comunes.isEmpty())
                 continue;
             double similitud = (double) comunes.size() / union.size();
-            for (int candidato : entrada.getValue()) if (!propios.contains(candidato))
-                puntos.put(candidato, puntos.getOrDefault(candidato, 0.0) + similitud);
+            for (int candidato : entrada.getValue()) {
+                if (!propios.contains(candidato)) {
+                    puntos.put(candidato, puntos.getOrDefault(candidato, 0.0) + similitud);
+                }
+            }
         }
         return puntos;
     }

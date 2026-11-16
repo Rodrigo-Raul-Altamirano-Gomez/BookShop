@@ -117,9 +117,6 @@ public class Usuario {
     }
 
     public void setCantidadPedidosEntregados(int cantidadPedidosEntregados) {
-        if (cantidadPedidosEntregados < 0) {
-            throw new IllegalArgumentException("El contador de pedidos no puede ser negativo.");
-        }
         this.cantidadPedidosEntregados = cantidadPedidosEntregados;
     }
 
@@ -180,7 +177,4 @@ public class Usuario {
         rol = tieneCorreoAdministrador() ? Rol.ADMIN : Rol.CLIENTE;
     }
 
-    public void registrarPedidoEntregado() {
-        cantidadPedidosEntregados = cantidadPedidosEntregados + 1;
-    }
 }

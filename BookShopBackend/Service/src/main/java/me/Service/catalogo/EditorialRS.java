@@ -34,14 +34,7 @@ public class EditorialRS {
     @POST
     @Path("busqueda")
     public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscar(FiltroReferenciaDTO filtro) throws NegocioException {
-        return servicios.getEditorialBO().buscar(Sesion.obtenerIdUsuario(peticion), filtro);
-    }
-
-    @POST
-    @Path("opciones")
-    public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscarOpciones(FiltroReferenciaDTO filtro) throws
-        NegocioException {
-        return servicios.getEditorialBO().buscar(Sesion.obtenerIdUsuario(peticion), filtro);
+        return servicios.getEditorialBO().buscar(filtro);
     }
 
     @GET

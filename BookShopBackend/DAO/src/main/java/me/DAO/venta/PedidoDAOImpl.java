@@ -4,13 +4,11 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import me.DBManager.DBManager;
 import me.DBManager.TransactionContext;
-import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.dto.compra.*;
+import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.entities.compra.*;
 import me.Model.entities.usuario.Usuario;
 
@@ -68,14 +66,7 @@ public class PedidoDAOImpl implements PedidoDAO {
                 pedido.setId(resultado.getInt(1));
             }
         }
-        // Cabecera y líneas comparten la compra. Business confirma todos sus efectos juntos.
-        ItemPedidoDAO items = new ItemPedidoDAOImpl();
-        for (Item item : pedido.getItems()) {
-            if (item.getUsuarioCreacion() == null)
-                item.setUsuarioCreacion(pedido.getUsuarioCreacion());
-            item.setFechaCreacion(pedido.getFechaCreacion());
-            items.insertar(pedido.getId(), item);
-        }
+
     }
 
     @Override
@@ -135,25 +126,8 @@ public class PedidoDAOImpl implements PedidoDAO {
     }
 
     @Override
-    public ResumenPedidoDTO obtenerResumen(int id) throws SQLException {
-        String sql = "SELECT id, fecha_pago, estado, cantidad_total_libros, total FROM PEDIDO WHERE id = ?";
-        try (Connection conexion = DBManager.getConnection();
-            PreparedStatement sentencia = conexion.prepareStatement(sql)) {
-            sentencia.setInt(1, id);
-            try (ResultSet resultado = sentencia.executeQuery()) {
-                return resultado.next() ? new ResumenPedidoDTO(resultado.getInt("id"),
-                    resultado.getObject("fecha_pago", LocalDateTime.class),
-                    EstadoPedido.valueOf(resultado.getString("estado")),
-                    resultado.getInt("cantidad_total_libros"), resultado.getBigDecimal("total")) : null;
-            }
-        }
-    }
-
-    @Override
     public ResultadoPaginadoDTO<TarjetaPedidoDTO> listarPorUsuario(int idUsuario, FiltroPedidoDTO filtro)
         throws SQLException {
-        if (filtro == null)
-            filtro = FiltroPedidoDTO.porDefecto();
         String condiciones = " WHERE id_usuario = ? AND NOT eliminado";
         if (!filtro.estados().isEmpty())
             condiciones += " AND estado IN (" + String.join(",",
@@ -167,8 +141,7 @@ public class PedidoDAOImpl implements PedidoDAO {
             case FECHA_PAGO_DESCENDENTE ->
                 "fecha_pago DESC, id DESC";
         };
-        List<ResumenPedidoDTO> pedidos = new ArrayList<>();
-        Map<Integer, List<String>> portadas = new HashMap<>();
+        List<TarjetaPedidoDTO> pedidos = new ArrayList<>();
         long total;
         try (Connection conexion = DBManager.getConnection()) {
             try (PreparedStatement sentencia = conexion.prepareStatement("SELECT COUNT(*) FROM PEDIDO" +
@@ -190,38 +163,31 @@ public class PedidoDAOImpl implements PedidoDAO {
                 sentencia.setInt(parametro++, filtro.tamanioPagina());
                 sentencia.setLong(parametro, (long) (filtro.pagina() - 1) * filtro.tamanioPagina());
                 try (ResultSet resultado = sentencia.executeQuery()) {
-                    while (resultado.next()) pedidos.add(new ResumenPedidoDTO(resultado.getInt("id"),
-                        resultado.getObject("fecha_pago", LocalDateTime.class),
-                        EstadoPedido.valueOf(resultado.getString("estado")),
-                        resultado.getInt("cantidad_total_libros"), resultado.getBigDecimal("total")));
-                }
-            }
-            // Una consulta conjunta recupera solo las portadas de esta página.
-            if (!pedidos.isEmpty()) {
-                String sql = "SELECT i.id_pedido, i.id_libro, l.portada FROM ITEM_PEDIDO i JOIN LIBRO l ON" +
-                    " l.id = i.id_libro" + " WHERE NOT i.eliminado AND i.id_pedido IN (" + String.join(",",
-                    java.util.Collections.nCopies(pedidos.size(), "?")) + ") ORDER BY i.id_pedido, i.id";
-                try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
-                    int parametro = 1;
-                    for (ResumenPedidoDTO pedido : pedidos) sentencia.setInt(parametro++, pedido.id());
-                    try (ResultSet resultado = sentencia.executeQuery()) {
-                        while (resultado.next()) {
-                            int idPedido = resultado.getInt("id_pedido");
-                            List<String> imagenesPedido = portadas.get(idPedido);
-                            if (imagenesPedido == null) {
-                                imagenesPedido = new ArrayList<>();
-                                portadas.put(idPedido, imagenesPedido);
-                            }
-                            imagenesPedido.add(resultado.getString("portada"));
-                        }
+                    while (resultado.next()) {
+                        int idPedido = resultado.getInt("id");
+                        ResumenPedidoDTO resumen = new ResumenPedidoDTO(idPedido,
+                            resultado.getObject("fecha_pago", LocalDateTime.class),
+                            EstadoPedido.valueOf(resultado.getString("estado")),
+                            resultado.getInt("cantidad_total_libros"), resultado.getBigDecimal("total"));
+                        pedidos.add(new TarjetaPedidoDTO(resumen, obtenerPortadas(conexion, idPedido)));
                     }
                 }
             }
         }
-        List<TarjetaPedidoDTO> items = new ArrayList<>();
-        for (ResumenPedidoDTO pedido : pedidos) items.add(new TarjetaPedidoDTO(pedido,
-            portadas.getOrDefault(pedido.id(), List.of())));
-        return new ResultadoPaginadoDTO<>(items, total, filtro.pagina(), filtro.tamanioPagina());
+        return new ResultadoPaginadoDTO<>(pedidos, total, filtro.pagina(), filtro.tamanioPagina());
+    }
+
+    private List<String> obtenerPortadas(Connection conexion, int idPedido) throws SQLException {
+        String sql = "SELECT l.portada FROM ITEM_PEDIDO i JOIN LIBRO l ON l.id=i.id_libro" +
+            " WHERE i.id_pedido=? AND NOT i.eliminado ORDER BY i.id";
+        List<String> portadas = new ArrayList<>();
+        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            sentencia.setInt(1, idPedido);
+            try (ResultSet resultado = sentencia.executeQuery()) {
+                while (resultado.next()) portadas.add(resultado.getString("portada"));
+            }
+        }
+        return portadas;
     }
 
     @Override

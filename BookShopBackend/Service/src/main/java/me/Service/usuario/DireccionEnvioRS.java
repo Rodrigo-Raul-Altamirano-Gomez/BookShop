@@ -36,37 +36,37 @@ public class DireccionEnvioRS {
 
     @POST
     public DireccionEnvioDTO registrar(DatosDireccionEnvioDTO datos) throws NegocioException {
-        return servicios.getDireccionEnvioBO().registrar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), datos);
+        return servicios.getDireccionEnvioBO().registrar(Sesion.exigirIdUsuario(peticion), datos);
     }
 
     @PUT
     @Path("{idDireccion}")
     public DireccionEnvioDTO modificar(@PathParam("idDireccion") int idDireccion, DatosDireccionEnvioDTO
         datos) throws NegocioException {
-        return servicios.getDireccionEnvioBO().modificar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), idDireccion, datos);
+        return servicios.getDireccionEnvioBO().modificar(Sesion.exigirIdUsuario(peticion), idDireccion, datos);
     }
 
     @GET
     @Path("{idDireccion}")
     public DireccionEnvioDTO consultar(@PathParam("idDireccion") int idDireccion) throws NegocioException {
-        return servicios.getDireccionEnvioBO().consultar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), idDireccion);
+        return servicios.getDireccionEnvioBO().consultar(Sesion.exigirIdUsuario(peticion), idDireccion);
     }
 
     @GET
     public ResultadoPaginadoDTO<DireccionEnvioDTO> listar(@DefaultValue("1") @QueryParam("pagina") int pagina,
         @DefaultValue("10") @QueryParam("tamanioPagina") int tamanioPagina) throws NegocioException {
-        return servicios.getDireccionEnvioBO().listar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), pagina, tamanioPagina);
+        return servicios.getDireccionEnvioBO().listar(Sesion.exigirIdUsuario(peticion), pagina, tamanioPagina);
     }
 
     @DELETE
     @Path("{idDireccion}")
     public void eliminar(@PathParam("idDireccion") int idDireccion) throws NegocioException {
-        servicios.getDireccionEnvioBO().eliminar(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), idDireccion);
+        servicios.getDireccionEnvioBO().eliminar(Sesion.exigirIdUsuario(peticion), idDireccion);
     }
 
     @PUT
     @Path("{idDireccion}/predeterminada")
     public void establecerPredeterminado(@PathParam("idDireccion") int idDireccion) throws NegocioException {
-        servicios.getDireccionEnvioBO().establecerPredeterminado(Sesion.exigirIdUsuario(peticion, servicios.getUsuarioBO()), idDireccion);
+        servicios.getDireccionEnvioBO().establecerPredeterminado(Sesion.exigirIdUsuario(peticion), idDireccion);
     }
 }

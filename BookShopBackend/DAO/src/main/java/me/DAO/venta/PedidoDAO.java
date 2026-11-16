@@ -14,8 +14,6 @@ public interface PedidoDAO {
 
     Pedido leer(int id) throws SQLException;
 
-    ResumenPedidoDTO obtenerResumen(int id) throws SQLException;
-
     ResultadoPaginadoDTO<TarjetaPedidoDTO> listarPorUsuario(int idUsuario, FiltroPedidoDTO filtro) throws
         SQLException;
 

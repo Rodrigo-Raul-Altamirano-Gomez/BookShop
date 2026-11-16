@@ -40,9 +40,6 @@ public partial class Inicio
         {
             errorCarga = e.Message;
         }
-        finally
-        {
-            cargando = false;
-        }
+        cargando = false;
     }
 }

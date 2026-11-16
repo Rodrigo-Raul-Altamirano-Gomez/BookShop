@@ -18,6 +18,7 @@ class AlgoritmosRecomendacionTest {
         l.setTitulo("Libro " + id);
         l.setIdioma("Español");
         l.setSinopsis("Una historia");
+        l.setProveedor("Distribuidora");
         l.setPrecioBase(new BigDecimal("20.00"));
         l.setFechaCreacion(AHORA.minusDays(10));
         l.setNumeroPaginas(100);

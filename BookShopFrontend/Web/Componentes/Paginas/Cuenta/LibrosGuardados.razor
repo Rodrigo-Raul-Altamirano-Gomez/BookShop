@@ -29,14 +29,14 @@
                 class="nav-link bookshop-tab @(!PestanaFavoritos ? "active" : "")"
                 role="tab"
                 aria-selected="@(!PestanaFavoritos)"
-                @onclick="MostrarDeseados">
+                @onclick="() => MostrarLista(false)">
                 Deseados
             </button>
             <button
                 class="nav-link bookshop-tab @(PestanaFavoritos ? "active" : "")"
                 role="tab"
                 aria-selected="@PestanaFavoritos"
-                @onclick="MostrarFavoritos">
+                @onclick="() => MostrarLista(true)">
                 Favoritos
             </button>
         </div>

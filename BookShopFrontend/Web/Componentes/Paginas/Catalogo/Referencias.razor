@@ -17,7 +17,7 @@
                 placeholder="Buscar por nombre" aria-label="Buscar por nombre"
                 @bind="textoBusqueda" @bind:event="oninput" disabled="@cargando" />
             <button class="btn btn-primary" type="submit" disabled="@cargando">Buscar</button>
-            @if (nombre.Length > 0)
+            @if (vista.Nombre.Length > 0)
             {
                 <button class="btn btn-outline-secondary" type="button" aria-label="Quitar búsqueda"
                     @onclick="QuitarNombre" disabled="@cargando"><Icono Nombre="close" /></button>
@@ -25,7 +25,7 @@
         </form>
         <label class="sort-label d-flex align-items-center gap-2">
             Ordenar por:
-            <select class="form-select" aria-label="Ordenar referencias" @bind="orden" @bind:after="ActualizarResultados" disabled="@cargando">
+            <select class="form-select" aria-label="Ordenar referencias" @bind="vista.Orden" @bind:after="ActualizarResultados" disabled="@cargando">
                 <option value="nombre">Nombre A-Z</option>
                 <option value="reciente">Más recientes</option>
             </select>
@@ -36,8 +36,8 @@
         {
             <div class="empty-state">
                 <Icono Nombre="book" />
-                <h2>@(nombre.Length == 0 ? "No hay referencias disponibles" : "No encontramos coincidencias")</h2>
-                @if (nombre.Length > 0)
+                <h2>@(vista.Nombre.Length == 0 ? "No hay referencias disponibles" : "No encontramos coincidencias")</h2>
+                @if (vista.Nombre.Length > 0)
                 {
                     <p>Prueba con otro nombre o borra la búsqueda.</p>
                 }
@@ -52,7 +52,7 @@
                     <TarjetaReferencia Referencia="reference" />
                 }
             </div>
-            <Paginacion Pagina="pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
+            <Paginacion Pagina="vista.Pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
         }
     </Cargando>
 </div>

@@ -121,19 +121,8 @@ public class Descuento {
     }
 
     public boolean estaVigente(LocalDateTime fechaActual) {
-        return activo && !eliminado && fechaActual != null && fechaInicio != null && fechaFin != null &&
+        return !eliminado &&
             !fechaActual.isBefore(fechaInicio) && !fechaActual.isAfter(fechaFin);
     }
 
-    public BigDecimal calcularPrecioFinal(BigDecimal precioOriginal, LocalDateTime fechaActual) {
-        if (precioOriginal == null || precioOriginal.signum() < 0) {
-            throw new IllegalArgumentException("El precio debe ser no negativo.");
-        }
-        if (!estaVigente(fechaActual))
-            return precioOriginal;
-        if (porcentaje == null || porcentaje.signum() < 0 || porcentaje.compareTo(new BigDecimal("100")) > 0) {
-            throw new IllegalStateException("El porcentaje de descuento no es valido.");
-        }
-        return precioOriginal.subtract(precioOriginal.multiply(porcentaje).divide(new BigDecimal("100")));
-    }
 }

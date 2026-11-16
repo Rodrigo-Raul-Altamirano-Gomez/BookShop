@@ -153,21 +153,4 @@ public class Cupon {
         return subtotal.compareTo(montoMinimo) >= 0;
     }
 
-    public BigDecimal calcularDescuento(BigDecimal subtotal, LocalDateTime fechaActual) {
-        if (!esAplicable(subtotal, fechaActual))
-            return BigDecimal.ZERO;
-        return subtotal.multiply(porcentaje).divide(new BigDecimal("100"));
-    }
-
-    public void consumir(BigDecimal subtotal, LocalDateTime fechaActual) {
-        if (!esAplicable(subtotal, fechaActual)) {
-            throw new IllegalStateException("El cupon no es aplicable.");
-        }
-        consumido = true;
-    }
-
-    public void liberar(LocalDateTime fechaActual) {
-        consumido = false;
-        activo = !eliminado && estaVigente(fechaActual);
-    }
 }

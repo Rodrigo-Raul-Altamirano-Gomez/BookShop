@@ -29,8 +29,6 @@ public class MetodoPagoDAOImpl implements MetodoPagoDAO {
             "tipo_metodo, numero_tarjeta_cifrado, numero_telefono_cifrado, tipo_tarjeta, " +
             "fecha_vencimiento, predeterminado, usuario_creacion, fecha_creacion) " +
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, FALSE, ?, ?)";
-        if (metodo.getFechaCreacion() == null)
-            metodo.setFechaCreacion(LocalDateTime.now());
         // Comparar numeros, insertar y elegir predeterminado deben poder compartir el contexto.
         Connection conexion = TransactionContext.getConnection();
         try (PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -153,12 +151,10 @@ public class MetodoPagoDAOImpl implements MetodoPagoDAO {
             tarjeta.setNumeroTarjetaCifrado(resultado.getString("numero_tarjeta_cifrado"));
             tarjeta.setTipoTarjeta(TipoTarjeta.valueOf(resultado.getString("tipo_tarjeta")));
             metodo = tarjeta;
-        } else if ("BILLETERA_DIGITAL".equals(tipo)) {
+        } else {
             BilleteraDigital billetera = new BilleteraDigital();
             billetera.setNumeroTelefonoCifrado(resultado.getString("numero_telefono_cifrado"));
             metodo = billetera;
-        } else {
-            throw new SQLException("El subtipo de metodo de pago almacenado no es valido.");
         }
         metodo.setId(resultado.getInt("id"));
         Usuario propietario = new Usuario();

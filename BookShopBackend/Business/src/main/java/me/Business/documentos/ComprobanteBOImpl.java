@@ -17,6 +17,8 @@ import me.Business.exceptions.PersistenciaException;
 
 public class ComprobanteBOImpl implements ComprobanteBO {
 
+    private final UsuarioDAO usuarioDAO;
+
     private final PedidoBO pedidoBO;
     private final Clock reloj;
 
@@ -42,5 +44,4 @@ public class ComprobanteBOImpl implements ComprobanteBO {
         }
     }
 
-    private final UsuarioDAO usuarioDAO;
 }

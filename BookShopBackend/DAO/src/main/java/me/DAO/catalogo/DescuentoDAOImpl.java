@@ -12,8 +12,6 @@ import java.util.List;
 import me.DBManager.DBManager;
 import me.DBManager.TransactionContext;
 import me.Model.dto.ResultadoPaginadoDTO;
-import me.Model.dto.catalogo.DescuentoDTO;
-import me.Model.dto.catalogo.EstadoDescuento;
 import me.Model.entities.catalogo.Descuento;
 import me.Model.entities.catalogo.Libro;
 
@@ -81,9 +79,9 @@ public class DescuentoDAOImpl implements DescuentoDAO {
     }
 
     @Override
-    public ResultadoPaginadoDTO<DescuentoDTO> listarPorLibro(int idLibro, LocalDateTime fecha, int pagina, int
+    public ResultadoPaginadoDTO<Descuento> listarPorLibro(int idLibro, int pagina, int
         tamanioPagina) throws SQLException {
-        List<DescuentoDTO> items = new ArrayList<>();
+        List<Descuento> items = new ArrayList<>();
         long total;
         try (Connection conexion = DBManager.getConnection()) {
             try (PreparedStatement contar =
@@ -94,24 +92,15 @@ public class DescuentoDAOImpl implements DescuentoDAO {
                     total = resultado.getLong(1);
                 }
             }
-            String sql = "SELECT id,porcentaje,fecha_inicio,fecha_fin FROM DESCUENTO" +
+            String sql = "SELECT * FROM DESCUENTO" +
                 " WHERE id_libro=? AND eliminado=FALSE ORDER BY fecha_inicio DESC,id DESC LIMIT ? OFFSET ?";
             try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
                 sentencia.setInt(1, idLibro);
                 sentencia.setInt(2, tamanioPagina);
                 sentencia.setLong(3, (long) (pagina - 1) * tamanioPagina);
                 try (ResultSet resultado = sentencia.executeQuery()) {
-                    while (resultado.next()) {
-                        LocalDateTime inicio = resultado.getTimestamp("fecha_inicio").toLocalDateTime();
-                        LocalDateTime fin = resultado.getTimestamp("fecha_fin").toLocalDateTime();
-                        EstadoDescuento estado = EstadoDescuento.VIGENTE;
-                        if (fecha.isBefore(inicio))
-                            estado = EstadoDescuento.PROXIMO;
-                        else if (fecha.isAfter(fin))
-                            estado = EstadoDescuento.VENCIDO;
-                        items.add(new DescuentoDTO(resultado.getInt("id"),
-                            resultado.getBigDecimal("porcentaje"), inicio, fin, estado));
-                    }
+                    while (resultado.next())
+                        items.add(mapearDescuento(resultado));
                 }
             }
         }
@@ -128,28 +117,8 @@ public class DescuentoDAOImpl implements DescuentoDAO {
             sentencia.setTimestamp(2, Timestamp.valueOf(fecha));
             sentencia.setTimestamp(3, Timestamp.valueOf(fecha));
             try (ResultSet resultado = sentencia.executeQuery()) {
-                if (!resultado.next())
-                    return null;
-                Descuento descuento = mapearDescuento(resultado);
-                descuento.setActivo(true);
-                return descuento;
+                return resultado.next() ? mapearDescuento(resultado) : null;
             }
-        }
-    }
-
-    @Override
-    public void actualizarVigencias(LocalDateTime fecha, String usuario) throws SQLException {
-        String sql = "UPDATE DESCUENTO SET activo=(fecha_inicio<=? AND fecha_fin>=?),usuario_actualizacion=?,"
-            + " fecha_actualizacion=CURRENT_TIMESTAMP WHERE eliminado=FALSE AND activo<>(fecha_inicio<=?" +
-            " AND fecha_fin>=?)";
-        try (Connection conexion = DBManager.getConnection();
-            PreparedStatement sentencia = conexion.prepareStatement(sql)) {
-            sentencia.setTimestamp(1, Timestamp.valueOf(fecha));
-            sentencia.setTimestamp(2, Timestamp.valueOf(fecha));
-            sentencia.setString(3, usuario);
-            sentencia.setTimestamp(4, Timestamp.valueOf(fecha));
-            sentencia.setTimestamp(5, Timestamp.valueOf(fecha));
-            sentencia.executeUpdate();
         }
     }
 

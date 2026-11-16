@@ -7,8 +7,6 @@ import java.util.List;
 import me.DBManager.DBManager;
 import me.DBManager.TransactionContext;
 import me.Model.dto.ResultadoPaginadoDTO;
-import me.Model.dto.compra.CuponDTO;
-import me.Model.dto.compra.EstadoCupon;
 import me.Model.entities.compra.Cupon;
 import me.Model.entities.usuario.Usuario;
 
@@ -76,11 +74,11 @@ public class CuponDAOImpl implements CuponDAO {
     }
 
     @Override
-    public ResultadoPaginadoDTO<CuponDTO> listarPorUsuario(int idUsuario, LocalDateTime fecha, int pagina, int
+    public ResultadoPaginadoDTO<Cupon> listarPorUsuario(int idUsuario, int pagina, int
         tamanioPagina) throws SQLException {
         String sql = "SELECT * FROM CUPON WHERE id_usuario = ? AND NOT eliminado ORDER BY fecha_creacion" +
             " DESC, id DESC LIMIT ? OFFSET ?";
-        List<CuponDTO> items = new ArrayList<>();
+        List<Cupon> items = new ArrayList<>();
         long total;
         try (Connection conexion = DBManager.getConnection()) {
             try (PreparedStatement sentencia =
@@ -96,37 +94,12 @@ public class CuponDAOImpl implements CuponDAO {
                 sentencia.setInt(2, tamanioPagina);
                 sentencia.setLong(3, (long) (pagina - 1) * tamanioPagina);
                 try (ResultSet resultado = sentencia.executeQuery()) {
-                    while (resultado.next()) {
-                        Cupon cupon = mapearCupon(resultado);
-                        EstadoCupon estado = EstadoCupon.DISPONIBLE;
-                        if (cupon.isConsumido())
-                            estado = EstadoCupon.UTILIZADO;
-                        else if (!cupon.isActivo() || fecha.isBefore(cupon.getFechaInicio()) ||
-                            fecha.isAfter(cupon.getFechaFin()))
-                            estado = EstadoCupon.VENCIDO;
-                        items.add(new CuponDTO(cupon.getId(), cupon.getPorcentaje(), cupon.getMontoMinimo(),
-                            cupon.getFechaFin(), estado));
-                    }
+                    while (resultado.next())
+                        items.add(mapearCupon(resultado));
                 }
             }
         }
         return new ResultadoPaginadoDTO<>(items, total, pagina, tamanioPagina);
-    }
-
-    @Override
-    public void actualizarVigencias(LocalDateTime fecha, String actor) throws SQLException {
-        String sql = """
-            UPDATE CUPON SET activo = (? BETWEEN fecha_inicio AND fecha_fin),
-                usuario_actualizacion = ?, fecha_actualizacion = CURRENT_TIMESTAMP
-            WHERE NOT eliminado AND activo <> (? BETWEEN fecha_inicio AND fecha_fin)
-            """;
-        try (Connection conexion = DBManager.getConnection();
-            PreparedStatement sentencia = conexion.prepareStatement(sql)) {
-            sentencia.setTimestamp(1, Timestamp.valueOf(fecha));
-            sentencia.setString(2, actor);
-            sentencia.setTimestamp(3, Timestamp.valueOf(fecha));
-            sentencia.executeUpdate();
-        }
     }
 
     @Override

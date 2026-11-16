@@ -11,6 +11,8 @@ import me.Business.exceptions.RecursoNoEncontradoException;
 import me.Business.exceptions.ValidacionException;
 import me.DAO.catalogo.EditorialDAO;
 import me.DAO.catalogo.EditorialDAOImpl;
+import me.DAO.catalogo.LibroDAO;
+import me.DAO.catalogo.LibroDAOImpl;
 import me.DAO.usuario.UsuarioDAO;
 import me.DAO.usuario.UsuarioDAOImpl;
 import me.DBManager.TransactionContext;
@@ -26,14 +28,17 @@ import me.Model.entities.usuario.Usuario;
 public class EditorialBOImpl implements EditorialBO {
 
     private final EditorialDAO editorialDAO;
+    private final LibroDAO libroDAO;
+    private final UsuarioDAO usuarioDAO;
     private final Clock reloj;
 
     public EditorialBOImpl() {
-        this(new EditorialDAOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")));
+        this(new EditorialDAOImpl(), new LibroDAOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")));
     }
 
-    public EditorialBOImpl(EditorialDAO editorialDAO, UsuarioDAO usuarioDAO, Clock reloj) {
+    public EditorialBOImpl(EditorialDAO editorialDAO, LibroDAO libroDAO, UsuarioDAO usuarioDAO, Clock reloj) {
         this.editorialDAO = editorialDAO;
+        this.libroDAO = libroDAO;
         this.usuarioDAO = usuarioDAO;
         this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
     }
@@ -44,16 +49,14 @@ public class EditorialBOImpl implements EditorialBO {
             Usuario actor = usuarioDAO.leer(idActor);
             if (registro == null)
                 throw new ValidacionException("registro", "Complete los datos de la editorial.");
-            DatosReferenciaDTO datos = validarFormulario(registro.datos());
-            if (registro.imagen() != null && registro.imagen().length() > 2048)
-                throw new ValidacionException("imagen", "La URL admite hasta 2048 caracteres.");
+            DatosReferenciaDTO datos = registro.datos();
             Editorial editorial = new Editorial();
-            editorial.setNombre(datos.nombre());
+            editorial.setNombre(datos.nombre().strip());
             editorial.setDescripcion(datos.introduccion());
             editorial.setImagen(registro.imagen());
             editorial.setUsuarioCreacion(actor.getEmail());
             editorial.setFechaCreacion(LocalDateTime.now(reloj));
-            if (editorialDAO.existeNombre(datos.nombre(), 0))
+            if (editorialDAO.existeNombre(datos.nombre().strip(), 0))
                 throw new ValidacionException("nombre", "Ya existe una editorial con ese nombre.");
             editorialDAO.insertar(editorial);
             return editorial.getId();
@@ -66,14 +69,14 @@ public class EditorialBOImpl implements EditorialBO {
     public void modificar(int idActor, int id, DatosReferenciaDTO datos) throws NegocioException {
         try {
             Usuario actor = usuarioDAO.leer(idActor);
-            DatosReferenciaDTO validos = validarFormulario(datos);
+
             Editorial editorial = editorialDAO.leer(id);
             if (editorial == null || editorial.isEliminado())
                 throw new RecursoNoEncontradoException("La editorial no está disponible.");
-            if (editorialDAO.existeNombre(validos.nombre(), id))
+            if (editorialDAO.existeNombre(datos.nombre().strip(), id))
                 throw new ValidacionException("nombre", "Ya existe una editorial con ese nombre.");
-            editorial.setNombre(validos.nombre());
-            editorial.setDescripcion(validos.introduccion());
+            editorial.setNombre(datos.nombre().strip());
+            editorial.setDescripcion(datos.introduccion());
             editorial.setUsuarioActualizacion(actor.getEmail());
             editorialDAO.modificar(editorial);
         } catch (SQLException e) {
@@ -85,8 +88,6 @@ public class EditorialBOImpl implements EditorialBO {
     public void cambiarImagen(int idActor, int id, String imagen) throws NegocioException {
         try {
             Usuario actor = usuarioDAO.leer(idActor);
-            if (imagen != null && imagen.length() > 2048)
-                throw new ValidacionException("imagen", "La URL admite hasta 2048 caracteres.");
             Editorial editorial = editorialDAO.leer(id);
             if (editorial == null || editorial.isEliminado())
                 throw new RecursoNoEncontradoException("La editorial no está disponible.");
@@ -104,8 +105,11 @@ public class EditorialBOImpl implements EditorialBO {
             Editorial editorial = editorialDAO.leer(id);
             if (editorial == null || editorial.isEliminado())
                 throw new RecursoNoEncontradoException("La editorial no esta disponible.");
-            if (editorial.isActivo() != activo && !editorialDAO.cambiarActivo(id, activo, actor.getEmail()))
-                throw new ConflictoException("La editorial cambio; vuelva a consultarlo.");
+            if (editorial.isActivo() != activo) {
+                if (!editorialDAO.cambiarActivo(id, activo, actor.getEmail()))
+                    throw new ConflictoException("La editorial cambio; vuelva a consultarlo.");
+                libroDAO.recalcularVetosPorEditorial(id, actor.getEmail());
+            }
             TransactionContext.commit();
         } catch (SQLException e) {
             TransactionContext.rollback();
@@ -127,6 +131,7 @@ public class EditorialBOImpl implements EditorialBO {
                 throw new RecursoNoEncontradoException("La editorial no esta disponible.");
             if (!editorialDAO.eliminar(id, actor.getEmail()))
                 throw new ConflictoException("La editorial cambio; vuelva a consultarlo.");
+            libroDAO.recalcularVetosPorEditorial(id, actor.getEmail());
             TransactionContext.commit();
         } catch (SQLException e) {
             TransactionContext.rollback();
@@ -140,7 +145,7 @@ public class EditorialBOImpl implements EditorialBO {
     }
 
     @Override
-    public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscar(int idActor, FiltroReferenciaDTO filtro) throws
+    public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscar(FiltroReferenciaDTO filtro) throws
         NegocioException {
         if (filtro == null)
             filtro = FiltroReferenciaDTO.porDefecto();
@@ -148,15 +153,8 @@ public class EditorialBOImpl implements EditorialBO {
             throw new ValidacionException("pagina", "La página y su tamaño deben ser positivos.");
         if (filtro.orden() == null)
             throw new ValidacionException("orden", "Seleccione un orden.");
-        String nombre = filtro.nombre() == null ? null : filtro.nombre().strip();
-        if (nombre != null && nombre.isEmpty())
-            nombre = null;
-        if (nombre != null && nombre.length() > 150)
-            throw new ValidacionException("nombre", "El máximo es 150 caracteres.");
-        FiltroReferenciaDTO valido = new FiltroReferenciaDTO(nombre, filtro.soloActivos(), filtro.orden(),
-            filtro.pagina(), filtro.tamanioPagina());
         try {
-            return editorialDAO.buscar(valido);
+            return editorialDAO.buscar(filtro);
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudieron consultar las editoriales.", e);
         }
@@ -174,21 +172,4 @@ public class EditorialBOImpl implements EditorialBO {
         }
     }
 
-    private DatosReferenciaDTO validarFormulario(DatosReferenciaDTO datos) throws ValidacionException {
-        if (datos == null)
-            throw new ValidacionException("datos", "Complete los datos de la editorial.");
-        String nombre = datos.nombre() == null ? "" : datos.nombre().strip();
-        if (nombre.isEmpty())
-            throw new ValidacionException("nombre", "Este campo es obligatorio.");
-        if (nombre.length() > 150)
-            throw new ValidacionException("nombre", "El máximo es 150 caracteres.");
-        String introduccion = datos.introduccion() == null ? null : datos.introduccion().strip();
-        if (introduccion != null && introduccion.isEmpty())
-            introduccion = null;
-        if (introduccion != null && introduccion.length() > 65535)
-            throw new ValidacionException("introduccion", "El máximo es 65535 caracteres.");
-        return new DatosReferenciaDTO(nombre, introduccion);
-    }
-
-    private final UsuarioDAO usuarioDAO;
 }

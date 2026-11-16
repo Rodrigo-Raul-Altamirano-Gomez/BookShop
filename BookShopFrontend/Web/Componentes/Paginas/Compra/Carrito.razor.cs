@@ -46,10 +46,7 @@ public partial class Carrito : Web.Componentes.Paginas.Cuenta.PaginaCuenta
         {
             Sesion.Avisar(e.Message);
         }
-        finally
-        {
-            procesando = false;
-        }
+        procesando = false;
     }
 
     private async Task Vaciar()
@@ -64,13 +61,9 @@ public partial class Carrito : Web.Componentes.Paginas.Cuenta.PaginaCuenta
         }
         catch (InvalidOperationException e)
         {
-            Sesion.Error = e.Message;
             Sesion.Avisar(e.Message);
         }
-        finally
-        {
-            procesando = false;
-        }
+        procesando = false;
     }
 
     private void Continuar()

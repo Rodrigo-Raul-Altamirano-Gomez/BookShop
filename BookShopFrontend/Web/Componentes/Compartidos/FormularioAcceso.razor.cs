@@ -39,11 +39,6 @@ public partial class FormularioAcceso
     {
         if (enviando)
             return;
-        if (registro && contrasena != confirmacion)
-        {
-            error = "Las contraseñas no coinciden.";
-            return;
-        }
         enviando = true;
         try
         {

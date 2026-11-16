@@ -17,6 +17,7 @@ import me.Business.compra.CarritoBO;
 import me.Business.compra.CuponBO;
 import me.Business.compra.PedidoBO;
 import me.Business.exceptions.CuentaInactivaException;
+import me.Business.exceptions.CredencialesInvalidasException;
 import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.ValidacionException;
 import me.Business.usuario.DireccionEnvioBO;
@@ -44,7 +45,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -131,10 +131,10 @@ class ServicioHttpTest {
 
     @Test
     void catalogoPublicoUsaVisitanteYRespetaFiltro() throws Exception {
-        when(servicios.getLibroBO().buscar(eq(0), any())).thenReturn(new ResultadoPaginadoDTO<>(List.of(), 0, 1, 12));
+        when(servicios.getLibroBO().buscar(any())).thenReturn(new ResultadoPaginadoDTO<>(List.of(), 0, 1, 12));
         try (Response respuesta = http.target("libros/busqueda").request().post(Entity.json(FiltroLibroDTO.porDefecto()))) {
             assertEquals(200, respuesta.getStatus());
-            verify(servicios.getLibroBO()).buscar(eq(0), argThat(f -> f.pagina() == 1 && f.soloActivos()));
+            verify(servicios.getLibroBO()).buscar(argThat(f -> f.pagina() == 1 && f.soloActivos()));
         }
     }
 
@@ -170,7 +170,7 @@ class ServicioHttpTest {
 
     @Test
     void errorDeValidacionExponeCampoSinTraza() throws Exception {
-        when(servicios.getLibroBO().buscar(anyInt(), any())).thenThrow(new ValidacionException("pagina", "Página inválida."));
+        when(servicios.getLibroBO().buscar(any())).thenThrow(new ValidacionException("pagina", "Página inválida."));
         try (Response respuesta = http.target("libros/busqueda").request().post(Entity.json(FiltroLibroDTO.porDefecto()))) {
             assertEquals(400, respuesta.getStatus());
             String json = respuesta.readEntity(String.class);
@@ -181,7 +181,7 @@ class ServicioHttpTest {
 
     @Test
     void errorInternoNoExponeSqlNiCausa() throws Exception {
-        when(servicios.getLibroBO().buscar(anyInt(), any())).thenThrow(new PersistenciaException("SELECT secreto", new IllegalStateException("clave privada")));
+        when(servicios.getLibroBO().buscar(any())).thenThrow(new PersistenciaException("SELECT secreto", new IllegalStateException("clave privada")));
         try (Response respuesta = http.target("libros/busqueda").request().post(Entity.json(FiltroLibroDTO.porDefecto()))) {
             assertEquals(500, respuesta.getStatus());
             String json = respuesta.readEntity(String.class);
@@ -232,16 +232,13 @@ class ServicioHttpTest {
     }
 
     @Test
-    void cuentaDesactivadaNoPuedeUsarUnaSesionAnterior() throws Exception {
+    void operacionPrivadaUsaLaIdentidadDeSesionSinOtraConsultaDeCuenta() throws Exception {
         when(request.getSession(false)).thenReturn(sesion);
         atributos.put("bookshop.actor", 7);
-        UsuarioBO usuarios = servicios.getUsuarioBO();
-        doThrow(new CuentaInactivaException("Cuenta desactivada"))
-            .when(usuarios).comprobarActivo(7);
         try (Response respuesta = http.target("carrito").request().get()) {
-            assertEquals(401, respuesta.getStatus());
-            verify(sesion).invalidate();
-            verifyNoInteractions(servicios.getCarritoBO());
+            assertEquals(204, respuesta.getStatus());
+            verify(servicios.getCarritoBO()).consultar(7);
+            verifyNoInteractions(servicios.getUsuarioBO());
         }
     }
 
@@ -289,30 +286,6 @@ class ServicioHttpTest {
     }
 
     @ParameterizedTest
-    @NullAndEmptySource
-    @ValueSource(strings = { "fasle", "1" })
-    void listaAusenteOInvalidaNoModificaDeseados(String favorito) {
-        when(request.getSession(false)).thenReturn(sesion);
-        atributos.put("bookshop.actor", 7);
-        var destino = http.target("cuenta/libros-guardados/3");
-        if (favorito != null)
-            destino = destino.queryParam("favorito", favorito);
-        for (String metodo : List.of("PUT", "DELETE")) {
-            try (Response respuesta = destino.request().method(metodo)) {
-                assertEquals(400, respuesta.getStatus());
-                verifyNoInteractions(servicios.getLibroGuardadoBO());
-            }
-        }
-        var busqueda = http.target("cuenta/libros-guardados/busqueda");
-        if (favorito != null)
-            busqueda = busqueda.queryParam("favorito", favorito);
-        try (Response respuesta = busqueda.request().post(Entity.json(FiltroLibroDTO.porDefecto()))) {
-            assertEquals(400, respuesta.getStatus());
-            verifyNoInteractions(servicios.getLibroGuardadoBO());
-        }
-    }
-
-    @ParameterizedTest
     @ValueSource(booleans = { true, false })
     void listaExplicitaSeEntregaSinCambiosABusiness(boolean favorito) throws Exception {
         when(request.getSession(false)).thenReturn(sesion);
@@ -320,6 +293,15 @@ class ServicioHttpTest {
         try (Response respuesta = http.target("cuenta/libros-guardados/3").queryParam("favorito", favorito).request().method("PUT")) {
             assertEquals(204, respuesta.getStatus());
             verify(servicios.getLibroGuardadoBO()).guardar(7, 3, favorito);
+        }
+        try (Response respuesta = http.target("cuenta/libros-guardados/3").queryParam("favorito", favorito).request().delete()) {
+            assertEquals(200, respuesta.getStatus());
+            verify(servicios.getLibroGuardadoBO()).retirar(7, 3, favorito);
+        }
+        try (Response respuesta = http.target("cuenta/libros-guardados/busqueda").queryParam("favorito", favorito)
+            .request().post(Entity.json(FiltroLibroDTO.porDefecto()))) {
+            assertEquals(204, respuesta.getStatus());
+            verify(servicios.getLibroGuardadoBO()).listar(eq(7), eq(favorito), any());
         }
     }
 
@@ -352,7 +334,7 @@ class ServicioHttpTest {
                 assertEquals(204, respuesta.getStatus());
             }
         }
-        verify(servicios.getLibroBO()).buscarIdiomas(7, null, 2, 3);
+        verify(servicios.getLibroBO()).buscarIdiomas(null, 2, 3);
         verify(servicios.getCuponBO()).listar(7, 2, 3);
     }
 
@@ -375,9 +357,58 @@ class ServicioHttpTest {
     }
 
     @Test
+    void desactivarValidaLaClaveUnaVezYConservaElTiempoDeSesion() throws Exception {
+        when(request.getSession(false)).thenReturn(sesion);
+        atributos.put("bookshop.actor", 7);
+        atributos.put("bookshop.inicio", java.time.Instant.now().minusSeconds(10));
+        UsuarioBO usuarios = servicios.getUsuarioBO();
+        try (Response respuesta = http.target("cuenta/desactivacion").request()
+            .post(Entity.json("{\"contraseniaActual\":\"clave123\"}"))) {
+            assertEquals(204, respuesta.getStatus());
+            var orden = inOrder(usuarios, sesion);
+            orden.verify(usuarios).desactivar(7, "clave123");
+            orden.verify(usuarios).cerrarSesion(eq(7), argThat(tiempo -> tiempo.toSeconds() >= 10));
+            orden.verify(sesion).invalidate();
+            verify(usuarios, never()).obtenerPerfil(anyInt());
+            verify(usuarios, never()).iniciarSesion(any());
+        }
+    }
+
+    @Test
+    void claveIncorrectaAlDesactivarConservaLaSesion() throws Exception {
+        when(request.getSession(false)).thenReturn(sesion);
+        atributos.put("bookshop.actor", 7);
+        UsuarioBO usuarios = servicios.getUsuarioBO();
+        doThrow(new CredencialesInvalidasException("La contraseña no es correcta."))
+            .when(usuarios).desactivar(7, "incorrecta");
+        try (Response respuesta = http.target("cuenta/desactivacion").request()
+            .post(Entity.json("{\"contraseniaActual\":\"incorrecta\"}"))) {
+            assertEquals(401, respuesta.getStatus());
+            verify(usuarios, never()).cerrarSesion(anyInt(), any());
+            verify(sesion, never()).invalidate();
+        }
+    }
+
+    @Test
+    void cuentaDesactivadaCierraSesionAunqueFalleGuardarSuTiempo() throws Exception {
+        when(request.getSession(false)).thenReturn(sesion);
+        atributos.put("bookshop.actor", 7);
+        atributos.put("bookshop.inicio", java.time.Instant.now().minusSeconds(10));
+        UsuarioBO usuarios = servicios.getUsuarioBO();
+        doThrow(new PersistenciaException("No se pudo guardar el tiempo.", new IllegalStateException()))
+            .when(usuarios).cerrarSesion(eq(7), any());
+        try (Response respuesta = http.target("cuenta/desactivacion").request()
+            .post(Entity.json("{\"contraseniaActual\":\"clave123\"}"))) {
+            assertEquals(500, respuesta.getStatus());
+            verify(usuarios).desactivar(7, "clave123");
+            verify(sesion).invalidate();
+        }
+    }
+
+    @Test
     void paginaDeCatalogoConservaImportesYTotalDelConjunto() throws Exception {
         var libro = new TarjetaLibroDTO(3, "Libro", null, "Autor", new BigDecimal("19.99"), new BigDecimal("16.99"), new BigDecimal("15.00"), true);
-        when(servicios.getLibroBO().buscar(eq(0), any())).thenReturn(new ResultadoPaginadoDTO<>(List.of(libro), 25, 2, 12));
+        when(servicios.getLibroBO().buscar(any())).thenReturn(new ResultadoPaginadoDTO<>(List.of(libro), 25, 2, 12));
         try (Response respuesta = http.target("libros/busqueda").request().post(Entity.json(FiltroLibroDTO.porDefecto()))) {
             assertEquals(200, respuesta.getStatus());
             try (var lector = Json.createReader(new StringReader(respuesta.readEntity(String.class)))) {

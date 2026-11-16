@@ -5,7 +5,7 @@ import me.Model.dto.ConfiguracionDTO;
 
 public interface ConfiguracionBO {
 
-    ConfiguracionDTO obtener(int idActor) throws NegocioException;
+    ConfiguracionDTO obtener() throws NegocioException;
 
-    void guardar(int idActor, ConfiguracionDTO datos) throws NegocioException;
+    void guardar(ConfiguracionDTO datos) throws NegocioException;
 }

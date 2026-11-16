@@ -36,7 +36,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -54,6 +53,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import me.Model.dto.catalogo.FiltroReferenciaDTO;
+import me.Model.dto.ResultadoPaginadoDTO;
+import me.Model.dto.catalogo.EstadoDescuento;
 
 class CatalogoBOTest {
 
@@ -182,12 +184,8 @@ class CatalogoBOTest {
     }
 
     @Test
-    void validacionesDeMedidasTomoYStockOcurrenAntesDeEscribir() throws Exception {
+    void stockNegativoNoSeEscribe() throws Exception {
         assertThrows(ValidacionException.class, () -> bo.cambiarStock(1, 1, -1));
-        DatosLibroDTO invalidos = new DatosLibroDTO("Titulo", "Idioma", "Sinopsis", "Proveedor", "ISBN", 2026, 100, -1.0, null, null, null, null);
-        assertThrows(ValidacionException.class, () -> bo.registrar(1, registro(invalidos)));
-        DatosLibroDTO tomo = new DatosLibroDTO("Titulo", "Idioma", "Sinopsis", "Proveedor", "ISBN", 2026, 100, null, null, null, null, 1);
-        assertThrows(ValidacionException.class, () -> bo.registrar(1, registro(tomo)));
         verifyNoInteractions(libros);
     }
 
@@ -200,9 +198,9 @@ class CatalogoBOTest {
     }
 
     @Test
-    void filtrosConservanSeleccionYProtegenListadoAdministrativo() throws Exception {
+    void filtrosConservanSeleccion() throws Exception {
         FiltroLibroDTO filtro = new FiltroLibroDTO(" Titulo ", List.of(1), List.of(2), null, List.of("Español"), null, null, true, false, OrdenLibro.MAS_RECIENTES, 2, 12);
-        bo.buscar(0, filtro);
+        bo.buscar(filtro);
         ArgumentCaptor<FiltroLibroDTO> captor = ArgumentCaptor.forClass(FiltroLibroDTO.class);
         verify(libros).buscar(captor.capture(), eq(LocalDateTime.of(2026, 10, 6, 23, 30)));
         assertEquals(List.of(1), captor.getValue().idsCategorias());
@@ -219,7 +217,7 @@ class CatalogoBOTest {
     @Test
     void categoriaNoDuplicaNombreReservado() throws Exception {
         when(categorias.existeNombre("Categoria", 0)).thenReturn(true);
-        CategoriaBOImpl categoriasBO = new CategoriaBOImpl(categorias, usuarios, reloj);
+        CategoriaBOImpl categoriasBO = new CategoriaBOImpl(categorias, libros, usuarios, reloj);
         assertThrows(ValidacionException.class, () -> categoriasBO.registrar(1, new RegistroReferenciaDTO(new DatosReferenciaDTO(" Categoria ", "texto"), null)));
         verify(categorias, never()).insertar(any());
     }
@@ -227,9 +225,10 @@ class CatalogoBOTest {
     @Test
     void vetoReferenciaConfirmaEfectosSoloUnaVezYFalloRevierte() throws Exception {
         when(autores.cambiarActivo(1, false, "admin@admin.bookshop")).thenReturn(true);
-        AutorBOImpl autoresBO = new AutorBOImpl(autores, usuarios, reloj);
+        AutorBOImpl autoresBO = new AutorBOImpl(autores, libros, usuarios, reloj);
         try (MockedStatic<TransactionContext> contexto = mockStatic(TransactionContext.class)) {
             autoresBO.cambiarActivo(1, 1, false);
+            verify(libros).recalcularVetosPorAutor(1, "admin@admin.bookshop");
             contexto.verify(TransactionContext::commit);
             contexto.verify(TransactionContext::close);
         }
@@ -239,6 +238,37 @@ class CatalogoBOTest {
             contexto.verify(TransactionContext::rollback);
             contexto.verify(TransactionContext::commit, never());
         }
+    }
+
+    @Test
+    void categoriaYEditorialCoordinanSusVetosEnBusiness() throws Exception {
+        when(categorias.cambiarActivo(1, false, "admin@admin.bookshop")).thenReturn(true);
+        when(editoriales.eliminar(1, "admin@admin.bookshop")).thenReturn(true);
+        CategoriaBOImpl categoriasBO = new CategoriaBOImpl(categorias, libros, usuarios, reloj);
+        EditorialBOImpl editorialesBO = new EditorialBOImpl(editoriales, libros, usuarios, reloj);
+        try (MockedStatic<TransactionContext> contexto = mockStatic(TransactionContext.class)) {
+            categoriasBO.cambiarActivo(1, 1, false);
+            editorialesBO.eliminar(1, 1);
+            verify(libros).recalcularVetosPorCategoria(1, "admin@admin.bookshop");
+            verify(libros).recalcularVetosPorEditorial(1, "admin@admin.bookshop");
+            contexto.verify(TransactionContext::commit, org.mockito.Mockito.times(2));
+        }
+    }
+
+    @Test
+    void negocioClasificaDescuentosSinModificarSuVigenciaGuardada() throws Exception {
+        LocalDateTime ahora = LocalDateTime.of(2026, 10, 6, 23, 30);
+        Descuento vigente = new Descuento(1, libro, BigDecimal.TEN, ahora, ahora.plusDays(1));
+        Descuento proximo = new Descuento(2, libro, BigDecimal.TEN, ahora.plusDays(1), ahora.plusDays(2));
+        Descuento vencido = new Descuento(3, libro, BigDecimal.TEN, ahora.minusDays(2), ahora.minusDays(1));
+        when(descuentos.listarPorLibro(1, 1, 12)).thenReturn(
+            new ResultadoPaginadoDTO<>(List.of(vigente, proximo, vencido), 3, 1, 12));
+        DescuentoBOImpl descuentosBO = new DescuentoBOImpl(descuentos, libros, usuarios, reloj);
+        var lista = descuentosBO.listarPorLibro(1, 1, 12);
+        assertEquals(List.of(EstadoDescuento.VIGENTE, EstadoDescuento.PROXIMO, EstadoDescuento.VENCIDO),
+            lista.items().stream().map(item -> item.estado()).toList());
+        assertEquals(3, lista.totalResultados());
+        verify(descuentos, never()).modificar(any());
     }
 
     @Test

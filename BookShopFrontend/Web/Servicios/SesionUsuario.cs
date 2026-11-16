@@ -10,7 +10,6 @@ public class SesionUsuario
     public bool EsAdministrador => Usuario?.EsAdministrador == true;
     public Libro? LibroComparacion { get; set; }
     public Dictionary<string, object> EstadoVistas { get; } = [];
-    public string? Error { get; set; }
     public event Action? Cambiado;
     public event Action? Cerrada;
     public event Action? AccesoSolicitado;
@@ -28,7 +27,6 @@ public class SesionUsuario
         Usuario = null;
         EstadoVistas.Clear();
         LibroComparacion = null;
-        Error = null;
         Cerrada?.Invoke();
         Notificar();
     }

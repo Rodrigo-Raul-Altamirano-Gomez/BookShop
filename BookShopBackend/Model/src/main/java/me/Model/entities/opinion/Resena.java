@@ -96,9 +96,6 @@ public class Resena {
     }
 
     public void setCantidadVotosUtiles(int cantidadVotosUtiles) {
-        if (cantidadVotosUtiles < 0) {
-            throw new IllegalArgumentException("La cantidad de votos no puede ser negativa.");
-        }
         this.cantidadVotosUtiles = cantidadVotosUtiles;
     }
 

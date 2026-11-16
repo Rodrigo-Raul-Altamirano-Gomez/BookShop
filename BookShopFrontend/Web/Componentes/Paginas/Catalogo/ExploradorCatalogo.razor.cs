@@ -4,7 +4,7 @@ using Web.Modelos;
 
 namespace Web.Componentes.Paginas.Catalogo;
 
-public partial class ExploradorCatalogo : IDisposable
+public partial class ExploradorCatalogo
 {
     private string? errorCarga;
 
@@ -39,21 +39,16 @@ public partial class ExploradorCatalogo : IDisposable
     private long totalResultados;
     private List<Libro> resultados = [];
     private bool cargando = true;
-    private HashSet<string> categorias = [], autores = [], editoriales = [], idiomas = [];
-    private decimal minimo;
-    private decimal maximo;
-    private bool precioFiltrado => minimo != 0 || maximo != 1000;
-    private string orden = "MAS_RECIENTES";
-    private int pagina = 1;
-    private string contextoAnterior = "";
-    private decimal LimitePrecio => Math.Max(1000, Math.Max(minimo, maximo));
+    private VistaCatalogo vista = new();
+    private bool precioFiltrado => vista.Minimo != 0 || vista.Maximo != 1000;
+    private decimal LimitePrecio => Math.Max(1000, Math.Max(vista.Minimo, vista.Maximo));
     private string EstiloRango
     {
         get
         {
-            string inicio = (minimo * 100 / LimitePrecio)
+            string inicio = (vista.Minimo * 100 / LimitePrecio)
                 .ToString(System.Globalization.CultureInfo.InvariantCulture);
-            string fin = (maximo * 100 / LimitePrecio).ToString(System.Globalization.CultureInfo.InvariantCulture);
+            string fin = (vista.Maximo * 100 / LimitePrecio).ToString(System.Globalization.CultureInfo.InvariantCulture);
             return $"--inicio:{inicio}%;--fin:{fin}%";
         }
     }
@@ -64,8 +59,8 @@ public partial class ExploradorCatalogo : IDisposable
     private IEnumerable<string> OpcionesEditoriales =>
         Catalogo.Referencias.Where(r => r.Tipo == "editoriales").Select(r => r.Nombre);
     private IEnumerable<string> OpcionesIdiomas => Catalogo.Idiomas;
-    private bool HayFiltros => categorias.Count > 0 || autores.Count > 0
-        || editoriales.Count > 0 || idiomas.Count > 0 || precioFiltrado;
+    private bool HayFiltros => vista.Categorias.Count > 0 || vista.Autores.Count > 0
+        || vista.Editoriales.Count > 0 || vista.Idiomas.Count > 0 || precioFiltrado;
 
     public static readonly Dictionary<string, string> OpcionesOrden = new()
     {
@@ -91,21 +86,21 @@ public partial class ExploradorCatalogo : IDisposable
             var filtro = new FiltroLibroDTO
             {
                 Titulo = Busqueda,
-                Idiomas = idiomas.ToList(),
-                PrecioMinimo = precioFiltrado ? minimo : null,
-                PrecioMaximo = precioFiltrado ? maximo : null,
+                Idiomas = vista.Idiomas.ToList(),
+                PrecioMinimo = precioFiltrado ? vista.Minimo : null,
+                PrecioMaximo = precioFiltrado ? vista.Maximo : null,
                 SoloNuevos = SoloNuevos,
-                Orden = orden,
-                Pagina = pagina,
+                Orden = vista.Orden,
+                Pagina = vista.Pagina,
                 TamanioPagina = 12
             };
             foreach (var referencia in Catalogo.Referencias)
             {
-                if (referencia.Tipo == "categorias" && categorias.Contains(referencia.Nombre))
+                if (referencia.Tipo == "categorias" && vista.Categorias.Contains(referencia.Nombre))
                     filtro.IdsCategorias.Add(referencia.Id);
-                if (referencia.Tipo == "autores" && autores.Contains(referencia.Nombre))
+                if (referencia.Tipo == "autores" && vista.Autores.Contains(referencia.Nombre))
                     filtro.IdsAutores.Add(referencia.Id);
-                if (referencia.Tipo == "editoriales" && editoriales.Contains(referencia.Nombre))
+                if (referencia.Tipo == "editoriales" && vista.Editoriales.Contains(referencia.Nombre))
                     filtro.IdsEditoriales.Add(referencia.Id);
             }
             string ruta = "libros/busqueda";
@@ -129,10 +124,7 @@ public partial class ExploradorCatalogo : IDisposable
         {
             errorCarga = e.Message;
         }
-        finally
-        {
-            cargando = false;
-        }
+        cargando = false;
     }
 
     protected override async Task OnParametersSetAsync()
@@ -140,55 +132,16 @@ public partial class ExploradorCatalogo : IDisposable
         await Catalogo.Inicializar();
         var contexto = Navegacion.ToBaseRelativePath(Navegacion.Uri).Split('#')[0] + "|" + Busqueda + "|"
             + TipoAmbito + "|" + Titulo + "|" + Favoritos + "|" + IdAmbito;
-        if (contexto != contextoAnterior)
+        if (Sesion.EstadoVistas.TryGetValue(contexto, out var guardado) && guardado is VistaCatalogo almacenada)
+            vista = almacenada;
+        else
         {
-            GuardarVista();
-            contextoAnterior = contexto;
-            if (Sesion.EstadoVistas.TryGetValue(contexto, out var guardado) && guardado is VistaCatalogo vista)
-            {
-                categorias = [.. vista.Categorias];
-                autores = [.. vista.Autores];
-                editoriales = [.. vista.Editoriales];
-                idiomas = [.. vista.Idiomas];
-                minimo = vista.Minimo;
-                maximo = vista.Maximo;
-                orden = vista.Orden;
-                pagina = vista.Pagina;
-            }
-            else
-            {
-                categorias = [];
-                autores = [];
-                editoriales = [];
-                idiomas = [];
-                minimo = 0;
-                maximo = 1000;
-                pagina = 1;
-                orden = OrdenInicial;
-            }
+            vista = new VistaCatalogo { Orden = OrdenInicial };
+            Sesion.EstadoVistas[contexto] = vista;
         }
         await Consultar();
     }
 
-    private void GuardarVista()
-    {
-        if (contextoAnterior.Length == 0)
-            return;
-        Sesion.EstadoVistas[contextoAnterior] = new VistaCatalogo
-        {
-            Categorias = [.. categorias],
-            Autores = [.. autores],
-            Editoriales = [.. editoriales],
-            Idiomas = [.. idiomas],
-            Minimo = minimo,
-            Maximo = maximo,
-            Orden = orden,
-            Pagina = pagina
-
-        };
-    }
-
-    public void Dispose() => GuardarVista();
     // Conserva únicamente los controles de pantalla al volver desde un libro.
     private class VistaCatalogo
     {
@@ -197,71 +150,52 @@ public partial class ExploradorCatalogo : IDisposable
         public HashSet<string> Editoriales { get; set; } = [];
         public HashSet<string> Idiomas { get; set; } = [];
         public decimal Minimo { get; set; }
-        public decimal Maximo { get; set; }
+        public decimal Maximo { get; set; } = 1000;
         public string Orden { get; set; } = "MAS_RECIENTES";
         public int Pagina { get; set; } = 1;
     }
 
-    private async Task SeleccionarCategoria(string valor)
+    private async Task SeleccionarFiltro(HashSet<string> seleccionados, string valor)
     {
-        if (!categorias.Add(valor))
-            categorias.Remove(valor);
-        await ActualizarResultados();
-    }
-
-    private async Task SeleccionarAutor(string valor)
-    {
-        if (!autores.Add(valor))
-            autores.Remove(valor);
-        await ActualizarResultados();
-    }
-
-    private async Task SeleccionarEditorial(string valor)
-    {
-        if (!editoriales.Add(valor))
-            editoriales.Remove(valor);
-        await ActualizarResultados();
-    }
-
-    private async Task SeleccionarIdioma(string valor)
-    {
-        if (!idiomas.Add(valor))
-            idiomas.Remove(valor);
+        if (seleccionados.Contains(valor))
+            seleccionados.Remove(valor);
+        else
+            seleccionados.Add(valor);
         await ActualizarResultados();
     }
 
     private async Task AjustarMinimo()
     {
-        minimo = Math.Max(0, minimo);
-        if (minimo > maximo)
-            maximo = minimo;
+        vista.Minimo = Math.Max(0, vista.Minimo);
+        if (vista.Minimo > vista.Maximo)
+            vista.Maximo = vista.Minimo;
         await ActualizarResultados();
     }
 
     private async Task AjustarMaximo()
     {
-        maximo = Math.Max(0, maximo);
-        if (maximo < minimo)
-            minimo = maximo;
+        vista.Maximo = Math.Max(0, vista.Maximo);
+        if (vista.Maximo < vista.Minimo)
+            vista.Minimo = vista.Maximo;
         await ActualizarResultados();
     }
 
     private async Task QuitarPrecio()
     {
-        minimo = 0;
-        maximo = 1000;
+        vista.Minimo = 0;
+        vista.Maximo = 1000;
         await ActualizarResultados();
     }
 
     private async Task ActualizarResultados()
     {
-        pagina = 1;
+        vista.Pagina = 1;
         await Consultar();
     }
 
     private async Task CambiarPagina(int valor)
     {
-        pagina = valor;
+        vista.Pagina = valor;
         await Consultar();
     }
 }

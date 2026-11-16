@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import java.time.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-import me.Business.compra.PedidoBOImpl;
+import me.Business.compra.PedidoBO;
 import me.Business.compra.ProveedorConfiguracion;
 import me.Business.exceptions.*;
 import me.DAO.catalogo.*;
@@ -140,7 +140,7 @@ class SolicitudesBusinessTest {
     }
 
     private SolicitudBOImpl construir(ProveedorConfiguracion configuracion) {
-        return new SolicitudBOImpl(solicitudes, pedidos, resenas, libros, cupones, usuarios, reloj, configuracion, mock(PedidoBOImpl.class));
+        return new SolicitudBOImpl(solicitudes, pedidos, resenas, libros, cupones, usuarios, reloj, configuracion, mock(PedidoBO.class));
     }
 
     private ResumenSolicitudDTO resumen(Solicitud solicitud) {
@@ -162,6 +162,34 @@ class SolicitudesBusinessTest {
         verify(pedidos, never()).leer(anyInt());
         verify(pedidos, never()).incrementarIntentos(anyInt(), anyInt(), anyString());
         verify(solicitudes, never()).insertar(any());
+    }
+
+    @Test
+    void devolucionAjenaNoConsumeIntentosNiRegistraSolicitud() throws Exception {
+        assertThrows(AccesoDenegadoException.class, () -> negocio.comprobarDevolucion(9, 10));
+        assertThrows(AccesoDenegadoException.class, () -> negocio.enviarDevolucion(9, 10,
+            new DatosDevolucionDTO(MotivoDevolucion.OTRO, null)));
+        verify(pedidos, never()).incrementarIntentos(anyInt(), anyInt(), anyString());
+        verify(solicitudes, never()).insertar(any());
+    }
+
+    @Test
+    void solicitudAjenaNoPuedeConsultarseEditarNiRetirarse() throws Exception {
+        Usuario otro = new Usuario();
+        otro.setId(2);
+        when(usuarios.leer(2)).thenReturn(otro);
+        registro.set(new SolicitudReporteResena(7, cliente, resena, MotivoReporteResena.OTRO, null));
+        assertThrows(AccesoDenegadoException.class, () -> negocio.consultarReporte(2, 7));
+        assertThrows(AccesoDenegadoException.class, () -> negocio.editarReporte(2, 7,
+            new DatosReporteResenaDTO(MotivoReporteResena.OTRO, null)));
+        assertThrows(AccesoDenegadoException.class, () -> negocio.retirar(2, 7));
+        registro.set(new SolicitudDevolucion(7, cliente, pedido, MotivoDevolucion.OTRO, null));
+        assertThrows(AccesoDenegadoException.class, () -> negocio.consultarDevolucion(2, 7));
+        assertThrows(AccesoDenegadoException.class, () -> negocio.consultarPedidoReferencia(2, 7));
+        assertThrows(AccesoDenegadoException.class, () -> negocio.editarDevolucion(2, 7,
+            new DatosDevolucionDTO(MotivoDevolucion.OTRO, null)));
+        verify(solicitudes, never()).modificar(any());
+        verify(solicitudes, never()).eliminar(anyInt(), anyString());
     }
 
     @Test

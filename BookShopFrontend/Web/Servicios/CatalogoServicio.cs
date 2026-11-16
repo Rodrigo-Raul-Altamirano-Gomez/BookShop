@@ -9,6 +9,7 @@ public class CatalogoServicio
     private readonly SesionUsuario Sesion;
     public List<Referencia> Referencias { get; } = [];
     public List<string> Idiomas { get; } = [];
+    public string? Error { get; private set; }
     public bool Cargando
     {
         get; private set;
@@ -29,6 +30,7 @@ public class CatalogoServicio
         if (Inicializado || Cargando)
             return;
         Cargando = true;
+        Error = null;
         try
         {
             Referencias.Clear();
@@ -64,12 +66,10 @@ public class CatalogoServicio
                 paginaIdiomas++;
             } while ((paginaIdiomas - 1) * 12 < totalIdiomas);
             Inicializado = true;
-            Sesion.Error = null;
         }
         catch (InvalidOperationException e)
         {
-            Sesion.Error = e.Message;
-            Sesion.Avisar(e.Message);
+            Error = e.Message;
         }
         Cargando = false;
         Sesion.Notificar();
