@@ -38,7 +38,8 @@ public class MetodoPagoDAOImpl implements MetodoPagoDAO {
             sentencia.setString(4, metodo.getAlias());
             sentencia.setBoolean(5, metodo.isActivo());
             sentencia.setString(6, tipo);
-            if (metodo instanceof TarjetaBancaria tarjeta) {
+            if (metodo instanceof TarjetaBancaria) {
+                TarjetaBancaria tarjeta = (TarjetaBancaria) metodo;
                 sentencia.setString(7, tarjeta.getNumeroTarjetaCifrado());
                 sentencia.setString(8, null);
                 sentencia.setString(9, tarjeta.getTipoTarjeta().name());
@@ -117,7 +118,8 @@ public class MetodoPagoDAOImpl implements MetodoPagoDAO {
         sentencia.setString(1, metodo.getTitular());
         sentencia.setString(2, metodo.getProveedor());
         sentencia.setString(3, metodo.getAlias());
-        if (metodo instanceof TarjetaBancaria tarjeta) {
+        if (metodo instanceof TarjetaBancaria) {
+            TarjetaBancaria tarjeta = (TarjetaBancaria) metodo;
             sentencia.setString(4, tarjeta.getNumeroTarjetaCifrado());
             sentencia.setString(5, null);
             sentencia.setString(6, tarjeta.getTipoTarjeta().name());

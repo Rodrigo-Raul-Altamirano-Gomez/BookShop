@@ -14,7 +14,7 @@
     <div class="page-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
         <h1>Resumen de compra</h1>
     </div>
-    @if (Sesion.Usuario is null)
+    @if (Sesion.Usuario == null)
     {
         <div class="empty-state card border-0 text-center align-items-center py-5">
             <h2>Inicia sesión para continuar</h2>
@@ -216,7 +216,7 @@
                                             <span class="radio-mark">
                                             </span>
                                             <div>
-                                                @if (cupon is null)
+                                                @if (cupon == null)
                                                 {
                                                     <h3>Sin cupón</h3>
                                                 }
@@ -315,7 +315,7 @@
                             <span>@Presentacion.Dinero(resumen.Total)</span>
                         </div>
                     </div>
-                    @if (errorPago is not null)
+                    @if (errorPago != null)
                     {
                         <p class="alert alert-danger py-2" role="alert">@errorPago</p>
                     }

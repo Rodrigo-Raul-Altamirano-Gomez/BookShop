@@ -1,11 +1,8 @@
 package me.Business.usuario;
 
 import java.sql.SQLException;
-import java.time.Clock;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import me.Business.exceptions.AccesoDenegadoException;
-import me.Business.exceptions.ConflictoException;
 import me.Business.exceptions.NegocioException;
 import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.RecursoNoEncontradoException;
@@ -23,19 +20,8 @@ import me.Model.entities.usuario.Usuario;
 
 public class DireccionEnvioBOImpl implements DireccionEnvioBO {
 
-    private final DireccionEnvioDAO direccionEnvioDAO;
-    private final UsuarioDAO usuarioDAO;
-    private final Clock reloj;
-
-    public DireccionEnvioBOImpl() {
-        this(new DireccionEnvioDAOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")));
-    }
-
-    public DireccionEnvioBOImpl(DireccionEnvioDAO direccionEnvioDAO, UsuarioDAO usuarioDAO, Clock reloj) {
-        this.direccionEnvioDAO = direccionEnvioDAO;
-        this.usuarioDAO = usuarioDAO;
-        this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
-    }
+    private final DireccionEnvioDAO direccionEnvioDAO = new DireccionEnvioDAOImpl();
+    private final UsuarioDAO usuarioDAO = new UsuarioDAOImpl();
 
     @Override
     public DireccionEnvioDTO registrar(int idActor, DatosDireccionEnvioDTO datos) throws NegocioException {
@@ -45,11 +31,11 @@ public class DireccionEnvioBOImpl implements DireccionEnvioBO {
             DireccionEnvio direccion = new DireccionEnvio(0, actor, datos.alias(), datos.calle(),
                 datos.distrito(), datos.ciudad(), datos.referencia());
             direccion.setUsuarioCreacion(actor.getEmail());
-            direccion.setFechaCreacion(LocalDateTime.now(reloj));
+            direccion.setFechaCreacion(LocalDateTime.now());
             direccionEnvioDAO.insertar(direccion);
             if (datos.predeterminada()) {
                 if (!direccionEnvioDAO.establecerPredeterminado(idActor, direccion.getId(), actor.getEmail())) {
-                    throw new ConflictoException("La direccion no puede elegirse como predeterminada.");
+                    throw new NegocioException("La direccion no puede elegirse como predeterminada.");
                 }
                 direccion.setPredeterminada(true);
             }
@@ -86,12 +72,12 @@ public class DireccionEnvioBOImpl implements DireccionEnvioBO {
             direccionEnvioDAO.modificar(direccion);
             if (datos.predeterminada() && !direccion.isPredeterminada()) {
                 if (!direccionEnvioDAO.establecerPredeterminado(idActor, idDireccion, actor.getEmail())) {
-                    throw new ConflictoException("La direccion no puede elegirse como predeterminada.");
+                    throw new NegocioException("La direccion no puede elegirse como predeterminada.");
                 }
                 direccion.setPredeterminada(true);
             } else if (!datos.predeterminada() && direccion.isPredeterminada()) {
                 if (!direccionEnvioDAO.quitarPredeterminado(idDireccion, actor.getEmail())) {
-                    throw new ConflictoException("La direccion predeterminada cambio mientras se editaba.");
+                    throw new NegocioException("La direccion predeterminada cambio mientras se editaba.");
                 }
                 direccion.setPredeterminada(false);
             }
@@ -142,7 +128,7 @@ public class DireccionEnvioBOImpl implements DireccionEnvioBO {
             Usuario actor = usuarioDAO.leer(idActor);
             comprobarPropiedad(direccionEnvioDAO.leer(idDireccion), idActor);
             if (!direccionEnvioDAO.eliminar(idDireccion, actor.getEmail())) {
-                throw new ConflictoException("La direccion ya se habia eliminado.");
+                throw new NegocioException("La direccion ya se habia eliminado.");
             }
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo eliminar la direccion.", e);
@@ -155,7 +141,7 @@ public class DireccionEnvioBOImpl implements DireccionEnvioBO {
             Usuario actor = usuarioDAO.leer(idActor);
             comprobarPropiedad(direccionEnvioDAO.leer(idDireccion), idActor);
             if (!direccionEnvioDAO.establecerPredeterminado(idActor, idDireccion, actor.getEmail())) {
-                throw new ConflictoException("La direccion no puede elegirse como predeterminada.");
+                throw new NegocioException("La direccion no puede elegirse como predeterminada.");
             }
             TransactionContext.commit();
         } catch (SQLException e) {
@@ -178,6 +164,6 @@ public class DireccionEnvioBOImpl implements DireccionEnvioBO {
             throw new AccesoDenegadoException("La direccion pertenece a otro usuario.");
         }
         if (!direccion.isActivo())
-            throw new ConflictoException("La direccion no esta disponible.");
+            throw new NegocioException("La direccion no esta disponible.");
     }
 }

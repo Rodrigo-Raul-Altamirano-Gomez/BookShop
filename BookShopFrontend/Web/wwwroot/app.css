@@ -469,9 +469,6 @@ hr {
     width:18px;
     height:18px;
 }
-.dialog-open {
-    overflow:hidden;
-}
 .empty-state {
     text-align:center;
     padding:60px 30px;

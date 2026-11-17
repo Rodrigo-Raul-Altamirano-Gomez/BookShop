@@ -14,8 +14,8 @@ public partial class MisPedidos
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        if (Sesion.EstadoVistas.TryGetValue("cuenta:mis-pedidos", out var guardado))
-            filtro = (FiltroPedidoDTO)guardado;
+        if (Sesion.EstadoVistas.ContainsKey("cuenta:mis-pedidos"))
+            filtro = (FiltroPedidoDTO)Sesion.EstadoVistas["cuenta:mis-pedidos"];
         Sesion.EstadoVistas["cuenta:mis-pedidos"] = filtro;
         estadosSeleccionados = filtro.Estados.ToList();
     }
@@ -23,7 +23,7 @@ public partial class MisPedidos
     protected override async Task CargarDatos()
     {
         resultado = new();
-        if (Sesion.Usuario is not null)
+        if (Sesion.Usuario != null)
             resultado = await Api.Post<ResultadoPaginadoDTO<TarjetaPedidoDTO>>("pedidos/busqueda", filtro);
     }
 

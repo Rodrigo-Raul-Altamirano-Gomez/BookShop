@@ -12,7 +12,7 @@
                 aria-current="page">Deseados y favoritos</li>
         </ol>
     </nav>
-    @if (Sesion.Usuario is null)
+    @if (Sesion.Usuario == null)
     {
         <h1 class="page-heading">Deseados y favoritos</h1>
         <div class="empty-state card border-0 text-center align-items-center py-5">
@@ -52,8 +52,8 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        if (Sesion.EstadoVistas.TryGetValue(ClavePestana, out var pestana) && pestana is bool favoritos)
-            PestanaFavoritos = favoritos;
+        if (Sesion.EstadoVistas.ContainsKey(ClavePestana))
+            PestanaFavoritos = (bool)Sesion.EstadoVistas[ClavePestana];
     }
 
     private void MostrarLista(bool favoritos)

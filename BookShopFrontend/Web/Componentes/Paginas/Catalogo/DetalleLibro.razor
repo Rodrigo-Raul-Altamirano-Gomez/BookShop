@@ -9,7 +9,7 @@
             <li class="breadcrumb-item active" aria-current="page"><span>@Libro?.Titulo</span></li>
         </ol>
     </nav>
-    @if (Libro is null)
+    @if (Libro == null)
     {
         <div class="empty-state">
             <h1>Libro no encontrado</h1>
@@ -162,7 +162,7 @@
                             <dd>@Libro.Saga</dd>
                         </div>
                     }
-                    @if (Libro.Tomo is not null)
+                    @if (Libro.Tomo != null)
                     {
                         <div class="col-12 col-md-6 d-flex">
                             <dt>Tomo</dt>
@@ -264,7 +264,7 @@
 {
     <FormularioResena AlGuardar="PublicarResena" AlCerrar="() => formularioResena = false" />
 }
-@if (resenaAReportar is not null)
+@if (resenaAReportar != null)
 {
     <FormularioReporteResena AlGuardar="EnviarReporte" AlCerrar="() => resenaAReportar = null" />
 }

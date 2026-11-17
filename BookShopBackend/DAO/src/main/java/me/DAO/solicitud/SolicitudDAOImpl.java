@@ -32,7 +32,8 @@ public class SolicitudDAOImpl implements SolicitudDAO {
         try (PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             sentencia.setString(1, tipo.name());
             sentencia.setInt(2, solicitud.getUsuario().getId());
-            if (solicitud instanceof SolicitudDevolucion devolucion) {
+            if (solicitud instanceof SolicitudDevolucion) {
+                SolicitudDevolucion devolucion = (SolicitudDevolucion) solicitud;
                 sentencia.setInt(3, devolucion.getPedido().getId());
                 sentencia.setString(4, devolucion.getMotivo().name());
                 sentencia.setNull(5, Types.INTEGER);
@@ -65,8 +66,11 @@ public class SolicitudDAOImpl implements SolicitudDAO {
         TipoSolicitud tipo = (solicitud instanceof SolicitudDevolucion ? TipoSolicitud.DEVOLUCION :
             TipoSolicitud.REPORTE_RESENA);
         String columnaMotivo = tipo == TipoSolicitud.DEVOLUCION ? "motivo_devolucion" : "motivo_reporte";
-        String motivo = solicitud instanceof SolicitudDevolucion devolucion ? devolucion.getMotivo().name() :
-            ((SolicitudReporteResena) solicitud).getMotivo().name();
+        String motivo;
+        if (solicitud instanceof SolicitudDevolucion)
+            motivo = ((SolicitudDevolucion) solicitud).getMotivo().name();
+        else
+            motivo = ((SolicitudReporteResena) solicitud).getMotivo().name();
         String sql = "UPDATE SOLICITUD SET " + columnaMotivo +
             " = ?, comentario = ?, usuario_actualizacion = ?, fecha_actualizacion = ?" +
             " WHERE id = ? AND tipo_solicitud = ? AND estado = 'PENDIENTE' AND NOT eliminado";

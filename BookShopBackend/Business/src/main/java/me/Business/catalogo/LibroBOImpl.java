@@ -2,11 +2,8 @@ package me.Business.catalogo;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.time.Clock;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
-import me.Business.exceptions.ConflictoException;
 import me.Business.exceptions.NegocioException;
 import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.RecursoNoEncontradoException;
@@ -37,26 +34,11 @@ import me.Model.entities.usuario.Usuario;
 
 public class LibroBOImpl implements LibroBO {
 
-    private final LibroDAO libroDAO;
-    private final AutorDAO autorDAO;
-    private final CategoriaDAO categoriaDAO;
-    private final EditorialDAO editorialDAO;
-    private final UsuarioDAO usuarioDAO;
-    private final Clock reloj;
-
-    public LibroBOImpl() {
-        this(new LibroDAOImpl(), new AutorDAOImpl(), new CategoriaDAOImpl(), new EditorialDAOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")));
-    }
-
-    public LibroBOImpl(LibroDAO libroDAO, AutorDAO autorDAO, CategoriaDAO categoriaDAO, EditorialDAO
-        editorialDAO, UsuarioDAO usuarioDAO, Clock reloj) {
-        this.libroDAO = libroDAO;
-        this.autorDAO = autorDAO;
-        this.categoriaDAO = categoriaDAO;
-        this.editorialDAO = editorialDAO;
-        this.usuarioDAO = usuarioDAO;
-        this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
-    }
+    private final LibroDAO libroDAO = new LibroDAOImpl();
+    private final AutorDAO autorDAO = new AutorDAOImpl();
+    private final CategoriaDAO categoriaDAO = new CategoriaDAOImpl();
+    private final EditorialDAO editorialDAO = new EditorialDAOImpl();
+    private final UsuarioDAO usuarioDAO = new UsuarioDAOImpl();
 
     @Override
     public int registrar(int idActor, RegistroLibroDTO registro) throws NegocioException {
@@ -78,7 +60,7 @@ public class LibroBOImpl implements LibroBO {
             Editorial editorial = editorialDAO.leer(registro.idEditorial());
             if (autor == null || !autor.estaDisponible() || categoria == null || !categoria.estaDisponible()
                 || editorial == null || !editorial.estaDisponible())
-                throw new ConflictoException("Las referencias seleccionadas ya no estan disponibles.");
+                throw new NegocioException("Las referencias seleccionadas ya no estan disponibles.");
             Libro libro = new Libro();
             libro.setTitulo(datos.titulo().strip());
             libro.setIdioma(datos.idioma().strip());
@@ -99,7 +81,7 @@ public class LibroBOImpl implements LibroBO {
             libro.setStockFisico(registro.stockInicial());
             libro.setPortada(registro.portada());
             libro.setUsuarioCreacion(actor.getEmail());
-            libro.setFechaCreacion(LocalDateTime.now(reloj));
+            libro.setFechaCreacion(LocalDateTime.now());
             libroDAO.insertar(libro);
             TransactionContext.commit();
             return libro.getId();
@@ -154,7 +136,7 @@ public class LibroBOImpl implements LibroBO {
             if (libro == null || libro.isEliminado())
                 throw new RecursoNoEncontradoException("El libro no está disponible.");
             if (!libroDAO.cambiarPrecio(id, valido, actor.getEmail()))
-                throw new ConflictoException("El libro cambio; vuelva a consultarlo.");
+                throw new NegocioException("El libro cambio; vuelva a consultarlo.");
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo cambiar el precio.", e);
         }
@@ -170,7 +152,7 @@ public class LibroBOImpl implements LibroBO {
             if (libro == null || libro.isEliminado())
                 throw new RecursoNoEncontradoException("El libro no está disponible.");
             if (!libroDAO.cambiarStock(id, stock, actor.getEmail()))
-                throw new ConflictoException("El libro cambio; vuelva a consultarlo.");
+                throw new NegocioException("El libro cambio; vuelva a consultarlo.");
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo cambiar el stock.", e);
         }
@@ -184,7 +166,7 @@ public class LibroBOImpl implements LibroBO {
             if (libro == null || libro.isEliminado())
                 throw new RecursoNoEncontradoException("El libro no está disponible.");
             if (!libroDAO.cambiarImagen(id, imagen, actor.getEmail()))
-                throw new ConflictoException("El libro cambio; vuelva a consultarlo.");
+                throw new NegocioException("El libro cambio; vuelva a consultarlo.");
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo cambiar la portada.", e);
         }
@@ -199,15 +181,15 @@ public class LibroBOImpl implements LibroBO {
                 throw new RecursoNoEncontradoException("El libro no está disponible.");
             int vetosReferencias = libro.getNumeroVetos() - (libro.isVetadoDirectamente() ? 1 : 0);
             if (activo && vetosReferencias > 0)
-                throw new ConflictoException("Primero active las referencias vetadas del libro.");
+                throw new NegocioException("Primero active las referencias vetadas del libro.");
             if (libro.isVetadoDirectamente() == !activo)
                 return;
             if (!libroDAO.cambiarVetoDirecto(id, !activo, actor.getEmail()))
-                throw new ConflictoException("El libro cambio; vuelva a consultarlo.");
+                throw new NegocioException("El libro cambio; vuelva a consultarlo.");
             if (activo) {
                 Libro actualizado = libroDAO.leer(id);
                 if (actualizado == null || !actualizado.isActivo())
-                    throw new ConflictoException("Una referencia fue vetada; el libro permanece inactivo.");
+                    throw new NegocioException("Una referencia fue vetada; el libro permanece inactivo.");
             }
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo cambiar el estado del libro.", e);
@@ -222,7 +204,7 @@ public class LibroBOImpl implements LibroBO {
             if (libro == null || libro.isEliminado())
                 throw new RecursoNoEncontradoException("El libro no está disponible.");
             if (!libroDAO.eliminar(id, actor.getEmail()))
-                throw new ConflictoException("El libro cambio; vuelva a consultarlo.");
+                throw new NegocioException("El libro cambio; vuelva a consultarlo.");
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo eliminar el libro.", e);
         }
@@ -233,7 +215,7 @@ public class LibroBOImpl implements LibroBO {
         NegocioException {
         FiltroLibroDTO valido = validarFiltro(filtro);
         try {
-            return libroDAO.buscar(valido, LocalDateTime.now(reloj));
+            return libroDAO.buscar(valido, LocalDateTime.now());
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo consultar el catalogo.", e);
         }
@@ -247,7 +229,7 @@ public class LibroBOImpl implements LibroBO {
             Autor autor = autorDAO.leer(id);
             if (autor == null || autor.isEliminado())
                 throw new RecursoNoEncontradoException("El autor no esta disponible.");
-            return libroDAO.buscarPorAutor(id, valido, LocalDateTime.now(reloj));
+            return libroDAO.buscarPorAutor(id, valido, LocalDateTime.now());
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudieron consultar los libros del autor.", e);
         }
@@ -261,7 +243,7 @@ public class LibroBOImpl implements LibroBO {
             Categoria categoria = categoriaDAO.leer(id);
             if (categoria == null || categoria.isEliminado())
                 throw new RecursoNoEncontradoException("La categoria no esta disponible.");
-            return libroDAO.buscarPorCategoria(id, valido, LocalDateTime.now(reloj));
+            return libroDAO.buscarPorCategoria(id, valido, LocalDateTime.now());
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudieron consultar los libros de la categoria.", e);
         }
@@ -275,7 +257,7 @@ public class LibroBOImpl implements LibroBO {
             Editorial editorial = editorialDAO.leer(id);
             if (editorial == null || editorial.isEliminado())
                 throw new RecursoNoEncontradoException("La editorial no esta disponible.");
-            return libroDAO.buscarPorEditorial(id, valido, LocalDateTime.now(reloj));
+            return libroDAO.buscarPorEditorial(id, valido, LocalDateTime.now());
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudieron consultar los libros de la editorial.", e);
         }
@@ -296,7 +278,7 @@ public class LibroBOImpl implements LibroBO {
     @Override
     public DetalleLibroDTO obtenerDetalle(int idActor, int id) throws NegocioException {
         try {
-            DetalleLibroDTO detalle = libroDAO.obtenerDetalle(id, idActor, LocalDateTime.now(reloj));
+            DetalleLibroDTO detalle = libroDAO.obtenerDetalle(id, idActor, LocalDateTime.now());
             if (detalle == null)
                 throw new RecursoNoEncontradoException("El libro no esta disponible.");
             return detalle;

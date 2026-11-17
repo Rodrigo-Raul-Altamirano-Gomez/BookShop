@@ -63,7 +63,7 @@ public class SesionUsuario
 
     public bool RequerirAcceso()
     {
-        if (Usuario is not null)
+        if (Usuario != null)
             return true;
         MostrarAcceso();
         return false;

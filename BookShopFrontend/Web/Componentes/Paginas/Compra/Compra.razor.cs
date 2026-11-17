@@ -30,7 +30,7 @@ public partial class Compra : Web.Componentes.Paginas.Cuenta.PaginaCuenta
     protected override async Task CargarDatos()
     {
         preparacion = null;
-        if (Sesion.Usuario is null)
+        if (Sesion.Usuario == null)
             return;
         await Cuenta.CargarDatosCompra();
         MostrarPreparacion(await Api.Post<PreparacionCompraDTO>("pedidos/preparacion"));
@@ -94,14 +94,14 @@ public partial class Compra : Web.Componentes.Paginas.Cuenta.PaginaCuenta
             errorPago = e.Message;
         }
 
-        if (detalle is not null)
+        if (detalle != null)
         {
             // El pedido ya fue confirmado; no se envía otra confirmación ni se altera su detalle.
             Compras.MostrarCarrito(new ResumenCompraDTO());
             preparacion = null;
             Navegacion.NavigateTo($"/confirmacion/{detalle.Pedido.Id}");
         }
-        else if (Sesion.Usuario is not null)
+        else if (Sesion.Usuario != null)
         {
             // Si negocio actualizó los importes, mostrar la preparación vigente antes del reintento.
             try

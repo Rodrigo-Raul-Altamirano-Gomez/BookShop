@@ -15,7 +15,6 @@ El entregable incluye los recorridos de RF01, RF02, RF03 y RF05 a RF19. De RF04 
 - `BookShopBackend/Service`: API REST Jakarta EE.
 - `BookShopBackend/App`: ejecución por consola.
 - `BookShopFrontend/Web`: interfaz, DTO y consumo REST.
-- `BookShopFrontend/Pruebas`: comprobaciones del frontend.
 
 ## Ejecutar el frontend con el backend desplegado
 
@@ -39,7 +38,7 @@ Se requieren JDK 25, Maven, MySQL, GlassFish compatible con Jakarta EE y SDK .NE
 
 1. Completar `BookShopBackend/DBManager/src/main/resources/db.properties` usando la plantilla `db.example.properties` de la misma carpeta.
 2. Para una base nueva, utilizar `BookShopBackend/DAO/src/main/resources/DDL.sql`. Este archivo recrea las tablas; no debe ejecutarse sobre una base con datos que se quieran conservar.
-3. Ejecutar `mvn verify` desde `BookShopBackend` y desplegar `Service/target/bookshop.war` en GlassFish. La API utiliza `/bookshop/webresources`.
+3. Ejecutar `mvn package` desde `BookShopBackend` y desplegar `Service/target/bookshop.war` en GlassFish. La API utiliza `/bookshop/webresources`.
 4. Configurar `Backend:Url` en `BookShopFrontend/Web/appsettings.json`. La dirección local es `https://localhost:8181/bookshop/webresources/`; el certificado de GlassFish debe ser de confianza en Windows. Ejecutar:
 
 ```powershell
@@ -52,9 +51,7 @@ La clave de cifrado de los métodos de pago está definida en `ProteccionDatos.j
 
 ## Funcionamiento
 
-La [guía para recorrer y explicar el código](docs/Guia_codigo.md) sigue los flujos principales y explica las piezas compartidas.
-
-Los recursos REST delegan las reglas en Business, que utiliza los DAO para acceder a MySQL. El servidor convierte los DTO Java a JSON con JSON-B. Web consume ese JSON con Newtonsoft.Json y clases DTO en `Modelos/DTO`.
+Cada recurso REST crea el BO que necesita (`new XBOImpl()`) y le delega las reglas. Business que utiliza los DAO para acceder a MySQL. El servidor convierte los DTO Java a JSON con JSON-B. Web consume ese JSON con Newtonsoft.Json y clases DTO en `Modelos/DTO`.
 
 Las pantallas Blazor están en `Componentes`, con marcado `.razor`, lógica `.razor.cs` y estilos `.razor.css`. Los servicios de Web gestionan las llamadas REST, la sesión y los datos compartidos. El componente `Cargando` muestra la espera o el error mientras se consultan datos.
 
@@ -76,21 +73,25 @@ Las imágenes se reciben y devuelven como texto en los DTO, por ejemplo `"portad
 
 Las entidades de Model muestran encapsulamiento y relaciones entre objetos; los métodos de pago utilizan herencia y polimorfismo. Business y DAO conservan interfaces e implementaciones, organizadas en paquetes y módulos. Los DTO transportan datos entre Java y Blazor mediante REST. Los componentes de la interfaz reúnen HTML, CSS y eventos de C#.
 
-El servidor atiende peticiones en distintos hilos. Carrito y Pedido utilizan `synchronized` sobre el mismo carrito para que cambiar cantidades y pagar no se ejecuten simultáneamente sobre sus datos. El mapa de carritos tiene un monitor para crear un único carrito por usuario. Las consultas de recomendaciones guardadas utilizan el monitor de su instancia. La prueba `CarritoConcurrenciaTest` ejecuta dos hilos sobre el mismo carrito y comprueba que se conservan las cantidades.
+El servidor atiende peticiones en distintos hilos. Carrito y Pedido utilizan `synchronized` sobre el mismo carrito para que cambiar cantidades y pagar no se ejecuten simultáneamente sobre sus datos. El mapa de carritos tiene un monitor para crear un único carrito por usuario. Las consultas de recomendaciones guardadas están en un mapa estático protegido con `synchronized`.
 
 Las transacciones de DBManager mantienen juntas las escrituras relacionadas en la base de datos. Los monitores protegen los objetos compartidos en memoria; ambas responsabilidades se mantienen separadas. No se incorporan semáforos ni tareas en segundo plano sin una necesidad concreta. JasperReports genera el comprobante y los dos reportes a partir de plantillas JRXML, sin guardar los PDF en la base.
 
 ## Verificación local
 
 ```powershell
-mvn -f BookShopBackend/pom.xml verify
-dotnet run --project BookShopFrontend/Pruebas
+mvn -f BookShopBackend/pom.xml package
+dotnet build BookShopFrontend/Web
 ```
 
-Las pruebas aisladas no sustituyen la revisión del sistema desplegado.
-
-Con el backend y una base de desarrollo disponibles, `dotnet run --project BookShopFrontend/Pruebas -- --real` ejecuta pruebas integradas que crean un usuario, una dirección, una tarjeta ficticia y un pedido. Esos datos permanecen en la base.
+`BookShopBackend/App` contiene un `Main` que recorre el flujo de compra por consola (consultar libro, carrito, preparación y pago simulado) contra la base de desarrollo. Ese recorrido registra un pedido real en la base.
 
 Las credenciales, claves, respaldos, archivos temporales y resultados de compilación se excluyen de Git.
 
 Los administradores acceden desde Cuenta a Administración y abren Reportes en un modal con pestañas Libros y Usuarios. El frontend controla ese acceso por rol. Los endpoints de documentos exigen sesión; el comprobante conserva la comprobación de propiedad del pedido, y los reportes no añaden una comprobación administrativa en Business. Las plantillas se compilan al generar cada PDF, sin caché adicional.
+
+## Errores y fechas
+
+Business lanza `NegocioException` para las reglas del negocio y cuatro subclases para casos con un código HTTP propio: `ValidacionException` (400), `AccesoDenegadoException` (403), `RecursoNoEncontradoException` (404) y `PersistenciaException` (500, fallos de la BD). `Errores` convierte cualquier excepción en un JSON `{"mensaje": "..."}`; las demás reglas responden 409. El frontend muestra ese mensaje.
+
+Las fechas del negocio se obtienen con `LocalDateTime.now()`. El contenedor del backend fija `TZ=America/Lima` y la conexión MySQL usa la misma zona.

@@ -10,7 +10,7 @@ public partial class DatosCompra
 
     protected override async Task CargarDatos()
     {
-        if (Sesion.Usuario is null)
+        if (Sesion.Usuario == null)
             return;
         await Cuenta.CargarDatosCompra();
     }
@@ -25,7 +25,7 @@ public partial class DatosCompra
     {
         get
         {
-            if (Sesion.Usuario is null)
+            if (Sesion.Usuario == null)
                 return 0;
             if (Pestana == "direcciones")
                 return Cuenta.Direcciones.Count;

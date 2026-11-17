@@ -2,13 +2,10 @@ package me.Business.catalogo;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.time.Clock;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import me.Business.exceptions.AccesoDenegadoException;
-import me.Business.exceptions.ConflictoException;
 import me.Business.exceptions.NegocioException;
 import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.RecursoNoEncontradoException;
@@ -30,22 +27,9 @@ import me.Model.entities.usuario.Usuario;
 
 public class DescuentoBOImpl implements DescuentoBO {
 
-    private final DescuentoDAO descuentoDAO;
-    private final LibroDAO libroDAO;
-    private final UsuarioDAO usuarioDAO;
-    private final Clock reloj;
-
-    public DescuentoBOImpl() {
-        this(new DescuentoDAOImpl(), new LibroDAOImpl(), new UsuarioDAOImpl(),
-            Clock.system(ZoneId.of("America/Lima")));
-    }
-
-    public DescuentoBOImpl(DescuentoDAO descuentoDAO, LibroDAO libroDAO, UsuarioDAO usuarioDAO, Clock reloj) {
-        this.descuentoDAO = descuentoDAO;
-        this.libroDAO = libroDAO;
-        this.usuarioDAO = usuarioDAO;
-        this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
-    }
+    private final DescuentoDAO descuentoDAO = new DescuentoDAOImpl();
+    private final LibroDAO libroDAO = new LibroDAOImpl();
+    private final UsuarioDAO usuarioDAO = new UsuarioDAOImpl();
 
     @Override
     public int guardar(int idActor, int idLibro, DatosDescuentoDTO datos) throws NegocioException {
@@ -74,7 +58,7 @@ public class DescuentoBOImpl implements DescuentoBO {
                 descuento = new Descuento();
                 descuento.setLibro(libro);
                 descuento.setUsuarioCreacion(actor.getEmail());
-                descuento.setFechaCreacion(LocalDateTime.now(reloj));
+                descuento.setFechaCreacion(LocalDateTime.now());
             } else {
                 descuento = descuentoDAO.leer(datos.id());
                 if (descuento == null || descuento.isEliminado())
@@ -84,7 +68,7 @@ public class DescuentoBOImpl implements DescuentoBO {
             }
             if (datos.eliminar()) {
                 if (!descuentoDAO.eliminar(datos.id(), actor.getEmail()))
-                    throw new ConflictoException("El descuento cambio; vuelva a consultarlo.");
+                    throw new NegocioException("El descuento cambio; vuelva a consultarlo.");
             } else {
                 if (descuentoDAO.haySuperposicion(idLibro, datos.id(), datos.fechaInicio(), datos.fechaFin()))
                     throw new ValidacionException("fechaInicio",
@@ -92,7 +76,7 @@ public class DescuentoBOImpl implements DescuentoBO {
                 descuento.setPorcentaje(datos.porcentaje().setScale(2, java.math.RoundingMode.HALF_UP));
                 descuento.setFechaInicio(datos.fechaInicio());
                 descuento.setFechaFin(datos.fechaFin());
-                LocalDateTime ahora = LocalDateTime.now(reloj);
+                LocalDateTime ahora = LocalDateTime.now();
                 descuento.setActivo(!ahora.isBefore(datos.fechaInicio()) && !ahora.isAfter(datos.fechaFin()));
                 if (datos.id() == 0)
                     descuentoDAO.insertar(descuento);
@@ -125,7 +109,7 @@ public class DescuentoBOImpl implements DescuentoBO {
             if (libro == null || libro.isEliminado())
                 throw new RecursoNoEncontradoException("El libro no esta disponible.");
             ResultadoPaginadoDTO<Descuento> datos = descuentoDAO.listarPorLibro(idLibro, pagina, tamanio);
-            LocalDateTime ahora = LocalDateTime.now(reloj);
+            LocalDateTime ahora = LocalDateTime.now();
             List<DescuentoDTO> descuentos = new ArrayList<>();
             for (Descuento descuento : datos.items()) {
                 EstadoDescuento estado = EstadoDescuento.VIGENTE;

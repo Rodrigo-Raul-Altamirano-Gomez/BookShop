@@ -9,7 +9,7 @@ public partial class MisSeguimientos
 
     protected override async Task CargarDatos()
     {
-        if (Sesion.Usuario is null)
+        if (Sesion.Usuario == null)
         {
             Referencias.Clear();
             totalResultados = 0;
@@ -52,8 +52,8 @@ public partial class MisSeguimientos
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        if (Sesion.EstadoVistas.TryGetValue(ClaveVista, out var guardado) && guardado is VistaSeguimientos almacenada)
-            vista = almacenada;
+        if (Sesion.EstadoVistas.ContainsKey(ClaveVista))
+            vista = (VistaSeguimientos)Sesion.EstadoVistas[ClaveVista];
         Sesion.EstadoVistas[ClaveVista] = vista;
     }
 

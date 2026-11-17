@@ -20,7 +20,7 @@ public partial class DetallePedido : Web.Componentes.Paginas.Cuenta.PaginaCuenta
         pedido = null;
         formularioCancelacion = formularioDevolucion = false;
         errorComprobante = null;
-        if (Sesion.Usuario is not null)
+        if (Sesion.Usuario != null)
             pedido = await Api.Get<DetallePedidoDTO>($"pedidos/{Id}");
         idCargado = Id;
     }

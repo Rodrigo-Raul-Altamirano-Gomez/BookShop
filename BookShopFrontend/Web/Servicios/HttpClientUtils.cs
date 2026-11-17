@@ -1,58 +1,89 @@
 using System.Net;
-using Newtonsoft.Json;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace Web.Servicios;
 
-// Una instancia por circuito Blazor: las cookies de dos usuarios nunca se comparten.
-public sealed class HttpClientUtils : IDisposable
+// Cliente REST del backend. Hay una instancia por usuario conectado (servicio Scoped),
+// así cada uno conserva su propia cookie de sesión.
+public class HttpClientUtils : IDisposable
 {
     private readonly HttpClient cliente;
-    private readonly CookieContainer cookies = new();
+    private readonly CookieContainer cookies = new CookieContainer();
 
+    // Se avisa cuando el backend responde 401: la sesión ya no existe.
     public event Action? SesionVencida;
 
     public HttpClientUtils(IConfiguration configuracion)
     {
-        cliente = new HttpClient(new HttpClientHandler { CookieContainer = cookies });
+        HttpClientHandler manejador = new HttpClientHandler();
+        manejador.CookieContainer = cookies;
+        cliente = new HttpClient(manejador);
         cliente.Timeout = TimeSpan.FromSeconds(30);
-        cliente.DefaultRequestHeaders.Accept.ParseAdd("application/json");
-        cliente.BaseAddress = new Uri(configuracion["Backend:Url"]!.TrimEnd('/') + "/");
+        cliente.BaseAddress = new Uri(configuracion["Backend:Url"]!);
     }
 
-    public Task<T> Get<T>(string ruta) => Enviar<T>(HttpMethod.Get, ruta);
-    public Task<T> Post<T>(string ruta, object? datos = null) => Enviar<T>(HttpMethod.Post, ruta, datos);
-    public Task<T> Put<T>(string ruta, object? datos = null) => Enviar<T>(HttpMethod.Put, ruta, datos);
-    public Task<T> Delete<T>(string ruta) => Enviar<T>(HttpMethod.Delete, ruta);
-    public Task Post(string ruta, object? datos = null) => Enviar<object>(HttpMethod.Post, ruta, datos);
-    public Task Put(string ruta, object? datos = null) => Enviar<object>(HttpMethod.Put, ruta, datos);
-    public Task Delete(string ruta) => Enviar<object>(HttpMethod.Delete, ruta);
+    public async Task<T> Get<T>(string ruta)
+    {
+        string json = await Enviar(HttpMethod.Get, ruta, null);
+        return JsonConvert.DeserializeObject<T>(json)!;
+    }
 
-    // Descarga binaria (PDF de RF17, RF18 y RF19). Los errores llegan como JSON igual que en las demás llamadas.
+    public async Task<T> Post<T>(string ruta, object? datos = null)
+    {
+        string json = await Enviar(HttpMethod.Post, ruta, datos);
+        return JsonConvert.DeserializeObject<T>(json)!;
+    }
+
+    public async Task<T> Put<T>(string ruta, object? datos = null)
+    {
+        string json = await Enviar(HttpMethod.Put, ruta, datos);
+        return JsonConvert.DeserializeObject<T>(json)!;
+    }
+
+    public async Task<T> Delete<T>(string ruta)
+    {
+        string json = await Enviar(HttpMethod.Delete, ruta, null);
+        return JsonConvert.DeserializeObject<T>(json)!;
+    }
+
+    public async Task Post(string ruta, object? datos = null)
+    {
+        await Enviar(HttpMethod.Post, ruta, datos);
+    }
+
+    public async Task Put(string ruta, object? datos = null)
+    {
+        await Enviar(HttpMethod.Put, ruta, datos);
+    }
+
+    public async Task Delete(string ruta)
+    {
+        await Enviar(HttpMethod.Delete, ruta, null);
+    }
+
+    // Descarga un PDF (comprobante o reporte).
     public async Task<byte[]> GetArchivo(string ruta)
     {
-        using var peticion = new HttpRequestMessage(HttpMethod.Get, ruta);
-        peticion.Headers.Accept.Clear();
-        peticion.Headers.Accept.ParseAdd("application/pdf");
-        peticion.Headers.Accept.ParseAdd("application/json");
-        using var respuesta = await Ejecutar(peticion);
+        HttpRequestMessage peticion = new HttpRequestMessage(HttpMethod.Get, ruta);
+        HttpResponseMessage respuesta = await Ejecutar(peticion);
         return await respuesta.Content.ReadAsByteArrayAsync();
     }
 
-    private async Task<T> Enviar<T>(HttpMethod metodo, string ruta, object? datos = null)
+    // Envía la petición con el cuerpo en JSON y devuelve el JSON de la respuesta.
+    private async Task<string> Enviar(HttpMethod metodo, string ruta, object? datos)
     {
-        using var peticion = new HttpRequestMessage(metodo, ruta);
-        if (datos is not null || metodo == HttpMethod.Put)
-            peticion.Content = new StringContent(
-                JsonConvert.SerializeObject(datos), Encoding.UTF8, "application/json");
-        using var respuesta = await Ejecutar(peticion);
-        if (respuesta.StatusCode == HttpStatusCode.NoContent)
-            return default!;
-        var contenido = await respuesta.Content.ReadAsStringAsync();
-        return JsonConvert.DeserializeObject<T>(contenido)!;
+        HttpRequestMessage peticion = new HttpRequestMessage(metodo, ruta);
+        if (datos != null || metodo == HttpMethod.Put)
+        {
+            string cuerpo = JsonConvert.SerializeObject(datos);
+            peticion.Content = new StringContent(cuerpo, Encoding.UTF8, "application/json");
+        }
+        HttpResponseMessage respuesta = await Ejecutar(peticion);
+        return await respuesta.Content.ReadAsStringAsync();
     }
 
-    // Envía la petición y convierte las respuestas de error en InvalidOperationException con el mensaje del backend.
+    // Si el backend responde con error, lanza InvalidOperationException con su mensaje.
     private async Task<HttpResponseMessage> Ejecutar(HttpRequestMessage peticion)
     {
         HttpResponseMessage respuesta;
@@ -66,25 +97,22 @@ public sealed class HttpClientUtils : IDisposable
         }
         catch (TaskCanceledException)
         {
-            throw new InvalidOperationException("El backend tardó demasiado en responder. "
-                + "Consulta el estado antes de repetir la operación.");
+            throw new InvalidOperationException("El backend tardó demasiado en responder.");
         }
         if (respuesta.IsSuccessStatusCode)
             return respuesta;
-        using (respuesta)
+
+        if (respuesta.StatusCode == HttpStatusCode.Unauthorized)
+            SesionVencida?.Invoke();
+        string mensaje = "No se pudo completar la operación.";
+        string texto = await respuesta.Content.ReadAsStringAsync();
+        if (respuesta.Content.Headers.ContentType?.MediaType == "application/json")
         {
-            var texto = await respuesta.Content.ReadAsStringAsync();
-            string mensaje = "No se pudo completar la operación.";
-            ErrorRestDTO? error = null;
-            if (respuesta.Content.Headers.ContentType?.MediaType == "application/json")
-            {
-                error = JsonConvert.DeserializeObject<ErrorRestDTO>(texto);
-                mensaje = error?.Mensaje ?? mensaje;
-            }
-            if (respuesta.StatusCode == HttpStatusCode.Unauthorized && error?.Codigo != "CredencialesInvalidas")
-                SesionVencida?.Invoke();
-            throw new InvalidOperationException(mensaje);
+            ErrorRestDTO? error = JsonConvert.DeserializeObject<ErrorRestDTO>(texto);
+            if (error != null && error.Mensaje != "")
+                mensaje = error.Mensaje;
         }
+        throw new InvalidOperationException(mensaje);
     }
 
     public void OlvidarSesion()
@@ -93,5 +121,8 @@ public sealed class HttpClientUtils : IDisposable
             cookie.Expired = true;
     }
 
-    public void Dispose() => cliente.Dispose();
+    public void Dispose()
+    {
+        cliente.Dispose();
+    }
 }

@@ -11,7 +11,7 @@
         <label class="form-label d-block mb-3">Comentario
             <textarea class="form-control" rows="5" @bind="borrador.Comentario" required></textarea>
         </label>
-        @if (error is not null)
+        @if (error != null)
         {
             <p class="alert alert-danger" role="alert">@error</p>
         }
@@ -33,7 +33,7 @@
 
     protected override void OnInitialized()
     {
-        if (Valor is not null)
+        if (Valor != null)
             borrador = new DatosResenaDTO { Puntuacion = Valor.Puntuacion, Comentario = Valor.Comentario };
     }
 

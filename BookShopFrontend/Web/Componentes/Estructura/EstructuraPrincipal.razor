@@ -58,7 +58,7 @@
         </div>
     </div>
 </footer>
-@if (cuentaAbierta && Sesion.Usuario is not null)
+@if (cuentaAbierta && Sesion.Usuario != null)
 {
     <div class="offcanvas-backdrop fade show" @onclick="CerrarCuenta"></div>
         <aside
@@ -102,7 +102,7 @@
 {
     <FormularioAcceso AlCerrar="CerrarAcceso" />
 }
-@if (aviso is not null)
+@if (aviso != null)
 {
     <div class="toast show bookshop-toast d-flex align-items-center gap-3 p-3 shadow-sm" role="status">
         <Icono Nombre="check" />
@@ -112,7 +112,7 @@
         </button>
     </div>
 }
-@if (informacion is not null)
+@if (informacion != null)
 {
     <Modal Titulo="@informacion" AlCerrar="CerrarInformacion">
         <p>@TextoInformacion</p>
@@ -121,12 +121,12 @@
         </div>
     </Modal>
 }
-@if (Sesion.LibroComparacion is Libro compareBook)
+@if (Sesion.LibroComparacion != null)
 {
     <div class="card comparison-dock d-flex flex-row align-items-center gap-3 p-3 shadow-sm">
-        <a class="d-flex align-items-center gap-2" href="/libros/@compareBook.Id">
-            <img src="@compareBook.Portada" alt="@compareBook.Titulo" />
-            <span>@compareBook.Titulo</span>
+        <a class="d-flex align-items-center gap-2" href="/libros/@Sesion.LibroComparacion.Id">
+            <img src="@Sesion.LibroComparacion.Portada" alt="@Sesion.LibroComparacion.Titulo" />
+            <span>@Sesion.LibroComparacion.Titulo</span>
         </a>
         <button class="btn icon-button" aria-label="Retirar libro de comparación" @onclick="QuitarComparacion">
             <Icono Nombre="close" />

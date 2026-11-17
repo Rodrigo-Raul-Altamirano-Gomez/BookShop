@@ -20,7 +20,7 @@ public partial class MiPerfil
 
     private void EditarPerfil()
     {
-        if (Sesion.Usuario is null)
+        if (Sesion.Usuario == null)
             return;
         Nombre = Sesion.Usuario.Nombre;
         Nacimiento = Sesion.Usuario.Nacimiento;
@@ -115,7 +115,7 @@ public partial class MiPerfil
     private string urlFoto = "";
     private async Task GuardarFoto(bool quitar)
     {
-        if (Sesion.Usuario is null)
+        if (Sesion.Usuario == null)
             return;
         procesando = true;
         ErrorImagen = "";

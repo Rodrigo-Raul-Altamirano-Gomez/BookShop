@@ -112,26 +112,9 @@ public abstract class Solicitud {
         return !eliminado && estado == EstadoSolicitud.PENDIENTE;
     }
 
-    public boolean estaResuelta() {
-        return estado != null && estado != EstadoSolicitud.PENDIENTE;
-    }
-
     public void editar(String comentario, String correo, LocalDateTime fecha) {
         this.comentario = comentario;
         this.usuarioActualizacion = correo;
         this.fechaActualizacion = fecha;
-    }
-
-    public void retirar(String correo, LocalDateTime fecha) {
-        eliminado = true;
-        usuarioActualizacion = correo;
-        fechaActualizacion = fecha;
-    }
-
-    public void resolver(EstadoSolicitud resultado, String correo, LocalDateTime fecha) {
-        estado = resultado;
-        fechaResolucion = fecha;
-        usuarioActualizacion = correo;
-        fechaActualizacion = fecha;
     }
 }

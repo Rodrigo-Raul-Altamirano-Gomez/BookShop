@@ -3,8 +3,6 @@ package me.Service.documentos;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
-import jakarta.enterprise.context.RequestScoped;
-import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -16,16 +14,18 @@ import jakarta.ws.rs.core.Response;
 import me.Business.exceptions.NegocioException;
 import me.Business.exceptions.ValidacionException;
 import me.Model.dto.catalogo.ConsultaReporteLibrosDTO;
-import me.Service.Servicios;
+import me.Business.documentos.ComprobanteBO;
+import me.Business.documentos.ComprobanteBOImpl;
+import me.Business.documentos.ReporteBO;
+import me.Business.documentos.ReporteBOImpl;
 import me.Service.Sesion;
 
 // RF17, RF18 y RF19: documentos PDF generados con JasperReports.
 @Path("documentos")
 @Produces("application/pdf")
-@RequestScoped
 public class ReporteRS {
-    @Inject
-    private Servicios servicios;
+    private final ComprobanteBO comprobanteBO = new ComprobanteBOImpl();
+    private final ReporteBO reporteBO = new ReporteBOImpl();
     @Context
     private HttpServletRequest peticion;
 
@@ -33,7 +33,7 @@ public class ReporteRS {
     @GET
     @Path("comprobantes/{idPedido}")
     public Response comprobante(@PathParam("idPedido") int idPedido) throws NegocioException {
-        byte[] pdf = servicios.getComprobanteBO().generarPDF(Sesion.exigirIdUsuario(peticion), idPedido);
+        byte[] pdf = comprobanteBO.generarPDF(Sesion.exigirIdUsuario(peticion), idPedido);
         return pdf(pdf, "comprobante-pedido-" + idPedido + ".pdf");
     }
 
@@ -42,9 +42,9 @@ public class ReporteRS {
     @Path("ventas-libros")
     public Response ventasLibros(@QueryParam("inicio") String inicio, @QueryParam("fin") String fin,
             @QueryParam("cantidad") Integer cantidad) throws NegocioException {
-        var consulta = new ConsultaReporteLibrosDTO(fecha("inicio", inicio), fecha("fin", fin), cantidad);
+        ConsultaReporteLibrosDTO consulta = new ConsultaReporteLibrosDTO(fecha("inicio", inicio), fecha("fin", fin), cantidad);
         Sesion.exigirIdUsuario(peticion);
-        byte[] pdf = servicios.getReporteBO().generarLibrosPDF(consulta);
+        byte[] pdf = reporteBO.generarLibrosPDF(consulta);
         return pdf(pdf, "reporte-ventas-libros-" + inicio + "-" + fin + ".pdf");
     }
 
@@ -60,7 +60,7 @@ public class ReporteRS {
             throw new ValidacionException("mes", "Selecciona un mes y año válidos.");
         }
         Sesion.exigirIdUsuario(peticion);
-        byte[] pdf = servicios.getReporteBO().generarUsuariosPDF(periodo, cantidad);
+        byte[] pdf = reporteBO.generarUsuariosPDF(periodo, cantidad);
         return pdf(pdf, "reporte-usuarios-" + mes + ".pdf");
     }
 

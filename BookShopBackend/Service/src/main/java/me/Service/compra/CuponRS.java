@@ -1,7 +1,5 @@
 package me.Service.compra;
 
-import jakarta.enterprise.context.RequestScoped;
-import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
@@ -13,16 +11,15 @@ import jakarta.ws.rs.core.MediaType;
 import me.Business.exceptions.NegocioException;
 import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.dto.compra.CuponDTO;
-import me.Service.Servicios;
+import me.Business.compra.CuponBO;
+import me.Business.compra.CuponBOImpl;
 import me.Service.Sesion;
 
 @Path("cuenta/cupones")
 @Produces(MediaType.APPLICATION_JSON)
-@RequestScoped
 public class CuponRS {
 
-    @Inject
-    private Servicios servicios;
+    private final CuponBO cuponBO = new CuponBOImpl();
 
     @Context
     private HttpServletRequest peticion;
@@ -30,6 +27,6 @@ public class CuponRS {
     @GET
     public ResultadoPaginadoDTO<CuponDTO> listar(@DefaultValue("1") @QueryParam("pagina") int pagina,
         @DefaultValue("10") @QueryParam("tamanioPagina") int tamanioPagina) throws NegocioException {
-        return servicios.getCuponBO().listar(Sesion.exigirIdUsuario(peticion), pagina, tamanioPagina);
+        return cuponBO.listar(Sesion.exigirIdUsuario(peticion), pagina, tamanioPagina);
     }
 }

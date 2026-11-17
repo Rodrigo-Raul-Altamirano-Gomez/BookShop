@@ -25,7 +25,7 @@ public partial class Comparacion
         cargando = true;
         errorCarga = null;
         LibrosComparados.Clear();
-        if (Sesion.LibroComparacion is not null)
+        if (Sesion.LibroComparacion != null)
         {
             try
             {

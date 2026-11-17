@@ -64,8 +64,8 @@ public partial class Referencias : IDisposable
         {
             tipoAnterior = Tipo;
             string clave = $"referencias:{Tipo}";
-            if (Sesion.EstadoVistas.TryGetValue(clave, out var guardado) && guardado is VistaReferencias almacenada)
-                vista = almacenada;
+            if (Sesion.EstadoVistas.ContainsKey(clave))
+                vista = (VistaReferencias)Sesion.EstadoVistas[clave];
             else
             {
                 vista = new VistaReferencias();

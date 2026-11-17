@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import me.Business.exceptions.ConfiguracionException;
+import me.Business.exceptions.NegocioException;
 import me.Model.dto.catalogo.ReporteVentasLibrosDTO;
 import me.Model.dto.catalogo.ResumenVentasLibroDTO;
 import me.Model.dto.catalogo.TarjetaReferenciaDTO;
@@ -26,6 +26,7 @@ import net.sf.jasperreports.engine.JRParameter;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
 
@@ -36,7 +37,7 @@ public final class GeneradorPDF {
     private static final DateTimeFormatter FECHA_HORA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm", PERU);
     private static final DateTimeFormatter MES = DateTimeFormatter.ofPattern("MMMM 'de' yyyy", PERU);
 
-    public byte[] comprobante(ComprobanteCompraDTO comprobante) throws ConfiguracionException {
+    public byte[] comprobante(ComprobanteCompraDTO comprobante) throws NegocioException {
         DetallePedidoDTO detalle = comprobante.pedido();
         ResumenCompraDTO resumen = detalle.resumen();
         EstadoPedido estado = detalle.pedido().estado();
@@ -97,7 +98,7 @@ public final class GeneradorPDF {
         return generar("ComprobanteCompra", parametros, filas);
     }
 
-    public byte[] ventasLibros(ReporteVentasLibrosDTO reporte) throws ConfiguracionException {
+    public byte[] ventasLibros(ReporteVentasLibrosDTO reporte) throws NegocioException {
         Map<String, Object> parametros = new HashMap<>();
         parametros.put(JRParameter.REPORT_LOCALE, PERU);
         parametros.put("fechaGeneracion", reporte.fechaGeneracion().format(FECHA_HORA));
@@ -120,7 +121,7 @@ public final class GeneradorPDF {
         return generar("ReporteVentasLibros", parametros, filas);
     }
 
-    public byte[] usuarios(ReporteUsuariosDTO reporte) throws ConfiguracionException {
+    public byte[] usuarios(ReporteUsuariosDTO reporte) throws NegocioException {
         Map<String, Object> parametros = new HashMap<>();
         parametros.put(JRParameter.REPORT_LOCALE, PERU);
         parametros.put("fechaGeneracion", reporte.fechaGeneracion().format(FECHA_HORA));
@@ -147,13 +148,13 @@ public final class GeneradorPDF {
     }
 
     private static byte[] generar(String plantilla, Map<String, Object> parametros, List<Map<String, ?>> filas)
-        throws ConfiguracionException {
+        throws NegocioException {
         try (InputStream jrxml = GeneradorPDF.class.getResourceAsStream("/reportes/" + plantilla + ".jrxml")) {
             JasperReport reporte = JasperCompileManager.compileReport(jrxml);
-            var impresion = JasperFillManager.fillReport(reporte, parametros, new JRMapCollectionDataSource(filas));
+            JasperPrint impresion = JasperFillManager.fillReport(reporte, parametros, new JRMapCollectionDataSource(filas));
             return JasperExportManager.exportReportToPdf(impresion);
         } catch (Exception e) {
-            throw new ConfiguracionException("No se pudo generar el documento PDF.", e);
+            throw new NegocioException("No se pudo generar el documento PDF.", e);
         }
     }
 

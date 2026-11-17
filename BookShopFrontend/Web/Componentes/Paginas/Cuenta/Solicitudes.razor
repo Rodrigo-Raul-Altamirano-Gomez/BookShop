@@ -4,7 +4,7 @@
 <PageTitle>@Titulo · BookShop</PageTitle>
 <div class="container py-4">
     <h1>@Titulo</h1>
-    @if (Sesion.Usuario is null)
+    @if (Sesion.Usuario == null)
     {
         <p>Inicia sesión para consultar las solicitudes.</p>
         <button class="btn btn-primary" @onclick="Sesion.MostrarAcceso">Iniciar sesión</button>
@@ -69,7 +69,7 @@
         </Cargando>
     }
 
-    @if (seleccionada is not null && !editando && pedidoReferencia is null && !verResena)
+    @if (seleccionada != null && !editando && pedidoReferencia == null && !verResena)
     {
         <Modal Titulo="@($"Solicitud #{seleccionada.Id}")" AlCerrar="CerrarDetalle" Ocupado="@procesando">
             <p>Creada: @seleccionada.FechaSolicitud.ToString("dd/MM/yyyy HH:mm") · @TextoEstado(seleccionada.Estado)</p>
@@ -78,7 +78,7 @@
                 <p>Solicitante: @seleccionada.NombreSolicitante</p>
             }
             <p><strong>Motivo:</strong> @seleccionada.Motivo</p>
-            @if (devolucion is not null)
+            @if (devolucion != null)
             {
                 <p><strong>Comentario:</strong> @(string.IsNullOrWhiteSpace(devolucion.Datos.Comentario) ? "Sin comentario adicional." : devolucion.Datos.Comentario)</p>
                 <p>Pedido #@devolucion.Pedido.Id · @devolucion.Pedido.FechaPago.ToString("dd/MM/yyyy HH:mm")</p>
@@ -89,7 +89,7 @@
                 }
                 <button class="btn btn-secondary" @onclick="VerPedido" disabled="@procesando">Ver pedido</button>
             }
-            @if (reporte is not null)
+            @if (reporte != null)
             {
                 <p><strong>Comentario:</strong> @(string.IsNullOrWhiteSpace(reporte.Datos.Comentario) ? "Sin comentario adicional." : reporte.Datos.Comentario)</p>
                 @if (reporte.FechaResolucion.HasValue)
@@ -103,7 +103,7 @@
                     <p>@reporte.ResenaReportada.ContenidoOriginal.Puntuacion de 5 estrellas</p>
                     <p>@reporte.ResenaReportada.ContenidoOriginal.Comentario</p>
                     <h3 class="h5">Contenido actual · @(reporte.ResenaActiva ? "Reseña activa" : "Reseña retirada")</h3>
-                    @if (reporte.ContenidoActual is not null)
+                    @if (reporte.ContenidoActual != null)
                     {
                         <p>@reporte.ContenidoActual.Puntuacion de 5 estrellas</p>
                         <p>@reporte.ContenidoActual.Comentario</p>
@@ -116,7 +116,7 @@
                 <div class="d-flex flex-wrap gap-2 mt-4">
                     <button class="btn btn-primary" @onclick='() => Resolver("ACEPTADA")' disabled="@procesando">Aceptar</button>
                     <button class="btn btn-outline-danger" @onclick='() => Resolver("RECHAZADA")' disabled="@procesando">Rechazar</button>
-                    @if (reporte is not null && (!reporte.ResenaActiva
+                    @if (reporte != null && (!reporte.ResenaActiva
                         || reporte.ContenidoActual?.Puntuacion != reporte.ResenaReportada.ContenidoOriginal.Puntuacion
                         || reporte.ContenidoActual?.Comentario != reporte.ResenaReportada.ContenidoOriginal.Comentario))
                     {
@@ -124,29 +124,29 @@
                     }
                 </div>
             }
-            @if (errorOperacion is not null)
+            @if (errorOperacion != null)
             {
                 <p class="alert alert-danger mt-3" role="alert">@errorOperacion</p>
             }
         </Modal>
     }
-    @if (editando && devolucion is not null)
+    @if (editando && devolucion != null)
     {
         <FormularioDevolucion Titulo="Editar solicitud de devolución" Valor="devolucion.Datos"
             AlGuardar="GuardarDevolucion" AlCerrar="CerrarDetalle" />
     }
-    @if (editando && reporte is not null)
+    @if (editando && reporte != null)
     {
         <FormularioReporteResena Titulo="Editar reporte de reseña" Valor="reporte.Datos"
             AlGuardar="GuardarReporte" AlCerrar="CerrarDetalle" />
     }
-    @if (pedidoReferencia is not null)
+    @if (pedidoReferencia != null)
     {
         <Modal Titulo="Consulta del pedido" Amplio="true" AlCerrar="() => pedidoReferencia = null">
             <DetallePedidoContenido Pedido="pedidoReferencia" />
         </Modal>
     }
-    @if (verResena && reporte is not null)
+    @if (verResena && reporte != null)
     {
         <Modal Titulo="Reseña original reportada" AlCerrar="() => verResena = false">
             <p>Reseña #@reporte.ResenaReportada.IdResena · @reporte.ResenaReportada.NombreUsuario</p>

@@ -59,12 +59,4 @@ public class SolicitudReporteResena extends Solicitud {
     public void setPuntuacionOriginal(int puntuacionOriginal) {
         this.puntuacionOriginal = puntuacionOriginal;
     }
-
-    public String getComentarioActual() {
-        return resena == null ? null : resena.getComentario();
-    }
-
-    public boolean isResenaActiva() {
-        return resena != null && resena.estaDisponible();
-    }
 }

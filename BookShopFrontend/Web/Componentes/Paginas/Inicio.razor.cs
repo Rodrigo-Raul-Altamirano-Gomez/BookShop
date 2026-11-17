@@ -57,7 +57,7 @@ public partial class Inicio : IDisposable
         correoCargado = Sesion.Usuario?.Correo;
         ParaTi.Clear();
         mostrarParaTi = false;
-        if (Sesion.Usuario is null)
+        if (Sesion.Usuario == null)
             return;
         mostrarParaTi = await Api.Get<bool>("recomendaciones/para-ti/disponible");
         if (mostrarParaTi)

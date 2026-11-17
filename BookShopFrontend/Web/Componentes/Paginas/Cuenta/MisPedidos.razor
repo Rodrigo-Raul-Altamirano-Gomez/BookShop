@@ -3,7 +3,7 @@
 <PageTitle>Mis pedidos · BookShop</PageTitle>
 <div class="container py-4">
     <h1>Mis pedidos</h1>
-    @if (Sesion.Usuario is null)
+    @if (Sesion.Usuario == null)
     {
         <p>Inicia sesión para consultar tus pedidos.</p>
         <button class="btn btn-primary" @onclick="Sesion.MostrarAcceso">Iniciar sesión</button>

@@ -27,33 +27,6 @@ public class Item {
         this.fechaCreacion = LocalDateTime.now();
     }
 
-    public Item(int id, Libro libro, int cantidad) {
-        this();
-        this.id = id;
-        this.libro = libro;
-        this.cantidad = cantidad;
-        this.precioBase = libro.getPrecioBase();
-        this.precioUnitario = precioBase;
-        subTotal = BigDecimal.ZERO;
-        if (precioUnitario != null)
-            subTotal = precioUnitario.multiply(BigDecimal.valueOf(cantidad));
-    }
-
-    public Item(Item original) {
-        this.id = original.id;
-        this.libro = original.libro;
-        this.cantidad = original.cantidad;
-        this.precioBase = original.precioBase;
-        this.precioUnitario = original.precioUnitario;
-        this.porcentajeDescuento = original.porcentajeDescuento;
-        this.subTotal = original.subTotal;
-        this.eliminado = original.eliminado;
-        this.usuarioCreacion = original.usuarioCreacion;
-        this.fechaCreacion = original.fechaCreacion;
-        this.usuarioActualizacion = original.usuarioActualizacion;
-        this.fechaActualizacion = original.fechaActualizacion;
-    }
-
     public int getId() {
         return id;
     }

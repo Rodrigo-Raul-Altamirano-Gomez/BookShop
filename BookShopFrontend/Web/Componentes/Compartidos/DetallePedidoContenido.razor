@@ -136,18 +136,18 @@
                 <span>Entrega estimada</span>
                 <strong>@(Pedido.FechaEntregaEstimada?.ToString("dd/MM/yyyy HH:mm") ?? "—")</strong>
             </div>
-            @if (Pedido.FechaSalida is DateTime fechaSalida)
+            @if (Pedido.FechaSalida != null)
             {
                 <div class="col-md-4 d-flex flex-column gap-1">
                     <span>Fecha de salida</span>
-                    <strong>@fechaSalida.ToString("dd/MM/yyyy HH:mm")</strong>
+                    <strong>@Pedido.FechaSalida.Value.ToString("dd/MM/yyyy HH:mm")</strong>
                 </div>
             }
-            @if (Pedido.FechaEntrega is DateTime fechaEntrega)
+            @if (Pedido.FechaEntrega != null)
             {
                 <div class="col-md-4 d-flex flex-column gap-1">
                     <span>Fecha de entrega</span>
-                    <strong>@fechaEntrega.ToString("dd/MM/yyyy HH:mm")</strong>
+                    <strong>@Pedido.FechaEntrega.Value.ToString("dd/MM/yyyy HH:mm")</strong>
                 </div>
             }
         </div>

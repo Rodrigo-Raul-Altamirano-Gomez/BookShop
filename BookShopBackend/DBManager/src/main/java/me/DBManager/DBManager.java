@@ -1,70 +1,35 @@
 package me.DBManager;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-public final class DBManager {
-    private static final String CONFIGURACION = "db";
-    private static HikariDataSource pool;
+public class DBManager {
 
+    private static String url;
+    private static String usuario;
+    private static String contrasenia;
+
+    // Se ejecuta una sola vez, cuando se usa DBManager por primera vez.
     static {
-        Runtime.getRuntime().addShutdownHook(new Thread(DBManager::close, "BookShop-cierre-pool"));
-    }
-
-    private DBManager() {
-    }
-
-    public static Connection getConnection() throws SQLException {
-        return obtenerPool().getConnection();
-    }
-
-    private static synchronized HikariDataSource obtenerPool() throws SQLException {
-        if (pool != null) return pool;
+        ResourceBundle config = ResourceBundle.getBundle("db");
+        String host = config.getString("db.host");
+        String puerto = config.getString("db.port");
+        String esquema = config.getString("db.schema");
+        usuario = config.getString("db.user");
+        contrasenia = config.getString("db.password");
+        // La sesión MySQL usa la hora de Lima para las fechas del negocio.
+        url = "jdbc:mysql://" + host + ":" + puerto + "/" + esquema
+            + "?connectionTimeZone=-05:00&forceConnectionTimeZoneToSession=true";
         try {
-            ResourceBundle config = ResourceBundle.getBundle(CONFIGURACION);
-            String host = config.getString("db.host");
-            String port = config.getString("db.port");
-            String schema = config.getString("db.schema");
-            String user = config.getString("db.user");
-            String password = config.getString("db.password");
-            String url = String.format("jdbc:mysql://%s:%s/%s", host, port, schema);
-            HikariConfig configuracion = new HikariConfig();
-            configuracion.setDriverClassName("com.mysql.cj.jdbc.Driver");
-            configuracion.addDataSourceProperty("fallbackToSystemKeyStore", "false");
-            configuracion.setPoolName("BookShop");
-            configuracion.setJdbcUrl(url);
-            configuracion.setUsername(user);
-            configuracion.setPassword(password);
-            configuracion.setMaximumPoolSize(Integer.parseInt(config.getString("db.pool.maximumSize")));
-            configuracion.setMinimumIdle(Integer.parseInt(config.getString("db.pool.minimumIdle")));
-            configuracion.setConnectionTimeout(Long.parseLong(config.getString("db.pool.connectionTimeout")));
-            configuracion.setValidationTimeout(Long.parseLong(config.getString("db.pool.validationTimeout")));
-            configuracion.addDataSourceProperty("connectTimeout", config.getString("db.connectTimeout"));
-            configuracion.addDataSourceProperty("socketTimeout", config.getString("db.socketTimeout"));
-            // Fechas de negocio y CURRENT_TIMESTAMP usan Lima, también en la sesión MySQL.
-            configuracion.addDataSourceProperty("connectionTimeZone", "-05:00");
-            configuracion.addDataSourceProperty("forceConnectionTimeZoneToSession", "true");
-            // Inicia sin una espera adicional de conexion; getConnection aplica su propio limite.
-            configuracion.setInitializationFailTimeout(-1);
-            pool = new HikariDataSource(configuracion);
-            return pool;
-        } catch (MissingResourceException e) {
-            throw new SQLException("No se encontró db.properties o falta alguna clave de configuración.", e);
-        } catch (IllegalArgumentException e) {
-            throw new SQLException("La configuracion del pool de conexiones no es valida.", e);
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    // Cierra el pool al terminar la aplicacion; no se llama al terminar cada consulta.
-    public static synchronized void close() {
-        if (pool == null) return;
-        pool.close();
-        pool = null;
+    public static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(url, usuario, contrasenia);
     }
 }
-

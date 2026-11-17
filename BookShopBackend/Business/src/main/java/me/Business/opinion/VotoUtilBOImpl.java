@@ -19,21 +19,10 @@ import me.Model.entities.usuario.Usuario;
 
 public class VotoUtilBOImpl implements VotoUtilBO {
 
-    private final VotoUtilDAO votoUtilDAO;
-    private final ResenaDAO resenaDAO;
-    private final LibroDAO libroDAO;
-    private final UsuarioDAO usuarioDAO;
-
-    public VotoUtilBOImpl() {
-        this(new VotoUtilDAOImpl(), new ResenaDAOImpl(), new LibroDAOImpl(), new UsuarioDAOImpl());
-    }
-
-    public VotoUtilBOImpl(VotoUtilDAO votoUtilDAO, ResenaDAO resenaDAO, LibroDAO libroDAO, UsuarioDAO usuarioDAO) {
-        this.votoUtilDAO = votoUtilDAO;
-        this.resenaDAO = resenaDAO;
-        this.libroDAO = libroDAO;
-        this.usuarioDAO = usuarioDAO;
-    }
+    private final VotoUtilDAO votoUtilDAO = new VotoUtilDAOImpl();
+    private final ResenaDAO resenaDAO = new ResenaDAOImpl();
+    private final LibroDAO libroDAO = new LibroDAOImpl();
+    private final UsuarioDAO usuarioDAO = new UsuarioDAOImpl();
 
     @Override
     public boolean cambiarVoto(int idActor, int idResena, boolean marcar) throws NegocioException {

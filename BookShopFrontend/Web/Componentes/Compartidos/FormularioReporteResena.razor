@@ -12,13 +12,13 @@
         <label class="form-label d-block mb-3">Comentario adicional
             <textarea class="form-control" rows="4" @bind="borrador.Comentario"></textarea>
         </label>
-        @if (error is not null)
+        @if (error != null)
         {
             <p class="alert alert-danger" role="alert">@error</p>
         }
         <div class="modal-footer px-0 pb-0">
             <button class="btn btn-secondary" type="button" @onclick="AlCerrar" disabled="@guardando">Cancelar</button>
-            <button class="btn btn-primary" type="submit" disabled="@guardando">@(Valor is null ? "Enviar reporte" : "Guardar cambios")</button>
+            <button class="btn btn-primary" type="submit" disabled="@guardando">@(Valor == null ? "Enviar reporte" : "Guardar cambios")</button>
         </div>
     </form>
 </Modal>
@@ -34,7 +34,7 @@
 
     protected override void OnInitialized()
     {
-        if (Valor is not null)
+        if (Valor != null)
             borrador = new DatosReporteResenaDTO { Motivo = Valor.Motivo, Comentario = Valor.Comentario };
     }
 

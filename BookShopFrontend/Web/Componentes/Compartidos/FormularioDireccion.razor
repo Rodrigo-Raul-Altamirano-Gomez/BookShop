@@ -1,4 +1,4 @@
-<Modal Titulo="@(Valor is null ? "Añadir dirección" : "Editar dirección")" AlCerrar="AlCerrar" Ocupado="@Guardando">
+<Modal Titulo="@(Valor == null ? "Añadir dirección" : "Editar dirección")" AlCerrar="AlCerrar" Ocupado="@Guardando">
     <form @onsubmit="Guardar" @onsubmit:preventDefault>
         <label class="field form-label d-block mb-3">
             Alias *
@@ -57,7 +57,7 @@
         <div class="modal-footer px-0 pb-0 mt-4">
             <button type="button" class="btn btn-secondary" @onclick="AlCerrar" disabled="@Guardando">Cancelar</button>
             <button type="submit" class="btn btn-primary" disabled="@Guardando">
-                @(Valor is null ? "Guardar dirección" : "Guardar cambios")
+                @(Valor == null ? "Guardar dirección" : "Guardar cambios")
             </button>
         </div>
     </form>

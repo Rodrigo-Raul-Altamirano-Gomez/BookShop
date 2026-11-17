@@ -2,22 +2,15 @@ package me.Business.compra;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.time.Clock;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.DoubleSupplier;
 import me.Business.configuracion.ConfiguracionBOImpl;
 import me.Business.exceptions.AccesoDenegadoException;
-import me.Business.exceptions.CondicionesCompraCambiaronException;
-import me.Business.exceptions.ConflictoException;
 import me.Business.exceptions.NegocioException;
-import me.Business.exceptions.PagoRechazadoException;
 import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.RecursoNoEncontradoException;
-import me.Business.exceptions.StockInsuficienteException;
 import me.Business.exceptions.ValidacionException;
 import me.Business.usuario.MetodosPago;
 import me.DAO.catalogo.LibroDAO;
@@ -59,44 +52,15 @@ import me.Model.entities.usuario.Usuario;
 
 public class PedidoBOImpl implements PedidoBO {
 
-    private final PedidoDAO pedidoDAO;
-    private final ItemPedidoDAO itemPedidoDAO;
-    private final LibroDAO libroDAO;
-    private final UsuarioDAO usuarioDAO;
-    private final DireccionEnvioDAO direccionEnvioDAO;
-    private final MetodoPagoDAO metodoPagoDAO;
-    private final CuponDAO cuponDAO;
-    private final SolicitudDAO solicitudDAO;
-    private final CarritoBOImpl carrito;
-    private final Clock reloj;
-    private final DoubleSupplier azar;
-    private final ProveedorConfiguracion configuracion;
-
-    // Los constructores por defecto comparten la memoria de CarritoBOImpl por actor.
-    public PedidoBOImpl() {
-        this(new PedidoDAOImpl(), new ItemPedidoDAOImpl(), new LibroDAOImpl(), new UsuarioDAOImpl(),
-            new DireccionEnvioDAOImpl(), new MetodoPagoDAOImpl(), new CuponDAOImpl(), new SolicitudDAOImpl(),
-            new CarritoBOImpl(), Clock.system(ZoneId.of("America/Lima")), Math::random, ConfiguracionBOImpl::actual);
-    }
-
-    // Al inyectar dependencias, se usa la misma instancia de carrito para navegación y compra.
-    public PedidoBOImpl(PedidoDAO pedidoDAO, ItemPedidoDAO itemPedidoDAO, LibroDAO libroDAO, UsuarioDAO
-        usuarioDAO, DireccionEnvioDAO direccionEnvioDAO, MetodoPagoDAO metodoPagoDAO, CuponDAO cuponDAO,
-        SolicitudDAO solicitudDAO, CarritoBOImpl carrito, Clock reloj, DoubleSupplier azar,
-        ProveedorConfiguracion configuracion) {
-        this.pedidoDAO = pedidoDAO;
-        this.itemPedidoDAO = itemPedidoDAO;
-        this.libroDAO = libroDAO;
-        this.usuarioDAO = usuarioDAO;
-        this.direccionEnvioDAO = direccionEnvioDAO;
-        this.metodoPagoDAO = metodoPagoDAO;
-        this.cuponDAO = cuponDAO;
-        this.solicitudDAO = solicitudDAO;
-        this.carrito = carrito;
-        this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
-        this.azar = azar;
-        this.configuracion = configuracion;
-    }
+    private final PedidoDAO pedidoDAO = new PedidoDAOImpl();
+    private final ItemPedidoDAO itemPedidoDAO = new ItemPedidoDAOImpl();
+    private final LibroDAO libroDAO = new LibroDAOImpl();
+    private final UsuarioDAO usuarioDAO = new UsuarioDAOImpl();
+    private final DireccionEnvioDAO direccionEnvioDAO = new DireccionEnvioDAOImpl();
+    private final MetodoPagoDAO metodoPagoDAO = new MetodoPagoDAOImpl();
+    private final CuponDAO cuponDAO = new CuponDAOImpl();
+    private final SolicitudDAO solicitudDAO = new SolicitudDAOImpl();
+    private final CarritoBOImpl carrito = new CarritoBOImpl();
 
     @Override
     public PreparacionCompraDTO preparar(int idActor) throws NegocioException {
@@ -104,7 +68,7 @@ public class PedidoBOImpl implements PedidoBO {
         synchronized (carritoUsuario) {
             ResumenCompraDTO resumen = carrito.consultarResumen(carritoUsuario);
             if (resumen.items().isEmpty())
-                throw new ConflictoException("El carrito esta vacio.");
+                throw new NegocioException("El carrito esta vacio.");
             try {
                 SeleccionCompraDTO seleccion = buscarDatosPredeterminados(idActor);
                 carritoUsuario.preparacion = new PreparacionCompraDTO(resumen, seleccion, puedePagar(resumen,
@@ -127,7 +91,7 @@ public class PedidoBOImpl implements PedidoBO {
         ResultadoPaginadoDTO<MetodoPago> metodos = metodoPagoDAO.listarPorUsuario(idActor, 1, 1);
         if (!metodos.items().isEmpty()) {
             MetodoPago candidato = metodos.items().getFirst();
-            if (candidato.isPredeterminado() && candidato.validarEstado(LocalDateTime.now(reloj).toLocalDate()))
+            if (candidato.isPredeterminado() && candidato.validarEstado(LocalDateTime.now().toLocalDate()))
                 metodo = candidato.getId();
         }
         return new SeleccionCompraDTO(direccion, metodo, 0);
@@ -138,51 +102,24 @@ public class PedidoBOImpl implements PedidoBO {
         CarritoBOImpl.EstadoCarrito carritoUsuario = carrito.obtenerCarrito(idActor);
         synchronized (carritoUsuario) {
             if (carritoUsuario.preparacion == null)
-                throw new ConflictoException("Debes volver a preparar la compra desde el carrito.");
+                throw new NegocioException("Debes volver a preparar la compra desde el carrito.");
             return carritoUsuario.preparacion;
         }
     }
 
     @Override
     public PreparacionCompraDTO seleccionar(int idActor, SeleccionCompraDTO seleccion) throws NegocioException {
-        if (seleccion == null || seleccion.idDireccionEnvio() < 0 || seleccion.idMetodoPago() < 0 ||
-            seleccion.idCupon() < 0)
+        if (seleccion == null)
             throw new ValidacionException("seleccion", "La seleccion no es valida.");
         CarritoBOImpl.EstadoCarrito carritoUsuario = carrito.obtenerCarrito(idActor);
         synchronized (carritoUsuario) {
             if (carritoUsuario.preparacion == null || carritoUsuario.pedidoConfirmado > 0)
-                throw new ConflictoException("Debes preparar una compra vigente.");
+                throw new NegocioException("Debes preparar una compra vigente.");
             try {
-                LocalDateTime ahora = LocalDateTime.now(reloj);
-                if (seleccion.idDireccionEnvio() > 0) {
-                    DireccionEnvio direccion = direccionEnvioDAO.leer(seleccion.idDireccionEnvio());
-                    if (direccion == null || !direccion.estaDisponible())
-                        throw new ConflictoException("La direccion seleccionada ya no esta disponible.");
-                    if (direccion.getUsuario().getId() != idActor)
-                        throw new AccesoDenegadoException("La direccion pertenece a otra cuenta.");
-                }
-                if (seleccion.idMetodoPago() > 0) {
-                    MetodoPago metodo = metodoPagoDAO.leer(seleccion.idMetodoPago());
-                    if (metodo == null)
-                        throw new ConflictoException("El metodo seleccionado no existe.");
-                    if (metodo.getUsuario().getId() != idActor)
-                        throw new AccesoDenegadoException("El metodo pertenece a otra cuenta.");
-                    if (!metodo.validarEstado(ahora.toLocalDate()))
-                        throw new ConflictoException("El metodo seleccionado esta vencido o retirado.");
-                }
                 ResumenCompraDTO base = carrito.consultarResumen(carritoUsuario);
-                Cupon cupon = seleccion.idCupon() == 0 ? null : cuponDAO.leer(seleccion.idCupon());
-                if (seleccion.idCupon() > 0) {
-                    if (cupon == null)
-                        throw new ConflictoException("El cupon seleccionado no existe.");
-                    if (cupon.getUsuario().getId() != idActor)
-                        throw new AccesoDenegadoException("El cupon pertenece a otra cuenta.");
-                    if (!cupon.esAplicable(base.subtotal(), ahora))
-                        throw new ConflictoException("El cupon no esta vigente o no alcanza el minimo.");
-                }
-                ResumenCompraDTO resumen = CarritoBOImpl.calcularResumen(base.items(), base.porcentajeEnvio(),
-                    seleccion.idCupon(), cupon == null ? BigDecimal.ZERO : cupon.getPorcentaje());
-                // Se sustituye solo tras validar toda la selección; un error conserva la anterior.
+                Cupon cupon = validarSeleccion(idActor, seleccion, base.subtotal());
+                ResumenCompraDTO resumen = aplicarCupon(base, cupon);
+                // Solo se guarda si toda la selección es válida; un error conserva la anterior.
                 carritoUsuario.preparacion = new PreparacionCompraDTO(resumen, seleccion, puedePagar(resumen,
                     seleccion));
                 return carritoUsuario.preparacion;
@@ -192,11 +129,49 @@ public class PedidoBOImpl implements PedidoBO {
         }
     }
 
+    // Comprueba que la dirección, el método y el cupón elegidos sean del usuario y sigan vigentes.
+    // Un id 0 significa "sin elegir". Devuelve el cupón elegido o null.
+    private Cupon validarSeleccion(int idActor, SeleccionCompraDTO seleccion, BigDecimal subtotal)
+        throws SQLException, NegocioException {
+        LocalDateTime ahora = LocalDateTime.now();
+        if (seleccion.idDireccionEnvio() > 0) {
+            DireccionEnvio direccion = direccionEnvioDAO.leer(seleccion.idDireccionEnvio());
+            if (direccion == null || !direccion.estaDisponible())
+                throw new NegocioException("La direccion seleccionada ya no esta disponible.");
+            if (direccion.getUsuario().getId() != idActor)
+                throw new AccesoDenegadoException("La direccion pertenece a otra cuenta.");
+        }
+        if (seleccion.idMetodoPago() > 0) {
+            MetodoPago metodo = metodoPagoDAO.leer(seleccion.idMetodoPago());
+            if (metodo == null || metodo.getUsuario().getId() != idActor)
+                throw new AccesoDenegadoException("El metodo seleccionado no pertenece a tu cuenta.");
+            if (!metodo.validarEstado(ahora.toLocalDate()))
+                throw new NegocioException("El metodo seleccionado esta vencido o retirado.");
+        }
+        if (seleccion.idCupon() == 0)
+            return null;
+        Cupon cupon = cuponDAO.leer(seleccion.idCupon());
+        if (cupon == null || cupon.getUsuario().getId() != idActor)
+            throw new AccesoDenegadoException("El cupon seleccionado no pertenece a tu cuenta.");
+        if (!cupon.esAplicable(subtotal, ahora))
+            throw new NegocioException("El cupon no esta vigente o no alcanza el minimo.");
+        return cupon;
+    }
+
+    private ResumenCompraDTO aplicarCupon(ResumenCompraDTO base, Cupon cupon) {
+        if (cupon == null)
+            return base;
+        return CarritoBOImpl.calcularResumen(base.items(), base.porcentajeEnvio(), cupon.getId(),
+            cupon.getPorcentaje());
+    }
+
     private boolean puedePagar(ResumenCompraDTO resumen, SeleccionCompraDTO seleccion) {
         if (seleccion.idDireccionEnvio() <= 0 || seleccion.idMetodoPago() <= 0 || resumen.items().isEmpty())
             return false;
-        for (ItemDTO item : resumen.items()) if (!item.activo() || item.stockDisponible() < item.cantidad())
-            return false;
+        for (ItemDTO item : resumen.items()) {
+            if (!item.activo() || item.stockDisponible() < item.cantidad())
+                return false;
+        }
         return true;
     }
 
@@ -204,70 +179,52 @@ public class PedidoBOImpl implements PedidoBO {
     public DetallePedidoDTO pagar(int idActor) throws NegocioException {
         CarritoBOImpl.EstadoCarrito carritoUsuario = carrito.obtenerCarrito(idActor);
         synchronized (carritoUsuario) {
+            // Si la compra ya se confirmó, un reintento devuelve el mismo pedido sin cobrar de nuevo.
             if (carritoUsuario.pedidoConfirmado > 0)
                 return consultar(idActor, carritoUsuario.pedidoConfirmado);
             PreparacionCompraDTO previa = carritoUsuario.preparacion;
             if (previa == null)
-                throw new ConflictoException("Debes preparar la compra desde el carrito.");
+                throw new NegocioException("Debes preparar la compra desde el carrito.");
             SeleccionCompraDTO seleccion = previa.seleccion();
             if (seleccion.idDireccionEnvio() <= 0 || seleccion.idMetodoPago() <= 0)
                 throw new ValidacionException("seleccion", "Selecciona direccion y metodo de pago.");
             try {
-                TransactionContext.getConnection();
                 Usuario usuario = usuarioDAO.leer(idActor);
                 if (usuario == null || !usuario.estaDisponible())
                     throw new AccesoDenegadoException("La cuenta ya no esta disponible.");
-                LocalDateTime ahora = LocalDateTime.now(reloj);
+                // 1. Se vuelven a comprobar la selección, los precios y el stock antes de cobrar.
                 ResumenCompraDTO base = carrito.consultarResumen(carritoUsuario);
-                List<ItemDTO> items = base.items();
-                DireccionEnvio direccion = direccionEnvioDAO.leer(seleccion.idDireccionEnvio());
-                MetodoPago metodo = metodoPagoDAO.leer(seleccion.idMetodoPago());
-                if (direccion == null || !direccion.estaDisponible())
-                    throw new ConflictoException("La direccion seleccionada ya no esta disponible.");
-                if (direccion.getUsuario().getId() != idActor)
-                    throw new AccesoDenegadoException("La direccion pertenece a otra cuenta.");
-                if (metodo == null)
-                    throw new ConflictoException("El metodo seleccionado no existe.");
-                if (metodo.getUsuario().getId() != idActor)
-                    throw new AccesoDenegadoException("El metodo pertenece a otra cuenta.");
-                if (!metodo.validarEstado(ahora.toLocalDate()))
-                    throw new ConflictoException("El metodo seleccionado esta vencido o retirado.");
-                Cupon cupon = seleccion.idCupon() == 0 ? null : cuponDAO.leer(seleccion.idCupon());
-                if (seleccion.idCupon() > 0) {
-                    if (cupon == null)
-                        throw new ConflictoException("El cupon seleccionado no existe.");
-                    if (cupon.getUsuario().getId() != idActor)
-                        throw new AccesoDenegadoException("El cupon pertenece a otra cuenta.");
-                    if (!cupon.esAplicable(base.subtotal(), ahora))
-                        throw new ConflictoException("El cupon no esta vigente o no alcanza el minimo.");
-                }
-                ResumenCompraDTO vigente = CarritoBOImpl.calcularResumen(items, base.porcentajeEnvio(),
-                    seleccion.idCupon(), cupon == null ? BigDecimal.ZERO : cupon.getPorcentaje());
+                Cupon cupon = validarSeleccion(idActor, seleccion, base.subtotal());
+                ResumenCompraDTO vigente = aplicarCupon(base, cupon);
                 carritoUsuario.preparacion = new PreparacionCompraDTO(vigente, seleccion, puedePagar(vigente,
                     seleccion));
-                for (ItemDTO item : items) {
+                for (ItemDTO item : vigente.items()) {
                     if (!item.activo())
-                        throw new ConflictoException("Uno de los libros no esta disponible.");
+                        throw new NegocioException("Uno de los libros no esta disponible.");
                     if (item.stockDisponible() < item.cantidad())
-                        throw new StockInsuficienteException("No hay stock suficiente de " + item.titulo() + ".");
+                        throw new NegocioException("No hay stock suficiente de " + item.titulo() + ".");
                 }
-                if (condicionesCambiaron(previa.resumen(), vigente))
-                    throw new CondicionesCompraCambiaronException("Los precios o importes cambiaron. Revisa" +
-                        " el nuevo resumen antes de pagar.");
-                if (azar.getAsDouble() >= 0.90)
-                    throw new PagoRechazadoException("El pago simulado fue rechazado. Puedes volver a" +
-                        " intentarlo.");
-                for (ItemDTO item : items) if (!libroDAO.descontarStock(item.idLibro(), item.cantidad(),
-                    usuario.getEmail()))
-                    throw new StockInsuficienteException("El stock cambio antes de registrar la compra.");
+                if (previa.resumen().total().compareTo(vigente.total()) != 0)
+                    throw new NegocioException("Los precios o importes cambiaron. Revisa el nuevo resumen" +
+                        " antes de pagar.");
+                // 2. Pago simulado con 90 % de éxito.
+                if (Math.random() >= 0.90)
+                    throw new NegocioException("El pago simulado fue rechazado. Puedes volver a intentarlo.");
+                // 3. Se guardan en una sola transacción el stock, el cupón, el pedido y sus líneas.
+                LocalDateTime ahora = LocalDateTime.now();
+                for (ItemDTO item : vigente.items()) {
+                    if (!libroDAO.descontarStock(item.idLibro(), item.cantidad(), usuario.getEmail()))
+                        throw new NegocioException("El stock cambio antes de registrar la compra.");
+                }
                 if (cupon != null && !cuponDAO.consumir(cupon.getId(), idActor, ahora, usuario.getEmail()))
-                    throw new ConflictoException("El cupon ya no esta disponible.");
+                    throw new NegocioException("El cupon ya no esta disponible.");
+                DireccionEnvio direccion = direccionEnvioDAO.leer(seleccion.idDireccionEnvio());
+                MetodoPago metodo = metodoPagoDAO.leer(seleccion.idMetodoPago());
                 Pedido pedido = crearPedidoConItems(usuario, direccion, metodo, cupon, vigente, ahora);
                 pedidoDAO.insertar(pedido);
                 for (Item item : pedido.getItems())
                     itemPedidoDAO.insertar(pedido.getId(), item);
                 TransactionContext.commit();
-                // El pedido confirmado se recuerda para que un reintento no duplique la compra.
                 carritoUsuario.pedidoConfirmado = pedido.getId();
                 carritoUsuario.lineas.clear();
             } catch (SQLException e) {
@@ -281,23 +238,6 @@ public class PedidoBOImpl implements PedidoBO {
             }
             return consultar(idActor, carritoUsuario.pedidoConfirmado);
         }
-    }
-
-    private boolean condicionesCambiaron(ResumenCompraDTO anterior, ResumenCompraDTO actual) {
-        if (anterior.porcentajeEnvio().compareTo(actual.porcentajeEnvio()) != 0 ||
-            anterior.porcentajeCupon().compareTo(actual.porcentajeCupon()) != 0 ||
-            anterior.total().compareTo(actual.total()) != 0 || anterior.items().size() != actual.items().size())
-            return true;
-        for (int i = 0; i < anterior.items().size(); i++) {
-            ItemDTO antes = anterior.items().get(i);
-            ItemDTO ahora = actual.items().get(i);
-            if (antes.idLibro() != ahora.idLibro() || antes.cantidad() != ahora.cantidad() ||
-                antes.precioOriginal().compareTo(ahora.precioOriginal()) != 0 ||
-                antes.precioUnitario().compareTo(ahora.precioUnitario()) != 0 ||
-                antes.porcentajeDescuento().compareTo(ahora.porcentajeDescuento()) != 0)
-                return true;
-        }
-        return false;
     }
 
     private Pedido crearPedidoConItems(Usuario usuario, DireccionEnvio direccion, MetodoPago metodo, Cupon
@@ -384,10 +324,10 @@ public class PedidoBOImpl implements PedidoBO {
         DireccionEnvioDTO direccionDTO = new DireccionEnvioDTO(direccion.getId(), direccion.getAlias(),
             direccion.getCalle(), direccion.getDistrito(), direccion.getCiudad(), direccion.getReferencia(),
             direccion.isPredeterminada());
-        LocalDateTime ahora = LocalDateTime.now(reloj);
+        LocalDateTime ahora = LocalDateTime.now();
         boolean puedeDevolver = false;
         if (acciones && pedido.getEstado() == EstadoPedido.ENTREGADO) {
-            ConfiguracionDTO parametros = configuracion.obtener();
+            ConfiguracionDTO parametros = new ConfiguracionBOImpl().obtener();
             puedeDevolver = pedido.puedeSolicitarDevolucion(ahora, parametros.plazoDiasDevolucion(),
                 parametros.maximoIntentosDevolucion()) && !solicitudDAO.existeDevolucionPendiente(pedido.getId());
         }
@@ -424,7 +364,7 @@ public class PedidoBOImpl implements PedidoBO {
                 throw new RecursoNoEncontradoException("El pedido no existe.");
             if (pedido.getUsuario().getId() != idActor)
                 throw new AccesoDenegadoException("El pedido pertenece a otra cuenta.");
-            LocalDateTime ahora = LocalDateTime.now(reloj);
+            LocalDateTime ahora = LocalDateTime.now();
             EstadoPedido anterior = pedido.getEstado();
             if (anterior == EstadoPedido.EN_ALMACEN && !ahora.isBefore(pedido.getFechaPago().plusSeconds(30))) {
                 pedido.setEstado(EstadoPedido.EN_CAMINO);
@@ -438,7 +378,7 @@ public class PedidoBOImpl implements PedidoBO {
                 pedido.setUsuarioActualizacion(actor.getEmail());
                 pedido.setFechaActualizacion(ahora);
                 if (!pedidoDAO.actualizarEstado(pedido, anterior))
-                    throw new ConflictoException("El estado del pedido cambio.");
+                    throw new NegocioException("El estado del pedido cambio.");
                 if (pedido.getEstado() == EstadoPedido.ENTREGADO)
                     premiarPrimeraEntrega(actor, ahora);
             }
@@ -457,9 +397,9 @@ public class PedidoBOImpl implements PedidoBO {
 
     private void premiarPrimeraEntrega(Usuario actor, LocalDateTime fecha) throws SQLException,
         NegocioException {
-        ConfiguracionDTO parametros = configuracion.obtener();
+        ConfiguracionDTO parametros = new ConfiguracionBOImpl().obtener();
         if (!usuarioDAO.incrementarPedidosEntregados(actor.getId(), actor.getEmail()))
-            throw new ConflictoException("No se pudo contar la primera entrega.");
+            throw new NegocioException("No se pudo contar la primera entrega.");
         int entregados = actor.getCantidadPedidosEntregados() + 1;
         if (entregados % parametros.pedidosEntregadosPorCupon() == 0) {
             Cupon cupon = new Cupon();
@@ -487,19 +427,19 @@ public class PedidoBOImpl implements PedidoBO {
             if (pedido.getUsuario().getId() != idActor)
                 throw new AccesoDenegadoException("El pedido pertenece a otra cuenta.");
             if (!pedido.puedeCancelar())
-                throw new ConflictoException("Solo puedes cancelar un pedido en almacen.");
-            if (azar.getAsDouble() >= 0.80)
-                throw new ConflictoException("La cancelacion simulada fue rechazada. El pedido se conserva.");
-            LocalDateTime ahora = LocalDateTime.now(reloj);
+                throw new NegocioException("Solo puedes cancelar un pedido en almacen.");
+            if (Math.random() >= 0.80)
+                throw new NegocioException("La cancelacion simulada fue rechazada. El pedido se conserva.");
+            LocalDateTime ahora = LocalDateTime.now();
             pedido.setEstado(EstadoPedido.CANCELADO);
             pedido.setUsuarioActualizacion(actor.getEmail());
             pedido.setFechaActualizacion(ahora);
             if (!pedidoDAO.actualizarEstado(pedido, EstadoPedido.EN_ALMACEN))
-                throw new ConflictoException("El pedido ya cambio de estado.");
+                throw new NegocioException("El pedido ya cambio de estado.");
             List<Item> items = pedido.getItems();
             for (Item item : items) if (!libroDAO.reponerStock(item.getLibro().getId(), item.getCantidad(),
                 actor.getEmail()))
-                throw new ConflictoException("No se pudo reponer el stock del pedido.");
+                throw new NegocioException("No se pudo reponer el stock del pedido.");
             if (pedido.getCupon() != null)
                 cuponDAO.liberar(pedido.getCupon().getId(), ahora, actor.getEmail());
             TransactionContext.commit();

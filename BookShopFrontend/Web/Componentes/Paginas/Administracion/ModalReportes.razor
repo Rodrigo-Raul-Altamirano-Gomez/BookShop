@@ -32,7 +32,7 @@
                 <input class="form-control" type="number" min="1" @bind="cantidadUsuarios" placeholder="Sin límite" />
             </label>
         }
-        @if (error is not null)
+        @if (error != null)
         {
             <p class="alert alert-danger" role="alert">@error</p>
         }

@@ -8,7 +8,6 @@ import me.Business.catalogo.LibroBOImpl;
 import me.Business.compra.CarritoBOImpl;
 import me.Business.compra.PedidoBOImpl;
 import me.Business.exceptions.NegocioException;
-import me.DBManager.DBManager;
 import me.Model.dto.compra.SeleccionCompraDTO;
 
 public class Main {
@@ -61,8 +60,6 @@ public class Main {
             System.out.println("Ejemplares que quedan en el carrito: " + carrito.consultar(usuario).cantidadLibros());
         } catch (NegocioException e) {
             System.out.println(e.getMessage());
-        } finally {
-            DBManager.close();
         }
     }
 }

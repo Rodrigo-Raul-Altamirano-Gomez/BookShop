@@ -17,7 +17,7 @@ public partial class FormularioDireccion
     private bool Guardando { get; set; }
     protected override void OnInitialized()
     {
-        if (Valor is not null)
+        if (Valor != null)
             Borrador = new DatosDireccionEnvioDTO
             {
                 Alias = Valor.Alias,

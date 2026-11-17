@@ -117,7 +117,7 @@ public partial class ExploradorCatalogo : IDisposable
             if (Favoritos.HasValue)
                 ruta = "cuenta/libros-guardados/busqueda?favorito="
                     + Favoritos.Value.ToString().ToLowerInvariant();
-            if (IdConsulta is not null)
+            if (IdConsulta != null)
                 ruta = $"recomendaciones/consultas/{IdConsulta}/busqueda";
             var datos = await Api.Post<ResultadoPaginadoDTO<TarjetaLibroDTO>>(ruta, filtro);
             resultados = datos.Items.Select(Presentacion.Libro).ToList();
@@ -135,8 +135,8 @@ public partial class ExploradorCatalogo : IDisposable
         await Catalogo.Inicializar();
         var contexto = new Uri(Navegacion.Uri).AbsolutePath + "|" + OrdenInicial + "|"
             + TipoAmbito + "|" + Titulo + "|" + Favoritos + "|" + IdAmbito;
-        if (Sesion.EstadoVistas.TryGetValue(contexto, out var guardado) && guardado is VistaCatalogo almacenada)
-            vista = almacenada;
+        if (Sesion.EstadoVistas.ContainsKey(contexto))
+            vista = (VistaCatalogo)Sesion.EstadoVistas[contexto];
         else
         {
             vista = new VistaCatalogo { Orden = OrdenInicial };

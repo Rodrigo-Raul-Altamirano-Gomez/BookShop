@@ -3,26 +3,25 @@ package me.DBManager;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public final class TransactionContext {
-    private static final ThreadLocal<Connection> connectionHolder = new ThreadLocal<>();
+// Guarda una conexión por hilo para que varias operaciones DAO formen una sola transacción.
+public class TransactionContext {
 
-    private TransactionContext() {
-    }
+    private static final ThreadLocal<Connection> connectionHolder = new ThreadLocal<>();
 
     public static Connection getConnection() throws SQLException {
         Connection conexion = connectionHolder.get();
         if (conexion == null) {
             conexion = DBManager.getConnection();
-            // Business siempre cierra el contexto en finally, también si falla el inicio.
-            connectionHolder.set(conexion);
             conexion.setAutoCommit(false);
+            connectionHolder.set(conexion);
         }
         return conexion;
     }
 
     public static void commit() throws SQLException {
         Connection conexion = connectionHolder.get();
-        if (conexion != null) conexion.commit();
+        if (conexion != null)
+            conexion.commit();
     }
 
     public static void rollback() {
@@ -38,13 +37,13 @@ public final class TransactionContext {
 
     public static void close() {
         Connection conexion = connectionHolder.get();
-        connectionHolder.remove();
         if (conexion != null) {
             try {
                 conexion.close();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+            connectionHolder.remove();
         }
     }
 }

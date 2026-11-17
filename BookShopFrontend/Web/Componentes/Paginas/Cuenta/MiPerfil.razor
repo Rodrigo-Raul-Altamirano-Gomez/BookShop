@@ -12,7 +12,7 @@
         </ol>
     </nav>
     <h1 class="page-heading d-flex flex-wrap align-items-center justify-content-between gap-3">Mi perfil</h1>
-    @if (Sesion.Usuario is null)
+    @if (Sesion.Usuario == null)
     {
         <div class="empty-state card border-0 text-center align-items-center py-5">
             <Icono Nombre="user" />

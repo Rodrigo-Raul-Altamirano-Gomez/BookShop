@@ -1,12 +1,9 @@
 package me.Business.usuario;
 
 import java.sql.SQLException;
-import java.time.Clock;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import me.Business.exceptions.ConflictoException;
-import me.Business.catalogo.LibroBOImpl;
 import me.Business.exceptions.NegocioException;
+import me.Business.catalogo.LibroBOImpl;
 import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.RecursoNoEncontradoException;
 import me.DAO.catalogo.LibroDAO;
@@ -23,24 +20,9 @@ import me.Model.entities.usuario.Usuario;
 
 public class LibroGuardadoBOImpl implements LibroGuardadoBO {
 
-    private final UsuarioDAO usuarioDAO;
-
-    private final LibroGuardadoDAO libroGuardadoDAO;
-    private final LibroDAO libroDAO;
-    private final Clock reloj;
-
-    public LibroGuardadoBOImpl() {
-        this(new LibroGuardadoDAOImpl(), new LibroDAOImpl(), new UsuarioDAOImpl(),
-            Clock.system(ZoneId.of("America/Lima")));
-    }
-
-    public LibroGuardadoBOImpl(LibroGuardadoDAO libroGuardadoDAO, LibroDAO libroDAO, UsuarioDAO usuarioDAO,
-        Clock reloj) {
-        this.libroGuardadoDAO = libroGuardadoDAO;
-        this.libroDAO = libroDAO;
-        this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
-        this.usuarioDAO = usuarioDAO;
-    }
+    private final UsuarioDAO usuarioDAO = new UsuarioDAOImpl();
+    private final LibroGuardadoDAO libroGuardadoDAO = new LibroGuardadoDAOImpl();
+    private final LibroDAO libroDAO = new LibroDAOImpl();
 
     @Override
     public void guardar(int idActor, int idLibro, boolean favorito) throws NegocioException {
@@ -50,7 +32,7 @@ public class LibroGuardadoBOImpl implements LibroGuardadoBO {
             if (libro == null || libro.isEliminado())
                 throw new RecursoNoEncontradoException("El libro no existe.");
             if (!libro.isActivo())
-                throw new ConflictoException("El libro no esta disponible.");
+                throw new NegocioException("El libro no esta disponible.");
             libroGuardadoDAO.guardar(idActor, idLibro, favorito, actor.getEmail());
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo guardar el libro en la lista.", e);
@@ -77,7 +59,7 @@ public class LibroGuardadoBOImpl implements LibroGuardadoBO {
             validos.precioMaximo(), true, validos.soloNuevos(), validos.orden(), validos.pagina(),
             validos.tamanioPagina());
         try {
-            return libroDAO.buscarGuardados(idActor, favorito, visibles, LocalDateTime.now(reloj));
+            return libroDAO.buscarGuardados(idActor, favorito, visibles, LocalDateTime.now());
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudieron consultar los libros guardados.", e);
         }

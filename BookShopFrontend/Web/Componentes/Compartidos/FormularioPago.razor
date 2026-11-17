@@ -1,4 +1,4 @@
-<Modal Titulo="@(Valor is null ? "Añadir método de pago" : "Editar método de pago")" AlCerrar="AlCerrar" Ocupado="@Guardando">
+<Modal Titulo="@(Valor == null ? "Añadir método de pago" : "Editar método de pago")" AlCerrar="AlCerrar" Ocupado="@Guardando">
     <div class="nav nav-tabs bookshop-tabs mb-4" role="tablist" aria-label="Tipo de método">
         <button
             type="button"
@@ -6,7 +6,7 @@
             aria-selected="@(Borrador.TarjetaBancaria)"
             class="nav-link bookshop-tab @(Borrador.TarjetaBancaria ? "active" : "")"
             @onclick="() => CambiarTipo(true)"
-            disabled="@(Guardando || Valor is not null && !Valor.TarjetaBancaria)">
+            disabled="@(Guardando || Valor != null && !Valor.TarjetaBancaria)">
             <Icono Nombre="card" />
             Tarjeta
         </button>
@@ -16,7 +16,7 @@
             aria-selected="@(!Borrador.TarjetaBancaria)"
             class="nav-link bookshop-tab @(!Borrador.TarjetaBancaria ? "active" : "")"
             @onclick="() => CambiarTipo(false)"
-            disabled="@(Guardando || Valor is not null && Valor.TarjetaBancaria)">
+            disabled="@(Guardando || Valor != null && Valor.TarjetaBancaria)">
             <Icono Nombre="wallet" />
             Billetera
         </button>
@@ -53,17 +53,17 @@
             </label>
         }
         <label class="field form-label d-block mb-3">
-            @(Borrador.TarjetaBancaria ? "Número de tarjeta" : "Número de celular") @(Valor is null ? "*" : "")
+            @(Borrador.TarjetaBancaria ? "Número de tarjeta" : "Número de celular") @(Valor == null ? "*" : "")
             <input class="form-control"
-                required="@(Valor is null)" @bind="Borrador.Numero"
+                required="@(Valor == null)" @bind="Borrador.Numero"
                 @bind:event="oninput"
                 inputmode="numeric"
                 autocomplete="off"
-                placeholder="@(Valor is null ? "Ingresa el número completo" :
+                placeholder="@(Valor == null ? "Ingresa el número completo" :
                     "Deja vacío para conservar el número registrado")"
                 />
         </label>
-        @if (Valor is not null)
+        @if (Valor != null)
         {
             <p class="text-body-secondary">Número registrado: @Valor.NumeroEnmascarado</p>
         }
@@ -85,7 +85,7 @@
         <div class="modal-footer px-0 pb-0 mt-4">
             <button type="button" class="btn btn-secondary" @onclick="AlCerrar" disabled="@Guardando">Cancelar</button>
             <button type="submit" class="btn btn-primary" disabled="@Guardando">
-                @(Valor is null ? "Guardar método" : "Guardar cambios")
+                @(Valor == null ? "Guardar método" : "Guardar cambios")
             </button>
         </div>
     </form>

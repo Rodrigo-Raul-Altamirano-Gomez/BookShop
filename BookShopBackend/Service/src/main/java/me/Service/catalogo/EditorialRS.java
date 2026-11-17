@@ -1,7 +1,5 @@
 package me.Service.catalogo;
 
-import jakarta.enterprise.context.RequestScoped;
-import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -16,17 +14,16 @@ import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.dto.catalogo.DetalleReferenciaDTO;
 import me.Model.dto.catalogo.FiltroReferenciaDTO;
 import me.Model.dto.catalogo.TarjetaReferenciaDTO;
-import me.Service.Servicios;
+import me.Business.catalogo.EditorialBO;
+import me.Business.catalogo.EditorialBOImpl;
 import me.Service.Sesion;
 
 @Path("editoriales")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@RequestScoped
 public class EditorialRS {
 
-    @Inject
-    private Servicios servicios;
+    private final EditorialBO editorialBO = new EditorialBOImpl();
 
     @Context
     private HttpServletRequest peticion;
@@ -34,12 +31,12 @@ public class EditorialRS {
     @POST
     @Path("busqueda")
     public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscar(FiltroReferenciaDTO filtro) throws NegocioException {
-        return servicios.getEditorialBO().buscar(filtro);
+        return editorialBO.buscar(filtro);
     }
 
     @GET
     @Path("{id}")
     public DetalleReferenciaDTO obtenerDetalle(@PathParam("id") int id) throws NegocioException {
-        return servicios.getEditorialBO().obtenerDetalle(Sesion.obtenerIdUsuario(peticion), id);
+        return editorialBO.obtenerDetalle(Sesion.obtenerIdUsuario(peticion), id);
     }
 }

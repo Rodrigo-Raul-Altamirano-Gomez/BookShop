@@ -11,6 +11,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl unzip \
     && rm -rf /var/lib/apt/lists/*
 ENV PATH="/opt/glassfish8/bin:${PATH}"
 ENV AS_HOSTNAME=localhost
+# Las fechas del negocio (LocalDateTime.now) usan la hora de Lima.
+ENV TZ=America/Lima
 WORKDIR /app
 COPY --from=compilacion /proyecto/Service/target/bookshop.war /app/bookshop.war
 RUN DOMINIO=/opt/glassfish8/glassfish/domains/domain1; \

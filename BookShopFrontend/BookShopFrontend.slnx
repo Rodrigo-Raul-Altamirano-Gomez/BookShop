@@ -1,4 +1,3 @@
 <Solution>
-  <Project Path="Pruebas/Pruebas.csproj" />
   <Project Path="Web/Web.csproj" DefaultStartup="true" />
 </Solution>

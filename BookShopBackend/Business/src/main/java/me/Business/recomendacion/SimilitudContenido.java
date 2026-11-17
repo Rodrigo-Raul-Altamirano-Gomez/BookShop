@@ -1,10 +1,8 @@
 package me.Business.recomendacion;
 
-import java.text.Normalizer;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import me.Model.entities.catalogo.Libro;
@@ -51,10 +49,9 @@ final class SimilitudContenido {
     }
 
     private static Set<String> separarPalabras(String texto) {
-        String limpio = Normalizer.normalize(texto.toLowerCase(Locale.ROOT),
-            Normalizer.Form.NFD).replaceAll("\\p{M}", "");
         Set<String> significativas = new HashSet<>();
-        for (String palabra : limpio.split("[^\\p{L}\\p{N}]+")) {
+        // Separa el texto por espacios y signos; solo cuentan las palabras de tres letras o más.
+        for (String palabra : texto.toLowerCase().split("[\\s.,;:!?¡¿()\"]+")) {
             if (palabra.length() >= 3)
                 significativas.add(palabra);
         }

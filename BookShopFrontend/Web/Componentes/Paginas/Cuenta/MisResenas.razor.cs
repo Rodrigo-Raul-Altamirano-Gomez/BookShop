@@ -15,7 +15,7 @@ public partial class MisResenas
     {
         resultado = new();
         CerrarEdicion();
-        if (Sesion.Usuario is not null)
+        if (Sesion.Usuario != null)
             resultado = await Api.Post<ResultadoPaginadoDTO<ResenaDTO>>("resenas/propias/busqueda", consulta);
     }
 

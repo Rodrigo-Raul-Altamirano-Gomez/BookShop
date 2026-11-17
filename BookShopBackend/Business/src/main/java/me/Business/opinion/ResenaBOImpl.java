@@ -1,11 +1,8 @@
 package me.Business.opinion;
 
 import java.sql.SQLException;
-import java.time.Clock;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import me.Business.exceptions.AccesoDenegadoException;
-import me.Business.exceptions.ConflictoException;
 import me.Business.exceptions.NegocioException;
 import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.RecursoNoEncontradoException;
@@ -31,26 +28,10 @@ import me.Model.entities.usuario.Usuario;
 
 public class ResenaBOImpl implements ResenaBO {
 
-    private final UsuarioDAO usuarioDAO;
-
-    private final ResenaDAO resenaDAO;
-    private final LibroDAO libroDAO;
-    private final PedidoDAO pedidoDAO;
-    private final Clock reloj;
-
-    public ResenaBOImpl() {
-        this(new ResenaDAOImpl(), new LibroDAOImpl(), new PedidoDAOImpl(), new UsuarioDAOImpl(),
-            Clock.system(ZoneId.of("America/Lima")));
-    }
-
-    public ResenaBOImpl(ResenaDAO resenaDAO, LibroDAO libroDAO, PedidoDAO pedidoDAO, UsuarioDAO usuarioDAO,
-        Clock reloj) {
-        this.resenaDAO = resenaDAO;
-        this.libroDAO = libroDAO;
-        this.pedidoDAO = pedidoDAO;
-        this.usuarioDAO = usuarioDAO;
-        this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
-    }
+    private final UsuarioDAO usuarioDAO = new UsuarioDAOImpl();
+    private final ResenaDAO resenaDAO = new ResenaDAOImpl();
+    private final LibroDAO libroDAO = new LibroDAOImpl();
+    private final PedidoDAO pedidoDAO = new PedidoDAOImpl();
 
     @Override
     public void verificarPuedePublicar(int idActor, int idLibro) throws NegocioException {
@@ -59,7 +40,7 @@ public class ResenaBOImpl implements ResenaBO {
             if (libro == null || !libro.isActivo())
                 throw new RecursoNoEncontradoException("El libro no esta disponible.");
             if (resenaDAO.existePublicada(idActor, idLibro))
-                throw new ConflictoException("Ya tiene una resena publicada para este libro.");
+                throw new NegocioException("Ya tiene una resena publicada para este libro.");
             if (!pedidoDAO.haCompradoLibro(idActor, idLibro))
                 throw new AccesoDenegadoException("Necesita una compra confirmada que no este cancelada ni" +
                     " devuelta.");
@@ -81,7 +62,7 @@ public class ResenaBOImpl implements ResenaBO {
             resena.setUsuario(actor);
             resena.setPuntuacion(validos.puntuacion());
             resena.setComentario(validos.comentario());
-            LocalDateTime ahora = LocalDateTime.now(reloj);
+            LocalDateTime ahora = LocalDateTime.now();
             resena.setFecha(ahora);
             resena.setFechaCreacion(ahora);
             resena.setUsuarioCreacion(actor.getEmail());
@@ -104,11 +85,11 @@ public class ResenaBOImpl implements ResenaBO {
             if (idActor != resena.getUsuario().getId())
                 throw new AccesoDenegadoException("La reseña pertenece a otro usuario.");
             if (!resena.isActivo())
-                throw new ConflictoException("La resena no esta publicada.");
+                throw new NegocioException("La resena no esta publicada.");
             resena.setPuntuacion(validos.puntuacion());
             resena.setComentario(validos.comentario());
             resena.setUsuarioActualizacion(actor.getEmail());
-            resena.setFechaActualizacion(LocalDateTime.now(reloj));
+            resena.setFechaActualizacion(LocalDateTime.now());
             resenaDAO.modificar(resena);
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo modificar la resena.", e);
@@ -143,7 +124,7 @@ public class ResenaBOImpl implements ResenaBO {
             if (!administrador && actor.getId() != resena.getUsuario().getId())
                 throw new AccesoDenegadoException("La reseña pertenece a otro usuario.");
             if (!resenaDAO.eliminar(id, actor.getEmail()))
-                throw new ConflictoException("La resena ya fue retirada.");
+                throw new NegocioException("La resena ya fue retirada.");
             TransactionContext.commit();
         } catch (SQLException e) {
             TransactionContext.rollback();

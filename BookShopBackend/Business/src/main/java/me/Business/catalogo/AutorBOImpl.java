@@ -1,10 +1,7 @@
 package me.Business.catalogo;
 
 import java.sql.SQLException;
-import java.time.Clock;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import me.Business.exceptions.ConflictoException;
 import me.Business.exceptions.NegocioException;
 import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.RecursoNoEncontradoException;
@@ -27,21 +24,9 @@ import me.Model.entities.usuario.Usuario;
 
 public class AutorBOImpl implements AutorBO {
 
-    private final AutorDAO autorDAO;
-    private final LibroDAO libroDAO;
-    private final UsuarioDAO usuarioDAO;
-    private final Clock reloj;
-
-    public AutorBOImpl() {
-        this(new AutorDAOImpl(), new LibroDAOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")));
-    }
-
-    public AutorBOImpl(AutorDAO autorDAO, LibroDAO libroDAO, UsuarioDAO usuarioDAO, Clock reloj) {
-        this.autorDAO = autorDAO;
-        this.libroDAO = libroDAO;
-        this.usuarioDAO = usuarioDAO;
-        this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
-    }
+    private final AutorDAO autorDAO = new AutorDAOImpl();
+    private final LibroDAO libroDAO = new LibroDAOImpl();
+    private final UsuarioDAO usuarioDAO = new UsuarioDAOImpl();
 
     @Override
     public int registrar(int idActor, RegistroReferenciaDTO registro) throws NegocioException {
@@ -55,7 +40,7 @@ public class AutorBOImpl implements AutorBO {
             autor.setBiografia(datos.introduccion());
             autor.setImagen(registro.imagen());
             autor.setUsuarioCreacion(actor.getEmail());
-            autor.setFechaCreacion(LocalDateTime.now(reloj));
+            autor.setFechaCreacion(LocalDateTime.now());
             autorDAO.insertar(autor);
             return autor.getId();
         } catch (SQLException e) {
@@ -88,7 +73,7 @@ public class AutorBOImpl implements AutorBO {
             if (autor == null || autor.isEliminado())
                 throw new RecursoNoEncontradoException("El autor no está disponible.");
             if (!autorDAO.cambiarImagen(id, imagen, actor.getEmail()))
-                throw new ConflictoException("El autor cambio; vuelva a consultarlo.");
+                throw new NegocioException("El autor cambio; vuelva a consultarlo.");
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo cambiar la imagen del autor.", e);
         }
@@ -103,7 +88,7 @@ public class AutorBOImpl implements AutorBO {
                 throw new RecursoNoEncontradoException("El autor no esta disponible.");
             if (autor.isActivo() != activo) {
                 if (!autorDAO.cambiarActivo(id, activo, actor.getEmail()))
-                    throw new ConflictoException("El autor cambio; vuelva a consultarlo.");
+                    throw new NegocioException("El autor cambio; vuelva a consultarlo.");
                 libroDAO.recalcularVetosPorAutor(id, actor.getEmail());
             }
             TransactionContext.commit();
@@ -126,7 +111,7 @@ public class AutorBOImpl implements AutorBO {
             if (autor == null || autor.isEliminado())
                 throw new RecursoNoEncontradoException("El autor no esta disponible.");
             if (!autorDAO.eliminar(id, actor.getEmail()))
-                throw new ConflictoException("El autor cambio; vuelva a consultarlo.");
+                throw new NegocioException("El autor cambio; vuelva a consultarlo.");
             libroDAO.recalcularVetosPorAutor(id, actor.getEmail());
             TransactionContext.commit();
         } catch (SQLException e) {

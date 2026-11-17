@@ -1,7 +1,5 @@
 package me.Service.catalogo;
 
-import jakarta.enterprise.context.RequestScoped;
-import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -16,17 +14,16 @@ import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.dto.catalogo.DetalleReferenciaDTO;
 import me.Model.dto.catalogo.FiltroReferenciaDTO;
 import me.Model.dto.catalogo.TarjetaReferenciaDTO;
-import me.Service.Servicios;
+import me.Business.catalogo.CategoriaBO;
+import me.Business.catalogo.CategoriaBOImpl;
 import me.Service.Sesion;
 
 @Path("categorias")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@RequestScoped
 public class CategoriaRS {
 
-    @Inject
-    private Servicios servicios;
+    private final CategoriaBO categoriaBO = new CategoriaBOImpl();
 
     @Context
     private HttpServletRequest peticion;
@@ -34,12 +31,12 @@ public class CategoriaRS {
     @POST
     @Path("busqueda")
     public ResultadoPaginadoDTO<TarjetaReferenciaDTO> buscar(FiltroReferenciaDTO filtro) throws NegocioException {
-        return servicios.getCategoriaBO().buscar(filtro);
+        return categoriaBO.buscar(filtro);
     }
 
     @GET
     @Path("{id}")
     public DetalleReferenciaDTO obtenerDetalle(@PathParam("id") int id) throws NegocioException {
-        return servicios.getCategoriaBO().obtenerDetalle(Sesion.obtenerIdUsuario(peticion), id);
+        return categoriaBO.obtenerDetalle(Sesion.obtenerIdUsuario(peticion), id);
     }
 }

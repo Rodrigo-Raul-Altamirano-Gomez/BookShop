@@ -1,7 +1,5 @@
 package me.Service.usuario;
 
-import jakarta.enterprise.context.RequestScoped;
-import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -19,54 +17,53 @@ import me.Business.exceptions.NegocioException;
 import me.Model.dto.ResultadoPaginadoDTO;
 import me.Model.dto.compra.DatosMetodoPagoDTO;
 import me.Model.dto.compra.MetodoPagoDTO;
-import me.Service.Servicios;
+import me.Business.usuario.MetodoPagoBO;
+import me.Business.usuario.MetodoPagoBOImpl;
 import me.Service.Sesion;
 
 @Path("cuenta/metodos")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@RequestScoped
 public class MetodoPagoRS {
 
-    @Inject
-    private Servicios servicios;
+    private final MetodoPagoBO metodoPagoBO = new MetodoPagoBOImpl();
 
     @Context
     private HttpServletRequest peticion;
 
     @POST
     public MetodoPagoDTO registrar(DatosMetodoPagoDTO datos) throws NegocioException {
-        return servicios.getMetodoPagoBO().registrar(Sesion.exigirIdUsuario(peticion), datos);
+        return metodoPagoBO.registrar(Sesion.exigirIdUsuario(peticion), datos);
     }
 
     @PUT
     @Path("{idMetodo}")
     public MetodoPagoDTO modificar(@PathParam("idMetodo") int idMetodo, DatosMetodoPagoDTO datos) throws
         NegocioException {
-        return servicios.getMetodoPagoBO().modificar(Sesion.exigirIdUsuario(peticion), idMetodo, datos);
+        return metodoPagoBO.modificar(Sesion.exigirIdUsuario(peticion), idMetodo, datos);
     }
 
     @GET
     @Path("{idMetodo}")
     public MetodoPagoDTO consultar(@PathParam("idMetodo") int idMetodo) throws NegocioException {
-        return servicios.getMetodoPagoBO().consultar(Sesion.exigirIdUsuario(peticion), idMetodo);
+        return metodoPagoBO.consultar(Sesion.exigirIdUsuario(peticion), idMetodo);
     }
 
     @GET
     public ResultadoPaginadoDTO<MetodoPagoDTO> listar(@DefaultValue("1") @QueryParam("pagina") int pagina,
         @DefaultValue("10") @QueryParam("tamanioPagina") int tamanioPagina) throws NegocioException {
-        return servicios.getMetodoPagoBO().listar(Sesion.exigirIdUsuario(peticion), pagina, tamanioPagina);
+        return metodoPagoBO.listar(Sesion.exigirIdUsuario(peticion), pagina, tamanioPagina);
     }
 
     @DELETE
     @Path("{idMetodo}")
     public void eliminar(@PathParam("idMetodo") int idMetodo) throws NegocioException {
-        servicios.getMetodoPagoBO().eliminar(Sesion.exigirIdUsuario(peticion), idMetodo);
+        metodoPagoBO.eliminar(Sesion.exigirIdUsuario(peticion), idMetodo);
     }
 
     @PUT
     @Path("{idMetodo}/predeterminado")
     public void establecerPredeterminado(@PathParam("idMetodo") int idMetodo) throws NegocioException {
-        servicios.getMetodoPagoBO().establecerPredeterminado(Sesion.exigirIdUsuario(peticion), idMetodo);
+        metodoPagoBO.establecerPredeterminado(Sesion.exigirIdUsuario(peticion), idMetodo);
     }
 }

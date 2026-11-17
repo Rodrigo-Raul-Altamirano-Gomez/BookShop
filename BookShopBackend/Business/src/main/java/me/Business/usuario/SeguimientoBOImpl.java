@@ -1,7 +1,6 @@
 package me.Business.usuario;
 
 import java.sql.SQLException;
-import me.Business.exceptions.ConflictoException;
 import me.Business.exceptions.NegocioException;
 import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.RecursoNoEncontradoException;
@@ -27,26 +26,11 @@ import me.Model.entities.usuario.Usuario;
 
 public class SeguimientoBOImpl implements SeguimientoBO {
 
-    private final UsuarioDAO usuarioDAO;
-
-    private final SeguimientoDAO seguimientoDAO;
-    private final AutorDAO autorDAO;
-    private final CategoriaDAO categoriaDAO;
-    private final EditorialDAO editorialDAO;
-
-    public SeguimientoBOImpl() {
-        this(new SeguimientoDAOImpl(), new AutorDAOImpl(), new CategoriaDAOImpl(), new EditorialDAOImpl(), new
-            UsuarioDAOImpl());
-    }
-
-    public SeguimientoBOImpl(SeguimientoDAO seguimientoDAO, AutorDAO autorDAO, CategoriaDAO categoriaDAO,
-        EditorialDAO editorialDAO, UsuarioDAO usuarioDAO) {
-        this.seguimientoDAO = seguimientoDAO;
-        this.autorDAO = autorDAO;
-        this.categoriaDAO = categoriaDAO;
-        this.editorialDAO = editorialDAO;
-        this.usuarioDAO = usuarioDAO;
-    }
+    private final UsuarioDAO usuarioDAO = new UsuarioDAOImpl();
+    private final SeguimientoDAO seguimientoDAO = new SeguimientoDAOImpl();
+    private final AutorDAO autorDAO = new AutorDAOImpl();
+    private final CategoriaDAO categoriaDAO = new CategoriaDAOImpl();
+    private final EditorialDAO editorialDAO = new EditorialDAOImpl();
 
     @Override
     public void guardar(int idActor, TipoSeguimiento tipo, int idReferencia) throws NegocioException {
@@ -86,7 +70,7 @@ public class SeguimientoBOImpl implements SeguimientoBO {
                     throw new ValidacionException("tipo", "Selecciona un tipo de seguimiento valido.");
             }
             if (!disponible)
-                throw new ConflictoException("La referencia no esta disponible para seguirla.");
+                throw new NegocioException("La referencia no esta disponible para seguirla.");
             seguimientoDAO.guardar(idActor, tipo, idReferencia, actor.getEmail());
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo guardar el seguimiento.", e);

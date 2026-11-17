@@ -144,16 +144,8 @@ public abstract class MetodoPago {
         this.fechaActualizacion = fechaActualizacion;
     }
 
-    public boolean validarEstado() {
-        return validarEstado(LocalDate.now());
-    }
-
     public boolean validarEstado(LocalDate fechaActual) {
         return activo && !eliminado && fechaActual != null && fechaVencimiento != null &&
             !fechaVencimiento.isBefore(fechaActual);
-    }
-
-    public boolean estaVencido(LocalDate fechaActual) {
-        return fechaActual != null && fechaVencimiento != null && fechaVencimiento.isBefore(fechaActual);
     }
 }

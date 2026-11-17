@@ -11,12 +11,12 @@
             <li class="breadcrumb-item active" aria-current="page">Pedido #@Id</li>
         </ol>
     </nav>
-    @if (Sesion.Usuario is null)
+    @if (Sesion.Usuario == null)
     {
         <h1>Detalle del pedido</h1>
         <button class="btn btn-primary" @onclick="Sesion.MostrarAcceso">Iniciar sesión</button>
     }
-    else if (pedido is not null)
+    else if (pedido != null)
     {
         @if (Navegacion.Uri.Contains("/confirmacion/"))
         {
@@ -47,7 +47,7 @@
             <a class="btn btn-secondary" href="/mis-pedidos">Mis pedidos</a>
             <a class="btn btn-primary" href="/catalogo">Seguir explorando</a>
         </div>
-        @if (errorComprobante is not null)
+        @if (errorComprobante != null)
         {
             <p class="alert alert-danger py-2 mt-3 text-center" role="alert">@errorComprobante</p>
         }
@@ -59,7 +59,7 @@
                 <label class="form-label d-block mb-3">Motivo
                     <textarea class="form-control" rows="4" @bind="cancelacion.Motivo" required></textarea>
                 </label>
-                @if (errorCancelacion is not null)
+                @if (errorCancelacion != null)
                 {
                     <p class="alert alert-danger" role="alert">@errorCancelacion</p>
                 }

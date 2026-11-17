@@ -16,7 +16,7 @@ public partial class Carrito : Web.Componentes.Paginas.Cuenta.PaginaCuenta
     protected override async Task CargarDatos()
     {
         Complementarios.Clear();
-        if (Sesion.Usuario is null)
+        if (Sesion.Usuario == null)
             return;
         Compras.MostrarCarrito(await Api.Get<ResumenCompraDTO>("carrito"));
         await CargarComplementarios();

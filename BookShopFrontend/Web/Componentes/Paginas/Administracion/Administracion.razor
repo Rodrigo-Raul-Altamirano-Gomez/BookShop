@@ -3,7 +3,7 @@
 <PageTitle>Administración · BookShop</PageTitle>
 <div class="container py-4">
     <h1 class="page-heading">Administración</h1>
-    @if (Sesion.Usuario is null)
+    @if (Sesion.Usuario == null)
     {
         <p>Inicia sesión con una cuenta de administrador.</p>
         <button class="btn btn-primary" @onclick="Sesion.MostrarAcceso">Iniciar sesión</button>

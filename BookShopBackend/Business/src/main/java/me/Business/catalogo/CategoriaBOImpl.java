@@ -1,10 +1,7 @@
 package me.Business.catalogo;
 
 import java.sql.SQLException;
-import java.time.Clock;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import me.Business.exceptions.ConflictoException;
 import me.Business.exceptions.NegocioException;
 import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.RecursoNoEncontradoException;
@@ -27,21 +24,9 @@ import me.Model.entities.usuario.Usuario;
 
 public class CategoriaBOImpl implements CategoriaBO {
 
-    private final CategoriaDAO categoriaDAO;
-    private final LibroDAO libroDAO;
-    private final UsuarioDAO usuarioDAO;
-    private final Clock reloj;
-
-    public CategoriaBOImpl() {
-        this(new CategoriaDAOImpl(), new LibroDAOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")));
-    }
-
-    public CategoriaBOImpl(CategoriaDAO categoriaDAO, LibroDAO libroDAO, UsuarioDAO usuarioDAO, Clock reloj) {
-        this.categoriaDAO = categoriaDAO;
-        this.libroDAO = libroDAO;
-        this.usuarioDAO = usuarioDAO;
-        this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
-    }
+    private final CategoriaDAO categoriaDAO = new CategoriaDAOImpl();
+    private final LibroDAO libroDAO = new LibroDAOImpl();
+    private final UsuarioDAO usuarioDAO = new UsuarioDAOImpl();
 
     @Override
     public int registrar(int idActor, RegistroReferenciaDTO registro) throws NegocioException {
@@ -55,7 +40,7 @@ public class CategoriaBOImpl implements CategoriaBO {
             categoria.setDescripcion(datos.introduccion());
             categoria.setImagen(registro.imagen());
             categoria.setUsuarioCreacion(actor.getEmail());
-            categoria.setFechaCreacion(LocalDateTime.now(reloj));
+            categoria.setFechaCreacion(LocalDateTime.now());
             if (categoriaDAO.existeNombre(datos.nombre().strip(), 0))
                 throw new ValidacionException("nombre", "Ya existe una categoria con ese nombre.");
             categoriaDAO.insertar(categoria);
@@ -92,7 +77,7 @@ public class CategoriaBOImpl implements CategoriaBO {
             if (categoria == null || categoria.isEliminado())
                 throw new RecursoNoEncontradoException("La categoria no está disponible.");
             if (!categoriaDAO.cambiarImagen(id, imagen, actor.getEmail()))
-                throw new ConflictoException("La categoría cambio; vuelva a consultarlo.");
+                throw new NegocioException("La categoría cambio; vuelva a consultarlo.");
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo cambiar la imagen de la categoría.", e);
         }
@@ -107,7 +92,7 @@ public class CategoriaBOImpl implements CategoriaBO {
                 throw new RecursoNoEncontradoException("La categoría no esta disponible.");
             if (categoria.isActivo() != activo) {
                 if (!categoriaDAO.cambiarActivo(id, activo, actor.getEmail()))
-                    throw new ConflictoException("La categoría cambio; vuelva a consultarlo.");
+                    throw new NegocioException("La categoría cambio; vuelva a consultarlo.");
                 libroDAO.recalcularVetosPorCategoria(id, actor.getEmail());
             }
             TransactionContext.commit();
@@ -130,7 +115,7 @@ public class CategoriaBOImpl implements CategoriaBO {
             if (categoria == null || categoria.isEliminado())
                 throw new RecursoNoEncontradoException("La categoría no esta disponible.");
             if (!categoriaDAO.eliminar(id, actor.getEmail()))
-                throw new ConflictoException("La categoría cambio; vuelva a consultarlo.");
+                throw new NegocioException("La categoría cambio; vuelva a consultarlo.");
             libroDAO.recalcularVetosPorCategoria(id, actor.getEmail());
             TransactionContext.commit();
         } catch (SQLException e) {

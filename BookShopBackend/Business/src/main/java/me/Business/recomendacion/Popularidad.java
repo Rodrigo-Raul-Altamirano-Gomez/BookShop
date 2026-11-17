@@ -18,7 +18,7 @@ final class Popularidad {
         List<ValoracionLibroDTO> valoraciones, LocalDateTime ahora) {
         Map<Integer, Long> cantidades = new HashMap<>();
         for (VentaLibroDTO venta : ventas) {
-            if (!venta.fechaPago().isBefore(ahora.minusDays(90)) && !venta.fechaPago().isAfter(ahora)) {
+            if (venta.fechaPago().isAfter(ahora.minusDays(90))) {
                 cantidades.put(venta.idLibro(), cantidades.getOrDefault(venta.idLibro(), 0L) + venta.cantidad());
             }
         }
@@ -40,13 +40,17 @@ final class Popularidad {
             ValoracionLibroDTO valoracion = porLibro.get(libro.getId());
             long cantidadResenas = valoracion == null ? 0 : valoracion.cantidadResenas();
             long estrellas = valoracion == null ? 0 : valoracion.sumaPuntuaciones();
+            // Promedio bayesiano: cada libro parte con 5 reseñas "virtuales" del promedio global.
             double valoracionAjustada = (estrellas + 5 * promedioGlobal) / (cantidadResenas + 5.0);
-            double ventasNormalizadas = maximo == 0 ? 0 : Math.log1p(cantidades.getOrDefault(libro.getId(),
-                0L)) / Math.log1p(maximo);
-            long dias = Math.max(0, ChronoUnit.DAYS.between(libro.getFechaCreacion(), ahora));
-            double puntajeNovedad = Math.exp(-dias / 30.0);
-            puntos.put(libro.getId(), .60 * ventasNormalizadas + .25 * valoracionAjustada / 5.0 + .15 *
-                puntajeNovedad);
+            // Ventas del libro respecto al más vendido (entre 0 y 1).
+            double ventasNormalizadas = 0;
+            if (maximo > 0)
+                ventasNormalizadas = (double) cantidades.getOrDefault(libro.getId(), 0L) / maximo;
+            // Novedad: 1 para un libro de hoy y se reduce a la mitad cada 30 días.
+            long dias = ChronoUnit.DAYS.between(libro.getFechaCreacion(), ahora);
+            double puntajeNovedad = Math.pow(0.5, dias / 30.0);
+            double puntaje = 0.60 * ventasNormalizadas + 0.25 * valoracionAjustada / 5.0 + 0.15 * puntajeNovedad;
+            puntos.put(libro.getId(), puntaje);
         }
         return puntos;
     }

@@ -1,7 +1,5 @@
 package me.Service.compra;
 
-import jakarta.enterprise.context.RequestScoped;
-import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -16,23 +14,22 @@ import jakarta.ws.rs.core.MediaType;
 import me.Business.exceptions.NegocioException;
 import me.Business.exceptions.ValidacionException;
 import me.Model.dto.compra.ResumenCompraDTO;
-import me.Service.Servicios;
+import me.Business.compra.CarritoBO;
+import me.Business.compra.CarritoBOImpl;
 import me.Service.Sesion;
 
 @Path("carrito")
 @Produces(MediaType.APPLICATION_JSON)
-@RequestScoped
 public class CarritoRS {
 
-    @Inject
-    private Servicios servicios;
+    private final CarritoBO carritoBO = new CarritoBOImpl();
 
     @Context
     private HttpServletRequest peticion;
 
     @GET
     public ResumenCompraDTO consultar() throws NegocioException {
-        return servicios.getCarritoBO().consultar(Sesion.exigirIdUsuario(peticion));
+        return carritoBO.consultar(Sesion.exigirIdUsuario(peticion));
     }
 
     @POST
@@ -42,7 +39,7 @@ public class CarritoRS {
         int idUsuario = Sesion.exigirIdUsuario(peticion);
         if (cantidad == null)
             throw new ValidacionException("cantidad", "Indica la cantidad.");
-        return servicios.getCarritoBO().agregar(idUsuario, idLibro, cantidad);
+        return carritoBO.agregar(idUsuario, idLibro, cantidad);
     }
 
     @PUT
@@ -52,17 +49,17 @@ public class CarritoRS {
         int idUsuario = Sesion.exigirIdUsuario(peticion);
         if (cantidad == null)
             throw new ValidacionException("cantidad", "Indica la cantidad.");
-        return servicios.getCarritoBO().cambiarCantidad(idUsuario, idLibro, cantidad);
+        return carritoBO.cambiarCantidad(idUsuario, idLibro, cantidad);
     }
 
     @DELETE
     @Path("libros/{idLibro}")
     public ResumenCompraDTO retirar(@PathParam("idLibro") int idLibro) throws NegocioException {
-        return servicios.getCarritoBO().retirar(Sesion.exigirIdUsuario(peticion), idLibro);
+        return carritoBO.retirar(Sesion.exigirIdUsuario(peticion), idLibro);
     }
 
     @DELETE
     public ResumenCompraDTO vaciar() throws NegocioException {
-        return servicios.getCarritoBO().vaciar(Sesion.exigirIdUsuario(peticion));
+        return carritoBO.vaciar(Sesion.exigirIdUsuario(peticion));
     }
 }

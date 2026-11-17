@@ -51,14 +51,14 @@ public partial class EstructuraPrincipal : IDisposable
 
     private async Task Buscar()
     {
-        if (Sesion.BuscarEnListado is not null)
+        if (Sesion.BuscarEnListado != null)
             await Sesion.BuscarEnListado(Sesion.TextoBusqueda.Trim());
         else
             Navegacion.NavigateTo("/catalogo?q=" + Uri.EscapeDataString(Sesion.TextoBusqueda.Trim()));
     }
     private void AbrirCuenta()
     {
-        if (Sesion.Usuario is null)
+        if (Sesion.Usuario == null)
             AbrirAcceso();
         else
             cuentaAbierta = true;

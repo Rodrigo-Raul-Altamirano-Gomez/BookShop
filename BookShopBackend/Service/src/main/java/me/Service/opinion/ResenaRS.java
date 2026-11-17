@@ -1,7 +1,5 @@
 package me.Service.opinion;
 
-import jakarta.enterprise.context.RequestScoped;
-import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -19,17 +17,19 @@ import me.Model.dto.opinion.ConsultaResenasDTO;
 import me.Model.dto.opinion.DatosResenaDTO;
 import me.Model.dto.opinion.ResenaDTO;
 import me.Model.dto.opinion.ValoracionLibroDTO;
-import me.Service.Servicios;
+import me.Business.opinion.ResenaBO;
+import me.Business.opinion.ResenaBOImpl;
+import me.Business.opinion.VotoUtilBO;
+import me.Business.opinion.VotoUtilBOImpl;
 import me.Service.Sesion;
 
 @Path("resenas")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@RequestScoped
 public class ResenaRS {
 
-    @Inject
-    private Servicios servicios;
+    private final ResenaBO resenaBO = new ResenaBOImpl();
+    private final VotoUtilBO votoUtilBO = new VotoUtilBOImpl();
 
     @Context
     private HttpServletRequest peticion;
@@ -37,55 +37,55 @@ public class ResenaRS {
     @GET
     @Path("libro/{idLibro}/publicacion/permitida")
     public void verificarPuedePublicar(@PathParam("idLibro") int idLibro) throws NegocioException {
-        servicios.getResenaBO().verificarPuedePublicar(Sesion.exigirIdUsuario(peticion), idLibro);
+        resenaBO.verificarPuedePublicar(Sesion.exigirIdUsuario(peticion), idLibro);
     }
 
     @POST
     @Path("libro/{idLibro}")
     public int publicar(@PathParam("idLibro") int idLibro, DatosResenaDTO datos) throws NegocioException {
-        return servicios.getResenaBO().publicar(Sesion.exigirIdUsuario(peticion), idLibro, datos);
+        return resenaBO.publicar(Sesion.exigirIdUsuario(peticion), idLibro, datos);
     }
 
     @PUT
     @Path("{id}")
     public void modificar(@PathParam("id") int id, DatosResenaDTO datos) throws NegocioException {
-        servicios.getResenaBO().modificar(Sesion.exigirIdUsuario(peticion), id, datos);
+        resenaBO.modificar(Sesion.exigirIdUsuario(peticion), id, datos);
     }
 
     @DELETE
     @Path("{id}")
     public void eliminarPropia(@PathParam("id") int id) throws NegocioException {
-        servicios.getResenaBO().eliminarPropia(Sesion.exigirIdUsuario(peticion), id);
+        resenaBO.eliminarPropia(Sesion.exigirIdUsuario(peticion), id);
     }
 
     @POST
     @Path("propias/busqueda")
     public ResultadoPaginadoDTO<ResenaDTO> listarPropias(ConsultaResenasDTO consulta) throws NegocioException {
-        return servicios.getResenaBO().listarPropias(Sesion.exigirIdUsuario(peticion), consulta);
+        return resenaBO.listarPropias(Sesion.exigirIdUsuario(peticion), consulta);
     }
 
     @PUT
     @Path("{id}/voto")
     public boolean marcarVoto(@PathParam("id") int id) throws NegocioException {
-        return servicios.getVotoUtilBO().cambiarVoto(Sesion.exigirIdUsuario(peticion), id, true);
+        return votoUtilBO.cambiarVoto(Sesion.exigirIdUsuario(peticion), id, true);
     }
 
     @DELETE
     @Path("{id}/voto")
     public boolean retirarVoto(@PathParam("id") int id) throws NegocioException {
-        return servicios.getVotoUtilBO().cambiarVoto(Sesion.exigirIdUsuario(peticion), id, false);
+        return votoUtilBO.cambiarVoto(Sesion.exigirIdUsuario(peticion), id, false);
     }
 
     @POST
     @Path("libro/{idLibro}/busqueda")
     public ResultadoPaginadoDTO<ResenaDTO> listarPorLibro(@PathParam("idLibro") int idLibro,
         ConsultaResenasDTO consulta) throws NegocioException {
-        return servicios.getResenaBO().listarPorLibro(Sesion.obtenerIdUsuario(peticion), idLibro, consulta);
+        return resenaBO.listarPorLibro(Sesion.obtenerIdUsuario(peticion), idLibro, consulta);
     }
 
     @GET
     @Path("libro/{idLibro}/valoracion")
     public ValoracionLibroDTO obtenerValoracion(@PathParam("idLibro") int idLibro) throws NegocioException {
-        return servicios.getResenaBO().obtenerValoracion(idLibro);
+        return resenaBO.obtenerValoracion(idLibro);
     }
 }

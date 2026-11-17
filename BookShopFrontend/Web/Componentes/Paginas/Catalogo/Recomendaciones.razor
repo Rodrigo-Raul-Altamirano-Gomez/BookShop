@@ -2,7 +2,7 @@
 @page "/para-ti"
 <PageTitle>@Titulo · BookShop</PageTitle>
 <div class="container py-4">
-@if (personal && Sesion.Usuario is null)
+@if (personal && Sesion.Usuario == null)
 {
     <h1>Para ti</h1>
     <p>Inicia sesión para consultar tus recomendaciones.</p>
@@ -11,7 +11,7 @@
 else
 {
     <Cargando EnCurso="cargando" Error="@error" AlReintentar="Abrir">
-        @if (idConsulta is not null)
+        @if (idConsulta != null)
         {
             <ExploradorCatalogo @key="idConsulta" Titulo="@Titulo" IdConsulta="@idConsulta" OrdenFijo="true" />
         }

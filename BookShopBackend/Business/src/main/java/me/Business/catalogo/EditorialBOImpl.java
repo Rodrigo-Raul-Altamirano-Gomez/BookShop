@@ -1,10 +1,7 @@
 package me.Business.catalogo;
 
 import java.sql.SQLException;
-import java.time.Clock;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import me.Business.exceptions.ConflictoException;
 import me.Business.exceptions.NegocioException;
 import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.RecursoNoEncontradoException;
@@ -27,21 +24,9 @@ import me.Model.entities.usuario.Usuario;
 
 public class EditorialBOImpl implements EditorialBO {
 
-    private final EditorialDAO editorialDAO;
-    private final LibroDAO libroDAO;
-    private final UsuarioDAO usuarioDAO;
-    private final Clock reloj;
-
-    public EditorialBOImpl() {
-        this(new EditorialDAOImpl(), new LibroDAOImpl(), new UsuarioDAOImpl(), Clock.system(ZoneId.of("America/Lima")));
-    }
-
-    public EditorialBOImpl(EditorialDAO editorialDAO, LibroDAO libroDAO, UsuarioDAO usuarioDAO, Clock reloj) {
-        this.editorialDAO = editorialDAO;
-        this.libroDAO = libroDAO;
-        this.usuarioDAO = usuarioDAO;
-        this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
-    }
+    private final EditorialDAO editorialDAO = new EditorialDAOImpl();
+    private final LibroDAO libroDAO = new LibroDAOImpl();
+    private final UsuarioDAO usuarioDAO = new UsuarioDAOImpl();
 
     @Override
     public int registrar(int idActor, RegistroReferenciaDTO registro) throws NegocioException {
@@ -55,7 +40,7 @@ public class EditorialBOImpl implements EditorialBO {
             editorial.setDescripcion(datos.introduccion());
             editorial.setImagen(registro.imagen());
             editorial.setUsuarioCreacion(actor.getEmail());
-            editorial.setFechaCreacion(LocalDateTime.now(reloj));
+            editorial.setFechaCreacion(LocalDateTime.now());
             if (editorialDAO.existeNombre(datos.nombre().strip(), 0))
                 throw new ValidacionException("nombre", "Ya existe una editorial con ese nombre.");
             editorialDAO.insertar(editorial);
@@ -92,7 +77,7 @@ public class EditorialBOImpl implements EditorialBO {
             if (editorial == null || editorial.isEliminado())
                 throw new RecursoNoEncontradoException("La editorial no está disponible.");
             if (!editorialDAO.cambiarImagen(id, imagen, actor.getEmail()))
-                throw new ConflictoException("La editorial cambio; vuelva a consultarlo.");
+                throw new NegocioException("La editorial cambio; vuelva a consultarlo.");
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo cambiar la imagen de la editorial.", e);
         }
@@ -107,7 +92,7 @@ public class EditorialBOImpl implements EditorialBO {
                 throw new RecursoNoEncontradoException("La editorial no esta disponible.");
             if (editorial.isActivo() != activo) {
                 if (!editorialDAO.cambiarActivo(id, activo, actor.getEmail()))
-                    throw new ConflictoException("La editorial cambio; vuelva a consultarlo.");
+                    throw new NegocioException("La editorial cambio; vuelva a consultarlo.");
                 libroDAO.recalcularVetosPorEditorial(id, actor.getEmail());
             }
             TransactionContext.commit();
@@ -130,7 +115,7 @@ public class EditorialBOImpl implements EditorialBO {
             if (editorial == null || editorial.isEliminado())
                 throw new RecursoNoEncontradoException("La editorial no esta disponible.");
             if (!editorialDAO.eliminar(id, actor.getEmail()))
-                throw new ConflictoException("La editorial cambio; vuelva a consultarlo.");
+                throw new NegocioException("La editorial cambio; vuelva a consultarlo.");
             libroDAO.recalcularVetosPorEditorial(id, actor.getEmail());
             TransactionContext.commit();
         } catch (SQLException e) {

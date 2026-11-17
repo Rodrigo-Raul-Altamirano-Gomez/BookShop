@@ -26,7 +26,7 @@ public class DocumentoServicio
         Descargar($"documentos/usuarios?mes={anio:D4}-{mes:D2}{Cantidad(cantidad)}",
             $"reporte-usuarios-{anio:D4}-{mes:D2}.pdf");
 
-    private static string Cantidad(int? cantidad) => cantidad is null ? "" : $"&cantidad={cantidad}";
+    private static string Cantidad(int? cantidad) => cantidad == null ? "" : $"&cantidad={cantidad}";
 
     private async Task Descargar(string ruta, string nombreArchivo)
     {

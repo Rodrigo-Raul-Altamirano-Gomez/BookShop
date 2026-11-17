@@ -3,7 +3,7 @@
 <PageTitle>Mis reseñas · BookShop</PageTitle>
 <div class="container py-4">
     <h1>Mis reseñas</h1>
-    @if (Sesion.Usuario is null)
+    @if (Sesion.Usuario == null)
     {
         <p>Inicia sesión para consultar tus reseñas.</p>
         <button class="btn btn-primary" @onclick="Sesion.MostrarAcceso">Iniciar sesión</button>
@@ -51,7 +51,7 @@
             <Paginacion Pagina="consulta.Pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
         </Cargando>
     }
-    @if (resenaEnEdicion is not null)
+    @if (resenaEnEdicion != null)
     {
         <FormularioResena Titulo="Editar reseña" Valor="resenaEnEdicion" AlGuardar="Guardar" AlCerrar="CerrarEdicion" />
     }

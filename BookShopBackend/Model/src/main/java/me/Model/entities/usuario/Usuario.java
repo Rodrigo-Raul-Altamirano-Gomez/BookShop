@@ -2,7 +2,6 @@ package me.Model.entities.usuario;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Locale;
 
 public class Usuario {
 
@@ -167,7 +166,7 @@ public class Usuario {
     public boolean tieneCorreoAdministrador() {
         if (email == null)
             return false;
-        String correo = email.trim().toLowerCase(Locale.ROOT);
+        String correo = email.trim().toLowerCase();
         int separador = correo.indexOf('@');
         return separador > 0 && separador == correo.lastIndexOf('@') && correo.substring(separador +
             1).equals("admin.bookshop");

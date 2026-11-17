@@ -175,7 +175,7 @@ public partial class DetalleLibro : IDisposable
             return;
         }
 
-        if (Sesion.LibroComparacion is null)
+        if (Sesion.LibroComparacion == null)
         {
             Sesion.LibroComparacion = Libro;
             Sesion.Notificar();

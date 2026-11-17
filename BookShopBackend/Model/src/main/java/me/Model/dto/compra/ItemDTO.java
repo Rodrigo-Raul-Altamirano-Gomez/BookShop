@@ -7,8 +7,4 @@ import java.math.BigDecimal;
 public record ItemDTO(int idLibro, String titulo, String portada, int cantidad, BigDecimal precioOriginal,
     BigDecimal precioUnitario, BigDecimal porcentajeDescuento, BigDecimal subtotal, Boolean activo, Integer
     stockDisponible) {
-
-    public BigDecimal descuentoTotal() {
-        return precioOriginal.subtract(precioUnitario).multiply(BigDecimal.valueOf(cantidad));
-    }
 }

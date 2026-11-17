@@ -44,8 +44,8 @@ public static class Presentacion
         libro.Anio = dto.AnioEdicion;
         libro.Paginas = dto.NumeroPaginas;
         libro.Stock = dto.StockDisponible;
-        libro.Peso = dto.Peso is null ? "—" : $"{dto.Peso} kg";
-        libro.Dimensiones = dto.Alto is null || dto.Ancho is null ? "—" : $"{dto.Alto} × {dto.Ancho} cm";
+        libro.Peso = dto.Peso == null ? "—" : $"{dto.Peso} kg";
+        libro.Dimensiones = dto.Alto == null || dto.Ancho == null ? "—" : $"{dto.Alto} × {dto.Ancho} cm";
         libro.Saga = dto.Saga ?? "";
         libro.Tomo = dto.NumeroTomo;
         libro.Valoracion = dto.Valoracion;

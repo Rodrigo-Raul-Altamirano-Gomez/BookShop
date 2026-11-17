@@ -3,20 +3,17 @@ package me.Business.compra;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.SQLException;
-import java.time.Clock;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import me.Business.configuracion.ConfiguracionBO;
 import me.Business.configuracion.ConfiguracionBOImpl;
-import me.Business.exceptions.ConflictoException;
 import me.Business.exceptions.NegocioException;
 import me.Business.exceptions.PersistenciaException;
 import me.Business.exceptions.RecursoNoEncontradoException;
-import me.Business.exceptions.StockInsuficienteException;
 import me.Business.exceptions.ValidacionException;
 import me.DAO.catalogo.DescuentoDAO;
 import me.DAO.catalogo.DescuentoDAOImpl;
@@ -30,31 +27,11 @@ import me.Model.entities.catalogo.Libro;
 
 public class CarritoBOImpl implements CarritoBO {
 
-    private static final Map<Integer, EstadoCarrito> CARRITOS = new HashMap<>();
-    private final Map<Integer, EstadoCarrito> carritos;
-    private final LibroDAO libroDAO;
-    private final DescuentoDAO descuentoDAO;
-    private final Clock reloj;
-    private final ProveedorConfiguracion configuracion;
-
-    public CarritoBOImpl() {
-        this(new LibroDAOImpl(), new DescuentoDAOImpl(), Clock.system(ZoneId.of("America/Lima")),
-            ConfiguracionBOImpl::actual, CARRITOS);
-    }
-
-    public CarritoBOImpl(LibroDAO libroDAO, DescuentoDAO descuentoDAO, Clock reloj, ProveedorConfiguracion
-        configuracion) {
-        this(libroDAO, descuentoDAO, reloj, configuracion, new HashMap<>());
-    }
-
-    private CarritoBOImpl(LibroDAO libroDAO, DescuentoDAO descuentoDAO, Clock reloj, ProveedorConfiguracion
-        configuracion, Map<Integer, EstadoCarrito> carritos) {
-        this.libroDAO = libroDAO;
-        this.descuentoDAO = descuentoDAO;
-        this.reloj = reloj.withZone(ZoneId.of("America/Lima"));
-        this.configuracion = configuracion;
-        this.carritos = carritos;
-    }
+    // Los carritos viven en memoria y son compartidos por todas las instancias (uno por usuario).
+    private static final Map<Integer, EstadoCarrito> carritos = new HashMap<>();
+    private final LibroDAO libroDAO = new LibroDAOImpl();
+    private final DescuentoDAO descuentoDAO = new DescuentoDAOImpl();
+    private final ConfiguracionBO configuracionBO = new ConfiguracionBOImpl();
 
     // Pedido utiliza los mismos datos del carrito para preparar y confirmar la compra.
     static class EstadoCarrito {
@@ -92,13 +69,10 @@ public class CarritoBOImpl implements CarritoBO {
         EstadoCarrito carrito = obtenerCarrito(idUsuario);
         synchronized (carrito) {
             ItemDTO anterior = carrito.lineas.get(idLibro);
-            long cantidadTotal = cantidad;
+            int cantidadTotal = cantidad;
             if (anterior != null)
                 cantidadTotal += anterior.cantidad();
-            // La suma usa long para no desbordar antes de comprobar el stock.
-            if (cantidadTotal > Integer.MAX_VALUE)
-                throw new StockInsuficienteException("La cantidad supera el stock disponible.");
-            return guardarCantidad(carrito, idLibro, (int) cantidadTotal);
+            return guardarCantidad(carrito, idLibro, cantidadTotal);
         }
     }
 
@@ -126,9 +100,9 @@ public class CarritoBOImpl implements CarritoBO {
         ItemDTO anterior = carrito.lineas.get(idLibro);
         ItemDTO linea = consultarLinea(idLibro, cantidad, anterior);
         if (!linea.activo())
-            throw new ConflictoException("El libro no esta disponible.");
+            throw new NegocioException("El libro no esta disponible.");
         if (cantidad > linea.stockDisponible())
-            throw new StockInsuficienteException("No hay stock suficiente de " + linea.titulo() + ".");
+            throw new NegocioException("No hay stock suficiente de " + linea.titulo() + ".");
         List<ItemDTO> items = new ArrayList<>();
         for (ItemDTO existente : carrito.lineas.values()) {
             if (existente.idLibro() == idLibro)
@@ -138,7 +112,7 @@ public class CarritoBOImpl implements CarritoBO {
         }
         if (anterior == null)
             items.add(linea);
-        ResumenCompraDTO resumen = calcularResumen(items, configuracion.obtener().porcentajeEnvio(), 0,
+        ResumenCompraDTO resumen = calcularResumen(items, configuracionBO.obtener().porcentajeEnvio(), 0,
             BigDecimal.ZERO);
         carrito.lineas.put(idLibro, linea);
         carrito.preparacion = null;
@@ -167,7 +141,7 @@ public class CarritoBOImpl implements CarritoBO {
         for (ItemDTO linea : carrito.lineas.values()) {
             items.add(consultarLinea(linea.idLibro(), linea.cantidad(), linea));
         }
-        return calcularResumen(items, configuracion.obtener().porcentajeEnvio(), 0, BigDecimal.ZERO);
+        return calcularResumen(items, configuracionBO.obtener().porcentajeEnvio(), 0, BigDecimal.ZERO);
     }
 
     // Actualiza precio y disponibilidad; conserva visible una línea cuyo libro fue retirado.
@@ -181,7 +155,7 @@ public class CarritoBOImpl implements CarritoBO {
                     anterior.precioOriginal(), anterior.precioUnitario(), anterior.porcentajeDescuento(),
                     anterior.precioUnitario().multiply(BigDecimal.valueOf(cantidad)), false, 0);
             }
-            Descuento descuento = descuentoDAO.obtenerVigente(idLibro, LocalDateTime.now(reloj));
+            Descuento descuento = descuentoDAO.obtenerVigente(idLibro, LocalDateTime.now());
             BigDecimal porcentaje = descuento == null ? BigDecimal.ZERO : descuento.getPorcentaje();
             BigDecimal precioFinal =
                 libro.getPrecioBase().multiply(BigDecimal.valueOf(100).subtract(porcentaje)).divide(

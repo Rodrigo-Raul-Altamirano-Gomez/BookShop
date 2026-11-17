@@ -25,7 +25,7 @@ public partial class Solicitudes
         rutaCargada = Ruta;
         resultado = new();
         CerrarDetalle();
-        if (Sesion.Usuario is null || (EsModeracion && !Sesion.EsAdministrador))
+        if (Sesion.Usuario == null || (EsModeracion && !Sesion.EsAdministrador))
             return;
         string ambito = EsModeracion ? "moderacion" : "propias";
         resultado = await Api.Post<ResultadoPaginadoDTO<ResumenSolicitudDTO>>(
@@ -152,7 +152,7 @@ public partial class Solicitudes
         errorOperacion = null;
         try
         {
-            if (devolucion is not null)
+            if (devolucion != null)
             {
                 var resuelta = await Api.Put<DetalleDevolucionDTO>(
                     $"solicitudes/devoluciones/{seleccionada!.Id}/resolucion?resultado={estado}");

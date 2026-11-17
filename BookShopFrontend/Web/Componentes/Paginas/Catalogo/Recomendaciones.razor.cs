@@ -29,7 +29,7 @@ public partial class Recomendaciones : IAsyncDisposable
         error = null;
         correoCargado = Sesion.Usuario?.Correo;
         await Descartar();
-        if (!personal || Sesion.Usuario is not null)
+        if (!personal || Sesion.Usuario != null)
         {
             try
             {
@@ -53,7 +53,7 @@ public partial class Recomendaciones : IAsyncDisposable
 
     private async Task Descartar()
     {
-        if (idConsulta is null)
+        if (idConsulta == null)
             return;
         string anterior = idConsulta;
         idConsulta = null;
