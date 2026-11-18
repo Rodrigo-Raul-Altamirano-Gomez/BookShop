@@ -7,7 +7,6 @@ public partial class MisPedidos
     [Inject] private HttpClientUtils Api { get; set; } = default!;
     private static readonly string[] Estados = ["EN_ALMACEN", "EN_CAMINO", "ENTREGADO", "CANCELADO", "DEVUELTO"];
     private FiltroPedidoDTO filtro = new();
-    private List<string> estadosSeleccionados = [];
     private ResultadoPaginadoDTO<TarjetaPedidoDTO> resultado = new();
     private int TotalPaginas => Math.Max(1, (int)((resultado.TotalResultados + 9) / 10));
 
@@ -17,7 +16,6 @@ public partial class MisPedidos
         if (Sesion.EstadoVistas.ContainsKey("cuenta:mis-pedidos"))
             filtro = (FiltroPedidoDTO)Sesion.EstadoVistas["cuenta:mis-pedidos"];
         Sesion.EstadoVistas["cuenta:mis-pedidos"] = filtro;
-        estadosSeleccionados = filtro.Estados.ToList();
     }
 
     protected override async Task CargarDatos()
@@ -27,25 +25,12 @@ public partial class MisPedidos
             resultado = await Api.Post<ResultadoPaginadoDTO<TarjetaPedidoDTO>>("pedidos/busqueda", filtro);
     }
 
-    private void AlternarEstado(string estado)
+    private async Task AlternarEstado(string estado)
     {
-        if (estadosSeleccionados.Contains(estado))
-            estadosSeleccionados.Remove(estado);
+        if (filtro.Estados.Contains(estado))
+            filtro.Estados.Remove(estado);
         else
-            estadosSeleccionados.Add(estado);
-    }
-
-    private async Task Aplicar()
-    {
-        filtro.Estados = estadosSeleccionados.ToList();
-        await Ordenar();
-    }
-
-    private async Task Limpiar()
-    {
-        estadosSeleccionados.Clear();
-        filtro.Estados.Clear();
-        filtro.Orden = "FECHA_PAGO_DESCENDENTE";
+            filtro.Estados.Add(estado);
         await Ordenar();
     }
 

@@ -2,80 +2,96 @@
 @inherits PaginaCuenta
 <PageTitle>Mis pedidos · BookShop</PageTitle>
 <div class="container py-4">
-    <h1>Mis pedidos</h1>
     @if (Sesion.Usuario == null)
     {
+        <h1 class="page-heading">Mis pedidos</h1>
         <p>Inicia sesión para consultar tus pedidos.</p>
         <button class="btn btn-primary" @onclick="Sesion.MostrarAcceso">Iniciar sesión</button>
     }
     else
     {
-        <div class="row g-4 mt-1">
-        <aside class="filters col-12 col-lg-3">
-        <h2>Filtros</h2>
-        <form @onsubmit="Aplicar" @onsubmit:preventDefault>
-            <fieldset class="filter-group border-0 p-0 m-0">
-                <h3>Estados del pedido</h3>
-                <div class="d-flex flex-column">
-                    @foreach (string estado in Estados)
-                    {
-                        <label class="form-check">
-                            <input class="form-check-input" type="checkbox" checked="@estadosSeleccionados.Contains(estado)"
-                                @onchange="() => AlternarEstado(estado)" />
-                            <span class="form-check-label">@Presentacion.EstadoPedido(estado)</span>
-                        </label>
-                    }
-                </div>
-            </fieldset>
-            <div class="d-flex gap-2">
-                <button class="btn btn-primary" type="submit" disabled="@CargandoDatos">Aplicar filtros</button>
-                <button class="btn btn-secondary" type="button" @onclick="Limpiar" disabled="@CargandoDatos">Limpiar</button>
-            </div>
-        </form>
-        </aside>
-        <section class="col-12 col-lg-9">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-            <span>@resultado.TotalResultados pedidos</span>
-            <label class="d-flex align-items-center gap-2">Ordenar por:
-                <select class="form-select" @bind="filtro.Orden" @bind:after="Ordenar" disabled="@CargandoDatos">
-                    <option value="FECHA_PAGO_DESCENDENTE">Más recientes</option>
-                    <option value="TOTAL_ASCENDENTE">Total ascendente</option>
-                    <option value="TOTAL_DESCENDENTE">Total descendente</option>
-                </select>
-            </label>
-        </div>
-        <Cargando EnCurso="@CargandoDatos" Error="@ErrorCarga" AlReintentar="ActualizarDatos">
-            @if (resultado.Items.Count == 0)
-            {
-                <p>No hay pedidos con estos criterios.</p>
-            }
-            @foreach (var tarjeta in resultado.Items)
-            {
-                var pedido = tarjeta.Pedido;
-                <article class="card p-4 mb-3">
-                    <div class="d-flex flex-wrap align-items-center gap-4">
-                        <div class="portadas d-flex align-items-center gap-1">
-                            @foreach (string? portada in tarjeta.Portadas.Take(4))
+        <div class="row g-4">
+            <aside class="filters col-12 col-lg-3">
+                <fieldset disabled="@CargandoDatos" class="border-0 p-0 m-0">
+                    <h2>Filtros</h2>
+                    <div class="filter-group">
+                        <h3>Estado</h3>
+                        <div class="d-grid gap-2">
+                            @foreach (string estado in Estados)
                             {
-                                <img src="@(portada ?? "/images/book-placeholder.svg")" alt="Portada de un libro del pedido" />
-                            }
-                            @if (tarjeta.Portadas.Count > 4)
-                            {
-                                <span class="ms-2">+@(tarjeta.Portadas.Count - 4) portadas</span>
+                                <label class="form-check d-flex align-items-center gap-2">
+                                    <input class="form-check-input" type="checkbox" checked="@filtro.Estados.Contains(estado)"
+                                        @onchange="() => AlternarEstado(estado)" />
+                                    <span>@Presentacion.EstadoPedido(estado)</span>
+                                </label>
                             }
                         </div>
-                        <div class="flex-grow-1">
-                            <h2 class="h4">Pedido #@pedido.Id</h2>
-                            <p class="mb-2">@pedido.FechaPago.ToString("dd/MM/yyyy HH:mm") · @Presentacion.EstadoPedido(pedido.Estado)</p>
-                            <p class="mb-0">@pedido.CantidadLibros ejemplares · <strong>@Presentacion.Dinero(pedido.Total)</strong></p>
-                        </div>
-                        <a class="btn btn-primary" href="/pedidos/@pedido.Id">Ver detalle</a>
                     </div>
-                </article>
-            }
-            <Paginacion Pagina="filtro.Pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
-        </Cargando>
-        </section>
-    </div>
+                    <div class="filter-group active-filters border-top pt-3">
+                        <h3>Filtros activos</h3>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (string estado in filtro.Estados)
+                            {
+                                <button class="btn btn-sm btn-outline-secondary rounded-pill" @onclick="() => AlternarEstado(estado)">
+                                    @Presentacion.EstadoPedido(estado)
+                                    <Icono Nombre="close" />
+                                </button>
+                            }
+                            @if (filtro.Estados.Count == 0)
+                            {
+                                <span class="text-body-secondary">Ninguno</span>
+                            }
+                        </div>
+                    </div>
+                </fieldset>
+            </aside>
+            <section class="col-12 col-lg-9">
+                <div class="results-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div class="result-title d-flex flex-wrap align-items-baseline gap-3 flex-grow-1">
+                        <h1>Mis pedidos</h1>
+                        <span>@resultado.TotalResultados pedidos</span>
+                    </div>
+                    <label class="sort-label d-flex align-items-center gap-2">
+                        Ordenar por:
+                        <select class="form-select" aria-label="Ordenar pedidos" disabled="@CargandoDatos" @bind="filtro.Orden" @bind:after="Ordenar">
+                            <option value="FECHA_PAGO_DESCENDENTE">Más recientes</option>
+                            <option value="TOTAL_ASCENDENTE">Total ascendente</option>
+                            <option value="TOTAL_DESCENDENTE">Total descendente</option>
+                        </select>
+                    </label>
+                </div>
+                <Cargando EnCurso="@CargandoDatos" Error="@ErrorCarga" AlReintentar="ActualizarDatos">
+                    @if (resultado.Items.Count == 0)
+                    {
+                        <p>No hay pedidos con estos criterios.</p>
+                    }
+                    @foreach (var tarjeta in resultado.Items)
+                    {
+                        var pedido = tarjeta.Pedido;
+                        <article class="card p-4 mb-3">
+                            <div class="d-flex flex-wrap align-items-center gap-4">
+                                <div class="portadas d-flex align-items-center gap-1">
+                                    @foreach (string? portada in tarjeta.Portadas.Take(4))
+                                    {
+                                        <img src="@(portada ?? "/images/book-placeholder.svg")" alt="Portada de un libro del pedido" />
+                                    }
+                                    @if (tarjeta.Portadas.Count > 4)
+                                    {
+                                        <span class="ms-2">+@(tarjeta.Portadas.Count - 4) portadas</span>
+                                    }
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h2 class="h4">Pedido #@pedido.Id</h2>
+                                    <p class="mb-2">@pedido.FechaPago.ToString("dd/MM/yyyy HH:mm") · @Presentacion.EstadoPedido(pedido.Estado)</p>
+                                    <p class="mb-0">@pedido.CantidadLibros ejemplares · <strong>@Presentacion.Dinero(pedido.Total)</strong></p>
+                                </div>
+                                <a class="btn btn-primary" href="/pedidos/@pedido.Id">Ver detalle</a>
+                            </div>
+                        </article>
+                    }
+                    <Paginacion Pagina="filtro.Pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
+                </Cargando>
+            </section>
+        </div>
     }
 </div>

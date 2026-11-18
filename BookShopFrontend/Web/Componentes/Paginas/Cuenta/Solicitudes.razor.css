@@ -1,0 +1,9 @@
+.result-title span {
+    white-space: nowrap;
+    font-size: 13px;
+}
+
+.active-filters {
+    border-top: 1px solid var(--line);
+    padding-top: 17px;
+}

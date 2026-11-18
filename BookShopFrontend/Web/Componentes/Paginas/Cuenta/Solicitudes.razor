@@ -3,47 +3,73 @@
 @inherits PaginaCuenta
 <PageTitle>@Titulo · BookShop</PageTitle>
 <div class="container py-4">
-    <h1>@Titulo</h1>
     @if (Sesion.Usuario == null)
     {
+        <h1 class="page-heading">@Titulo</h1>
         <p>Inicia sesión para consultar las solicitudes.</p>
         <button class="btn btn-primary" @onclick="Sesion.MostrarAcceso">Iniciar sesión</button>
     }
     else if (EsModeracion && !Sesion.EsAdministrador)
     {
+        <h1 class="page-heading">@Titulo</h1>
         <p class="alert alert-warning">Solo los administradores pueden acceder a moderación.</p>
     }
     else
     {
-        <div class="row g-4 mt-1">
-        <aside class="filters col-12 col-lg-3">
-        <h2>Filtros</h2>
-        <fieldset class="filter-group border-0 p-0 m-0" disabled="@(CargandoDatos || procesando)">
-            <h3>Estados</h3>
-            <p class="small">Sin selección se muestran todos.</p>
-            @foreach (string estado in estados)
-            {
-                @if (estado != "CERRADA" || consulta.Tipo == "REPORTE_RESENA")
-                {
-                    <label class="form-check-label d-block">
-                        <input class="form-check-input me-1" type="checkbox" checked="@consulta.Estados.Contains(estado)"
-                            @onchange="() => CambiarEstado(estado)" />@TextoEstado(estado)
-                    </label>
-                }
-            }
-        </fieldset>
-        </aside>
-        <section class="col-12 col-lg-9">
-        <div class="nav nav-tabs mb-4" role="tablist" aria-label="Tipos de solicitudes">
-            <button class="nav-link @(consulta.Tipo == "DEVOLUCION" ? "active" : "")" role="tab"
+        <div class="nav nav-tabs bookshop-tabs" role="tablist" aria-label="Tipos de solicitudes">
+            <button class="nav-link bookshop-tab @(consulta.Tipo == "DEVOLUCION" ? "active" : "")" role="tab"
                 aria-selected="@(consulta.Tipo == "DEVOLUCION")" disabled="@(CargandoDatos || procesando)"
                 @onclick='() => MostrarTipo("DEVOLUCION")'>Devoluciones</button>
-            <button class="nav-link @(consulta.Tipo == "REPORTE_RESENA" ? "active" : "")" role="tab"
+            <button class="nav-link bookshop-tab @(consulta.Tipo == "REPORTE_RESENA" ? "active" : "")" role="tab"
                 aria-selected="@(consulta.Tipo == "REPORTE_RESENA")" disabled="@(CargandoDatos || procesando)"
                 @onclick='() => MostrarTipo("REPORTE_RESENA")'>Reportes de reseñas</button>
         </div>
+        <div class="row g-4">
+        <aside class="filters col-12 col-lg-3">
+            <fieldset disabled="@(CargandoDatos || procesando)" class="border-0 p-0 m-0">
+                <h2>Filtros</h2>
+                <div class="filter-group">
+                    <h3>Estado</h3>
+                    <div class="d-grid gap-2">
+                        @foreach (string estado in estados)
+                        {
+                            @if (estado != "CERRADA" || consulta.Tipo == "REPORTE_RESENA")
+                            {
+                                <label class="form-check d-flex align-items-center gap-2">
+                                    <input class="form-check-input" type="checkbox" checked="@consulta.Estados.Contains(estado)"
+                                        @onchange="() => CambiarEstado(estado)" />
+                                    <span>@TextoEstado(estado)</span>
+                                </label>
+                            }
+                        }
+                    </div>
+                </div>
+                <div class="filter-group active-filters border-top pt-3">
+                    <h3>Filtros activos</h3>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (string estado in consulta.Estados)
+                        {
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill" @onclick="() => CambiarEstado(estado)">
+                                @TextoEstado(estado)
+                                <Icono Nombre="close" />
+                            </button>
+                        }
+                        @if (consulta.Estados.Count == 0)
+                        {
+                            <span class="text-body-secondary">Ninguno</span>
+                        }
+                    </div>
+                </div>
+            </fieldset>
+        </aside>
+        <section class="col-12 col-lg-9">
+        <div class="results-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="result-title d-flex flex-wrap align-items-baseline gap-3 flex-grow-1">
+                <h1>@Titulo</h1>
+                <span>@resultado.TotalResultados solicitudes</span>
+            </div>
+        </div>
         <Cargando EnCurso="@CargandoDatos" Error="@ErrorCarga" AlReintentar="ActualizarDatos">
-            <p>@resultado.TotalResultados solicitudes</p>
             @if (resultado.Items.Count == 0)
             {
                 <p>No hay solicitudes en esta lista.</p>
