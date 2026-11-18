@@ -10,10 +10,13 @@
     }
     else
     {
-        <form class="card p-3 my-4" @onsubmit="Aplicar" @onsubmit:preventDefault>
-            <fieldset>
-                <legend class="fs-6">Estados del pedido</legend>
-                <div class="d-flex flex-wrap gap-3">
+        <div class="row g-4 mt-1">
+        <aside class="filters col-12 col-lg-3">
+        <h2>Filtros</h2>
+        <form @onsubmit="Aplicar" @onsubmit:preventDefault>
+            <fieldset class="filter-group border-0 p-0 m-0">
+                <h3>Estados del pedido</h3>
+                <div class="d-flex flex-column">
                     @foreach (string estado in Estados)
                     {
                         <label class="form-check">
@@ -24,11 +27,13 @@
                     }
                 </div>
             </fieldset>
-            <div class="d-flex gap-2 mt-3">
+            <div class="d-flex gap-2">
                 <button class="btn btn-primary" type="submit" disabled="@CargandoDatos">Aplicar filtros</button>
                 <button class="btn btn-secondary" type="button" @onclick="Limpiar" disabled="@CargandoDatos">Limpiar</button>
             </div>
         </form>
+        </aside>
+        <section class="col-12 col-lg-9">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
             <span>@resultado.TotalResultados pedidos</span>
             <label class="d-flex align-items-center gap-2">Ordenar por:
@@ -70,5 +75,7 @@
             }
             <Paginacion Pagina="filtro.Pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
         </Cargando>
+        </section>
+    </div>
     }
 </div>

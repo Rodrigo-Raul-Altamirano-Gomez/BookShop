@@ -15,14 +15,18 @@
     }
     else
     {
-        <div class="d-flex flex-wrap gap-3">
-            <a class="btn btn-secondary" href="/administracion/libros">Libros</a>
-            <a class="btn btn-secondary" href="/administracion/autores">Autores</a>
-            <a class="btn btn-secondary" href="/administracion/categorias">Categorías</a>
-            <a class="btn btn-secondary" href="/administracion/editoriales">Editoriales</a>
-            <a class="btn btn-secondary" href="/moderacion">Moderación</a>
-            <a class="btn btn-secondary" href="/administracion/configuracion">Configuración</a>
-            <button class="btn btn-primary" @onclick="() => reportesAbiertos = true">Reportes</button>
+        <h2 class="h4 mb-3">Catálogo</h2>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3 mb-5">
+            <div class="col"><a class="btn btn-secondary btn-lg w-100 py-4" href="/administracion/libros">Libros</a></div>
+            <div class="col"><a class="btn btn-secondary btn-lg w-100 py-4" href="/administracion/autores">Autores</a></div>
+            <div class="col"><a class="btn btn-secondary btn-lg w-100 py-4" href="/administracion/categorias">Categorías</a></div>
+            <div class="col"><a class="btn btn-secondary btn-lg w-100 py-4" href="/administracion/editoriales">Editoriales</a></div>
+        </div>
+        <h2 class="h4 mb-3">Gestión</h2>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3">
+            <div class="col"><a class="btn btn-secondary btn-lg w-100 py-4" href="/moderacion">Moderación</a></div>
+            <div class="col"><a class="btn btn-secondary btn-lg w-100 py-4" href="/administracion/configuracion">Configuración</a></div>
+            <div class="col"><button class="btn btn-primary btn-lg w-100 py-4" @onclick="() => reportesAbiertos = true">Reportes</button></div>
         </div>
         @if (reportesAbiertos)
         {

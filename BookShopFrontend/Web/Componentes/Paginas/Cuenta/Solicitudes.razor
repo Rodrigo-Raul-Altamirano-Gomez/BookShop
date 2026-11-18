@@ -15,7 +15,26 @@
     }
     else
     {
-        <div class="nav nav-tabs my-4" role="tablist" aria-label="Tipos de solicitudes">
+        <div class="row g-4 mt-1">
+        <aside class="filters col-12 col-lg-3">
+        <h2>Filtros</h2>
+        <fieldset class="filter-group border-0 p-0 m-0" disabled="@(CargandoDatos || procesando)">
+            <h3>Estados</h3>
+            <p class="small">Sin selección se muestran todos.</p>
+            @foreach (string estado in estados)
+            {
+                @if (estado != "CERRADA" || consulta.Tipo == "REPORTE_RESENA")
+                {
+                    <label class="form-check-label d-block">
+                        <input class="form-check-input me-1" type="checkbox" checked="@consulta.Estados.Contains(estado)"
+                            @onchange="() => CambiarEstado(estado)" />@TextoEstado(estado)
+                    </label>
+                }
+            }
+        </fieldset>
+        </aside>
+        <section class="col-12 col-lg-9">
+        <div class="nav nav-tabs mb-4" role="tablist" aria-label="Tipos de solicitudes">
             <button class="nav-link @(consulta.Tipo == "DEVOLUCION" ? "active" : "")" role="tab"
                 aria-selected="@(consulta.Tipo == "DEVOLUCION")" disabled="@(CargandoDatos || procesando)"
                 @onclick='() => MostrarTipo("DEVOLUCION")'>Devoluciones</button>
@@ -23,19 +42,6 @@
                 aria-selected="@(consulta.Tipo == "REPORTE_RESENA")" disabled="@(CargandoDatos || procesando)"
                 @onclick='() => MostrarTipo("REPORTE_RESENA")'>Reportes de reseñas</button>
         </div>
-        <fieldset class="d-flex flex-wrap gap-3 mb-4" disabled="@(CargandoDatos || procesando)">
-            <legend class="fs-6">Estados · sin selección se muestran todos</legend>
-            @foreach (string estado in estados)
-            {
-                @if (estado != "CERRADA" || consulta.Tipo == "REPORTE_RESENA")
-                {
-                    <label class="form-check-label">
-                        <input class="form-check-input me-1" type="checkbox" checked="@consulta.Estados.Contains(estado)"
-                            @onchange="() => CambiarEstado(estado)" />@TextoEstado(estado)
-                    </label>
-                }
-            }
-        </fieldset>
         <Cargando EnCurso="@CargandoDatos" Error="@ErrorCarga" AlReintentar="ActualizarDatos">
             <p>@resultado.TotalResultados solicitudes</p>
             @if (resultado.Items.Count == 0)
@@ -67,6 +73,8 @@
             }
             <Paginacion Pagina="consulta.Pagina" TotalPaginas="TotalPaginas" PaginaCambiada="CambiarPagina" />
         </Cargando>
+        </section>
+        </div>
     }
 
     @if (seleccionada != null && !editando && pedidoReferencia == null && !verResena)

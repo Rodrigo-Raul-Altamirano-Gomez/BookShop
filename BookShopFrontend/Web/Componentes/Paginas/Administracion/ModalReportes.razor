@@ -56,7 +56,7 @@
         var hoy = DateTime.Today;
         inicio = new DateTime(hoy.Year, hoy.Month, 1);
         fin = hoy;
-        mes = inicio.Value.AddMonths(-1);
+        mes = inicio;
     }
 
     private async Task Generar()
