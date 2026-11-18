@@ -15,11 +15,11 @@ public partial class Inicio : IDisposable
     [Inject] private SesionUsuario Sesion { get; set; } = default!;
 
     private IEnumerable<Referencia> Categorias =>
-        Catalogo.Referencias.Where(r => r.Tipo == "categorias" && r.Activo).Take(6);
+        Catalogo.Referencias.Where(r => r.Tipo == "categorias" && r.Activo).Take(8);
     private IEnumerable<Referencia> Autores =>
-        Catalogo.Referencias.Where(r => r.Tipo == "autores" && r.Activo).Take(6);
+        Catalogo.Referencias.Where(r => r.Tipo == "autores" && r.Activo).Take(8);
     private IEnumerable<Referencia> Editoriales => Catalogo.Referencias.Where(r => r.Tipo == "editoriales"
-        && r.Activo).Take(6);
+        && r.Activo).Take(8);
     private List<Libro> LibrosNuevos = [], MasVendidos = [], MasPopulares = [], ParaTi = [];
     private bool mostrarParaTi;
     private string? correoCargado;

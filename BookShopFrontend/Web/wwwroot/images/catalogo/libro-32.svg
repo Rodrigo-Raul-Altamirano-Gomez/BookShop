@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="720" viewBox="0 0 480 720">
+<rect width="480" height="720" fill="#2F5D50"/>
+<circle cx="390" cy="130" r="230" fill="#FFFFFF" fill-opacity="0.14"/>
+<circle cx="40" cy="710" r="230" fill="#FFFFFF" fill-opacity="0.14"/>
+<rect x="27" y="27" width="426" height="666" fill="none" stroke="#E8CF98" stroke-width="3"/>
+<text x="55" y="70" font-family="Arial, sans-serif" font-size="16" fill="#F7E8D0">BOOKSHOP  /  COLECCIÓN DEMO</text>
+<line x1="55" y1="93" x2="427" y2="93" stroke="#E8CF98" stroke-width="3"/>
+<text x="55" y="200" font-family="Georgia, 'Times New Roman', serif" font-weight="bold" font-size="48" fill="#F7E8D0">Emprender sin</text>
+<text x="55" y="262" font-family="Georgia, 'Times New Roman', serif" font-weight="bold" font-size="48" fill="#F7E8D0">miedo</text>
+<circle cx="240" cy="470" r="65" fill="none" stroke="#E8CF98" stroke-width="3"/>
+<line x1="110" y1="470" x2="372" y2="470" stroke="#E8CF98" stroke-width="3"/>
+<line x1="240" y1="375" x2="240" y2="565" stroke="#E8CF98" stroke-width="3"/>
+<text x="55" y="617" font-family="Arial, sans-serif" font-size="21" fill="#E8CF98">Óscar Benavides</text>
+<text x="55" y="661" font-family="Arial, sans-serif" font-size="14" fill="#E8CF98">DATOS FICTICIOS PARA PRUEBAS ACADÉMICAS</text>
+</svg>
