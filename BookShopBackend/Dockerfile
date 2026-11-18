@@ -17,6 +17,8 @@ WORKDIR /app
 COPY --from=compilacion /proyecto/Service/target/bookshop.war /app/bookshop.war
 RUN DOMINIO=/opt/glassfish8/glassfish/domains/domain1; \
     sed -i 's/-Xmx512m/-Xmx256m/g' "$DOMINIO/config/domain.xml" && \
+    # El conector MySQL (TLS) lee el keystore de GlassFish y necesita su contraseña, o falla con "keystore password was incorrect".
+    sed -i 's#\(<java-config[^>]*>\)#\1<jvm-options>-Djavax.net.ssl.keyStorePassword=changeit</jvm-options><jvm-options>-Djavax.net.ssl.trustStorePassword=changeit</jvm-options>#' "$DOMINIO/config/domain.xml" && \
     sed -i '/<network-listener .*protocol="admin-listener"/s/ address="[^"]*"//g' "$DOMINIO/config/domain.xml" && \
     sed -i '/<network-listener .*protocol="http-listener-2"/s/ address="[^"]*"//g' "$DOMINIO/config/domain.xml" && \
     sed -i '/<network-listener /s/protocol="admin-listener"/address="127.0.0.1" protocol="admin-listener"/' "$DOMINIO/config/domain.xml" && \
