@@ -39,16 +39,18 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="mock.js"></script>
 <script>
+/* La fila abre la consulta del libro; "Editar" abre directo la edición; "Desactivar/Activar" pide confirmación. */
 document.getElementById("filas").innerHTML = LIBROS.map((b, i) => `
-  <tr class="is-link" onclick="location.href='admin-libro.html?id=${b.id}'">
+  <tr class="is-link" onclick="if (!event.target.closest('a,button')) location.href='admin-libro.html?id=${b.id}'">
     <td><div style="width:2rem">${cover(b, "bk-cover-sm")}</div></td>
     <td><strong class="d-block" style="font-family:var(--bk-font-serif);font-weight:500;font-size:1rem">${b.t}</strong><span class="small text-muted">${b.a}</span></td>
     <td>${b.cat}</td>
     <td class="text-end bk-num">${soles(final(b))}${b.d ? `<br><span class="bk-tag bk-tag-sale">−${b.d} %</span>` : ""}</td>
     <td class="text-end bk-num ${b.s === 0 ? "text-danger fw-semibold" : ""}">${b.s}</td>
     <td>${i === 6 ? '<span class="bk-status bk-status-neutral">Inactivo</span>' : '<span class="bk-status bk-status-ok">Activo</span>'}</td>
-    <td class="text-end"><a class="btn btn-sm btn-link text-decoration-none" href="admin-libro.html?id=${b.id}">Editar</a></td>
+    <td class="text-end">${accionesFila(`href="admin-libro.html?id=${b.id}&editar=1"`, i !== 6, b.t, "o", `<button type="button" class="btn btn-sm btn-link text-decoration-none p-0" data-modal="#m-desc" data-libro="${b.t}">Agregar descuento</button>`)}</td>
   </tr>`).join("");
+document.body.insertAdjacentHTML("beforeend", modalDescuento());
 </script>
 </body>
 </html>

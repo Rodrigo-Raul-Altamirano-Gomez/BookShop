@@ -30,7 +30,7 @@ const LISTAS = {
   favoritos: ["Favoritos", "Los libros que más te gustaron. Solo tú ves esta lista.", 9, 5]
 };
 document.getElementById("tabs").innerHTML = Object.entries(LISTAS).map(([k, [n, , , cant]]) =>
-  `<li class="nav-item"><a class="nav-link d-flex align-items-center gap-2 ${k === listaActual ? "active" : ""}" ${k === listaActual ? 'aria-current="page"' : ""} href="listas.html?lista=${k}">${n} <span class="text-muted fw-normal bk-num">${cant}</span></a></li>`).join("");
+  `<li class="nav-item"><a class="nav-link d-flex align-items-center gap-2 ${k === listaActual ? "active" : ""}" ${k === listaActual ? 'aria-current="page"' : ""} href="listas.html?lista=${k}">${n}</a></li>`).join("");
 const [nombreL, subL, desdeL, cantL] = LISTAS[listaActual];
 document.getElementById("subtitulo").textContent = subL;
 document.title = `${nombreL} · BookShop`;

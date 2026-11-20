@@ -15,7 +15,7 @@
   <div class="bk-page-head"><h1>Perfil</h1></div>
 
   <!-- Modo consulta (por defecto) -->
-  <section class="bk-panel" style="max-width:40rem" data-modo-ver aria-labelledby="t-datos">
+  <section class="bk-panel" style="max-width:40rem" data-vista="ver" aria-labelledby="t-datos">
     <div class="d-flex align-items-center gap-3 mb-4">
       <span class="bk-avatar" style="width:4.5rem;height:4.5rem;font-size:1.25rem">MS</span>
       <div class="flex-grow-1"><h2 class="h3 mb-0" id="t-datos">Mariana Soto Delgado</h2><div class="small text-muted">Cliente desde el 03/02/2025</div></div>
@@ -28,12 +28,12 @@
     </dl>
     <div class="d-flex justify-content-end gap-2 pt-3 mt-2 border-top" style="border-color:var(--bk-line)!important">
       <button type="button" class="btn btn-outline-secondary" data-modal="#m-clave"><i class="bi bi-key me-2"></i>Cambiar contraseña</button>
-      <button type="button" class="btn btn-primary" data-perfil="editar"><i class="bi bi-pencil me-2"></i>Editar datos</button>
+      <button type="button" class="btn btn-primary" data-cambiar-vista="editar"><i class="bi bi-pencil me-2"></i>Editar datos</button>
     </div>
   </section>
 
   <!-- Desactivar cuenta: separado y al final, para que no se pulse por error -->
-  <section class="bk-panel mt-4" style="max-width:40rem" data-modo-ver aria-labelledby="t-desactivar"><div class="d-flex align-items-center gap-3">
+  <section class="bk-panel mt-4" style="max-width:40rem" data-vista="ver" aria-labelledby="t-desactivar"><div class="d-flex align-items-center gap-3">
     <div class="flex-grow-1">
       <h2 class="h3 mb-1" id="t-desactivar">Desactivar cuenta</h2>
       <p class="small text-muted mb-0">Se cerrará tu sesión. Tus pedidos, listas, reseñas y cupones se conservan, y puedes reactivarla al iniciar sesión.</p>
@@ -42,7 +42,7 @@
   </div></section>
 
   <!-- Modo edición -->
-  <form class="bk-panel" style="max-width:40rem" data-modo-editar hidden aria-labelledby="t-editar">
+  <form class="bk-panel" style="max-width:40rem" data-vista="editar" aria-labelledby="t-editar">
     <h2 class="h3 mb-3" id="t-editar">Editar datos</h2>
     <div class="d-flex align-items-center gap-3 mb-4">
       <span class="bk-avatar" style="width:4.5rem;height:4.5rem;font-size:1.25rem">MS</span>
@@ -52,8 +52,8 @@
     <label class="form-label" for="f">Fecha de nacimiento</label><input class="form-control mb-3" id="f" type="date" value="1996-04-12" style="max-width:14rem">
     <label class="form-label" for="c">Correo</label><input class="form-control mb-1" id="c" value="mariana@correo.pe" readonly style="background:var(--bk-sunken)"><div class="form-text mb-3">El correo no se puede cambiar.</div>
     <div class="d-flex justify-content-end gap-2 pt-3 border-top" style="border-color:var(--bk-line)!important">
-      <button type="button" class="btn btn-outline-secondary" data-perfil="ver">Cancelar</button>
-      <button type="button" class="btn btn-primary" data-perfil="ver" data-toast="Cambios guardados">Guardar cambios</button>
+      <button type="button" class="btn btn-outline-secondary" data-cambiar-vista="ver">Cancelar</button>
+      <button type="button" class="btn btn-primary" data-cambiar-vista="ver" data-toast="Cambios guardados">Guardar cambios</button>
     </div>
   </form>
 </main>
@@ -72,20 +72,5 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="mock.js"></script>
-<script>
-/* Perfil: modo consulta por defecto; "Editar datos" cambia al formulario y Cancelar/Guardar vuelven.
-   Variante del prototipo: ?editar=1 abre directo en edición. Delegado en document porque
-   el diseño de Mi cuenta vuelve a montar el contenido. */
-function modoPerfil(modo) {
-  document.querySelectorAll("[data-modo-ver]").forEach(el => el.hidden = modo !== "ver");
-  document.querySelector("[data-modo-editar]").hidden = modo !== "editar";
-  if (modo === "editar") document.getElementById("n").focus();
-}
-document.addEventListener("click", e => {
-  const b = e.target.closest("[data-perfil]");
-  if (b) modoPerfil(b.dataset.perfil);
-});
-document.addEventListener("DOMContentLoaded", () => { if (new URLSearchParams(location.search).has("editar")) modoPerfil("editar"); });
-</script>
 </body>
 </html>

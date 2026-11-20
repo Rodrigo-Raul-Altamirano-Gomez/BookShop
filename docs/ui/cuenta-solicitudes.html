@@ -53,8 +53,7 @@ const MOTIVOS = {
 
 const pendientes = l => l.filter(s => s.estado === "PENDIENTE").length;
 document.getElementById("tabs").innerHTML = [["devoluciones", "Devoluciones", DEVOLUCIONES], ["reportes", "Reportes de reseñas", REPORTES]].map(([k, n, l]) =>
-  `<li class="nav-item"><a class="nav-link d-flex align-items-center gap-2 ${k === tipoS ? "active" : ""}" ${k === tipoS ? 'aria-current="page"' : ""} href="cuenta-solicitudes.html?tipo=${k}">${n}
-    ${pendientes(l) ? `<span class="bk-count" title="Pendientes">${pendientes(l)}</span>` : ""}</a></li>`).join("");
+  `<li class="nav-item"><a class="nav-link d-flex align-items-center gap-2 ${k === tipoS ? "active" : ""}" ${k === tipoS ? 'aria-current="page"' : ""} href="cuenta-solicitudes.html?tipo=${k}">${n}</a></li>`).join("");
 document.getElementById("subtitulo").textContent = tipoS === "devoluciones"
   ? "Devoluciones que pediste de tus pedidos entregados."
   : "Reseñas de otros clientes que reportaste para revisión.";

@@ -36,7 +36,7 @@ const lista = pqS.has("vacia") ? [] : SIGUE[tipoSeg];
 const [tituloSeg, pluralSeg, ningunoSeg, accionSeg] = TIPOS_SEG[tipoSeg];
 
 document.getElementById("tabs").innerHTML = Object.entries(TIPOS_SEG).map(([k, [n]]) =>
-  `<li class="nav-item"><a class="nav-link d-flex align-items-center gap-2 ${k === tipoSeg ? "active" : ""}" ${k === tipoSeg ? 'aria-current="page"' : ""} href="cuenta-seguimientos.html?tipo=${k}">${n} <span class="text-muted fw-normal bk-num">${pqS.has("vacia") && k === tipoSeg ? 0 : SIGUE[k].length}</span></a></li>`).join("");
+  `<li class="nav-item"><a class="nav-link d-flex align-items-center gap-2 ${k === tipoSeg ? "active" : ""}" ${k === tipoSeg ? 'aria-current="page"' : ""} href="cuenta-seguimientos.html?tipo=${k}">${n}</a></li>`).join("");
 
 document.getElementById("seg-vista").innerHTML = !lista.length
   ? `<div class="bk-panel">${emptyState(`No sigues a ${ningunoSeg}.`, "Lo que sigas desde su página aparecerá aquí.", accionSeg, `explorar.html?tipo=${tipoSeg}`)}</div>`

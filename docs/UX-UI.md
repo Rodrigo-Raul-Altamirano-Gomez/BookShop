@@ -33,6 +33,7 @@ Criterios:
 | 4 | **Cada acción tiene respuesta.** | Toda acción produce un aviso, un mensaje en la página o un cambio visible. |
 | 5 | **Lo irreversible se confirma.** | Cancelar, eliminar, desactivar, vaciar y moderar piden confirmación en un diálogo. |
 | 6 | **La acción principal está a la vista.** | El precio y *Agregar al carrito* van junto al título; *Pagar* y *Continuar* quedan fijos en el panel lateral. |
+| 7 | **Solo lo que ayuda a la tarea actual.** | Se muestran los datos que el usuario usa en ese momento: el total de resultados de un listado, la distribución de estrellas de un libro, las cancelaciones que le quedan antes de cancelar. Se evitan los que no usa ahí y que obligan a consultas extra: por ejemplo, la cantidad de elementos de pestañas que no tiene abiertas, o el pedido en que recibió un libro al reseñarlo. |
 
 ---
 
@@ -553,6 +554,8 @@ Centrado: una ilustración de línea de un libro abierto (64 px, `--bk-line-stro
 - **Cabecera:** fondo `--bk-sunken`, texto `caption` en mayúsculas muted.
 - **Filas:** 48 px, sin rayas, solo con borde inferior, y *hover* `--bk-paper`. Las filas enlazables (pedidos, libros en administración) son clicables en toda su extensión.
 - **Alineación:** números a la derecha con cifras tabulares; acciones en la última columna, alineadas a la derecha.
+- **Acciones de fila** (administración): enlaces apilados, con *Editar* arriba, las acciones propias del registro en medio (en Libros, *Agregar descuento*, que abre el mismo diálogo que la consulta del libro) y *Desactivar* (en rojo) o *Activar* al final. Desactivar y Activar piden confirmación (`ConfirmModal`) y avisan que lo ya registrado no cambia. Cuando la fila es clicable, el clic en una acción no abre la fila.
+- **Pie de tabla:** a la izquierda, el rango mostrado (*"1–20 de 124"*); a la derecha, la paginación pequeña. Se muestran 20 filas por página en las tablas y 10 tarjetas por página en listas de tarjetas.
 
 ### 6.13 `TrackingTimeline`
 
@@ -631,6 +634,17 @@ Identifica un pedido por sus libros en las listas de pedidos (Mis pedidos, Devol
 | Resultado que hay que leer | Alerta en la página, sin cerrar. |
 | Botón no disponible | Deshabilitado, con una ayuda que explica por qué. Nunca desaparece sin explicación. |
 
+### 7.1 Consulta y edición
+
+Los registros que se revisan más de lo que se cambian se abren primero en **modo consulta**. Así se leen con comodidad y no se modifican por accidente. Se aplica en *Perfil* (§9.9), *Libro* en administración (§10.3) y *Configuración* (§10.7).
+
+- **Consulta:** los datos se muestran como listas de definiciones (etiqueta pequeña en gris, valor debajo). La cabecera lleva el botón principal **Editar {objeto}** (`bi-pencil`) y, si aplica, acciones secundarias (*Cambiar contraseña*, *Desactivar*).
+- **Edición:** reemplaza la consulta **en la misma pantalla**, sin cambiar de página, con el mismo orden de secciones y los campos cargados. El foco va al primer campo.
+  - **Cancelar:** vuelve a la consulta sin guardar.
+  - **Guardar:** vuelve a la consulta y muestra un aviso.
+- **Entrada directa a la edición:** un enlace *Editar* de una lista puede abrir la pantalla directo en edición (`?editar=1`).
+- **Excepción:** los formularios cortos de registros que pertenecen a una lista (direcciones, métodos de pago, autores, categorías, editoriales, descuentos) se editan en un **diálogo**, sin pantalla de consulta propia.
+
 ---
 
 ## 8. Pantallas de la tienda
@@ -673,7 +687,7 @@ Migas: Inicio › Catálogo › {Categoría} › {Título}.
 
 - **Resumen** (izquierda): el promedio en 48 px, las estrellas, el total de reseñas y la distribución por estrellas en barras (5 a 1).
 - **Lista** (derecha):
-  - El formulario *Escribe tu reseña* va primero, solo si el cliente cumple RF10. Debajo del título indica el pedido en que recibió el libro. Contiene `RatingStars` editable, el comentario y *Publicar reseña*.
+  - El formulario *Escribe tu reseña* va primero, solo si el cliente cumple RF10. Contiene `RatingStars` editable, el comentario y *Publicar reseña*.
   - Si el cliente ya reseñó, en lugar del formulario aparece **su reseña primero**, con *Editar* y *Eliminar* (este con confirmación). Variante del prototipo: `?resena=propia`.
   - **Cantidad visible:** se muestran las 5 reseñas más recientes. Debajo, el botón *"Ver más reseñas (n)"* (`.btn-outline-secondary`, a todo el ancho de la columna) agrega las 5 siguientes en la misma lista, sin recargar ni cambiar de página. El número indica cuántas faltan, y el botón desaparece cuando ya se ven todas. La reseña propia del cliente va siempre arriba y no cuenta entre las 5. El resumen de la izquierda (promedio, total y barras) siempre considera todas las reseñas. Es el mismo patrón *Ver más* de los filtros (§6.7).
   - Cada reseña muestra el avatar con iniciales, el nombre, la fecha, las estrellas a la derecha y el comentario. Al pie lleva *Útil (n)* (alternable) y *Reportar*, que abre un diálogo con el motivo en radios (Ofensiva, Spam, No relacionada con el libro, Otro), el comentario y *Enviar reporte*.
@@ -818,7 +832,7 @@ Panel centrado de 640 px con:
 
 Las devoluciones y los reportes son cosas distintas: una se refiere a un pedido propio y la otra a la reseña de otra persona. Por eso van en **dos pestañas** separadas, con el mismo estilo de pestañas que Explorar.
 
-- **Pestañas:** *Devoluciones* y *Reportes de reseñas*. Cada una muestra un contador verde (`.bk-count`) con sus pendientes. La pestaña activa va en la URL (`?tipo=devoluciones|reportes`); por defecto se abre *Devoluciones*. El subtítulo de la página cambia con la pestaña.
+- **Pestañas:** *Devoluciones* y *Reportes de reseñas*. La pestaña activa va en la URL (`?tipo=devoluciones|reportes`); por defecto se abre *Devoluciones*. El subtítulo de la página cambia con la pestaña.
 - **Devoluciones:** subtítulo *"Devoluciones que pediste de tus pedidos entregados."*. Cada panel muestra:
   - el `CoverStack` del pedido y el título *Pedido N.º {n}*, ambos con enlace al detalle del pedido (igual que en Mis pedidos);
   - *"Solicitada el {fecha} · Motivo: {motivo}"*;
@@ -851,7 +865,7 @@ Es una excepción del diseño de *Mi cuenta*: usa `MainLayout`, **a todo el anch
 - **Migas:** Mi cuenta › Mis listas. Debajo, el título *Mis listas* en `h1` y un subtítulo que cambia con la pestaña:
   - Deseados: *"Libros que quieres comprar más adelante. Solo tú ves esta lista."*;
   - Favoritos: *"Los libros que más te gustaron. Solo tú ves esta lista."*.
-- **Pestañas:** *Deseados* y *Favoritos*, con el mismo estilo que Explorar y Mis solicitudes. Cada una muestra al lado la cantidad de libros en texto gris, sin contador verde porque no son pendientes. La pestaña activa va en la URL (`?lista=`); por defecto se abre *Deseados*.
+- **Pestañas:** *Deseados* y *Favoritos*, con el mismo estilo que Explorar y Mis solicitudes. La pestaña activa va en la URL (`?lista=`); por defecto se abre *Deseados*.
 - **Contenido:** `ResultsView` con orden, 4 columnas y `PermiteQuitar`, igual que el catálogo.
 - **Vacío:** *"Aún no guardaste libros aquí. Usa el botón del detalle de cada libro."* con *Explorar el catálogo*.
 
@@ -859,7 +873,7 @@ Es una excepción del diseño de *Mi cuenta*: usa `MainLayout`, **a todo el anch
 
 Usa el mismo patrón que *Explorar* (§8.5), pero solo con lo que el cliente sigue. Así la pantalla no crece sin límite aunque siga muchos autores, categorías o editoriales.
 
-- **Pestañas:** *Autores*, *Categorías* y *Editoriales*, con la cantidad seguida al lado en texto gris, igual que en *Mis listas*. La pestaña activa va en la URL (`?tipo=autor|categoria|editorial`); por defecto se abre *Autores*.
+- **Pestañas:** *Autores*, *Categorías* y *Editoriales*, sin contadores, igual que en Explorar. La pestaña activa va en la URL (`?tipo=autor|categoria|editorial`); por defecto se abre *Autores*.
 - **Barra de herramientas** (`.bk-toolbar`):
   - a la izquierda, el buscador por nombre (*"Buscar autores por nombre"*) y el total;
   - a la derecha, *Ordenar por*: **Nombre A–Z** (por defecto), **Nombre Z–A** y **Seguido recientemente**.
@@ -877,7 +891,7 @@ Usa el mismo patrón que *Explorar* (§8.5), pero solo con lo que el cliente sig
 
 ### 9.9 Perfil — `cuenta-datos.html` (RF02)
 
-La pantalla abre en **modo consulta**: los datos se leen, no se editan por accidente. Desde ahí, dos botones llevan a cada cambio. Las variantes del prototipo son `?editar=1` para el modo edición y el diálogo de contraseña.
+La pantalla sigue el patrón de consulta y edición (§7.1) y abre en **modo consulta**: los datos se leen, no se editan por accidente. Desde ahí, dos botones llevan a cada cambio. Las variantes del prototipo son `?editar=1` para el modo edición y el diálogo de contraseña.
 
 - **Modo consulta** (panel de 640 px):
   - **Cabecera:** el avatar de 72 px, el nombre en `h3` y *"Cliente desde el {fecha}"*.
@@ -916,69 +930,106 @@ La pantalla abre en **modo consulta**: los datos se leen, no se editan por accid
 
 ### 10.1 Diseño común
 
-`AdminLayout` (§6.18). La cabecera de cada página (`.bk-page-head`) tiene el título y el subtítulo a la izquierda y la acción principal a la derecha.
+- **Diseño:** `AdminLayout` (§6.18). La cabecera de cada página (`.bk-page-head`) lleva el título y el subtítulo a la izquierda, y la acción principal a la derecha.
+- **Tablas:** usan las acciones de fila y el pie de tabla de §6.12. Así ninguna lista crece sin límite.
+- **Consulta antes que edición:** el libro y la configuración se abren primero en modo consulta (§7.1), igual que el Perfil del cliente.
 
 ### 10.2 Libros — `admin-libros.html` (RF04)
 
-- Subtítulo *"{N} libros · {M} activos"* y **Nuevo libro**.
-- Buscador por título y filtro *Estado* (Todos, Activos, Inactivos).
-- **Tabla:** miniatura, título (Newsreader) y autor, categoría, precio final (con la etiqueta de descuento vigente), stock (en rojo si es 0), estado y *Editar*. Toda la fila lleva a la edición.
-- Paginación de 20 filas, con *"1–20 de N"* a la izquierda.
+- **Cabecera:** subtítulo *"{N} libros · {M} activos"* y el botón **Nuevo libro**.
+- **Filtros:** buscador por título y filtro *Estado* (Todos, Activos, Inactivos).
+- **Tabla:** miniatura, título (Newsreader) y autor, categoría, precio final (con la etiqueta del descuento vigente), stock (en rojo si es 0), estado y acciones.
+  - **Clic en la fila:** abre la **consulta** del libro.
+  - **Acciones de fila** (§6.12), apiladas: *Editar* abre el libro directo en modo edición (`?editar=1`); *Agregar descuento* abre el diálogo de descuento sin salir de la lista (el mismo de la consulta, §10.3), con el título del libro debajo de su encabezado; y al final *Desactivar* (o *Activar* si está inactivo), con confirmación.
+- **Pie de tabla:** páginas de 20 filas.
 
-### 10.3 Nuevo y editar libro — `admin-libro.html?id=` (RF04)
+### 10.3 Libro: consulta, edición y alta — `admin-libro.html?id=` (RF04)
 
-- Migas: Libros › {Título | Nuevo libro}.
-- **Columna izquierda** (3 col): portada, *Elegir imagen* y la ayuda *"Portada. JPG o PNG."*.
-- **Columna derecha** (9 col), en paneles:
-  1. **Datos:** Título (8 col) + ISBN (4 col), Sinopsis, Idioma, Páginas y Año de publicación (4 + 4 + 4 col).
-  2. **Referencias:** Autor, Categoría y Editorial.
-     - Al crear, son listas con solo los activos y la ayuda *"…No podrán cambiarse después de registrar el libro."*.
-     - Al editar, son campos bloqueados con el icono de candado y la ayuda *"No se pueden cambiar después de registrar el libro."*.
-  3. **Precio y stock:** Precio (`S/`), Stock e interruptor **Activo**, con la ayuda *"Los libros inactivos no se muestran en la tienda."*.
-  4. **Descuentos** (solo al editar):
-     - una tabla con porcentaje, desde, hasta, estado (*Vigente*, *Programado*, *Finalizado*) y *Eliminar* (solo en los no finalizados, con confirmación);
-     - debajo, un formulario en línea con porcentaje, desde, hasta y *Agregar descuento*.
-     - Si las fechas se superponen, se marcan los dos campos de fecha y aparece el mensaje *"Se superpone con el descuento del {desde} al {hasta}."*.
-- **Barra de acciones** fija al pie: *Cancelar* y **Registrar libro** / **Guardar cambios**.
+Migas: Libros › {Título | Nuevo libro}.
+
+**Consulta** (por defecto, con `?id`):
+
+- **Cabecera:**
+  - a la izquierda, el título del libro en `h1`, el autor y su `StatusBadge` (Activo o Inactivo);
+  - a la derecha, *Desactivar* (`.btn-outline-danger`, con confirmación) o *Activar*, y **Editar libro** (primario, `bi-pencil`).
+- **Columna izquierda** (3 col): la portada.
+- **Columna derecha** (9 col), en paneles con listas de definiciones:
+  1. **Datos:** Título, ISBN, Sinopsis (a todo el ancho), Idioma, Páginas y Año de publicación.
+  2. **Referencias:** Autor, Categoría y Editorial, cada una con enlace a su página.
+  3. **Precio y stock:** Precio, *Precio final hoy* (con `PriceTag`) y Stock (en rojo si es 0).
+  4. **Descuentos:** se gestionan aquí y no dentro del formulario de edición, porque son registros propios del libro, igual que las direcciones lo son del cliente.
+     - *Agregar descuento* (`.btn-outline-primary`, a la derecha del título) abre un diálogo con porcentaje, desde y hasta. Si las fechas se superponen con otro descuento, se marcan los dos campos de fecha y aparece *"Se superpone con el descuento del {desde} al {hasta}."*.
+     - **Tabla:** porcentaje, desde, hasta, estado (*Vigente*, *Programado*, *Finalizado*) y *Eliminar* (solo en los no finalizados, con confirmación). Van primero los vigentes y programados, y luego los finalizados del más reciente al más antiguo.
+     - **Cantidad:** se ven 5 filas. *"Ver más descuentos (n)"* agrega las 5 siguientes y desaparece al llegar al final. Es el mismo patrón que las reseñas (§8.3).
+
+**Edición** (botón *Editar libro*, o *Editar* de la lista):
+
+- Título *Editar libro*. Contiene el mismo formulario que el alta, con los datos cargados:
+  - **Portada:** la imagen actual y *Elegir imagen*;
+  - **Datos:** Título (8 col) + ISBN (4 col), Sinopsis, Idioma, Páginas y Año (4 + 4 + 4 col);
+  - **Referencias:** campos bloqueados con el icono de candado y la ayuda *"No se pueden cambiar después de registrar el libro."*;
+  - **Precio y stock:** Precio (`S/`) y Stock.
+- El estado no se edita aquí: se cambia con *Desactivar* / *Activar*.
+- **Barra de acciones** fija al pie: *Cancelar* vuelve a la consulta sin guardar, y **Guardar cambios** vuelve a la consulta y muestra el aviso *"Cambios guardados"*.
+
+**Alta** (*Nuevo libro*, sin `?id`): solo el formulario, con el título *Nuevo libro*.
+
+- **Referencias:** listas con solo los activos y la ayuda *"…No podrán cambiarse después de registrar el libro."*.
+- **Interruptor Activo:** con la ayuda *"Los libros inactivos no se muestran en la tienda."*.
+- **Barra de acciones:** *Cancelar* (vuelve a la lista) y **Registrar libro**.
 
 ### 10.4 Autores, categorías y editoriales — `admin-autores.html`, `admin-categorias.html`, `admin-editoriales.html` (RF04)
 
 Las tres pantallas tienen la misma estructura:
 
-- Subtítulo *"{N} registrados"* y **Nuevo autor / Nueva categoría / Nueva editorial**.
-- Buscador por nombre y filtro *Estado*.
-- Tabla con la imagen en miniatura (circular para autores), el nombre, la cantidad de libros, el estado y *Editar*.
-- *Nuevo* y *Editar* abren un diálogo con:
-  - la imagen y *Elegir imagen*;
+- **Cabecera:** subtítulo *"{N} registrados"* y el botón **Nuevo autor**, **Nueva categoría** o **Nueva editorial**.
+- **Filtros:** buscador por nombre y filtro *Estado*.
+- **Tabla:** imagen en miniatura (circular para autores), nombre, cantidad de libros, estado y acciones de fila (§6.12): *Editar* y, debajo, *Desactivar* o *Activar*, con confirmación.
+- **Pie de tabla:** páginas de 20 filas.
+- **Diálogo de Nuevo y Editar:** se mantiene como diálogo porque son pocos campos. Contiene:
+  - la imagen actual y *Elegir imagen*;
   - el Nombre;
   - la Biografía (autores) o Descripción;
-  - el interruptor **Activo**, con la ayuda *"Si está inactivo, no se muestra en la tienda ni se ofrece al registrar libros."*.
+  - solo al crear, el interruptor **Activo**, con la ayuda *"Si está inactivo, no se muestra en la tienda ni se ofrece al registrar libros."*.
 
 ### 10.5 Devoluciones — `admin-devoluciones.html` (RF04)
 
-- Subtítulo *"Solicitudes pendientes de revisión."*.
-- **Tabla:** pedido (`CoverStack` + número, igual que en Mis pedidos), cliente (nombre y correo), fecha de entrega, total, motivo (negrita) y comentario, y las acciones **Aceptar** / *Rechazar*.
+- **Cabecera:** subtítulo *"Solicitudes pendientes de revisión."*.
+- **Tabla:** pedido (`CoverStack` + número, igual que en Mis pedidos), cliente (nombre y correo), fecha de entrega, total, motivo (en negrita) y comentario, y las acciones **Aceptar** / *Rechazar*.
 - **Confirmaciones:**
   - Aceptar: *"El pedido pasará a «Devuelto» y se repondrá el stock de sus libros."*;
   - Rechazar: *"El pedido seguirá como «Entregado». El cliente verá la solicitud como rechazada."*.
 - Al confirmar, la fila sale de la lista y se muestra un aviso.
+- **Pie de tabla:** páginas de 20 filas.
 - **Vacío:** *"No hay solicitudes pendientes."*.
 
 ### 10.6 Reportes de reseñas — `admin-reportes-resenas.html` (RF04)
 
-- Subtítulo: *"Reseñas que los clientes reportaron. También puedes ocultar cualquier reseña desde el detalle del libro."*.
-- **Tarjetas** de 832 px de ancho como máximo, cada una con:
-  - el libro (enlace al detalle en vista de administrador), el autor de la reseña y la fecha;
-  - el estado;
-  - el **contenido reportado** como cita (borde izquierdo de 3 px): estrellas y texto;
-  - *"Reportado por {nombre} · Motivo: {motivo}"* y el comentario.
-- **Acciones:** **Ocultar reseña**, que acepta el reporte, y *Mantener visible*, que lo rechaza. Ambas piden confirmación.
+- **Cabecera:** subtítulo *"Reseñas que los clientes reportaron. También puedes ocultar cualquier reseña desde el detalle del libro."*.
+- **Tarjetas** de 832 px de ancho como máximo. Cada una tiene:
+  - **a la izquierda**, la **portada** del libro (52 px, con enlace al detalle en vista de administrador), para reconocerlo de un vistazo, igual que en *Mis solicitudes › Reportes*;
+  - **a la derecha:**
+    - la etiqueta *RESEÑA EN* y el título del libro (enlace), con *"Escrita por {autor} · {fecha}"* y el estado;
+    - el **contenido reportado** como cita (borde izquierdo de 3 px): estrellas y texto;
+    - *"Reportado por {nombre} · Motivo: {motivo}"* y el comentario;
+    - las acciones **Ocultar reseña**, que acepta el reporte, y *Mantener visible*, que lo rechaza. Ambas piden confirmación.
+- **Pie:** páginas de 10 tarjetas.
 - **Vacío:** *"No hay reportes pendientes."*.
 
 ### 10.7 Configuración — `admin-configuracion.html` (RF04)
 
-- Arriba, un `.alert-info`: *"Los cambios se aplican a las operaciones nuevas. Los pedidos, cupones y solicitudes ya registrados no cambian."*.
-- Tres paneles de 832 px de ancho como máximo:
+**Consulta** (por defecto):
+
+- **Cabecera:** título y subtítulo *"Valores que rigen las operaciones nuevas de la tienda."*, y el botón **Editar configuración** (`bi-pencil`).
+- **Paneles:** tres paneles de 832 px de ancho como máximo, con listas de definiciones:
+  - **Envío:** costo de envío;
+  - **Devoluciones y cancelaciones:** plazo de devolución, solicitudes por pedido y cancelaciones por mes;
+  - **Cupones:** monto mínimo del pedido, pedidos para un cupón, descuento del cupón y vigencia.
+
+**Edición:**
+
+- Título *Editar configuración* y un `.alert-info`: *"Los cambios se aplican a las operaciones nuevas. Los pedidos, cupones y solicitudes ya registrados no cambian."*.
+- Los mismos tres paneles, con estos campos y ayudas:
 
 | Panel | Campos y ayudas |
 |---|---|
@@ -986,7 +1037,7 @@ Las tres pantallas tienen la misma estructura:
 | Devoluciones y cancelaciones | Plazo de devolución (días): *"Desde la entrega del pedido."* · Solicitudes por pedido: *"Incluye las rechazadas y retiradas."* · Cancelaciones por mes: *"Por cliente, en el mes calendario."* |
 | Cupones | Monto mínimo del pedido (`S/`): *"Solo cuentan los pedidos con este total o más."* · Pedidos para un cupón: *"Se emite un cupón cada vez que el cliente junta esta cantidad."* · Descuento del cupón (%) · Vigencia del cupón (días) |
 
-- Pie con *Cancelar* y **Guardar configuración**.
+- Pie con *Cancelar* (vuelve a la consulta sin guardar) y **Guardar configuración**, que vuelve a la consulta y muestra el aviso *"Configuración guardada"*.
 
 ### 10.8 Reportes PDF — `admin-reportes.html` (RF18, RF19)
 
@@ -1126,7 +1177,20 @@ A4 horizontal.
 7. **Lo que no se lleva a Blazor:**
    - `mock.js`, que solo arma el prototipo con datos de ejemplo, diseños compartidos y simulación de diálogos;
    - los textos marcados como *"Prototipo:"*;
-   - los parámetros de URL para ver variantes (`?rol=`, `?estado=`, `?vacio=`, `?cambios=`, `?resena=`, `?error=`, `?desactivada=`).
+   - los parámetros de URL para ver variantes (`?rol=`, `?estado=`, `?vacio=`, `?cambios=`, `?resena=`, `?error=`, `?desactivada=`). Se conservan solo los que forman parte del diseño: búsqueda, filtros, orden, página, pestaña (`?tipo=`, `?lista=`) y `?editar=1`.
+8. **El JavaScript es solo del prototipo.** El prototipo usa JavaScript porque es HTML estático y tiene que simular el comportamiento. En la aplicación, ese comportamiento se programa en C# dentro de los componentes Razor; lo único que se reutiliza tal cual es el CSS.
+
+| Comportamiento del prototipo (`mock.js`) | En Blazor |
+|---|---|
+| Encabezado, menú de cuenta, menú de administración | Diseños `MainLayout`, `AccountLayout` y `AdminLayout` (§6.18), con el rol del usuario autenticado. |
+| Libros, pedidos, autores… de ejemplo | Datos de los servicios del back-end. |
+| Vista de resultados, filtros con casillas, chips, *Ver más* | `ResultsView` y `CheckFilter` con estado en C# (`@bind`, eventos `@onchange` y `@onclick`). |
+| Consulta y edición (`data-vista`) | Un campo `bool editando` en la página, con `@if`. |
+| Pestañas (`?tipo=`, `?lista=`) | Parámetro de ruta o de consulta (`[SupplyParameterFromQuery]`). |
+| Confirmaciones y avisos | `ConfirmModal` y `ToastHost` + `AvisoService` (§6.10). |
+| Diálogos y menús desplegables | Se puede mantener el JavaScript de Bootstrap (`bootstrap.bundle`), que funciona con Blazor sin código propio, o abrirlos desde C# con el estado del componente. |
+| Comparación en la sesión | `ComparacionService` (`Scoped`). |
+| Requiere cuenta (`data-auth`) | Componente `RequiereSesion` (punto 6). |
 
 ---
 

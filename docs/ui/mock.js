@@ -183,6 +183,62 @@ function emptyState(titulo, texto, accion, href) {
 }
 
 /* ---------- Página de administración de autores, categorías y editoriales ---------- */
+/* Acciones de una fila de administración (UX-UI.md §6.12): Editar arriba y Desactivar/Activar debajo.
+   attrsEditar: atributos del enlace o botón Editar (href o data-modal). g: "o"/"a" para concordar el aviso. */
+function accionesFila(attrsEditar, activo, nombre, g = "o", extra = "") {
+  const editar = attrsEditar.startsWith("href")
+    ? `<a class="btn btn-sm btn-link text-decoration-none p-0" ${attrsEditar}>Editar</a>`
+    : `<button type="button" class="btn btn-sm btn-link text-decoration-none p-0" ${attrsEditar}>Editar</button>`;
+  const estado = activo
+    ? `<button type="button" class="btn btn-sm btn-link text-decoration-none p-0 text-danger" data-confirm="¿Desactivar «${nombre}»?" data-msg="Dejará de mostrarse en la tienda. Lo ya registrado (pedidos, listas, reseñas) no cambia." data-accion="Sí, desactivar" data-ok="«${nombre}» desactivad${g}" data-peligro>Desactivar</button>`
+    : `<button type="button" class="btn btn-sm btn-link text-decoration-none p-0" data-confirm="¿Activar «${nombre}»?" data-msg="Volverá a mostrarse en la tienda." data-accion="Sí, activar" data-ok="«${nombre}» activad${g}">Activar</button>`;
+  return `<div class="d-inline-flex flex-column align-items-end gap-1">${editar}${extra}${estado}</div>`;
+}
+
+/* Diálogo "Agregar descuento" (lo usan la lista de libros y la consulta del libro).
+   El botón que lo abre lleva data-libro con el título, que se muestra en el diálogo. */
+function modalDescuento() {
+  return `<div class="modal fade" id="m-desc" tabindex="-1" aria-labelledby="m-desc-t" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><form class="modal-content p-2">
+    <div class="modal-header border-0 pb-0"><div><h2 class="modal-title h3" id="m-desc-t">Agregar descuento</h2><div class="small text-muted" id="m-desc-libro"></div></div><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+    <div class="modal-body">
+      <label class="form-label" for="dp">Porcentaje</label><div class="input-group mb-3" style="max-width:9rem"><input class="form-control bk-num" id="dp" type="number" value="15"><span class="input-group-text">%</span></div>
+      <div class="row g-3">
+        <div class="col-6"><label class="form-label" for="dd">Desde</label><input class="form-control is-invalid" id="dd" type="date" value="2026-12-10" aria-describedby="dd-err"></div>
+        <div class="col-6"><label class="form-label" for="dh">Hasta</label><input class="form-control is-invalid" id="dh" type="date" value="2026-12-20" aria-describedby="dd-err"></div>
+        <div class="col-12 mt-1"><div class="text-danger small" id="dd-err">Se superpone con el descuento del 01/12 al 15/12.</div></div>
+      </div>
+    </div>
+    <div class="modal-footer border-0"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary" data-bs-dismiss="modal" data-toast="Descuento agregado">Agregar descuento</button></div>
+  </form></div></div>`;
+}
+document.addEventListener("show.bs.modal", e => {
+  if (e.target.id === "m-desc") document.getElementById("m-desc-libro").textContent = e.relatedTarget?.dataset.libro || "";
+});
+/* Pie de tabla de administración: rango mostrado y paginación (filas por página: porPagina) */
+function pieTabla(mostrados, total, porPagina) {
+  const paginas = Math.max(1, Math.ceil(total / porPagina));
+  return `<div class="d-flex justify-content-between align-items-center mt-3">
+    <span class="small text-muted bk-num">1–${mostrados} de ${total}</span>
+    <ul class="pagination pagination-sm mb-0">
+      <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-left"></i></span></li>
+      <li class="page-item active"><span class="page-link">1</span></li>
+      ${Array.from({ length: Math.min(paginas, 3) - 1 }, (_, i) => `<li class="page-item"><a class="page-link" href="#">${i + 2}</a></li>`).join("")}
+      <li class="page-item ${paginas === 1 ? "disabled" : ""}"><${paginas === 1 ? "span" : "a href=\"#\""} class="page-link"><i class="bi bi-chevron-right"></i></${paginas === 1 ? "span" : "a"}></li>
+    </ul></div>`;
+}
+
+/* Vistas de consulta y edición en la misma pantalla (Perfil, Libro, Configuración).
+   [data-vista="ver"|"editar"] se muestran según el modo; [data-cambiar-vista] cambia de modo; ?editar=1 abre en edición. */
+function cambiarVista(modo) {
+  document.querySelectorAll("[data-vista]").forEach(el => el.hidden = el.dataset.vista !== modo);
+  if (modo === "editar") document.querySelector('[data-vista="editar"] input:not([readonly]):not([type=checkbox]), [data-vista="editar"] textarea')?.focus();
+  window.scrollTo(0, 0);
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-cambiar-vista]");
+  if (b) cambiarVista(b.dataset.cambiarVista);
+});
+
 function adminEntidadesPage(tipo) {
   const cfg = {
     autor: ["Autores", "autor", AUTORES, "Biografía", "Nuevo autor"],
@@ -204,14 +260,15 @@ function adminEntidadesPage(tipo) {
         <td><div class="bk-entity-img ${round} m-0" style="width:2.5rem;font-size:.8rem">${imgEntidad(n, tipo)}</div></td>
         <td class="fw-semibold">${n}</td><td class="text-end bk-num">${(i * 7) % 13 + 2}</td>
         <td>${i === 9 ? '<span class="bk-status bk-status-neutral">Inactivo</span>' : '<span class="bk-status bk-status-ok">Activo</span>'}</td>
-        <td class="text-end"><button class="btn btn-sm btn-link text-decoration-none" data-modal="#ent-form" data-titulo="Editar ${nombre}" data-nombre="${n}">Editar</button></td></tr>`).join("")}</tbody></table></div>
+        <td class="text-end">${accionesFila(`data-modal="#ent-form" data-titulo="Editar ${nombre}" data-nombre="${n}"`, i !== 9, n, tipo === "categoria" || tipo === "editorial" ? "a" : "o")}</td></tr>`).join("")}</tbody></table></div>
+    ${pieTabla(lista.length, lista.length, 20)}
     <div class="modal fade" id="ent-form" tabindex="-1" aria-labelledby="ent-form-t" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><form class="modal-content p-2">
       <div class="modal-header border-0 pb-0"><h2 class="modal-title h3" id="ent-form-t">${nuevo}</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
       <div class="modal-body">
         <div class="d-flex align-items-center gap-3 mb-3"><div class="bk-entity-img ${round} m-0" style="width:4.5rem" id="ent-img"><i class="bi bi-image text-muted fs-4"></i></div><button type="button" class="btn btn-sm btn-outline-secondary">Elegir imagen</button></div>
         <label class="form-label" for="ent-n">Nombre</label><input class="form-control mb-3" id="ent-n">
         <label class="form-label" for="ent-d">${campo}</label><textarea class="form-control mb-3" id="ent-d" rows="4"></textarea>
-        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="ent-a" checked><label class="form-check-label" for="ent-a">Activo</label>
+        <div class="form-check form-switch" id="ent-activo"><input class="form-check-input" type="checkbox" id="ent-a" checked><label class="form-check-label" for="ent-a">Activo</label>
           <div class="form-text">Si está inactivo, no se muestra en la tienda ni se ofrece al registrar libros.</div></div>
       </div>
       <div class="modal-footer border-0"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary" data-bs-dismiss="modal" data-toast="Cambios guardados">Guardar</button></div>
@@ -220,6 +277,7 @@ function adminEntidadesPage(tipo) {
     const b = e.relatedTarget || document.activeElement;
     document.getElementById("ent-form-t").textContent = b?.dataset?.titulo || nuevo;
     document.getElementById("ent-n").value = b?.dataset?.nombre || "";
+    document.getElementById("ent-activo").hidden = !!b?.dataset?.nombre;
     document.getElementById("ent-img").innerHTML = b?.dataset?.nombre ? imgEntidad(b.dataset.nombre, tipo) : '<i class="bi bi-image text-muted fs-4"></i>';
   });
 }
@@ -488,6 +546,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   compareBar();
+  if (document.querySelector("[data-vista]")) cambiarVista(new URLSearchParams(location.search).has("editar") ? "editar" : "ver");
 });
 
 /* Acciones genéricas por atributo */

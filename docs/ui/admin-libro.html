@@ -16,81 +16,113 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="mock.js"></script>
 <script>
-/* Sin ?id = nuevo libro. Con ?id = edición (referencias bloqueadas y panel de descuentos). */
+/* Libro en administración.
+   - Con ?id: vista de consulta (por defecto) y vista de edición (?editar=1 o botón "Editar libro"), igual que Perfil.
+   - Sin ?id: solo el formulario para registrar un libro nuevo.
+   - Descuentos: panel propio en la consulta, con "Agregar descuento" (diálogo) y "Ver más descuentos (n)". */
 const idL = new URLSearchParams(location.search).get("id");
 const L = idL ? libro(idL) : null;
 const v = k => L ? L[k] : "";
+const isbn = L ? `978-612-4567-${String(L.id).padStart(2, "0")}-3` : "";
+const sinopsis = "En una casa de Barranco donde ningún reloj marca la misma hora, tres generaciones de mujeres guardan un secreto que solo puede contarse a medianoche.";
+const activo = L && L.id !== 7;
+
+/* ---------- Formulario (registro y edición) ---------- */
 const opciones = (lista, sel) => `<option value="">Elige una opción</option>` + lista.slice(0, 9).map(x => `<option ${x === sel ? "selected" : ""}>${x}</option>`).join("");
 const ref = (lbl, id, lista, val) => L
   ? `<div class="col-4"><span class="form-label d-block">${lbl}</span><div class="form-control d-flex align-items-center gap-2" style="background:var(--bk-sunken)"><i class="bi bi-lock text-muted"></i>${val}</div></div>`
   : `<div class="col-4"><label class="form-label" for="${id}">${lbl}</label><select class="form-select" id="${id}">${opciones(lista)}</select></div>`;
+const formulario = `
+  <form class="row g-4">
+    <div class="col-3"><div class="bk-panel text-center">
+      ${L ? cover(L) : `<div class="bk-cover d-flex align-items-center justify-content-center text-muted" style="box-shadow:none;border:1px dashed var(--bk-line-strong)"><i class="bi bi-image fs-2"></i></div>`}
+      <button type="button" class="btn btn-sm btn-outline-secondary mt-3 w-100">Elegir imagen</button><div class="form-text">Portada. JPG o PNG.</div></div></div>
+    <div class="col-9 d-grid gap-4">
+      <section class="bk-panel"><h2 class="h3 mb-3">Datos</h2><div class="row g-3">
+        <div class="col-8"><label class="form-label" for="tit">Título</label><input class="form-control" id="tit" value="${v("t")}"></div>
+        <div class="col-4"><label class="form-label" for="isbn">ISBN</label><input class="form-control bk-num" id="isbn" value="${isbn}"></div>
+        <div class="col-12"><label class="form-label" for="sin">Sinopsis</label><textarea class="form-control" id="sin" rows="4">${L ? sinopsis : ""}</textarea></div>
+        <div class="col-4"><label class="form-label" for="idi">Idioma</label><select class="form-select" id="idi"><option ${v("idi") === "Español" ? "selected" : ""}>Español</option><option ${v("idi") === "Inglés" ? "selected" : ""}>Inglés</option></select></div>
+        <div class="col-4"><label class="form-label" for="pag">Páginas</label><input class="form-control bk-num" id="pag" type="number" value="${v("pag")}"></div>
+        <div class="col-4"><label class="form-label" for="anio">Año de publicación</label><input class="form-control bk-num" id="anio" type="number" value="${v("anio")}"></div>
+      </div></section>
+      <section class="bk-panel"><h2 class="h3 mb-1">Referencias</h2>
+        <p class="small text-muted mb-3">${L ? "No se pueden cambiar después de registrar el libro." : "Solo se muestran los activos. No podrán cambiarse después de registrar el libro."}</p>
+        <div class="row g-3">${ref("Autor", "aut", AUTORES, v("a"))}${ref("Categoría", "cat", CATEGORIAS, v("cat"))}${ref("Editorial", "edi", EDITORIALES, v("ed"))}</div></section>
+      <section class="bk-panel"><h2 class="h3 mb-3">Precio y stock</h2><div class="row g-3">
+        <div class="col-4"><label class="form-label" for="pre">Precio</label><div class="input-group"><span class="input-group-text">S/</span><input class="form-control bk-num" id="pre" type="number" step="0.01" value="${L ? L.p.toFixed(2) : ""}"></div></div>
+        <div class="col-4"><label class="form-label" for="sto">Stock</label><input class="form-control bk-num" id="sto" type="number" value="${v("s")}"></div></div>
+        ${L ? "" : `<div class="form-check form-switch mt-4"><input class="form-check-input" type="checkbox" id="act" checked><label class="form-check-label fw-semibold" for="act">Activo</label><div class="form-text">Los libros inactivos no se muestran en la tienda.</div></div>`}
+      </section>
+    </div>
+  </form>
+  <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top" style="border-color:var(--bk-line)!important;position:sticky;bottom:0;background:var(--bk-paper);padding-bottom:1rem">
+    ${L ? `<button type="button" class="btn btn-outline-secondary" data-cambiar-vista="ver">Cancelar</button>
+           <button type="button" class="btn btn-primary" data-cambiar-vista="ver" data-toast="Cambios guardados">Guardar cambios</button>`
+        : `<a class="btn btn-outline-secondary" href="admin-libros.html">Cancelar</a>
+           <button type="button" class="btn btn-primary" data-toast="Libro registrado">Registrar libro</button>`}
+  </div>`;
+
+/* ---------- Descuentos (consulta) ---------- */
+const DESC = [
+  [20, "15/11/2026", "30/11/2026", "Vigente", "ok"], [10, "01/12/2026", "15/12/2026", "Programado", "info"], [15, "20/12/2026", "31/12/2026", "Programado", "info"],
+  [15, "01/10/2026", "15/10/2026", "Finalizado", "neutral"], [25, "01/09/2026", "10/09/2026", "Finalizado", "neutral"], [10, "15/08/2026", "31/08/2026", "Finalizado", "neutral"],
+  [20, "01/07/2026", "15/07/2026", "Finalizado", "neutral"], [5, "10/06/2026", "20/06/2026", "Finalizado", "neutral"]
+];
+const filaDesc = ([p, d, h, est, cls], i) => `<tr ${i >= 5 ? "hidden data-desc-extra" : ""} data-removible>
+  <td class="text-end bk-num">${p} %</td><td class="bk-num">${d}</td><td class="bk-num">${h}</td><td><span class="bk-status bk-status-${cls}">${est}</span></td>
+  <td class="text-end">${est === "Finalizado" ? "" : `<button type="button" class="btn btn-sm btn-link text-decoration-none text-danger p-0" data-confirm="¿Eliminar el descuento del ${d} al ${h}?" data-msg="${est === "Vigente" ? `El libro volverá a su precio de ${soles(L.p)}.` : "El descuento programado no se aplicará."}" data-accion="Sí, eliminar" data-ok="Descuento eliminado" data-peligro>Eliminar</button>`}</td></tr>`;
+const dl = pares => `<dl class="bk-kv row g-3 mb-0">${pares.map(([k, val, col = 4]) => `<div class="col-${col}"><dt>${k}</dt><dd class="mb-0">${val}</dd></div>`).join("")}</dl>`;
+
+const consulta = L ? `
+  <div class="row g-4">
+    <div class="col-3"><div class="bk-panel">${cover(L)}</div></div>
+    <div class="col-9 d-grid gap-4">
+      <section class="bk-panel"><h2 class="h3 mb-3">Datos</h2>${dl([["Título", L.t, 8], ["ISBN", `<span class="bk-num">${isbn}</span>`], ["Sinopsis", sinopsis, 12], ["Idioma", L.idi], ["Páginas", `<span class="bk-num">${L.pag}</span>`], ["Año de publicación", `<span class="bk-num">${L.anio}</span>`]])}</section>
+      <section class="bk-panel"><h2 class="h3 mb-3">Referencias</h2>${dl([["Autor", `<a href="entidad.html?tipo=autor&n=${encodeURIComponent(L.a)}">${L.a}</a>`], ["Categoría", `<a href="entidad.html?tipo=categoria&n=${encodeURIComponent(L.cat)}">${L.cat}</a>`], ["Editorial", `<a href="entidad.html?tipo=editorial&n=${encodeURIComponent(L.ed)}">${L.ed}</a>`]])}</section>
+      <section class="bk-panel"><h2 class="h3 mb-3">Precio y stock</h2>${dl([["Precio", soles(L.p)], ["Precio final hoy", price(L)], ["Stock", `<span class="bk-num ${L.s ? "" : "text-danger fw-semibold"}">${L.s}</span>`]])}</section>
+      <section class="bk-panel">
+        <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+          <div><h2 class="h3 mb-1">Descuentos</h2><p class="small text-muted mb-0">Primero los vigentes y programados. No pueden superponerse en fechas.</p></div>
+          <button type="button" class="btn btn-sm btn-outline-primary" data-modal="#m-desc" data-libro="${L.t}"><i class="bi bi-plus-lg me-1"></i>Agregar descuento</button>
+        </div>
+        <div class="bk-table-wrap"><table class="table bk-table mb-0">
+          <thead><tr><th class="text-end">Porcentaje</th><th>Desde</th><th>Hasta</th><th>Estado</th><th class="text-end"><span class="visually-hidden">Acciones</span></th></tr></thead>
+          <tbody id="tabla-desc">${DESC.map(filaDesc).join("")}</tbody></table></div>
+        ${DESC.length > 5 ? `<button type="button" class="btn btn-outline-secondary w-100 mt-3" id="ver-mas-desc">Ver más descuentos (${DESC.length - 5})</button>` : ""}
+      </section>
+    </div>
+  </div>` : "";
 
 document.getElementById("contenido").innerHTML = `
   <nav aria-label="Ruta"><ol class="breadcrumb bk-breadcrumb mb-2"><li class="breadcrumb-item"><a href="admin-libros.html">Libros</a></li><li class="breadcrumb-item active" aria-current="page">${L ? L.t : "Nuevo libro"}</li></ol></nav>
-  <div class="bk-page-head"><h1>${L ? "Editar libro" : "Nuevo libro"}</h1></div>
-
-  <form class="row g-4">
-    <div class="col-3">
-      <div class="bk-panel text-center">
-        ${L ? cover(L) : `<div class="bk-cover d-flex align-items-center justify-content-center text-muted" style="box-shadow:none;border:1px dashed var(--bk-line-strong)"><i class="bi bi-image fs-2"></i></div>`}
-        <button type="button" class="btn btn-sm btn-outline-secondary mt-3 w-100">Elegir imagen</button>
-        <div class="form-text">Portada. JPG o PNG.</div>
+  ${L ? `
+  <div data-vista="ver">
+    <div class="bk-page-head">
+      <div><h1 class="mb-1">${L.t}</h1><div class="d-flex align-items-center gap-2"><span class="small text-muted">${L.a}</span>${activo ? '<span class="bk-status bk-status-ok">Activo</span>' : '<span class="bk-status bk-status-neutral">Inactivo</span>'}</div></div>
+      <div class="d-flex gap-2">
+        ${activo
+          ? `<button type="button" class="btn btn-outline-danger" data-confirm="¿Desactivar «${L.t}»?" data-msg="Dejará de mostrarse en la tienda. Lo ya registrado (pedidos, listas, reseñas) no cambia." data-accion="Sí, desactivar" data-ok="Libro desactivado" data-peligro>Desactivar</button>`
+          : `<button type="button" class="btn btn-outline-secondary" data-confirm="¿Activar «${L.t}»?" data-msg="Volverá a mostrarse en la tienda." data-accion="Sí, activar" data-ok="Libro activado">Activar</button>`}
+        <button type="button" class="btn btn-primary" data-cambiar-vista="editar"><i class="bi bi-pencil me-2"></i>Editar libro</button>
       </div>
     </div>
-    <div class="col-9 d-grid gap-4">
-      <section class="bk-panel">
-        <h2 class="h3 mb-3">Datos</h2>
-        <div class="row g-3">
-          <div class="col-8"><label class="form-label" for="tit">Título</label><input class="form-control" id="tit" value="${v("t")}"></div>
-          <div class="col-4"><label class="form-label" for="isbn">ISBN</label><input class="form-control bk-num" id="isbn" value="${L ? "978-612-4567-" + String(L.id).padStart(2, "0") + "-3" : ""}"></div>
-          <div class="col-12"><label class="form-label" for="sin">Sinopsis</label><textarea class="form-control" id="sin" rows="4">${L ? "En una casa de Barranco donde ningún reloj marca la misma hora, tres generaciones de mujeres guardan un secreto…" : ""}</textarea></div>
-          <div class="col-4"><label class="form-label" for="idi">Idioma</label><select class="form-select" id="idi"><option ${v("idi") === "Español" ? "selected" : ""}>Español</option><option ${v("idi") === "Inglés" ? "selected" : ""}>Inglés</option></select></div>
-          <div class="col-4"><label class="form-label" for="pag">Páginas</label><input class="form-control bk-num" id="pag" type="number" value="${v("pag")}"></div>
-          <div class="col-4"><label class="form-label" for="anio">Año de publicación</label><input class="form-control bk-num" id="anio" type="number" value="${v("anio")}"></div>
-        </div>
-      </section>
+    ${consulta}
+  </div>
+  <div data-vista="editar"><div class="bk-page-head"><h1>Editar libro</h1></div>${formulario}</div>`
+  : `<div class="bk-page-head"><h1>Nuevo libro</h1></div>${formulario}`}
 
-      <section class="bk-panel">
-        <h2 class="h3 mb-1">Referencias</h2>
-        <p class="small text-muted mb-3">${L ? "No se pueden cambiar después de registrar el libro." : "Solo se muestran los activos. No podrán cambiarse después de registrar el libro."}</p>
-        <div class="row g-3">${ref("Autor", "aut", AUTORES, v("a"))}${ref("Categoría", "cat", CATEGORIAS, v("cat"))}${ref("Editorial", "edi", EDITORIALES, v("ed"))}</div>
-      </section>
+  ${modalDescuento()}`;
 
-      <section class="bk-panel">
-        <h2 class="h3 mb-3">Precio y stock</h2>
-        <div class="row g-3">
-          <div class="col-4"><label class="form-label" for="pre">Precio</label><div class="input-group"><span class="input-group-text">S/</span><input class="form-control bk-num" id="pre" type="number" step="0.01" value="${L ? L.p.toFixed(2) : ""}"></div></div>
-          <div class="col-4"><label class="form-label" for="sto">Stock</label><input class="form-control bk-num" id="sto" type="number" value="${v("s")}"></div>
-        </div>
-        <div class="form-check form-switch mt-4"><input class="form-check-input" type="checkbox" id="act" checked><label class="form-check-label fw-semibold" for="act">Activo</label>
-          <div class="form-text">Los libros inactivos no se muestran en la tienda.</div></div>
-      </section>
-
-      ${L ? `<section class="bk-panel">
-        <h2 class="h3 mb-1">Descuentos</h2>
-        <p class="small text-muted mb-3">Los descuentos de un libro no pueden superponerse en fechas.</p>
-        <div class="bk-table-wrap mb-3"><table class="table bk-table">
-          <thead><tr><th class="text-end">Porcentaje</th><th>Desde</th><th>Hasta</th><th>Estado</th><th class="text-end"><span class="visually-hidden">Acciones</span></th></tr></thead>
-          <tbody>
-            <tr data-removible><td class="text-end bk-num">20 %</td><td class="bk-num">15/11/2026</td><td class="bk-num">30/11/2026</td><td><span class="bk-status bk-status-ok">Vigente</span></td><td class="text-end"><button type="button" class="btn btn-sm btn-link text-decoration-none text-danger" data-confirm="¿Eliminar este descuento?" data-msg="El precio del libro volverá a ser S/ ${L.p.toFixed(2)} en ese período." data-accion="Sí, eliminar" data-ok="Descuento eliminado" data-peligro>Eliminar</button></td></tr>
-            <tr data-removible><td class="text-end bk-num">10 %</td><td class="bk-num">01/12/2026</td><td class="bk-num">15/12/2026</td><td><span class="bk-status bk-status-info">Programado</span></td><td class="text-end"><button type="button" class="btn btn-sm btn-link text-decoration-none text-danger" data-confirm="¿Eliminar este descuento?" data-msg="El descuento programado no se aplicará." data-accion="Sí, eliminar" data-ok="Descuento eliminado" data-peligro>Eliminar</button></td></tr>
-            <tr><td class="text-end bk-num">15 %</td><td class="bk-num">01/10/2026</td><td class="bk-num">15/10/2026</td><td><span class="bk-status bk-status-neutral">Finalizado</span></td><td></td></tr>
-          </tbody></table></div>
-        <div class="row g-3 align-items-end">
-          <div class="col-2"><label class="form-label" for="dp">Porcentaje</label><div class="input-group"><input class="form-control bk-num" id="dp" type="number" value="15"><span class="input-group-text">%</span></div></div>
-          <div class="col-3"><label class="form-label" for="dd">Desde</label><input class="form-control is-invalid" id="dd" type="date" value="2026-12-10" aria-describedby="dd-err"></div>
-          <div class="col-3"><label class="form-label" for="dh">Hasta</label><input class="form-control is-invalid" id="dh" type="date" value="2026-12-20" aria-describedby="dd-err"></div>
-          <div class="col-4"><button type="button" class="btn btn-outline-primary w-100">Agregar descuento</button></div>
-          <div class="col-12 mt-1"><div class="text-danger small" id="dd-err">Se superpone con el descuento del 01/12 al 15/12.</div></div>
-        </div>
-      </section>` : ""}
-    </div>
-  </form>
-
-  <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top" style="border-color:var(--bk-line)!important;position:sticky;bottom:0;background:var(--bk-paper);padding-bottom:1rem">
-    <a class="btn btn-outline-secondary" href="admin-libros.html">Cancelar</a>
-    <button type="button" class="btn btn-primary" data-toast="${L ? "Cambios guardados" : "Libro registrado"}">${L ? "Guardar cambios" : "Registrar libro"}</button>
-  </div>`;
+/* "Ver más descuentos": muestra 5 más cada vez, igual que las reseñas */
+document.addEventListener("click", e => {
+  const btn = e.target.closest("#ver-mas-desc");
+  if (!btn) return;
+  const ocultas = [...document.querySelectorAll("[data-desc-extra][hidden]")];
+  ocultas.slice(0, 5).forEach(r => r.hidden = false);
+  const quedan = ocultas.length - 5;
+  if (quedan > 0) btn.textContent = `Ver más descuentos (${quedan})`; else btn.remove();
+});
 </script>
 </body>
 </html>

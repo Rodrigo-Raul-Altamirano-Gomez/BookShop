@@ -36,6 +36,7 @@
       </tbody>
     </table>
   </div>
+  <div id="pie"></div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -45,6 +46,7 @@
 document.querySelectorAll("td[data-libros]").forEach(td => {
   td.innerHTML = `<div class="d-flex align-items-center gap-3">${coverStack(td.dataset.libros.split(",").map(Number))}<span class="fw-semibold text-nowrap">N.º ${td.dataset.num}</span></div>`;
 });
+document.getElementById("pie").innerHTML = pieTabla(2, 2, 20);
 </script>
 </body>
 </html>

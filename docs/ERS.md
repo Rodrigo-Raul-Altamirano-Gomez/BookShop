@@ -239,7 +239,7 @@ Los tiempos de seguimiento son de minutos para poder demostrar el flujo en clase
 
 **Catálogo**
 
-1. El Administrador lista, registra y edita libros, autores, categorías y editoriales, con sus imágenes.
+1. El Administrador lista, consulta, registra y edita libros, autores, categorías y editoriales, con sus imágenes.
 2. Activa o desactiva cada uno. Lo inactivo no se muestra a clientes ni a visitantes, pero se conserva en los pedidos, listas y reseñas existentes.
 3. Al registrar un libro elige autor, categoría y editorial entre los activos. Estas referencias no se pueden cambiar después.
 4. Actualiza el precio y el stock de cada libro.
@@ -259,7 +259,7 @@ Los tiempos de seguimiento son de minutos para poder demostrar el flujo en clase
 
 **Configuración**
 
-10. Edita los parámetros de la sección 3.1. Los cambios rigen solo para las operaciones posteriores; los pedidos, cupones y solicitudes ya registrados no cambian.
+10. Consulta y edita los parámetros de la sección 3.1. Los cambios rigen solo para las operaciones posteriores; los pedidos, cupones y solicitudes ya registrados no cambian.
 
 **Reportes**
 
