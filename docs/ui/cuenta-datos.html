@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Perfil · BookShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="theme.css" rel="stylesheet">
+</head>
+<body data-layout="cuenta" data-nav="cuenta-datos">
+<main id="contenido" class="container-xl pt-4">
+  <div class="bk-page-head"><h1>Perfil</h1></div>
+
+  <!-- Modo consulta (por defecto) -->
+  <section class="bk-panel" style="max-width:40rem" data-modo-ver aria-labelledby="t-datos">
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <span class="bk-avatar" style="width:4.5rem;height:4.5rem;font-size:1.25rem">MS</span>
+      <div class="flex-grow-1"><h2 class="h3 mb-0" id="t-datos">Mariana Soto Delgado</h2><div class="small text-muted">Cliente desde el 03/02/2025</div></div>
+    </div>
+    <dl class="bk-kv row g-0 mb-0">
+      <div class="col-6"><dt>Nombre completo</dt><dd>Mariana Soto Delgado</dd></div>
+      <div class="col-6"><dt>Fecha de nacimiento</dt><dd class="bk-num">12/04/1996</dd></div>
+      <div class="col-6"><dt>Correo</dt><dd>mariana@correo.pe</dd></div>
+      <div class="col-6"><dt>Contraseña</dt><dd>••••••••</dd></div>
+    </dl>
+    <div class="d-flex justify-content-end gap-2 pt-3 mt-2 border-top" style="border-color:var(--bk-line)!important">
+      <button type="button" class="btn btn-outline-secondary" data-modal="#m-clave"><i class="bi bi-key me-2"></i>Cambiar contraseña</button>
+      <button type="button" class="btn btn-primary" data-perfil="editar"><i class="bi bi-pencil me-2"></i>Editar datos</button>
+    </div>
+  </section>
+
+  <!-- Desactivar cuenta: separado y al final, para que no se pulse por error -->
+  <section class="bk-panel mt-4" style="max-width:40rem" data-modo-ver aria-labelledby="t-desactivar"><div class="d-flex align-items-center gap-3">
+    <div class="flex-grow-1">
+      <h2 class="h3 mb-1" id="t-desactivar">Desactivar cuenta</h2>
+      <p class="small text-muted mb-0">Se cerrará tu sesión. Tus pedidos, listas, reseñas y cupones se conservan, y puedes reactivarla al iniciar sesión.</p>
+    </div>
+    <button type="button" class="btn btn-outline-danger flex-shrink-0" data-confirm="¿Desactivar tu cuenta?" data-msg="Se cerrará tu sesión. Podrás reactivarla iniciando sesión con tu contraseña." data-accion="Sí, desactivar" data-href="inicio.html?rol=visitante" data-peligro>Desactivar cuenta</button>
+  </div></section>
+
+  <!-- Modo edición -->
+  <form class="bk-panel" style="max-width:40rem" data-modo-editar hidden aria-labelledby="t-editar">
+    <h2 class="h3 mb-3" id="t-editar">Editar datos</h2>
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <span class="bk-avatar" style="width:4.5rem;height:4.5rem;font-size:1.25rem">MS</span>
+      <div class="d-flex gap-2"><button type="button" class="btn btn-sm btn-outline-secondary">Cambiar foto</button><button type="button" class="btn btn-sm btn-link text-decoration-none text-danger" data-toast="Foto quitada">Quitar foto</button></div>
+    </div>
+    <label class="form-label" for="n">Nombre completo</label><input class="form-control mb-3" id="n" value="Mariana Soto Delgado">
+    <label class="form-label" for="f">Fecha de nacimiento</label><input class="form-control mb-3" id="f" type="date" value="1996-04-12" style="max-width:14rem">
+    <label class="form-label" for="c">Correo</label><input class="form-control mb-1" id="c" value="mariana@correo.pe" readonly style="background:var(--bk-sunken)"><div class="form-text mb-3">El correo no se puede cambiar.</div>
+    <div class="d-flex justify-content-end gap-2 pt-3 border-top" style="border-color:var(--bk-line)!important">
+      <button type="button" class="btn btn-outline-secondary" data-perfil="ver">Cancelar</button>
+      <button type="button" class="btn btn-primary" data-perfil="ver" data-toast="Cambios guardados">Guardar cambios</button>
+    </div>
+  </form>
+</main>
+
+<div class="modal fade" id="m-clave" tabindex="-1" aria-labelledby="m-clave-t" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered"><form class="modal-content p-2">
+    <div class="modal-header border-0 pb-0"><h2 class="modal-title h3" id="m-clave-t">Cambiar contraseña</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+    <div class="modal-body">
+      <label class="form-label" for="ca">Contraseña actual</label><input class="form-control mb-3" id="ca" type="password" autocomplete="current-password">
+      <label class="form-label" for="cn">Nueva contraseña</label><input class="form-control mb-3" id="cn" type="password" autocomplete="new-password">
+      <label class="form-label" for="cc">Confirmar nueva contraseña</label><input class="form-control is-invalid" id="cc" type="password" value="xxxxxx" aria-describedby="cc-err"><div class="invalid-feedback" id="cc-err">Las contraseñas no coinciden.</div>
+    </div>
+    <div class="modal-footer border-0"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary" data-bs-dismiss="modal" data-toast="Contraseña actualizada">Cambiar contraseña</button></div>
+  </form></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="mock.js"></script>
+<script>
+/* Perfil: modo consulta por defecto; "Editar datos" cambia al formulario y Cancelar/Guardar vuelven.
+   Variante del prototipo: ?editar=1 abre directo en edición. Delegado en document porque
+   el diseño de Mi cuenta vuelve a montar el contenido. */
+function modoPerfil(modo) {
+  document.querySelectorAll("[data-modo-ver]").forEach(el => el.hidden = modo !== "ver");
+  document.querySelector("[data-modo-editar]").hidden = modo !== "editar";
+  if (modo === "editar") document.getElementById("n").focus();
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-perfil]");
+  if (b) modoPerfil(b.dataset.perfil);
+});
+document.addEventListener("DOMContentLoaded", () => { if (new URLSearchParams(location.search).has("editar")) modoPerfil("editar"); });
+</script>
+</body>
+</html>

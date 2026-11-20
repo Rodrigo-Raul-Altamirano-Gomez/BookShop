@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Devoluciones · BookShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="theme.css" rel="stylesheet">
+</head>
+<body data-layout="admin" data-nav="admin-devoluciones" data-rol="admin">
+<main id="contenido" class="bk-admin-main">
+  <div class="bk-page-head"><div><h1>Devoluciones</h1><p class="small text-muted mb-0 mt-1">Solicitudes pendientes de revisión.</p></div></div>
+  <div class="bk-table-wrap">
+    <table class="table bk-table">
+      <thead><tr><th>Pedido</th><th>Cliente</th><th>Fecha de entrega</th><th class="text-end">Total</th><th>Motivo y comentario</th><th class="text-end"><span class="visually-hidden">Acciones</span></th></tr></thead>
+      <tbody>
+        <tr data-removible>
+          <td data-libros="3,7" data-num="1032"></td><td>Mariana Soto<br><span class="small text-muted">mariana@correo.pe</span></td><td class="bk-num">19/11/2026</td><td class="text-end bk-num">S/ 142.00</td>
+          <td style="max-width:22rem"><strong class="small">Producto dañado</strong><div class="small text-muted">El libro llegó con la tapa doblada y varias páginas manchadas.</div></td>
+          <td class="text-end text-nowrap">
+            <button class="btn btn-sm btn-primary" data-confirm="¿Aceptar la devolución del pedido N.º 1032?" data-msg="El pedido pasará a «Devuelto» y se repondrá el stock de sus libros." data-accion="Sí, aceptar" data-ok="Devolución aceptada">Aceptar</button>
+            <button class="btn btn-sm btn-outline-danger ms-1" data-confirm="¿Rechazar la devolución del pedido N.º 1032?" data-msg="El pedido seguirá como «Entregado». El cliente verá la solicitud como rechazada." data-accion="Sí, rechazar" data-ok="Devolución rechazada" data-peligro>Rechazar</button>
+          </td>
+        </tr>
+        <tr data-removible>
+          <td data-libros="6" data-num="1028"></td><td>Julián Ortega<br><span class="small text-muted">julian@correo.pe</span></td><td class="bk-num">17/11/2026</td><td class="text-end bk-num">S/ 82.00</td>
+          <td style="max-width:22rem"><strong class="small">Ya no lo quiero</strong><div class="small text-muted">Me regalaron el mismo libro antes de que llegara el pedido.</div></td>
+          <td class="text-end text-nowrap">
+            <button class="btn btn-sm btn-primary" data-confirm="¿Aceptar la devolución del pedido N.º 1028?" data-msg="El pedido pasará a «Devuelto» y se repondrá el stock de sus libros." data-accion="Sí, aceptar" data-ok="Devolución aceptada">Aceptar</button>
+            <button class="btn btn-sm btn-outline-danger ms-1" data-confirm="¿Rechazar la devolución del pedido N.º 1028?" data-msg="El pedido seguirá como «Entregado». El cliente verá la solicitud como rechazada." data-accion="Sí, rechazar" data-ok="Devolución rechazada" data-peligro>Rechazar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="mock.js"></script>
+<script>
+/* Mismo patrón que Mis pedidos: portadas + número para identificar el pedido */
+document.querySelectorAll("td[data-libros]").forEach(td => {
+  td.innerHTML = `<div class="d-flex align-items-center gap-3">${coverStack(td.dataset.libros.split(",").map(Number))}<span class="fw-semibold text-nowrap">N.º ${td.dataset.num}</span></div>`;
+});
+</script>
+</body>
+</html>

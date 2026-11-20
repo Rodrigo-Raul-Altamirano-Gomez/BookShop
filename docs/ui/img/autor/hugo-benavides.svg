@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Retrato de Hugo Benavides">
+<rect width="200" height="200" fill="#F2DDD5"/>
+<circle cx="100" cy="100" r="78" fill="#FFFFFF" opacity=".35"/>
+
+<path d="M40 200c4-36 28-56 60-56s56 20 60 56z" fill="#3D4A2A"/>
+<rect x="90" y="122" width="20" height="26" rx="8" fill="#F1D3B8"/>
+<path d="M88 146l12 10 12-10" fill="none" stroke="#FFFFFF" stroke-opacity=".5" stroke-width="3"/>
+<ellipse cx="100" cy="94" rx="28" ry="33" fill="#F1D3B8"/>
+<path d='M70 82c2-20 14-30 30-30s28 10 30 30c-6-8-16-12-30-12s-24 4-30 12z' fill='#8A6A4A'/>
+<path d='M78 104c4 16 12 24 22 24s18-8 22-24c-4 6-12 8-22 8s-18-2-22-8z' fill='#8A6A4A' opacity='.9'/>
+</svg>

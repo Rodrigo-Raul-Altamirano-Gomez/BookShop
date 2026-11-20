@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Detalle de libro · BookShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="theme.css" rel="stylesheet">
+</head>
+<body data-layout="tienda" data-nav="libro">
+<main id="contenido" class="container-xl pt-4"></main>
+
+<!-- Reportar reseña (RF10) -->
+<div class="modal fade" id="reportar" tabindex="-1" aria-labelledby="reportar-t" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered"><form class="modal-content p-2">
+    <div class="modal-header border-0 pb-0"><h2 class="modal-title h3" id="reportar-t">Reportar reseña</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+    <div class="modal-body">
+      <fieldset class="mb-3"><legend class="form-label">Motivo</legend>
+        <div class="form-check"><input class="form-check-input" type="radio" name="mot" id="m1" checked><label class="form-check-label" for="m1">Ofensiva</label></div>
+        <div class="form-check"><input class="form-check-input" type="radio" name="mot" id="m2"><label class="form-check-label" for="m2">Spam</label></div>
+        <div class="form-check"><input class="form-check-input" type="radio" name="mot" id="m3"><label class="form-check-label" for="m3">No relacionada con el libro</label></div>
+        <div class="form-check"><input class="form-check-input" type="radio" name="mot" id="m4"><label class="form-check-label" for="m4">Otro</label></div>
+      </fieldset>
+      <label class="form-label" for="rc">Comentario</label>
+      <textarea class="form-control" id="rc" rows="3" placeholder="Cuéntanos qué está mal con esta reseña"></textarea>
+    </div>
+    <div class="modal-footer border-0"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary" data-bs-dismiss="modal" data-toast="Gracias, revisaremos esta reseña.">Enviar reporte</button></div>
+  </form></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="mock.js"></script>
+<script>
+const b = libro(new URLSearchParams(location.search).get("id") || 1);
+document.title = b.t + " · BookShop";
+
+const resena = (ini, nombre, fecha, p, texto, util, propia, oculta) => `
+  <article class="bk-review ${oculta ? "solo-admin" : ""}" ${oculta ? 'style="background:var(--bk-sunken);margin:0 -1rem;padding-left:1rem;padding-right:1rem;border-radius:var(--bk-radius)"' : ""}>
+    <div class="d-flex align-items-center gap-2 mb-2">
+      <span class="bk-avatar">${ini}</span>
+      <div><strong>${nombre}</strong>${oculta ? ' <span class="bk-status bk-status-neutral ms-1">Oculta</span>' : ""}<div class="small text-muted bk-num">${fecha}</div></div>
+      <span class="bk-stars ms-auto" aria-label="${p} de 5 estrellas">${estrellas(p)}</span>
+    </div>
+    <p class="mb-2">${texto}</p>
+    <div class="d-flex gap-3 small">
+      ${propia
+        ? `<button class="btn btn-sm btn-link text-decoration-none">Editar</button><button class="btn btn-sm btn-link text-decoration-none text-danger" data-confirm="¿Eliminar tu reseña?" data-msg="Se quitará tu reseña de este libro." data-accion="Sí, eliminar" data-ok="Reseña eliminada" data-peligro>Eliminar</button>`
+        : `<button class="btn btn-sm btn-link text-decoration-none no-admin" data-auth data-press="Útil (${util + 1})|Útil (${util})" aria-pressed="false"><i class="bi bi-hand-thumbs-up me-1"></i><span class="lbl">Útil (${util})</span></button>
+           <button class="btn btn-sm btn-link text-decoration-none text-muted no-admin" data-auth data-modal="#reportar"><i class="bi bi-flag me-1"></i>Reportar</button>
+           <button class="btn btn-sm btn-outline-secondary solo-admin" data-toast="${oculta ? "Reseña visible de nuevo" : "Reseña ocultada"}">${oculta ? "Mostrar" : "Ocultar"}</button>`}
+    </div>
+  </article>`;
+
+document.getElementById("contenido").innerHTML = `
+  <nav aria-label="Ruta"><ol class="breadcrumb bk-breadcrumb mb-4"><li class="breadcrumb-item"><a href="inicio.html">Inicio</a></li><li class="breadcrumb-item"><a href="catalogo.html">Catálogo</a></li><li class="breadcrumb-item"><a href="entidad.html?tipo=categoria&n=${b.cat}">${b.cat}</a></li><li class="breadcrumb-item active" aria-current="page">${b.t}</li></ol></nav>
+
+  <div class="row g-5">
+    <div class="col-4">${cover(b)}</div>
+    <div class="col-7">
+      <h1 class="bk-display mb-2">${b.t}</h1>
+      <p class="mb-2 text-muted">de <a href="entidad.html?tipo=autor&n=${encodeURIComponent(b.a)}" class="fw-semibold">${b.a}</a> · <a href="entidad.html?tipo=editorial&n=${encodeURIComponent(b.ed)}">${b.ed}</a> · <a href="entidad.html?tipo=categoria&n=${b.cat}">${b.cat}</a></p>
+      <a href="#resenas" class="d-inline-flex align-items-center gap-2 text-decoration-none small text-body">
+        <span class="bk-stars" aria-hidden="true">${estrellas(b.r)}</span><span class="bk-num"><strong>${b.r.toFixed(1)}</strong> <span class="text-muted">(${b.n} reseñas)</span></span></a>
+
+      <hr class="bk-divider">
+      <div class="d-flex align-items-center gap-3">${price(b, "bk-price-lg")}${b.d ? `<span class="bk-tag bk-tag-sale">−${b.d} %</span>` : ""}</div>
+      ${b.s > 0
+        ? `<p class="small mt-1 mb-4"><i class="bi bi-check2 text-success"></i> En stock: <strong class="bk-num">${b.s}</strong> unidades</p>`
+        : `<p class="small mt-1 mb-4 text-danger fw-semibold"><i class="bi bi-x-circle me-1"></i>Agotado · Sin stock por ahora</p>`}
+
+      <div class="d-flex gap-2 align-items-stretch no-admin">
+        <div class="bk-stepper" role="group" aria-label="Cantidad">
+          <button type="button" aria-label="Quitar uno" disabled>−</button><input type="number" value="1" min="1" max="${b.s}" aria-label="Cantidad" ${b.s ? "" : "disabled"}><button type="button" aria-label="Agregar uno" ${b.s > 1 ? "" : "disabled"}>+</button>
+        </div>
+        <button class="btn btn-primary btn-lg" ${b.s ? "" : "disabled"} data-auth data-toast="Agregado al carrito|Ver carrito|carrito.html"><i class="bi bi-bag me-2"></i>Agregar al carrito</button>
+      </div>
+      <div class="d-flex gap-2 mt-3">
+        <button class="btn btn-sm btn-outline-primary no-admin" data-auth data-press="En favoritos|Favoritos" aria-pressed="false"><i class="bi bi-heart me-1"></i><span class="lbl">Favoritos</span></button>
+        <button class="btn btn-sm btn-outline-primary no-admin" data-auth data-press="En deseados|Deseados" aria-pressed="false"><i class="bi bi-bookmark me-1"></i><span class="lbl">Deseados</span></button>
+        <button class="btn btn-sm btn-outline-primary" data-cmp-add="${b.id}"><i class="bi bi-layout-split me-1"></i>Comparar</button>
+      </div>
+
+      <hr class="bk-divider">
+      <h2 class="h3">Sinopsis</h2>
+      <p style="max-width:40rem">En una casa de Barranco donde ningún reloj marca la misma hora, tres generaciones de mujeres guardan un secreto que solo puede contarse a medianoche. Cuando la última de ellas decide vender la casa, cada habitación empieza a devolverle un recuerdo que creía perdido.</p>
+      <dl class="bk-spec mt-4 mb-0">
+        <div><dt>ISBN</dt><dd>978-612-4567-${String(b.id).padStart(2, "0")}-3</dd></div>
+        <div><dt>Idioma</dt><dd>${b.idi}</dd></div>
+        <div><dt>Páginas</dt><dd>${b.pag}</dd></div>
+        <div><dt>Año</dt><dd>${b.anio}</dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <section id="resenas" class="mt-5 pt-3" aria-labelledby="t-res">
+    <div class="bk-shelf-head"><h2 id="t-res">Reseñas</h2></div>
+    <div class="row g-5">
+      <div class="col-4">
+        <div class="d-flex align-items-baseline gap-2"><span style="font-family:var(--bk-font-serif);font-size:3rem;font-weight:500;line-height:1">${b.r.toFixed(1)}</span><span class="text-muted">de 5</span></div>
+        <div class="bk-stars fs-5 my-1" aria-hidden="true">${estrellas(b.r)}</div>
+        <p class="small text-muted">${b.n} reseñas</p>
+        <div class="bk-dist mt-3" aria-label="Distribución de puntuaciones">
+          <span>5</span><span class="bar"><span style="width:55%"></span></span><span class="bk-num text-muted">10</span>
+          <span>4</span><span class="bar"><span style="width:22%"></span></span><span class="bk-num text-muted">4</span>
+          <span>3</span><span class="bar"><span style="width:11%"></span></span><span class="bk-num text-muted">2</span>
+          <span>2</span><span class="bar"><span style="width:6%"></span></span><span class="bk-num text-muted">1</span>
+          <span>1</span><span class="bar"><span style="width:6%"></span></span><span class="bk-num text-muted">1</span>
+        </div>
+      </div>
+      <div class="col-8">
+        <form class="bk-panel mb-4 solo-cliente" aria-labelledby="t-form">
+          <h3 id="t-form" class="mb-1">Escribe tu reseña</h3>
+          <p class="small text-muted mb-3">Recibiste este libro en tu pedido N.º 1032.</p>
+          <fieldset class="mb-3"><legend class="form-label">Tu puntuación</legend>
+            <div class="bk-rating-input">
+              <input type="radio" name="p" id="p5"><label for="p5" aria-label="5 de 5 estrellas">★</label>
+              <input type="radio" name="p" id="p4" checked><label for="p4" aria-label="4 de 5 estrellas">★</label>
+              <input type="radio" name="p" id="p3"><label for="p3" aria-label="3 de 5 estrellas">★</label>
+              <input type="radio" name="p" id="p2"><label for="p2" aria-label="2 de 5 estrellas">★</label>
+              <input type="radio" name="p" id="p1"><label for="p1" aria-label="1 de 5 estrellas">★</label>
+            </div></fieldset>
+          <label class="form-label" for="c">Comentario</label>
+          <textarea class="form-control mb-3" id="c" rows="3" placeholder="¿Qué te pareció el libro?"></textarea>
+          <div class="text-end"><button type="button" class="btn btn-primary" data-toast="Reseña publicada.">Publicar reseña</button></div>
+        </form>
+        ${listaResenas()}
+      </div>
+    </div>
+  </section>
+
+  <section class="mt-5 pt-2" aria-labelledby="t-sim">
+    <div class="bk-shelf-head"><h2 id="t-sim">Libros similares</h2><a class="bk-more" href="recomendaciones.html?tipo=similares&id=${b.id}">Ver todos <i class="bi bi-arrow-right"></i></a></div>
+    <div class="bk-shelf" data-books="${b.id},8"></div>
+  </section>`;
+
+/* Variante ?resena=propia: el cliente ya reseñó el libro; su reseña va primero, con Editar y Eliminar */
+if (new URLSearchParams(location.search).has("resena")) {
+  document.querySelector('form[aria-labelledby="t-form"]').outerHTML =
+    `<div class="solo-cliente">${resena("MS", "Mariana Soto · tu reseña", "18/11/2026", 4, "Me atrapó desde el primer capítulo. La casa es un personaje más.", 0, true)}</div>`;
+}
+
+/* Reseñas: se muestran 5 (más recientes primero) y "Ver más reseñas (n)" agrega las 5 siguientes */
+function listaResenas() {
+  const autores = [["RQ", "Rosa Quiroga"], ["JO", "Julián Ortega"], ["EC", "Elena Castañeda"], ["HB", "Hugo Benavides"], ["PI", "Pablo Iturbe"], ["CR", "Carmen Rivas"], ["DM", "Diego Montalvo"], ["AP", "Ana Lucía Pardo"], ["MS", "Marco Salazar"]];
+  const textos = [
+    "La mejor novela que leí este año. La estructura por habitaciones funciona muy bien y el final es inesperado sin ser forzado.",
+    "Muy bien escrita, aunque la parte central se hace lenta. Vale la pena por los últimos capítulos.",
+    "Los personajes se sienten reales. Lo terminé en dos noches.",
+    "Bonita edición y una historia que se queda contigo varios días.",
+    "Esperaba más del final, pero el estilo es precioso.",
+    "Ideal para regalar. A mi madre le encantó."
+  ];
+  const puntos = [5, 3, 5, 4, 3, 5, 4, 4, 2, 5, 4, 5, 3, 4, 5, 4, 3, 5];
+  const todas = Array.from({ length: b.n }, (_, i) => {
+    const [ini, nom] = autores[i % autores.length];
+    const dia = String(18 - (i % 18)).padStart(2, "0");
+    return resena(ini, nom, `${dia}/${i < 12 ? "11" : "10"}/2026`, puntos[i % puntos.length], textos[i % textos.length], (b.n - i) % 8);
+  });
+  const oculta = resena("XX", "Usuario12", "28/10/2026", 1, "Contenido ofensivo que fue ocultado por moderación.", 0, false, true);
+  const resto = todas.length - 5;
+  return `<div id="lista-resenas">${todas.slice(0, 5).join("")}${oculta}
+      ${todas.slice(5).map(r => r.replace('<article class="bk-review', '<article hidden data-pendiente class="bk-review')).join("")}</div>
+    ${resto > 0 ? `<button type="button" class="btn btn-outline-secondary w-100 mt-3" id="ver-mas-resenas">Ver más reseñas (${resto})</button>` : ""}`;
+}
+document.addEventListener("click", e => {
+  const btn = e.target.closest("#ver-mas-resenas");
+  if (!btn) return;
+  const pendientes = [...document.querySelectorAll("#lista-resenas [data-pendiente][hidden]")];
+  pendientes.slice(0, 5).forEach(r => r.hidden = false);
+  const quedan = pendientes.length - 5;
+  if (quedan > 0) btn.textContent = `Ver más reseñas (${quedan})`; else btn.remove();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reportes de reseñas · BookShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="theme.css" rel="stylesheet">
+</head>
+<body data-layout="admin" data-nav="admin-reportes-resenas" data-rol="admin">
+<main id="contenido" class="bk-admin-main">
+  <div class="bk-page-head"><div><h1>Reportes de reseñas</h1><p class="small text-muted mb-0 mt-1">Reseñas que los clientes reportaron. También puedes ocultar cualquier reseña desde el detalle del libro.</p></div></div>
+  <div class="d-grid gap-3" style="max-width:52rem">
+    <article class="bk-panel" data-removible>
+      <div class="d-flex justify-content-between gap-3 mb-3">
+        <div><p class="bk-caption mb-1">Reseña en</p><a class="bk-line-title" href="libro.html?id=10&rol=admin">La última biblioteca</a><div class="small text-muted">Escrita por Usuario12 · 28/10/2026</div></div>
+        <span class="bk-status bk-status-warn align-self-start">Pendiente</span>
+      </div>
+      <blockquote class="bk-quote mb-3"><span class="bk-stars">★<span class="off">★★★★</span></span><p class="mb-0 mt-1">No compren aquí, mejor visiten tiendalibros-barata.xyz donde todo está a mitad de precio.</p></blockquote>
+      <div class="small"><strong>Reportado por Mariana Soto</strong> · Motivo: Spam<div class="text-muted">La reseña solo tiene un enlace a otra tienda.</div></div>
+      <div class="d-flex gap-2 mt-3 pt-3 border-top" style="border-color:var(--bk-line)!important">
+        <button class="btn btn-sm btn-primary" data-confirm="¿Ocultar esta reseña?" data-msg="Dejará de mostrarse y de contar en el promedio del libro. El reporte quedará aceptado." data-accion="Sí, ocultar" data-ok="Reseña ocultada">Ocultar reseña</button>
+        <button class="btn btn-sm btn-outline-secondary" data-confirm="¿Mantener visible esta reseña?" data-msg="El reporte quedará rechazado." data-accion="Sí, mantener" data-ok="Reporte rechazado">Mantener visible</button>
+      </div>
+    </article>
+    <article class="bk-panel" data-removible>
+      <div class="d-flex justify-content-between gap-3 mb-3">
+        <div><p class="bk-caption mb-1">Reseña en</p><a class="bk-line-title" href="libro.html?id=6&rol=admin">Breve historia del silencio</a><div class="small text-muted">Escrita por Hugo Benavides · 09/11/2026</div></div>
+        <span class="bk-status bk-status-warn align-self-start">Pendiente</span>
+      </div>
+      <blockquote class="bk-quote mb-3"><span class="bk-stars">★★<span class="off">★★★</span></span><p class="mb-0 mt-1">Aburrido. El autor no sabe de lo que habla y se nota en cada página.</p></blockquote>
+      <div class="small"><strong>Reportado por Elena Castañeda</strong> · Motivo: Ofensiva<div class="text-muted">Ataca al autor en lugar de opinar sobre el libro.</div></div>
+      <div class="d-flex gap-2 mt-3 pt-3 border-top" style="border-color:var(--bk-line)!important">
+        <button class="btn btn-sm btn-primary" data-confirm="¿Ocultar esta reseña?" data-msg="Dejará de mostrarse y de contar en el promedio del libro. El reporte quedará aceptado." data-accion="Sí, ocultar" data-ok="Reseña ocultada">Ocultar reseña</button>
+        <button class="btn btn-sm btn-outline-secondary" data-confirm="¿Mantener visible esta reseña?" data-msg="El reporte quedará rechazado." data-accion="Sí, mantener" data-ok="Reporte rechazado">Mantener visible</button>
+      </div>
+    </article>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="mock.js"></script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Carrito · BookShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="theme.css" rel="stylesheet">
+</head>
+<body data-layout="tienda" data-nav="carrito">
+<main id="contenido" class="container-xl pt-4">
+  <div id="lleno">
+    <div class="d-flex align-items-baseline justify-content-between mb-4">
+      <h1 class="mb-0">Carrito <span class="text-muted fs-5 fw-normal" style="font-family:var(--bk-font-sans)">(3 libros)</span></h1>
+      <button class="btn btn-sm btn-link text-decoration-none text-danger" data-confirm="¿Vaciar el carrito?" data-msg="Se quitarán los 3 libros del carrito." data-accion="Sí, vaciar carrito" data-href="carrito.html?vacio=1" data-peligro>Vaciar carrito</button>
+    </div>
+
+    <div class="row g-5">
+      <section class="col-8" aria-label="Libros del carrito">
+        <div class="bk-panel py-0">
+          <div class="bk-line" data-removible>
+            <a href="libro.html?id=1"><div class="bk-cover bk-cover-type bk-c1"><span class="t">La casa de los relojes</span></div></a>
+            <div>
+              <a class="bk-line-title" href="libro.html?id=1">La casa de los relojes</a>
+              <div class="small text-muted mb-2">Inés Valdivia</div>
+              <div class="d-flex align-items-center gap-2 mb-3"><span class="bk-price is-sale"><span class="now fs-6">S/ 48.00</span><span class="was">S/ 60.00</span></span><span class="bk-tag bk-tag-sale">−20 %</span></div>
+              <div class="d-flex align-items-center gap-3">
+                <div class="bk-stepper bk-stepper-sm" role="group" aria-label="Cantidad de La casa de los relojes"><button type="button" aria-label="Quitar uno">−</button><input type="number" value="2" aria-label="Cantidad"><button type="button" aria-label="Agregar uno">+</button></div>
+                <button class="btn btn-sm btn-link text-decoration-none text-muted" onclick="this.closest('[data-removible]').remove()" data-toast="Libro quitado">Quitar</button>
+              </div>
+            </div>
+            <div class="text-end"><span class="small text-muted d-block">Subtotal</span><strong class="bk-num">S/ 96.00</strong></div>
+          </div>
+          <div class="bk-line" data-removible>
+            <a href="libro.html?id=2"><div class="bk-cover bk-cover-type bk-c2"><span class="t">Mareas del sur</span></div></a>
+            <div>
+              <a class="bk-line-title" href="libro.html?id=2">Mareas del sur</a>
+              <div class="small text-muted mb-2">Tomás Arguedas</div>
+              <div class="mb-3"><span class="bk-price"><span class="now fs-6">S/ 54.90</span></span></div>
+              <div class="d-flex align-items-center gap-3">
+                <div class="bk-stepper bk-stepper-sm" role="group" aria-label="Cantidad de Mareas del sur"><button type="button" aria-label="Quitar uno" disabled>−</button><input type="number" value="1" aria-label="Cantidad"><button type="button" aria-label="Agregar uno">+</button></div>
+                <button class="btn btn-sm btn-link text-decoration-none text-muted" onclick="this.closest('[data-removible]').remove()" data-toast="Libro quitado">Quitar</button>
+              </div>
+            </div>
+            <div class="text-end"><span class="small text-muted d-block">Subtotal</span><strong class="bk-num">S/ 54.90</strong></div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="col-4">
+        <div class="bk-panel bk-summary" style="position:sticky;top:5.5rem">
+          <h2 class="h3 mb-3">Resumen</h2>
+          <dl><dt>Subtotal</dt><dd>S/ 150.90</dd><dt>Envío</dt><dd>S/ 10.00</dd></dl>
+          <hr class="bk-divider my-3">
+          <dl><dt class="fw-semibold text-body">Total</dt><dd class="total">S/ 160.90</dd></dl>
+          <a class="btn btn-primary btn-lg w-100 mt-4" href="compra.html">Continuar</a>
+          <p class="small text-muted text-center mt-3 mb-0">Elegirás la dirección y el pago en el siguiente paso.</p>
+        </div>
+      </aside>
+    </div>
+
+    <section class="mt-5 pt-2" aria-labelledby="t-comp">
+      <div class="bk-shelf-head">
+        <div><h2 id="t-comp">También suelen llevarse</h2><p class="small text-muted mb-0 mt-1">Libros que suelen comprarse junto con los de tu carrito.</p></div>
+        <a class="bk-more" href="recomendaciones.html?tipo=complementarios">Ver todos <i class="bi bi-arrow-right"></i></a>
+      </div>
+      <div class="bk-shelf" data-books="3,8"></div>
+    </section>
+  </div>
+  <div id="vacio" class="d-none"><h1 class="mb-4">Carrito</h1><div class="bk-panel"></div></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="mock.js"></script>
+<script>
+if (new URLSearchParams(location.search).has("vacio")) {
+  document.getElementById("lleno").remove();
+  const v = document.getElementById("vacio");
+  v.classList.remove("d-none");
+  v.querySelector(".bk-panel").innerHTML = emptyState("Tu carrito está vacío.", "Agrega libros desde su página de detalle.", "Explorar el catálogo", "catalogo.html");
+}
+</script>
+</body>
+</html>

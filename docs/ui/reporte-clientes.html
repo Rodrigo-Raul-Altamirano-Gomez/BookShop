@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reporte de clientes por monto gastado · BookShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="theme.css" rel="stylesheet">
+</head>
+<body data-layout="doc" style="background:#8E877D">
+<style>
+  .bk-a4 { width: 1123px; min-height: 794px; margin: 2rem auto; background: #fff; padding: 48px 56px; box-shadow: 0 4px 24px rgba(0,0,0,.25); font-size: 12px; color: var(--bk-ink); }
+  .bk-a4 table { width: 100%; border-collapse: collapse; }
+  .bk-a4 th { font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--bk-muted); text-align: left; border-bottom: 1.5px solid var(--bk-ink); padding: 6px 4px; }
+  .bk-a4 td { padding: 7px 4px; border-bottom: 1px solid var(--bk-line); font-variant-numeric: tabular-nums; }
+  .bk-a4 .r { text-align: right; }
+  .bk-doc-bar { position: sticky; top: 0; background: #2A2622; color: #F7F4EE; padding: .5rem 1rem; font-size: .875rem; display: flex; gap: 1rem; align-items: center; }
+</style>
+<div class="bk-doc-bar"><i class="bi bi-file-earmark-pdf"></i>reporte-clientes.pdf <span class="ms-auto opacity-75">Vista del PDF (JasperReports, RF19) · horizontal</span></div>
+<main id="contenido" class="bk-a4">
+  <div class="d-flex justify-content-between align-items-end mb-4 pb-3 border-bottom">
+    <div><span class="bk-logo" style="font-size:22px">Book<span>Shop</span></span><h1 class="h2 mt-2 mb-0">Clientes por monto gastado</h1></div>
+    <div class="text-end bk-num">Período: 01/11/2026 – 30/11/2026<br>Generado: 20/11/2026 09:16<br>Resultados: 6</div>
+  </div>
+  <table>
+    <thead><tr><th class="r">#</th><th>Cliente</th><th>Estado</th><th class="r">Días de uso</th><th class="r">Gasto</th><th>Categoría</th><th>Autor</th><th>Editorial</th></tr></thead>
+    <tbody>
+      <tr><td class="r">1</td><td>Mariana Soto<div class="text-muted">mariana@correo.pe</div></td><td>Activa</td><td class="r">656</td><td class="r">S/ 362.81</td><td>Novela</td><td>Inés Valdivia</td><td>Ediciones Faro</td></tr>
+      <tr><td class="r">2</td><td>Julián Ortega<div class="text-muted">julian@correo.pe</div></td><td>Activa</td><td class="r">410</td><td class="r">S/ 214.50</td><td>Historia</td><td>Julián Ortega</td><td>Sextante</td></tr>
+      <tr><td class="r">3</td><td>Elena Castañeda<div class="text-muted">elena@correo.pe</div></td><td>Activa</td><td class="r">302</td><td class="r">S/ 145.00</td><td>Fantasía</td><td>Hugo Benavides</td><td>Lumbre</td></tr>
+      <tr><td class="r">4</td><td>Rosa Quiroga<div class="text-muted">rosa@correo.pe</div></td><td>Desactivada</td><td class="r">188</td><td class="r">S/ 49.00</td><td>Viajes</td><td>Rosa Quiroga</td><td>Altamar</td></tr>
+      <tr><td class="r">5</td><td>Pablo Iturbe<div class="text-muted">pablo@correo.pe</div></td><td>Activa</td><td class="r">95</td><td class="r">S/ 0.00</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td class="r">6</td><td>Diego Montalvo<div class="text-muted">diego@correo.pe</div></td><td>Activa</td><td class="r">12</td><td class="r">S/ 0.00</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td colspan="4" style="border:0;padding-top:12px"><strong>Total</strong></td><td class="r" style="border:0;padding-top:12px"><strong>S/ 771.31</strong></td><td colspan="3" style="border:0"></td></tr>
+    </tbody>
+  </table>
+  <p class="text-muted mt-4" style="font-size:10px">Gasto: suma de los pedidos del período que no están cancelados ni devueltos. Categoría, autor y editorial: los más comprados en el período, por unidades.</p>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="mock.js"></script>
+</body>
+</html>

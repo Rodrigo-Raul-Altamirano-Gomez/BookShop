@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Iniciar sesión · BookShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="theme.css" rel="stylesheet">
+</head>
+<body data-layout="auth" data-rol="visitante">
+<main id="contenido" class="mx-auto pb-5" style="max-width:27.5rem">
+  <div class="alert alert-info d-none" id="aviso" role="status"><i class="bi bi-info-circle"></i><div>Inicia sesión para continuar.</div></div>
+  <div class="alert alert-danger d-none" id="error" role="alert"><i class="bi bi-x-circle"></i><div>Correo o contraseña incorrectos.</div></div>
+  <form class="bk-panel p-4" id="form-login">
+    <h1 class="h2 mb-4">Iniciar sesión</h1>
+    <label class="form-label" for="correo">Correo</label>
+    <input class="form-control mb-3" id="correo" type="email" value="mariana@correo.pe" autocomplete="email">
+    <label class="form-label" for="clave">Contraseña</label>
+    <div class="input-group mb-4">
+      <input class="form-control" id="clave" type="password" value="secreto123" autocomplete="current-password">
+      <button class="btn btn-outline-secondary" type="button" onclick="const c=document.getElementById('clave');c.type=c.type==='password'?'text':'password';this.textContent=c.type==='password'?'Mostrar':'Ocultar'">Mostrar</button>
+    </div>
+    <button class="btn btn-primary btn-lg w-100" type="submit">Iniciar sesión</button>
+    <p class="text-center small mt-4 mb-0">¿No tienes cuenta? <a class="fw-semibold" href="registro.html">Regístrate</a></p>
+  </form>
+  <p class="small text-muted text-center mt-4">Prototipo: escribe un correo <span class="bk-code">@admin.bookshop</span> para entrar como administrador, o <a href="login.html?desactivada=1">prueba una cuenta desactivada</a>.</p>
+</main>
+
+<div class="modal fade" id="reactivar" tabindex="-1" aria-labelledby="reactivar-t" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered"><div class="modal-content p-2">
+    <div class="modal-header border-0 pb-0"><h2 class="modal-title h3" id="reactivar-t">Tu cuenta está desactivada</h2></div>
+    <div class="modal-body">¿Quieres reactivarla? Recuperarás todo tu historial: pedidos, listas y reseñas.</div>
+    <div class="modal-footer border-0">
+      <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Volver</button>
+      <a class="btn btn-primary" href="inicio.html">Reactivar e ingresar</a>
+    </div>
+  </div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="mock.js"></script>
+<script>
+const pl = new URLSearchParams(location.search);
+if (pl.has("aviso")) document.getElementById("aviso").classList.remove("d-none");
+if (pl.has("error")) document.getElementById("error").classList.remove("d-none");
+document.getElementById("form-login").addEventListener("submit", e => {
+  e.preventDefault();
+  const correo = document.getElementById("correo").value.trim();
+  if (!correo.includes("@") || pl.has("error")) { document.getElementById("error").classList.remove("d-none"); return; }
+  if (pl.has("desactivada")) return new bootstrap.Modal(document.getElementById("reactivar")).show();
+  location.href = correo.endsWith("@admin.bookshop") ? "admin-libros.html" : (pl.get("volver") || "inicio.html");
+});
+if (pl.has("desactivada")) document.getElementById("correo").value = "julian@correo.pe";
+</script>
+</body>
+</html>

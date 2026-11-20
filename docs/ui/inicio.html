@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inicio · BookShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="theme.css" rel="stylesheet">
+</head>
+<body data-layout="tienda" data-nav="inicio">
+<main id="contenido">
+  <section class="border-bottom" style="border-color:var(--bk-line)!important">
+    <div class="container-xl py-5">
+      <div class="row align-items-end g-5">
+        <div class="col-7">
+          <p class="bk-caption mb-2">Librería en línea</p>
+          <h1 class="bk-display mb-3">Encuentra tu próxima lectura.</h1>
+          <p class="text-muted mb-4" style="max-width:34rem">Novelas, ensayos y poesía de autores que vale la pena descubrir. Busca por título o explora por categoría, autor y editorial.</p>
+          <form class="bk-search" style="max-width:36rem" role="search" action="catalogo.html">
+            <i class="bi bi-search"></i>
+            <input class="form-control" name="q" type="search" placeholder="¿Qué libro buscas?" aria-label="Buscar libros por título" style="font-size:1rem;padding-top:.8rem;padding-bottom:.8rem;background:var(--bk-surface);border-color:var(--bk-line-strong)">
+          </form>
+        </div>
+        <div class="col-5">
+          <div class="d-flex align-items-end justify-content-end gap-3" aria-hidden="true">
+            <div style="width:7.5rem;transform:rotate(-3deg)"><div class="bk-cover bk-cover-type bk-c3"><span class="t">El cartógrafo ciego</span><span class="a">Lucía Ferrán</span></div></div>
+            <div style="width:9.5rem"><div class="bk-cover bk-cover-type bk-c1"><span class="t">La casa de los relojes</span><span class="a">Inés Valdivia</span></div></div>
+            <div style="width:7rem;transform:rotate(2.5deg)"><div class="bk-cover bk-cover-type bk-c2"><span class="t">Mareas del sur</span><span class="a">Tomás Arguedas</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="container-xl">
+    <section class="mt-5 solo-cliente" aria-labelledby="s-parati">
+      <div class="bk-shelf-head">
+        <div><h2 id="s-parati">Para ti</h2><p class="small text-muted mb-0 mt-1">Basado en lo que compran lectores con gustos parecidos a los tuyos.</p></div>
+        <a class="bk-more" href="recomendaciones.html?tipo=para-ti">Ver todos <i class="bi bi-arrow-right"></i></a>
+      </div>
+      <div class="bk-shelf" data-books="8,8"></div>
+    </section>
+
+    <section class="mt-5" aria-labelledby="s-nov">
+      <div class="bk-shelf-head"><h2 id="s-nov">Novedades</h2><a class="bk-more" href="recomendaciones.html?tipo=novedades">Ver todos <i class="bi bi-arrow-right"></i></a></div>
+      <div class="bk-shelf" data-books="0,8"></div>
+    </section>
+
+    <section class="mt-5" aria-labelledby="s-ven">
+      <div class="bk-shelf-head"><h2 id="s-ven">Más vendidos</h2><a class="bk-more" href="recomendaciones.html?tipo=mas-vendidos">Ver todos <i class="bi bi-arrow-right"></i></a></div>
+      <div class="bk-shelf" data-books="4,8"></div>
+    </section>
+
+    <section class="mt-5" aria-labelledby="s-pop">
+      <div class="bk-shelf-head"><h2 id="s-pop">Más populares</h2><a class="bk-more" href="recomendaciones.html?tipo=mas-populares">Ver todos <i class="bi bi-arrow-right"></i></a></div>
+      <div class="bk-shelf" data-books="9,8"></div>
+    </section>
+
+    <section class="mt-5 pt-2" aria-labelledby="s-exp">
+      <h2 id="s-exp" class="mb-4">Explorar</h2>
+      <div class="bk-panel">
+        <div class="d-flex justify-content-between align-items-baseline mb-3"><h3 class="mb-0">Categorías</h3><a class="bk-more" href="explorar.html?tipo=categoria">Ver todas <i class="bi bi-arrow-right"></i></a></div>
+        <div class="bk-shelf" data-entities="categoria,8"></div>
+        <hr class="bk-divider">
+        <div class="d-flex justify-content-between align-items-baseline mb-3"><h3 class="mb-0">Autores</h3><a class="bk-more" href="explorar.html?tipo=autor">Ver todos <i class="bi bi-arrow-right"></i></a></div>
+        <div class="bk-shelf" data-entities="autor,8"></div>
+        <hr class="bk-divider">
+        <div class="d-flex justify-content-between align-items-baseline mb-3"><h3 class="mb-0">Editoriales</h3><a class="bk-more" href="explorar.html?tipo=editorial">Ver todas <i class="bi bi-arrow-right"></i></a></div>
+        <div class="bk-shelf" data-entities="editorial,8"></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="mock.js"></script>
+</body>
+</html>

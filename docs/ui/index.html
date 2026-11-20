@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mapa de pantallas · BookShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="theme.css" rel="stylesheet">
+</head>
+<body data-layout="indice">
+<style>
+  .bk-map h2 { font-size: 1.25rem; margin: 0 0 .75rem; }
+  .bk-map ul { list-style: none; padding: 0; margin: 0; }
+  .bk-map li { display: flex; align-items: baseline; gap: .75rem; padding: .45rem 0; border-bottom: 1px solid var(--bk-line); }
+  .bk-map li:last-child { border-bottom: 0; }
+  .bk-map li > a:first-child { font-weight: 600; text-decoration: none; }
+  .bk-map li > a:first-child:hover { text-decoration: underline; }
+  .bk-map .rf { margin-left: auto; font-size: .75rem; color: var(--bk-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .bk-map .var { font-size: .8125rem; }
+</style>
+<main id="contenido" class="container-xl py-5">
+  <div class="d-flex align-items-end justify-content-between mb-4 pb-4 border-bottom" style="border-color:var(--bk-line)!important">
+    <div>
+      <span class="bk-logo fs-3">Book<span>Shop</span></span>
+      <h1 class="mt-2 mb-1">Prototipo navegable</h1>
+      <p class="text-muted mb-0" style="max-width:46rem">Todas las pantallas de la aplicación (solo escritorio). Los enlaces, menús, diálogos y avisos funcionan; los datos son de ejemplo. Diseño y criterios en <code>docs/UX-UI.md</code>.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-primary" href="inicio.html?rol=visitante">Entrar como visitante</a>
+      <a class="btn btn-primary" href="inicio.html">Entrar como cliente</a>
+      <a class="btn btn-outline-primary" href="admin-libros.html">Entrar como administrador</a>
+    </div>
+  </div>
+
+  <div class="row g-4 bk-map">
+    <section class="col-4"><div class="bk-panel h-100">
+      <h2>Tienda</h2>
+      <ul>
+        <li><a href="inicio.html">Inicio</a><span class="var"><a href="inicio.html?rol=visitante">visitante</a></span><span class="rf">RF07 RF13 RF14</span></li>
+        <li><a href="catalogo.html">Catálogo</a><span class="var"><a href="catalogo.html?q=casa">búsqueda</a></span><span class="rf">RF07 RF08</span></li>
+        <li><a href="libro.html?id=1">Detalle de libro</a><span class="var"><a href="libro.html?id=5">agotado</a> · <a href="libro.html?id=1&resena=propia">reseña propia</a> · <a href="libro.html?id=1&rol=visitante">visitante</a> · <a href="libro.html?id=1&rol=admin">admin</a></span><span class="rf">RF09 RF10 RF12</span></li>
+        <li><a href="comparar.html">Comparación</a><span class="var"><a href="comparar.html?vacia=1">vacía</a></span><span class="rf">RF09</span></li>
+        <li><a href="explorar.html?tipo=autor">Explorar</a><span class="var"><a href="explorar.html?tipo=categoria">categorías</a> · <a href="explorar.html?tipo=editorial">editoriales</a></span><span class="rf">RF05</span></li>
+        <li><a href="entidad.html?tipo=autor">Página de autor</a><span class="var"><a href="entidad.html?tipo=categoria">categoría</a> · <a href="entidad.html?tipo=editorial">editorial</a></span><span class="rf">RF05</span></li>
+        <li><a href="recomendaciones.html?tipo=novedades">Novedades</a><span class="rf">RF07</span></li>
+        <li><a href="recomendaciones.html?tipo=mas-vendidos">Más vendidos</a><span class="rf">RF14</span></li>
+        <li><a href="recomendaciones.html?tipo=mas-populares">Más populares</a><span class="var"><a href="recomendaciones.html?tipo=para-ti">para ti</a></span><span class="rf">RF13</span></li>
+        <li><a href="recomendaciones.html?tipo=similares&id=1">Similares</a><span class="var"><a href="recomendaciones.html?tipo=complementarios">complementarios</a></span><span class="rf">RF12</span></li>
+        <li><a href="login.html">Iniciar sesión</a><span class="var"><a href="login.html?aviso=1">requiere cuenta</a> · <a href="login.html?error=1">error</a> · <a href="login.html?desactivada=1">desactivada</a></span><span class="rf">RF01</span></li>
+        <li><a href="registro.html">Registro</a><span class="rf">RF01</span></li>
+      </ul>
+    </div></section>
+
+    <section class="col-4"><div class="bk-panel h-100">
+      <h2>Compra</h2>
+      <ul class="mb-4">
+        <li><a href="carrito.html">Carrito</a><span class="var"><a href="carrito.html?vacio=1">vacío</a></span><span class="rf">RF11 RF12</span></li>
+        <li><a href="compra.html">Resumen de compra</a><span class="var"><a href="compra.html?cambios=1">datos cambiados</a></span><span class="rf">RF15</span></li>
+        <li><a href="confirmacion.html">Confirmación</a><span class="rf">RF16</span></li>
+        <li><a href="comprobante.html">Comprobante PDF</a><span class="rf">RF17</span></li>
+      </ul>
+      <h2>Mi cuenta</h2>
+      <ul>
+        <li><a href="cuenta-pedidos.html">Pedidos</a><span class="rf">RF03</span></li>
+        <li><a href="pedido.html?estado=camino">Detalle de pedido</a><span class="var"><a href="pedido.html?estado=almacen">almacén</a> · <a href="pedido.html?estado=limite">límite de cancelaciones</a> · <a href="pedido.html?estado=entregado">entregado</a> · <a href="pedido.html?estado=revision">devolución en revisión</a> · <a href="pedido.html?estado=cancelado">cancelado</a> · <a href="pedido.html?estado=devuelto">devuelto</a></span><span class="rf">RF03</span></li>
+        <li><a href="cuenta-solicitudes.html">Mis solicitudes</a><span class="var"><a href="cuenta-solicitudes.html?tipo=reportes">reportes</a></span><span class="rf">RF03</span></li>
+        <li><a href="cuenta-cupones.html">Cupones</a><span class="rf">RF02</span></li>
+        <li><a href="listas.html?lista=deseados">Mis listas</a><span class="var"><a href="listas.html?lista=favoritos">favoritos</a> · <a href="listas.html?vacia=1">vacía</a></span><span class="rf">RF06</span></li>
+        <li><a href="cuenta-seguimientos.html">Seguimientos</a><span class="var"><a href="cuenta-seguimientos.html?tipo=categoria">categorías</a> · <a href="cuenta-seguimientos.html?vacia=1">vacía</a></span><span class="rf">RF05</span></li>
+        <li><a href="cuenta-resenas.html">Mis reseñas</a><span class="rf">RF10</span></li>
+        <li><a href="cuenta-datos.html">Perfil</a><span class="var"><a href="cuenta-datos.html?editar=1">edición</a></span><span class="rf">RF02</span></li>
+        <li><a href="cuenta-direcciones.html">Direcciones</a><span class="var"><a href="cuenta-metodos.html">métodos de pago</a></span><span class="rf">RF02</span></li>
+      </ul>
+    </div></section>
+
+    <section class="col-4"><div class="bk-panel h-100">
+      <h2>Administración</h2>
+      <ul>
+        <li><a href="admin-libros.html">Libros</a><span class="rf">RF04</span></li>
+        <li><a href="admin-libro.html?id=1">Editar libro</a><span class="var"><a href="admin-libro.html">nuevo</a></span><span class="rf">RF04</span></li>
+        <li><a href="admin-autores.html">Autores</a><span class="var"><a href="admin-categorias.html">categorías</a> · <a href="admin-editoriales.html">editoriales</a></span><span class="rf">RF04</span></li>
+        <li><a href="admin-devoluciones.html">Devoluciones</a><span class="rf">RF04</span></li>
+        <li><a href="admin-reportes-resenas.html">Reportes de reseñas</a><span class="rf">RF04</span></li>
+        <li><a href="admin-configuracion.html">Configuración</a><span class="rf">RF04</span></li>
+        <li><a href="admin-reportes.html">Reportes PDF</a><span class="rf">RF18 RF19</span></li>
+        <li><a href="reporte-libros.html">PDF de libros</a><span class="var"><a href="reporte-clientes.html">PDF de clientes</a></span><span class="rf">RF18 RF19</span></li>
+      </ul>
+    </div></section>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="mock.js"></script>
+</body>
+</html>

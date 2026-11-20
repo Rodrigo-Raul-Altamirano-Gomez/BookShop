@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Catálogo · BookShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="theme.css" rel="stylesheet">
+</head>
+<body data-layout="tienda" data-nav="catalogo">
+<main id="contenido" class="container-xl pt-4">
+  <nav aria-label="Ruta"><ol class="breadcrumb bk-breadcrumb mb-2"><li class="breadcrumb-item"><a href="inicio.html">Inicio</a></li><li class="breadcrumb-item active" aria-current="page">Catálogo</li></ol></nav>
+  <div class="d-flex align-items-baseline justify-content-between gap-3 mb-4">
+    <h1 class="mb-0" id="titulo">Catálogo</h1>
+    <span class="text-muted small bk-num">124 libros</span>
+  </div>
+  <div data-results='{"orden":true,"periodo":"registro","desde":0,"n":12,"cols":4,"chips":true}'></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="mock.js"></script>
+<script>
+const q = new URLSearchParams(location.search).get("q");
+if (q) document.getElementById("titulo").textContent = `Resultados para «${q}»`;
+</script>
+</body>
+</html>

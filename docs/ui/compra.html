@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Resumen de compra · BookShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="theme.css" rel="stylesheet">
+</head>
+<body data-layout="tienda" data-nav="compra">
+<main id="contenido" class="container-xl pt-4">
+  <nav aria-label="Ruta"><ol class="breadcrumb bk-breadcrumb mb-2"><li class="breadcrumb-item"><a href="carrito.html">Carrito</a></li><li class="breadcrumb-item active" aria-current="page">Resumen de compra</li></ol></nav>
+  <h1 class="mb-4">Resumen de compra</h1>
+
+  <div class="row g-5">
+    <div class="col-8">
+      <section class="mb-5" aria-labelledby="t-dir">
+        <div class="bk-step"><span class="bk-step-n">1</span><h2 id="t-dir" class="h3 mb-0">Dirección de envío</h2></div>
+        <div class="row row-cols-2 g-3" role="radiogroup" aria-labelledby="t-dir">
+          <div class="col"><label class="bk-choice h-100"><input class="form-check-input" type="radio" name="dir" checked>
+            <span><strong>Casa</strong> <span class="bk-status bk-status-neutral ms-1">Predeterminada</span><br><span class="small text-muted">Jr. Domeyer 214, Barranco, Lima</span></span></label></div>
+          <div class="col"><label class="bk-choice h-100"><input class="form-check-input" type="radio" name="dir">
+            <span><strong>Oficina</strong><br><span class="small text-muted">Av. Javier Prado Este 1580, San Isidro, Lima</span></span></label></div>
+          <div class="col"><button type="button" class="bk-choice bk-choice-add w-100" data-modal="#m-dir"><i class="bi bi-plus-lg"></i> Agregar dirección</button></div>
+        </div>
+      </section>
+
+      <section class="mb-5" aria-labelledby="t-pago">
+        <div class="bk-step"><span class="bk-step-n">2</span><h2 id="t-pago" class="h3 mb-0">Método de pago</h2></div>
+        <div class="row row-cols-2 g-3" role="radiogroup" aria-labelledby="t-pago">
+          <div class="col"><label class="bk-choice h-100"><input class="form-check-input" type="radio" name="pago" checked>
+            <span><strong><i class="bi bi-credit-card me-1"></i>Tarjeta</strong> <span class="bk-status bk-status-neutral ms-1">Predeterminado</span><br><span class="small text-muted bk-num">•••• •••• •••• 4821 · vence 08/27</span></span></label></div>
+          <div class="col"><label class="bk-choice h-100"><input class="form-check-input" type="radio" name="pago">
+            <span><strong><i class="bi bi-phone me-1"></i>Yape</strong><br><span class="small text-muted bk-num">••••• 4321 · Mariana Soto</span></span></label></div>
+          <div class="col"><button type="button" class="bk-choice bk-choice-add w-100" data-modal="#m-metodo"><i class="bi bi-plus-lg"></i> Agregar método de pago</button></div>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-cup">
+        <div class="bk-step"><span class="bk-step-n">3</span><h2 id="t-cup" class="h3 mb-0">Cupón <span class="text-muted fw-normal">(opcional)</span></h2></div>
+        <div class="row row-cols-2 g-3" role="radiogroup" aria-labelledby="t-cup">
+          <div class="col"><label class="bk-choice bk-choice-coupon h-100">
+            <input class="form-check-input" type="radio" name="cup" value="BK7Q2" data-pct="10" checked>
+            <span class="pct">10 %</span>
+            <span><span class="bk-code">BK7Q2</span><br><span class="small text-muted bk-num">Vence el 30/12/2026</span></span></label></div>
+          <div class="col"><label class="bk-choice h-100 align-items-center">
+            <input class="form-check-input" type="radio" name="cup" value="" data-pct="0">
+            <span><strong>Sin cupón</strong><br><span class="small text-muted">Pagar el precio completo</span></span></label></div>
+        </div>
+        <p class="small text-muted mt-2 mb-0">Solo se muestran tus cupones utilizables. <a href="cuenta-cupones.html">Ver mis cupones</a></p>
+      </section>
+    </div>
+
+    <aside class="col-4">
+      <div style="position:sticky;top:5.5rem">
+        <div class="alert alert-warning d-none" id="a-cambios" role="alert"><i class="bi bi-exclamation-triangle"></i>
+          <div><strong>Algunos datos cambiaron desde que preparaste la compra.</strong> Revisa el resumen y vuelve a pagar.
+            <ul class="mb-0 mt-2 ps-3 small"><li>El precio de «Mareas del sur» cambió de S/ 52.00 a S/ 54.90.</li><li>Solo quedan 2 unidades de «La casa de los relojes».</li></ul></div></div>
+        <div class="alert alert-danger d-none" id="a-rechazo" role="alert"><i class="bi bi-x-circle"></i><div><strong>Pago rechazado.</strong> Puedes intentarlo de nuevo o elegir otro método de pago.</div></div>
+
+        <div class="bk-panel bk-summary">
+          <h2 class="h3 mb-3">Tu pedido</h2>
+          <div class="d-grid gap-3 mb-3">
+            <div class="bk-mini"><div class="bk-cover bk-cover-type bk-c1 bk-cover-sm"><span class="t">La casa</span></div><span>La casa de los relojes <span class="text-muted">× 2</span></span><span class="bk-num">S/ 96.00</span></div>
+            <div class="bk-mini"><div class="bk-cover bk-cover-type bk-c2 bk-cover-sm"><span class="t">Mareas</span></div><span>Mareas del sur <span class="text-muted">× 1</span></span><span class="bk-num">S/ 54.90</span></div>
+          </div>
+          <hr class="bk-divider my-3">
+          <dl><dt>Subtotal</dt><dd>S/ 150.90</dd><dt data-cup>Cupón BK7Q2 (10 %)</dt><dd class="minus" data-cup>− S/ 15.09</dd><dt>Envío</dt><dd>S/ 10.00</dd></dl>
+          <hr class="bk-divider my-3">
+          <dl><dt class="fw-semibold text-body">Total</dt><dd class="total" id="total">S/ 145.81</dd></dl>
+          <button class="btn btn-primary btn-lg w-100 mt-4" id="pagar">Pagar S/ 145.81</button>
+          <p class="small text-muted text-center mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Pago simulado: no se realiza ningún cargo real.</p>
+        </div>
+        <p class="small text-muted mt-3">Prototipo: el primer pago se rechaza y el segundo se aprueba. Con <a href="compra.html?cambios=1">?cambios=1</a> se ve el aviso de datos cambiados.</p>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<div class="modal fade" id="m-dir" tabindex="-1" aria-labelledby="m-dir-t" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered"><form class="modal-content p-2">
+    <div class="modal-header border-0 pb-0"><h2 class="modal-title h3" id="m-dir-t">Agregar dirección</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+    <div class="modal-body">
+      <label class="form-label" for="d-alias">Alias</label><input class="form-control mb-1" id="d-alias" placeholder="Casa, Oficina…"><div class="form-text mb-3">Un nombre corto para reconocerla.</div>
+      <label class="form-label" for="d-dir">Dirección</label><input class="form-control mb-3" id="d-dir">
+      <div class="row g-3"><div class="col-6"><label class="form-label" for="d-dis">Distrito</label><input class="form-control" id="d-dis"></div><div class="col-6"><label class="form-label" for="d-ciu">Ciudad</label><input class="form-control" id="d-ciu"></div></div>
+    </div>
+    <div class="modal-footer border-0"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary" data-bs-dismiss="modal" data-toast="Dirección guardada en tu perfil">Guardar dirección</button></div>
+  </form></div>
+</div>
+
+<div class="modal fade" id="m-metodo" tabindex="-1" aria-labelledby="m-metodo-t" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered"><form class="modal-content p-2">
+    <div class="modal-header border-0 pb-0"><h2 class="modal-title h3" id="m-metodo-t">Agregar método de pago</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+    <div class="modal-body">
+      <ul class="nav nav-underline mb-3" role="tablist">
+        <li class="nav-item"><button type="button" class="nav-link active" data-bs-toggle="tab" data-bs-target="#t-tar" role="tab">Tarjeta</button></li>
+        <li class="nav-item"><button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#t-bil" role="tab">Billetera digital</button></li>
+      </ul>
+      <div class="tab-content">
+        <div class="tab-pane fade show active" id="t-tar" role="tabpanel">
+          <label class="form-label" for="m-tit">Titular</label><input class="form-control mb-3" id="m-tit">
+          <label class="form-label" for="m-num">Número</label><input class="form-control mb-1 bk-num" id="m-num" inputmode="numeric"><div class="form-text mb-3">16 dígitos, sin espacios.</div>
+          <label class="form-label" for="m-ven">Vencimiento</label><input class="form-control" id="m-ven" placeholder="MM/AA" style="max-width:8rem">
+        </div>
+        <div class="tab-pane fade" id="t-bil" role="tabpanel">
+          <label class="form-label" for="b-pro">Proveedor</label><select class="form-select mb-3" id="b-pro"><option>Yape</option><option>Plin</option></select>
+          <label class="form-label" for="b-tit">Titular</label><input class="form-control mb-3" id="b-tit">
+          <label class="form-label" for="b-cel">Celular</label><input class="form-control bk-num" id="b-cel" inputmode="numeric"><div class="form-text">9 dígitos.</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer border-0"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary" data-bs-dismiss="modal" data-toast="Método de pago guardado en tu perfil">Guardar método</button></div>
+  </form></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="mock.js"></script>
+<script>
+const pc = new URLSearchParams(location.search);
+if (pc.has("cambios")) document.getElementById("a-cambios").classList.remove("d-none");
+let intentos = 0;
+const pagar = document.getElementById("pagar");
+pagar.addEventListener("click", () => {
+  const texto = pagar.innerHTML;
+  pagar.disabled = true;
+  pagar.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Procesando pago…';
+  setTimeout(() => {
+    intentos++;
+    if (intentos === 1) {
+      document.getElementById("a-cambios").classList.add("d-none");
+      document.getElementById("a-rechazo").classList.remove("d-none");
+      pagar.disabled = false; pagar.innerHTML = texto;
+    } else {
+      location.href = "confirmacion.html";
+    }
+  }, 900);
+});
+
+/* Al elegir cupón (o "Sin cupón") se recalculan el descuento, el total y el texto de Pagar */
+document.querySelectorAll('input[name="cup"]').forEach(r => r.addEventListener("change", () => {
+  const pct = +r.dataset.pct, subtotal = 150.90, desc = +(subtotal * pct / 100).toFixed(2), total = soles(subtotal - desc + ENVIO);
+  document.querySelectorAll("[data-cup]").forEach(el => el.hidden = !pct);
+  document.getElementById("total").textContent = total;
+  pagar.textContent = `Pagar ${total}`;
+}));
+</script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Recomendaciones · BookShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="theme.css" rel="stylesheet">
+</head>
+<body data-layout="tienda" data-nav="recomendaciones">
+<main id="contenido" class="container-xl pt-4"></main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="mock.js"></script>
+<script>
+const pr = new URLSearchParams(location.search);
+const tipo = pr.get("tipo") || "mas-vendidos";
+const base = libro(pr.get("id") || 1);
+/* [título, explicación, significado del período, primer libro de ejemplo, criterio de orden] */
+const R = {
+  "novedades": ["Novedades", "Los libros agregados más recientemente al catálogo.", "registro", 0, "fecha de registro"],
+  "mas-vendidos": ["Más vendidos", "Libros con más unidades vendidas en el período elegido.", "ventas", 4, "unidades vendidas"],
+  "mas-populares": ["Más populares", "Combina ventas recientes, valoraciones y novedad.", "ventas", 9, "popularidad"],
+  "para-ti": ["Para ti", "Basado en lo que compran lectores con gustos parecidos a los tuyos.", "ventas", 8, "afinidad con tus compras"],
+  "similares": [`Similares a «${base.t}»`, "Libros con características parecidas.", "registro", base.id, "similitud"],
+  "complementarios": ["También suelen llevarse", "Libros que suelen comprarse junto con los de tu carrito.", "ventas", 3, "frecuencia de compra conjunta"]
+};
+const [titulo, expl, periodo, desde, criterio] = R[tipo];
+document.title = titulo + " · BookShop";
+document.getElementById("contenido").innerHTML = `
+  <nav aria-label="Ruta"><ol class="breadcrumb bk-breadcrumb mb-2"><li class="breadcrumb-item"><a href="inicio.html">Inicio</a></li><li class="breadcrumb-item active" aria-current="page">${titulo}</li></ol></nav>
+  <h1 class="mb-1">${titulo}</h1>
+  <p class="text-muted mb-4">${expl}</p>
+  <div data-results='{"orden":false,"criterio":"${criterio}","periodo":"${periodo}","desde":${desde},"n":12,"cols":4,"total":48}'></div>`;
+</script>
+</body>
+</html>

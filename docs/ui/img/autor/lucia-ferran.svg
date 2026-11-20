@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Retrato de Lucía Ferrán">
+<rect width="200" height="200" fill="#DCE6EE"/>
+<circle cx="100" cy="100" r="78" fill="#FFFFFF" opacity=".35"/>
+<circle cx='100' cy='48' r='16' fill='#3B2A20'/>
+<path d="M40 200c4-36 28-56 60-56s56 20 60 56z" fill="#6B4E71"/>
+<rect x="90" y="122" width="20" height="26" rx="8" fill="#9C6B48"/>
+<path d="M88 146l12 10 12-10" fill="none" stroke="#FFFFFF" stroke-opacity=".5" stroke-width="3"/>
+<ellipse cx="100" cy="94" rx="28" ry="33" fill="#9C6B48"/>
+<path d='M70 88c2-24 14-36 30-36s28 12 30 36c-8-14-18-20-30-20s-22 6-30 20z' fill='#3B2A20'/>
+
+</svg>

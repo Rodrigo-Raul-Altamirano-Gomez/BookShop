@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Comparación · BookShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="theme.css" rel="stylesheet">
+</head>
+<body data-layout="tienda" data-nav="comparar">
+<main id="contenido" class="container-xl pt-4">
+  <nav aria-label="Ruta"><ol class="breadcrumb bk-breadcrumb mb-2"><li class="breadcrumb-item"><a href="inicio.html">Inicio</a></li><li class="breadcrumb-item active" aria-current="page">Comparación</li></ol></nav>
+  <h1 class="mb-4">Comparación</h1>
+  <div id="tabla"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="mock.js"></script>
+<script>
+/* En el prototipo, si la sesión no tiene dos libros elegidos se usan dos de ejemplo. */
+let ids = cmp.get();
+if (ids.length < 2 && !new URLSearchParams(location.search).has("vacia")) ids = [1, 10];
+const el = document.getElementById("tabla");
+if (ids.length < 2) {
+  el.innerHTML = emptyState("Elige dos libros para compararlos", "Usa el botón «Comparar» en el detalle de cada libro.", "Ir al catálogo", "catalogo.html");
+} else {
+  const [x, y] = ids.map(libro);
+  const filas = [
+    ["Autor", b => b.a], ["Categoría", b => b.cat], ["Editorial", b => b.ed], ["Idioma", b => b.idi],
+    ["Páginas", b => b.pag], ["Año", b => b.anio], ["Precio final", b => price(b)],
+    ["Puntuación", b => `<span class="bk-stars">${estrellas(b.r)}</span> <span class="bk-num">${b.r.toFixed(1)}</span>`],
+    ["Disponibilidad", b => b.s ? `En stock (${b.s})` : '<span class="text-danger fw-semibold">Agotado</span>']
+  ];
+  el.innerHTML = `<div class="bk-table-wrap"><table class="table bk-table mb-0">
+    <thead><tr><th style="width:20%">Atributo</th><th>Libro 1</th><th>Libro 2</th></tr></thead>
+    <tbody>
+      <tr><td></td>${[x, y].map(b => `<td><div class="d-flex gap-3 align-items-start"><div style="width:5.5rem">${cover(b)}</div>
+        <div><a class="bk-line-title" href="libro.html?id=${b.id}">${b.t}</a><br>
+        <button class="btn btn-sm btn-link text-decoration-none text-muted mt-1" data-cmp-del="${b.id}" onclick="setTimeout(()=>location.reload(),50)">Quitar</button></div></div></td>`).join("")}</tr>
+      ${filas.map(([n, f]) => {
+        const dif = String(f(x)) !== String(f(y));
+        return `<tr><th scope="row" class="fw-semibold" ${dif ? 'style="background:var(--bk-green-50)"' : ""}>${n}</th><td>${f(x)}</td><td>${f(y)}</td></tr>`;
+      }).join("")}
+    </tbody></table></div>
+    <p class="small text-muted mt-3"><span class="d-inline-block align-middle me-1" style="width:.9rem;height:.9rem;background:var(--bk-green-50);border-radius:2px"></span>Atributos en los que los libros difieren.</p>`;
+}
+</script>
+</body>
+</html>

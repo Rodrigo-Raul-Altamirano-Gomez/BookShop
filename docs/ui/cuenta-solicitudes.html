@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mis solicitudes · BookShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="theme.css" rel="stylesheet">
+</head>
+<body data-layout="cuenta" data-nav="cuenta-solicitudes">
+<main id="contenido" class="container-xl pt-4">
+  <div class="bk-page-head"><div><h1>Mis solicitudes</h1><p class="text-muted small mb-0 mt-1" id="subtitulo"></p></div></div>
+  <ul class="nav nav-underline mb-4" id="tabs"></ul>
+  <div class="d-grid gap-3" id="lista"></div>
+</main>
+
+<div class="modal fade" id="m-edit" tabindex="-1" aria-labelledby="m-edit-t" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered"><form class="modal-content p-2">
+    <div class="modal-header border-0 pb-0"><h2 class="modal-title h3" id="m-edit-t"></h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+    <div class="modal-body">
+      <label class="form-label" for="e-mot">Motivo</label>
+      <select class="form-select mb-3" id="e-mot"></select>
+      <label class="form-label" for="e-com">Comentario</label>
+      <textarea class="form-control" id="e-com" rows="3"></textarea>
+    </div>
+    <div class="modal-footer border-0"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary" data-bs-dismiss="modal" data-toast="Cambios guardados">Guardar cambios</button></div>
+  </form></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="mock.js"></script>
+<script>
+/* Mis solicitudes: dos pestañas, una por tipo (?tipo=devoluciones | reportes).
+   Devoluciones se identifican por el pedido (CoverStack + número); reportes, por el libro y la reseña. */
+const tipoS = new URLSearchParams(location.search).get("tipo") || "devoluciones";
+const ESTADO_SOL = { PENDIENTE: ["Pendiente", "warn"], ACEPTADA: ["Aceptada", "ok"], RECHAZADA: ["Rechazada", "bad"], RETIRADA: ["Retirada", "neutral"] };
+const DEVOLUCIONES = [
+  { pedido: 1032, libros: [3, 7], fecha: "20/11/2026", motivo: "Producto dañado", comentario: "El libro llegó con la tapa doblada y varias páginas manchadas.", estado: "PENDIENTE", url: "pedido.html?estado=revision" },
+  { pedido: 1019, libros: [6], fecha: "23/10/2026", motivo: "Producto equivocado", comentario: "Recibí otro libro distinto al que pedí.", estado: "ACEPTADA", url: "pedido.html?estado=devuelto" }
+];
+const REPORTES = [
+  { libro: 10, autor: "Usuario12", puntos: 1, texto: "No compren aquí, mejor visiten tiendalibros-barata.xyz donde todo está a mitad de precio.", fecha: "14/11/2026", motivo: "Spam", comentario: "La reseña solo tiene un enlace a otra tienda.", estado: "PENDIENTE" },
+  { libro: 12, autor: "Usuario45", puntos: 1, texto: "Contenido ofensivo que fue ocultado por moderación.", fecha: "05/11/2026", motivo: "Ofensiva", comentario: "Insulta a otros lectores.", estado: "ACEPTADA" },
+  { libro: 2, autor: "Diego Montalvo", puntos: 3, texto: "No me gustó el final, esperaba otra cosa.", fecha: "02/11/2026", motivo: "Otro", comentario: "Creo que revela el final del libro.", estado: "RECHAZADA" }
+];
+const MOTIVOS = {
+  devoluciones: ["Producto dañado", "Producto equivocado", "Ya no lo quiero", "Otro"],
+  reportes: ["Ofensiva", "Spam", "No relacionada con el libro", "Otro"]
+};
+
+const pendientes = l => l.filter(s => s.estado === "PENDIENTE").length;
+document.getElementById("tabs").innerHTML = [["devoluciones", "Devoluciones", DEVOLUCIONES], ["reportes", "Reportes de reseñas", REPORTES]].map(([k, n, l]) =>
+  `<li class="nav-item"><a class="nav-link d-flex align-items-center gap-2 ${k === tipoS ? "active" : ""}" ${k === tipoS ? 'aria-current="page"' : ""} href="cuenta-solicitudes.html?tipo=${k}">${n}
+    ${pendientes(l) ? `<span class="bk-count" title="Pendientes">${pendientes(l)}</span>` : ""}</a></li>`).join("");
+document.getElementById("subtitulo").textContent = tipoS === "devoluciones"
+  ? "Devoluciones que pediste de tus pedidos entregados."
+  : "Reseñas de otros clientes que reportaste para revisión.";
+
+/* Pie con acciones: solo en pendientes */
+const acciones = (s, que) => s.estado !== "PENDIENTE" ? "" : `
+  <div class="d-flex gap-3 mt-3 pt-3 border-top" style="border-color:var(--bk-line)!important">
+    <button class="btn btn-sm btn-link text-decoration-none" data-modal="#m-edit" data-motivo="${s.motivo}" data-comentario="${s.comentario}">Editar</button>
+    <button class="btn btn-sm btn-link text-decoration-none text-danger" data-confirm="¿Retirar ${que}?" data-msg="${tipoS === "devoluciones" ? "La solicitud pasará a «Retirada» y contará como un intento de devolución." : "Se retirará el reporte y la reseña no será revisada."}" data-accion="Sí, retirar" data-ok="${tipoS === "devoluciones" ? "Solicitud retirada" : "Reporte retirado"}" data-peligro>Retirar</button>
+  </div>`;
+const estadoBadge = s => { const [t, c] = ESTADO_SOL[s.estado]; return `<span class="bk-status bk-status-${c}">${t}</span>`; };
+
+const lista = document.getElementById("lista");
+if (tipoS === "devoluciones") {
+  lista.innerHTML = DEVOLUCIONES.length ? DEVOLUCIONES.map(s => `
+    <article class="bk-panel" data-removible>
+      <div class="d-flex align-items-start gap-3">
+        <a href="${s.url}" class="flex-shrink-0">${coverStack(s.libros)}</a>
+        <div class="flex-grow-1">
+          <h2 class="h3 mb-1">Pedido <a href="${s.url}">N.º ${s.pedido}</a></h2>
+          <p class="small text-muted bk-num mb-2">Solicitada el ${s.fecha} · Motivo: ${s.motivo}</p>
+          <p class="mb-0">${s.comentario}</p>
+        </div>
+        ${estadoBadge(s)}
+      </div>${acciones(s, "esta solicitud")}
+    </article>`).join("") : emptyState("No has pedido devoluciones.", "Puedes pedirla desde el detalle de un pedido entregado.", "Ver mis pedidos", "cuenta-pedidos.html");
+} else {
+  lista.innerHTML = REPORTES.length ? REPORTES.map(s => {
+    const b = libro(s.libro);
+    return `<article class="bk-panel" data-removible>
+      <div class="d-flex align-items-start gap-3">
+        <a href="libro.html?id=${b.id}" class="flex-shrink-0" style="width:2.6rem">${cover(b, "bk-cover-sm")}</a>
+        <div class="flex-grow-1">
+          <h2 class="h3 mb-1">Reseña en <a href="libro.html?id=${b.id}">${b.t}</a></h2>
+          <p class="small text-muted bk-num mb-2">Reportada el ${s.fecha} · Motivo: ${s.motivo}</p>
+          <blockquote class="bk-quote mb-2"><div class="small"><strong>${s.autor}</strong> <span class="bk-stars ms-1">${estrellas(s.puntos)}</span></div><p class="mb-0 mt-1">${s.texto}</p></blockquote>
+          <p class="mb-0"><span class="text-muted">Tu comentario:</span> ${s.comentario}</p>
+        </div>
+        ${estadoBadge(s)}
+      </div>${acciones(s, "este reporte")}
+    </article>`;
+  }).join("") : emptyState("No has reportado reseñas.", "Puedes reportar una reseña desde el detalle de un libro.", null, null);
+}
+
+/* El diálogo de edición usa los motivos del tipo actual */
+document.getElementById("m-edit-t").textContent = tipoS === "devoluciones" ? "Editar solicitud de devolución" : "Editar reporte";
+document.getElementById("m-edit").addEventListener("show.bs.modal", e => {
+  const o = e.relatedTarget;
+  document.getElementById("e-mot").innerHTML = MOTIVOS[tipoS].map(m => `<option ${m === o?.dataset.motivo ? "selected" : ""}>${m}</option>`).join("");
+  document.getElementById("e-com").value = o?.dataset.comentario || "";
+});
+</script>
+</body>
+</html>
