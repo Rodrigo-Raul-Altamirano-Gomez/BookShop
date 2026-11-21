@@ -1,0 +1,69 @@
+@page "/cuenta/metodos-pago"
+@layout AccountLayout
+@attribute [Authorize(Roles = "CLIENTE")]
+
+<PageTitle>Métodos de pago · BookShop</PageTitle>
+
+<div class="bk-page-head">
+    <h1>Métodos de pago</h1>
+    <button type="button" class="btn btn-primary" @onclick="() => modal.Abrir()"><i class="bi bi-plus-lg me-1"></i>Agregar método de pago</button>
+</div>
+
+@if (metodos == null)
+{
+    <div class="row row-cols-2 g-3" aria-hidden="true">
+        @for (int i = 0; i < 2; i++)
+        {
+            <div class="col"><div class="bk-panel h-100 placeholder-glow"><span class="placeholder col-3 mb-2"></span><span class="placeholder col-9 mb-3"></span><span class="placeholder col-5"></span></div></div>
+        }
+    </div>
+}
+else if (metodos.Count == 0)
+{
+    <EmptyState Titulo="Aún no tienes métodos de pago." Texto="Agrega una tarjeta o una billetera digital para pagar más rápido." TextoAccion="Agregar método de pago" OnAccion="() => modal.Abrir()" />
+}
+else
+{
+    <div class="row row-cols-2 g-3">
+        @foreach (MetodoPago metodo in metodos)
+        {
+            <div class="col">
+                <div class="bk-panel h-100">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        @if (metodo.Tipo == TipoMetodoPago.TARJETA)
+                        {
+                            <strong><i class="bi bi-credit-card me-1"></i>Tarjeta</strong>
+                        }
+                        else
+                        {
+                            <strong><i class="bi bi-phone me-1"></i>@metodo.Proveedor</strong>
+                        }
+                        @if (metodo.Predeterminado)
+                        {
+                            <StatusBadge Texto="Predeterminado" />
+                        }
+                    </div>
+                    <p class="text-muted small bk-num mb-3">
+                        @metodo.Titular · @Formato.Enmascarar(metodo.Numero)
+                        @if (metodo.Tipo == TipoMetodoPago.TARJETA)
+                        {
+                            @($" · vence {metodo.FechaVencimiento}")
+                        }
+                    </p>
+                    <div class="d-flex gap-3">
+                        <button type="button" class="btn btn-sm btn-link text-decoration-none" @onclick="() => modal.Abrir(metodo)">Editar</button>
+                        @if (!metodo.Predeterminado)
+                        {
+                            <button type="button" class="btn btn-sm btn-link text-decoration-none" disabled="@(marcando == metodo.Id)" @onclick="() => MarcarPredeterminado(metodo)">Usar como predeterminado</button>
+                        }
+                        <button type="button" class="btn btn-sm btn-link text-decoration-none text-danger" @onclick="() => PedirEliminar(metodo)">Eliminar</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<MetodoPagoModal @ref="modal" IdUsuario="idUsuario" OnGuardado="Recargar" />
+<ConfirmModal @ref="confirmacion" Mensaje="Dejará de ofrecerse al pagar. Los pedidos que lo usaron lo seguirán mostrando."
+              TextoAccion="Sí, eliminar" Peligro="true" OnConfirmar="Eliminar" />

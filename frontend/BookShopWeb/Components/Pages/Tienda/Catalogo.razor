@@ -1,0 +1,22 @@
+@page "/catalogo"
+
+<PageTitle>Catálogo · BookShop</PageTitle>
+
+<div class="container-xl pt-4">
+    <nav aria-label="Ruta"><ol class="breadcrumb bk-breadcrumb mb-2"><li class="breadcrumb-item"><a href="">Inicio</a></li><li class="breadcrumb-item active" aria-current="page">Catálogo</li></ol></nav>
+    <div class="d-flex align-items-baseline justify-content-between gap-3 mb-4">
+        <h1 class="mb-0">@(string.IsNullOrWhiteSpace(Q) ? "Catálogo" : $"Resultados para «{Q}»")</h1>
+        @if (total != null)
+        {
+            <span class="text-muted small bk-num">@total @(total == 1 ? "libro" : "libros")</span>
+        }
+    </div>
+    @* RF07.6: el catálogo es la vista de resultados de todos los libros activos *@
+    <ResultsView Endpoint="libros" PermiteOrden="true" SignificadoPeriodo="registro" OnCargado="t => total = t" />
+</div>
+
+@code {
+    [SupplyParameterFromQuery] public string? Q { get; set; }
+
+    private int? total;
+}

@@ -1,0 +1,39 @@
+@* Barra de comparación (UX-UI §6.14): en la tienda, con al menos un libro elegido; no en /comparar *@
+
+@if (Comparacion.Libros.Count > 0 && !Navegacion.Uri.Contains("/comparar"))
+{
+    <div class="bk-compare" role="region" aria-label="Comparación">
+        <span class="fw-semibold">Comparar</span>
+        @foreach (LibroComparado libro in Comparacion.Libros)
+        {
+            <span class="slot"><span>@libro.Titulo</span><button type="button" aria-label="Quitar @libro.Titulo de la comparación" @onclick="() => Comparacion.Quitar(libro.Id)"><i class="bi bi-x"></i></button></span>
+        }
+        @if (Comparacion.Libros.Count < 2)
+        {
+            <span class="slot empty"><span>Elige otro libro</span></span>
+            <span class="btn btn-sm btn-light disabled" aria-disabled="true">Ver comparación</span>
+        }
+        else
+        {
+            <a class="btn btn-sm btn-light" href="comparar">Ver comparación</a>
+        }
+    </div>
+}
+
+<div class="modal fade" id="bk-reemplazo" tabindex="-1" aria-labelledby="bk-reemplazo-t" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content p-2">
+            <div class="modal-header border-0 pb-0"><h2 class="modal-title h3" id="bk-reemplazo-t">¿Qué libro quieres reemplazar?</h2></div>
+            <div class="modal-body">
+                <p class="text-muted">Solo se pueden comparar dos libros. «@nuevo?.Titulo» ocupará el lugar del que elijas.</p>
+                <div class="d-grid gap-2">
+                    @foreach (LibroComparado libro in Comparacion.Libros)
+                    {
+                        <button type="button" class="btn btn-outline-primary text-start" @onclick="() => Reemplazar(libro.Id)">@libro.Titulo</button>
+                    }
+                </div>
+            </div>
+            <div class="modal-footer border-0"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Volver</button></div>
+        </div>
+    </div>
+</div>

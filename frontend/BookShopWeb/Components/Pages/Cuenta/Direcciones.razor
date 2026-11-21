@@ -1,0 +1,56 @@
+@page "/cuenta/direcciones"
+@layout AccountLayout
+@attribute [Authorize(Roles = "CLIENTE")]
+
+<PageTitle>Direcciones · BookShop</PageTitle>
+
+<div class="bk-page-head">
+    <h1>Direcciones</h1>
+    <button type="button" class="btn btn-primary" @onclick="() => modal.Abrir()"><i class="bi bi-plus-lg me-1"></i>Agregar dirección</button>
+</div>
+
+@if (direcciones == null)
+{
+    <div class="row row-cols-2 g-3" aria-hidden="true">
+        @for (int i = 0; i < 2; i++)
+        {
+            <div class="col"><div class="bk-panel h-100 placeholder-glow"><span class="placeholder col-3 mb-2"></span><span class="placeholder col-9 mb-3"></span><span class="placeholder col-5"></span></div></div>
+        }
+    </div>
+}
+else if (direcciones.Count == 0)
+{
+    <EmptyState Titulo="Aún no tienes direcciones." Texto="Agrega una para elegirla al pagar." TextoAccion="Agregar dirección" OnAccion="() => modal.Abrir()" />
+}
+else
+{
+    <div class="row row-cols-2 g-3">
+        @foreach (Direccion direccion in direcciones)
+        {
+            <div class="col">
+                <div class="bk-panel h-100">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <strong>@direccion.Alias</strong>
+                        @if (direccion.Predeterminada)
+                        {
+                            <StatusBadge Texto="Predeterminada" />
+                        }
+                    </div>
+                    <p class="text-muted small mb-3">@direccion.Detalle, @direccion.Distrito, @direccion.Ciudad</p>
+                    <div class="d-flex gap-3">
+                        <button type="button" class="btn btn-sm btn-link text-decoration-none" @onclick="() => modal.Abrir(direccion)">Editar</button>
+                        @if (!direccion.Predeterminada)
+                        {
+                            <button type="button" class="btn btn-sm btn-link text-decoration-none" disabled="@(marcando == direccion.Id)" @onclick="() => MarcarPredeterminada(direccion)">Usar como predeterminada</button>
+                        }
+                        <button type="button" class="btn btn-sm btn-link text-decoration-none text-danger" @onclick="() => PedirEliminar(direccion)">Eliminar</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<DireccionModal @ref="modal" IdUsuario="idUsuario" OnGuardado="Recargar" />
+<ConfirmModal @ref="confirmacion" Mensaje="Dejará de ofrecerse al pagar. Los pedidos que la usaron la seguirán mostrando."
+              TextoAccion="Sí, eliminar" Peligro="true" OnConfirmar="Eliminar" />

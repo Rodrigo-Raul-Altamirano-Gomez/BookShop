@@ -1,0 +1,9 @@
+@* Tarjeta de autor, categoría o editorial (UX-UI §6.4) *@
+<a class="bk-entity" href="@Entidades.Ruta(Entidad.Tipo)/@Entidad.Id">
+    <ImagenEntidad Entidad="Entidad" />
+    <div class="bk-entity-name">@Entidad.Nombre</div>
+</a>
+
+@code {
+    [Parameter, EditorRequired] public Entidad Entidad { get; set; } = default!;
+}

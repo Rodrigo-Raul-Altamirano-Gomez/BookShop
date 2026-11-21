@@ -1,0 +1,6 @@
+# Copiar como db.properties (no se sube a git) y completar los datos de la base de datos
+host=
+port=3306
+database=bookshop
+user=
+password=

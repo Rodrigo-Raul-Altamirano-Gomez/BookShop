@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Retrato de Ana Lucía Pardo">
+<rect width="200" height="200" fill="#E3E8D6"/>
+<circle cx="100" cy="100" r="78" fill="#FFFFFF" opacity=".35"/>
+<path d='M60 92c0-34 18-52 40-52s40 18 40 52v58H60z' fill='#1E1A16'/>
+<path d="M40 200c4-36 28-56 60-56s56 20 60 56z" fill="#3F5560"/>
+<rect x="90" y="122" width="20" height="26" rx="8" fill="#B07A55"/>
+<path d="M88 146l12 10 12-10" fill="none" stroke="#FFFFFF" stroke-opacity=".5" stroke-width="3"/>
+<ellipse cx="100" cy="94" rx="28" ry="33" fill="#B07A55"/>
+<path d='M70 86c4-24 16-34 30-34s28 10 32 34c-10-12-22-16-32-16s-22 4-30 16z' fill='#1E1A16'/>
+
+</svg>

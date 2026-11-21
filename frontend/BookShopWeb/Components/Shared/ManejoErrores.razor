@@ -1,0 +1,15 @@
+@* Un error inesperado (servidor caído, fallo de la base de datos) muestra un aviso en lugar de romper la aplicación.
+   Al navegar a otra página, el contenido se recupera. *@
+
+<ErrorBoundary @ref="errores">
+    <ChildContent>@ChildContent</ChildContent>
+    <ErrorContent>
+        <div class="alert alert-danger mt-4" role="alert">
+            <i class="bi bi-x-circle"></i>
+            <div>
+                No se pudo completar la operación. Inténtalo de nuevo.
+                <button type="button" class="btn btn-sm btn-outline-danger ms-3" @onclick="() => errores.Recover()">Reintentar</button>
+            </div>
+        </div>
+    </ErrorContent>
+</ErrorBoundary>

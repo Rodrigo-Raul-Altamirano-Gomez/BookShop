@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Viajes">
+<defs><pattern id="p" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="14" stroke="#FFFFFF" stroke-opacity=".08" stroke-width="6"/></pattern></defs>
+<rect width="200" height="200" fill="#8A6A2F"/><rect width="200" height="200" fill="url(#p)"/>
+<rect x="14" y="14" width="172" height="172" fill="none" stroke="#F7F4EE" stroke-opacity=".35"/>
+<g transform="translate(64 52) scale(4.5)" fill="#F7F4EE">  <path d="M8 16.016a7.5 7.5 0 0 0 1.962-14.74A1 1 0 0 0 9 0H7a1 1 0 0 0-.962 1.276A7.5 7.5 0 0 0 8 16.016m6.5-7.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0"/>  <path d="m6.94 7.44 4.95-2.83-2.83 4.95-4.949 2.83 2.828-4.95z"/></g>
+<text x="100" y="172" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="17" letter-spacing="2" fill="#F7F4EE" style="text-transform:uppercase">Viajes</text>
+</svg>

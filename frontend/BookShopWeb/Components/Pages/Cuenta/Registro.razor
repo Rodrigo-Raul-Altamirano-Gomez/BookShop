@@ -1,0 +1,64 @@
+@page "/registro"
+@layout AuthLayout
+
+<PageTitle>Crear cuenta · BookShop</PageTitle>
+
+<main id="contenido" class="mx-auto pb-5" style="max-width:36rem">
+    <form class="bk-panel p-4" @onsubmit="Registrar">
+        <h1 class="h2 mb-1">Crear cuenta</h1>
+        <p class="text-muted small mb-4">Con tu cuenta podrás comprar, guardar libros y escribir reseñas.</p>
+        <div class="d-flex align-items-center gap-3 mb-4">
+            @if (usuario.Foto != null)
+            {
+                <span class="bk-avatar" style="width:4rem;height:4rem"><img src="@usuario.Foto" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%" /></span>
+            }
+            else
+            {
+                <span class="bk-avatar" style="width:4rem;height:4rem;font-size:1.1rem"><i class="bi bi-person fs-3"></i></span>
+            }
+            <div>
+                <label class="btn btn-sm btn-outline-secondary mb-0" for="foto">Elegir foto</label>
+                <InputFile id="foto" class="d-none" accept=".jpg,.jpeg,.png" OnChange="ElegirFoto" />
+                <div class="form-text">Foto (opcional). JPG o PNG.</div>
+            </div>
+        </div>
+        <label class="form-label" for="nombre">Nombre completo</label>
+        <input class="form-control mb-3" id="nombre" autocomplete="name" required maxlength="100" @bind="usuario.NombreCompleto" />
+        <div class="row g-3 mb-3">
+            <div class="col-7">
+                <label class="form-label" for="correo">Correo</label>
+                <input class="form-control @(errorCorreo != null ? "is-invalid" : "")" id="correo" type="email" required maxlength="100"
+                       aria-describedby="correo-err" @bind="usuario.Correo" />
+                <div class="invalid-feedback" id="correo-err">@errorCorreo</div>
+            </div>
+            <div class="col-5">
+                <label class="form-label" for="nac">Fecha de nacimiento</label>
+                <input class="form-control" id="nac" type="date" required @bind="fechaNacimiento" />
+            </div>
+        </div>
+        <div class="row g-3 mb-4">
+            <div class="col-6">
+                <label class="form-label" for="c1">Contraseña</label>
+                <input class="form-control" id="c1" type="password" autocomplete="new-password" required @bind="contrasena" />
+            </div>
+            <div class="col-6">
+                <label class="form-label" for="c2">Confirmar contraseña</label>
+                <input class="form-control @(errorConfirmacion ? "is-invalid" : "")" id="c2" type="password" autocomplete="new-password" required
+                       aria-describedby="c2-err" @bind="confirmacion" />
+                <div class="invalid-feedback" id="c2-err">Las contraseñas no coinciden.</div>
+            </div>
+        </div>
+        <button class="btn btn-primary btn-lg w-100" type="submit" disabled="@procesando">
+            @if (procesando)
+            {
+                <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                <span>Creando cuenta…</span>
+            }
+            else
+            {
+                <span>Crear cuenta</span>
+            }
+        </button>
+        <p class="text-center small mt-4 mb-0">¿Ya tienes cuenta? <a class="fw-semibold" href="login">Inicia sesión</a></p>
+    </form>
+</main>

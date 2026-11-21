@@ -1,0 +1,42 @@
+@* Filtro de selección múltiple (UX-UI §6.7): casillas, buscador propio con más de 8 opciones, 5 visibles y "Ver más" *@
+<fieldset class="bk-filter-group bk-check-group @(abierto ? "is-open" : "") @(buscando ? "is-searching" : "")">
+    <legend class="form-label d-flex align-items-center gap-2 w-100">
+        @Titulo
+        <span class="bk-count">@(Seleccionadas.Count > 0 ? Seleccionadas.Count.ToString() : "")</span>
+        @if (Seleccionadas.Count > 0)
+        {
+            <button type="button" class="btn btn-link btn-sm p-0 ms-auto fw-normal" @onclick="Limpiar">Limpiar</button>
+        }
+    </legend>
+    @if (Opciones.Count > 8)
+    {
+        <div class="bk-search bk-search-sm mb-2">
+            <i class="bi bi-search"></i>
+            <input class="form-control form-control-sm" type="search" placeholder="Buscar @Plural" aria-label="Buscar @Plural"
+                   @bind="busqueda" @bind:event="oninput" />
+        </div>
+    }
+    <div class="bk-check-list">
+        @for (int i = 0; i < Opciones.Count; i++)
+        {
+            Entidad opcion = Opciones[i];
+            bool marcada = Seleccionadas.Contains(opcion.Id);
+            bool extra = i >= 5 && !marcada;
+            bool coincide = buscando && opcion.Nombre.Contains(busqueda.Trim(), StringComparison.CurrentCultureIgnoreCase);
+            <div class="form-check bk-check @(extra ? "is-extra" : "") @(coincide ? "match" : "")">
+                <input class="form-check-input" type="checkbox" id="f-@Clave-@opcion.Id" checked="@marcada" @onchange="() => Alternar(opcion.Id)" />
+                <label class="form-check-label" for="f-@Clave-@opcion.Id">@opcion.Nombre</label>
+            </div>
+        }
+    </div>
+    @if (buscando && !Opciones.Any(o => o.Nombre.Contains(busqueda.Trim(), StringComparison.CurrentCultureIgnoreCase)))
+    {
+        <p class="small text-muted mb-0 mt-1">Sin coincidencias.</p>
+    }
+    @if (Opciones.Count > 5 && !buscando)
+    {
+        <button type="button" class="btn btn-link btn-sm p-0 mt-1" aria-expanded="@(abierto ? "true" : "false")" @onclick="() => abierto = !abierto">
+            @(abierto ? "Ver menos" : $"Ver más ({Opciones.Count - 5})")
+        </button>
+    }
+</fieldset>

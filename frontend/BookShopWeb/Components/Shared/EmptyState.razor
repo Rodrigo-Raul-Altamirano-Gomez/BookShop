@@ -1,0 +1,25 @@
+@* Estado vacío (UX-UI §6.11): ilustración, título, ayuda y como máximo una acción *@
+<div class="bk-empty">
+    <svg width="64" height="64" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 14c8-3 16-3 24 2v36c-8-5-16-5-24-2V14Z" /><path d="M56 14c-8-3-16-3-24 2v36c8-5 16-5 24-2V14Z" /></svg>
+    <h2 class="h3">@Titulo</h2>
+    @if (Texto != null)
+    {
+        <p class="text-muted mb-4">@Texto</p>
+    }
+    @if (TextoAccion != null && Url != null)
+    {
+        <a class="btn btn-outline-primary" href="@Url">@TextoAccion</a>
+    }
+    else if (TextoAccion != null)
+    {
+        <button type="button" class="btn btn-outline-primary" @onclick="OnAccion">@TextoAccion</button>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Titulo { get; set; } = "";
+    [Parameter] public string? Texto { get; set; }
+    [Parameter] public string? TextoAccion { get; set; }
+    [Parameter] public string? Url { get; set; }
+    [Parameter] public EventCallback OnAccion { get; set; }
+}

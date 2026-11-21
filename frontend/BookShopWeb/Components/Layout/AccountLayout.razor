@@ -1,0 +1,30 @@
+@* Diseño de Mi cuenta (UX-UI §6.18): el de la tienda más el menú lateral de 3 columnas *@
+@inherits LayoutComponentBase
+@layout MainLayout
+
+<div class="container-xl pt-4">
+    <div class="row g-5">
+        <div class="col-3">
+            <nav class="bk-account-nav" aria-label="Mi cuenta">
+                <div class="d-flex align-items-center gap-2 mb-2 px-2">
+                    <Avatar Usuario="UsuarioActual.Datos" Estilo="width:2.5rem;height:2.5rem" />
+                    <div class="lh-sm"><strong>@UsuarioActual.Datos?.NombreCompleto</strong><div class="small text-muted">@UsuarioActual.Datos?.Correo</div></div>
+                </div>
+                <p class="bk-caption">Compras</p>
+                <NavLink href="cuenta/pedidos" ActiveClass="">Pedidos</NavLink>
+                <NavLink href="cuenta/solicitudes" ActiveClass="">Mis solicitudes</NavLink>
+                <NavLink href="cuenta/cupones" ActiveClass="">Cupones</NavLink>
+                <p class="bk-caption">Mi biblioteca</p>
+                <NavLink href="listas" ActiveClass="">Mis listas</NavLink>
+                <NavLink href="cuenta/seguimientos" ActiveClass="">Seguimientos</NavLink>
+                <NavLink href="cuenta/resenas" ActiveClass="">Mis reseñas</NavLink>
+                <p class="bk-caption">Cuenta</p>
+                <NavLink href="cuenta/perfil" ActiveClass="">Perfil</NavLink>
+                <NavLink href="cuenta/direcciones" ActiveClass="">Direcciones</NavLink>
+                <NavLink href="cuenta/metodos-pago" ActiveClass="">Métodos de pago</NavLink>
+                <a href="auth/logout" class="mt-3 text-muted" @onclick="CerrarSesion" @onclick:preventDefault>Cerrar sesión</a>
+            </nav>
+        </div>
+        <div class="col-9">@Body</div>
+    </div>
+</div>

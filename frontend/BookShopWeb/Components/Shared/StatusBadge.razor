@@ -1,0 +1,8 @@
+@* Etiqueta de estado (UX-UI §5.3): el estado siempre va con su texto *@
+<span class="bk-status bk-status-@Tipo">@Texto</span>
+
+@code {
+    [Parameter, EditorRequired] public string Texto { get; set; } = "";
+    // neutral, info, ok, warn o bad
+    [Parameter] public string Tipo { get; set; } = "neutral";
+}

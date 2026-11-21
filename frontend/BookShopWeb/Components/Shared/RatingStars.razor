@@ -1,0 +1,9 @@
+@* Estrellas de solo lectura (UX-UI §6.6) *@
+<span class="bk-stars @Clase" aria-hidden="true">@(new string('★', llenas))<span class="off">@(new string('★', 5 - llenas))</span></span>
+
+@code {
+    [Parameter] public double Promedio { get; set; }
+    [Parameter] public string? Clase { get; set; }
+
+    private int llenas => (int)Math.Round(Promedio, MidpointRounding.AwayFromZero);
+}

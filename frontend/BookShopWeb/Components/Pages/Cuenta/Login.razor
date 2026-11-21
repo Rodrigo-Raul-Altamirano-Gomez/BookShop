@@ -1,0 +1,56 @@
+@page "/login"
+@layout AuthLayout
+
+<PageTitle>Iniciar sesión · BookShop</PageTitle>
+
+<main id="contenido" class="mx-auto pb-5" style="max-width:27.5rem">
+    @if (Aviso == 1 && !mostrarError)
+    {
+        <div class="alert alert-info" role="status"><i class="bi bi-info-circle"></i><div>Inicia sesión para continuar.</div></div>
+    }
+    @if (mostrarError)
+    {
+        <div class="alert alert-danger" role="alert"><i class="bi bi-x-circle"></i><div>Correo o contraseña incorrectos.</div></div>
+    }
+    <form class="bk-panel p-4" @onsubmit="Ingresar">
+        <h1 class="h2 mb-4">Iniciar sesión</h1>
+        <label class="form-label" for="correo">Correo</label>
+        <input class="form-control mb-3" id="correo" type="email" autocomplete="email" required @bind="correo" />
+        <label class="form-label" for="clave">Contraseña</label>
+        <div class="input-group mb-4">
+            <input class="form-control" id="clave" type="@(verClave ? "text" : "password")" autocomplete="current-password" required @bind="contrasena" />
+            <button class="btn btn-outline-secondary" type="button" @onclick="() => verClave = !verClave">@(verClave ? "Ocultar" : "Mostrar")</button>
+        </div>
+        <button class="btn btn-primary btn-lg w-100" type="submit" disabled="@procesando">
+            @if (procesando)
+            {
+                <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                <span>Iniciando sesión…</span>
+            }
+            else
+            {
+                <span>Iniciar sesión</span>
+            }
+        </button>
+        <p class="text-center small mt-4 mb-0">¿No tienes cuenta? <a class="fw-semibold" href="registro">Regístrate</a></p>
+    </form>
+</main>
+
+<div class="modal fade" id="m-reactivar" tabindex="-1" aria-labelledby="m-reactivar-t" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content p-2">
+            <div class="modal-header border-0 pb-0"><h2 class="modal-title h3" id="m-reactivar-t">Tu cuenta está desactivada</h2></div>
+            <div class="modal-body">¿Quieres reactivarla? Recuperarás todo tu historial: pedidos, listas y reseñas.</div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" disabled="@reactivando">Volver</button>
+                <button type="button" class="btn btn-primary" disabled="@reactivando" @onclick="Reactivar">
+                    @if (reactivando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                    }
+                    Reactivar e ingresar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

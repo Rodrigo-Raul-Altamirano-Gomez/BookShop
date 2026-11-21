@@ -1,0 +1,137 @@
+@page "/admin/autores"
+@page "/admin/categorias"
+@page "/admin/editoriales"
+@layout AdminLayout
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+
+<PageTitle>@Entidades.Plural(tipo) · Administración · BookShop</PageTitle>
+
+<div class="bk-page-head">
+    <div>
+        <h1>@Entidades.Plural(tipo)</h1>
+        <p class="small text-muted mb-0 mt-1 bk-num">
+            @if (registrados != null)
+            {
+                @($"{registrados} registrados")
+            }
+            else
+            {
+                <span class="placeholder-glow"><span class="placeholder" style="width:6rem"></span></span>
+            }
+        </p>
+    </div>
+    <button type="button" class="btn btn-primary" @onclick="() => AbrirDialogo(null)"><i class="bi bi-plus-lg me-1"></i>@Entidades.Nuevo(tipo)</button>
+</div>
+
+<form class="d-flex gap-2 mb-3" role="search" @onsubmit="() => { }">
+    <div class="bk-search" style="max-width:20rem">
+        <i class="bi bi-search"></i>
+        <input class="form-control" type="search" placeholder="Buscar por nombre" aria-label="Buscar por nombre" style="background:var(--bk-surface)" @bind="busqueda" @bind:after="Filtrar" />
+    </div>
+    <select class="form-select" style="width:auto" aria-label="Estado" @bind="estado" @bind:after="Filtrar">
+        <option value="">Todos</option>
+        <option value="ACTIVO">Activos</option>
+        <option value="INACTIVO">Inactivos</option>
+    </select>
+</form>
+
+<div class="bk-table-wrap">
+    <table class="table table-hover bk-table">
+        <thead><tr><th style="width:4rem"><span class="visually-hidden">Imagen</span></th><th>Nombre</th><th class="text-end">Libros</th><th>Estado</th><th class="text-end"><span class="visually-hidden">Acciones</span></th></tr></thead>
+        <tbody>
+            @if (resultado == null)
+            {
+                @for (int i = 0; i < 6; i++)
+                {
+                    <tr class="placeholder-glow" aria-hidden="true"><td colspan="5"><span class="placeholder col-12"></span></td></tr>
+                }
+            }
+            else if (resultado.Elementos.Count == 0)
+            {
+                <tr><td colspan="5" class="text-center text-muted py-5">No se encontraron @Entidades.Plural(tipo).ToLower().</td></tr>
+            }
+            else
+            {
+                @foreach (EntidadAdmin fila in resultado.Elementos)
+                {
+                    <tr>
+                        <td><ImagenEntidad Entidad="fila.Entidad" Clase="m-0" Estilo="width:2.5rem;font-size:.8rem" /></td>
+                        <td class="fw-semibold">@fila.Entidad.Nombre</td>
+                        <td class="text-end bk-num">@fila.CantidadLibros</td>
+                        <td><StatusBadge Texto="@(fila.Entidad.Activo ? "Activo" : "Inactivo")" Tipo="@(fila.Entidad.Activo ? "ok" : "neutral")" /></td>
+                        <td class="text-end">
+                            <div class="d-inline-flex flex-column align-items-end gap-1">
+                                <button type="button" class="btn btn-sm btn-link text-decoration-none p-0" @onclick="() => AbrirDialogo(fila.Entidad)">Editar</button>
+                                @if (fila.Entidad.Activo)
+                                {
+                                    <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 text-danger" @onclick="() => PedirCambioEstado(fila.Entidad)">Desactivar</button>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn-sm btn-link text-decoration-none p-0" @onclick="() => PedirCambioEstado(fila.Entidad)">Activar</button>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+@if (resultado != null && resultado.Total > 0)
+{
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <span class="small text-muted bk-num">@Rango()</span>
+        <Paginacion Pagina="Pagina ?? 1" TotalPaginas="TotalPaginas" Pequena="true" OnCambio="IrA" />
+    </div>
+}
+
+@* Diálogo de alta y edición (UX-UI §10.4) *@
+<div class="modal fade" id="m-entidad" tabindex="-1" aria-labelledby="m-entidad-t" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content p-2" @onsubmit="Guardar">
+            <div class="modal-header border-0 pb-0">
+                <h2 class="modal-title h3" id="m-entidad-t">@(edicion.Id == 0 ? Entidades.Nuevo(tipo) : "Editar " + Entidades.Singular(tipo).ToLower())</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    @if (edicion.Imagen != null)
+                    {
+                        <ImagenEntidad Entidad="edicion" Clase="m-0" Estilo="width:4.5rem" />
+                    }
+                    else
+                    {
+                        <div class="bk-entity-img @(tipo == TipoEntidad.AUTOR ? "round" : "") m-0" style="width:4.5rem"><i class="bi bi-image text-muted fs-4"></i></div>
+                    }
+                    <label class="btn btn-sm btn-outline-secondary mb-0" for="ent-img">Elegir imagen</label>
+                    <InputFile id="ent-img" class="d-none" accept=".jpg,.jpeg,.png,.svg" OnChange="ElegirImagen" />
+                </div>
+                <label class="form-label" for="ent-n">Nombre</label>
+                <input class="form-control mb-3" id="ent-n" required maxlength="100" @bind="edicion.Nombre" />
+                <label class="form-label" for="ent-d">@(tipo == TipoEntidad.AUTOR ? "Biografía" : "Descripción")</label>
+                <textarea class="form-control mb-3" id="ent-d" rows="4" @bind="edicion.Descripcion"></textarea>
+                @if (edicion.Id == 0)
+                {
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="ent-a" aria-describedby="ent-a-ayuda" @bind="edicion.Activo" />
+                        <label class="form-check-label" for="ent-a">Activo</label>
+                        <div class="form-text" id="ent-a-ayuda">Si está inactivo, no se muestra en la tienda ni se ofrece al registrar libros.</div>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" disabled="@guardando">Cancelar</button>
+                <button type="submit" class="btn btn-primary" disabled="@guardando">
+                    @if (guardando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                    }
+                    Guardar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<ConfirmModal @ref="confirmacion" OnConfirmar="CambiarEstado" />

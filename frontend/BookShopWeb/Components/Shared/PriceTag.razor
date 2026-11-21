@@ -1,0 +1,24 @@
+@* Precio final; con descuento vigente, en lacre y con el original tachado (UX-UI §6.5) *@
+@if (Libro.DescuentoVigente != null)
+{
+    @if (Grande)
+    {
+        <div class="d-flex align-items-center gap-3">
+            <div class="bk-price is-sale bk-price-lg"><span class="now">@Formato.Soles(Libro.PrecioFinal)</span><span class="was">@Formato.Soles(Libro.Precio)</span></div>
+            <span class="bk-tag bk-tag-sale">−@Libro.DescuentoVigente.Porcentaje %</span>
+        </div>
+    }
+    else
+    {
+        <div class="bk-price is-sale"><span class="now">@Formato.Soles(Libro.PrecioFinal)</span><span class="was">@Formato.Soles(Libro.Precio)</span></div>
+    }
+}
+else
+{
+    <div class="bk-price @(Grande ? "bk-price-lg" : "")"><span class="now">@Formato.Soles(Libro.Precio)</span></div>
+}
+
+@code {
+    [Parameter, EditorRequired] public Libro Libro { get; set; } = default!;
+    [Parameter] public bool Grande { get; set; }
+}

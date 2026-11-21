@@ -1,0 +1,14 @@
+@* Bloques de carga con la forma de las tarjetas de libro (UX-UI §7) *@
+@for (int i = 0; i < Cantidad; i++)
+{
+    <div class="placeholder-glow" aria-hidden="true">
+        <div class="bk-cover placeholder w-100" style="box-shadow:none"></div>
+        <span class="placeholder col-10 mt-2"></span>
+        <span class="placeholder placeholder-sm col-7"></span>
+        <span class="placeholder col-5"></span>
+    </div>
+}
+
+@code {
+    [Parameter] public int Cantidad { get; set; } = 8;
+}

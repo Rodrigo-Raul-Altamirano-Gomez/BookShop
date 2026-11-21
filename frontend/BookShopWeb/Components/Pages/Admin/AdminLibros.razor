@@ -1,0 +1,104 @@
+@page "/admin/libros"
+@layout AdminLayout
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+
+<PageTitle>Libros · Administración · BookShop</PageTitle>
+
+<div class="bk-page-head">
+    <div>
+        <h1>Libros</h1>
+        <p class="small text-muted mb-0 mt-1 bk-num">
+            @if (conteo != null)
+            {
+                @($"{conteo.Total} libros · {conteo.Activos} activos")
+            }
+            else
+            {
+                <span class="placeholder-glow"><span class="placeholder" style="width:8rem"></span></span>
+            }
+        </p>
+    </div>
+    <a class="btn btn-primary" href="admin/libros/nuevo"><i class="bi bi-plus-lg me-1"></i>Nuevo libro</a>
+</div>
+
+<form class="d-flex gap-2 mb-3" role="search" @onsubmit="() => { }">
+    <div class="bk-search" style="max-width:20rem">
+        <i class="bi bi-search"></i>
+        <input class="form-control" type="search" placeholder="Buscar por título" aria-label="Buscar por título" style="background:var(--bk-surface)" @bind="busqueda" @bind:after="Filtrar" />
+    </div>
+    <select class="form-select" style="width:auto" aria-label="Estado" @bind="estado" @bind:after="Filtrar">
+        <option value="">Todos</option>
+        <option value="ACTIVO">Activos</option>
+        <option value="INACTIVO">Inactivos</option>
+    </select>
+</form>
+
+<div class="bk-table-wrap">
+    <table class="table table-hover bk-table">
+        <thead>
+            <tr>
+                <th style="width:3.5rem"><span class="visually-hidden">Portada</span></th>
+                <th>Libro</th><th>Categoría</th><th class="text-end">Precio</th><th class="text-end">Stock</th><th>Estado</th>
+                <th class="text-end"><span class="visually-hidden">Acciones</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (resultado == null)
+            {
+                @for (int i = 0; i < 6; i++)
+                {
+                    <tr class="placeholder-glow" aria-hidden="true"><td colspan="7"><span class="placeholder col-12"></span></td></tr>
+                }
+            }
+            else if (resultado.Elementos.Count == 0)
+            {
+                <tr><td colspan="7" class="text-center text-muted py-5">No se encontraron libros.</td></tr>
+            }
+            else
+            {
+                @foreach (Libro libro in resultado.Elementos)
+                {
+                    @* Clic en la fila: consulta del libro; las acciones no abren la fila (UX-UI §6.12) *@
+                    <tr class="is-link" @onclick="() => Navegacion.NavigateTo(Ruta(libro))">
+                        <td><div style="width:2rem"><BookCover Libro="libro" Pequena="true" /></div></td>
+                        <td><a class="d-block text-reset text-decoration-none" href="@Ruta(libro)" style="font-family:var(--bk-font-serif);font-weight:500;font-size:1rem">@libro.Titulo</a><span class="small text-muted">@libro.Autor.Nombre</span></td>
+                        <td>@libro.Categoria.Nombre</td>
+                        <td class="text-end bk-num">
+                            @Formato.Soles(libro.PrecioFinal)
+                            @if (libro.DescuentoVigente != null)
+                            {
+                                <br><span class="bk-tag bk-tag-sale">−@libro.DescuentoVigente.Porcentaje %</span>
+                            }
+                        </td>
+                        <td class="text-end bk-num @(libro.Stock == 0 ? "text-danger fw-semibold" : "")">@libro.Stock</td>
+                        <td><StatusBadge Texto="@(libro.Activo ? "Activo" : "Inactivo")" Tipo="@(libro.Activo ? "ok" : "neutral")" /></td>
+                        <td class="text-end" @onclick:stopPropagation="true">
+                            <div class="d-inline-flex flex-column align-items-end gap-1">
+                                <a class="btn btn-sm btn-link text-decoration-none p-0" href="@(Ruta(libro) + "?editar=1")">Editar</a>
+                                <button type="button" class="btn btn-sm btn-link text-decoration-none p-0" @onclick="() => descuento.Abrir(libro)">Agregar descuento</button>
+                                @if (libro.Activo)
+                                {
+                                    <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 text-danger" @onclick="() => PedirCambioEstado(libro)">Desactivar</button>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn-sm btn-link text-decoration-none p-0" @onclick="() => PedirCambioEstado(libro)">Activar</button>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+@if (resultado != null && resultado.Total > 0)
+{
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <span class="small text-muted bk-num">@Rango()</span>
+        <Paginacion Pagina="Pagina ?? 1" TotalPaginas="TotalPaginas" Pequena="true" OnCambio="IrA" />
+    </div>
+}
+
+<DescuentoModal @ref="descuento" OnGuardado="Recargar" />
+<ConfirmModal @ref="confirmacion" OnConfirmar="CambiarEstado" />

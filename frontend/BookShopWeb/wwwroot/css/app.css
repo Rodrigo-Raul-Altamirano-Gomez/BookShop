@@ -1,0 +1,18 @@
+/* Estilos que theme.css no trae porque en el prototipo los ponía mock.js */
+
+/* Avisos (UX-UI §6.10) */
+.bk-toast { background: var(--bk-ink); color: #F7F4EE; border: 0; border-radius: var(--bk-radius); box-shadow: var(--bk-shadow-pop); font-size: .9375rem; }
+.bk-toast a { color: #CFE3D7; }
+
+/* Botón × para quitar un libro de una lista (BookCard con PermiteQuitar) */
+.bk-card-remove { position: absolute; top: .4rem; right: .4rem; width: 1.9rem; height: 1.9rem; padding: 0; border-radius: 50%; opacity: .92; }
+
+/* El encabezado de Blazor enfoca el h1 al navegar */
+h1:focus { outline: none; }
+
+/* Error no controlado de Blazor */
+#blazor-error-ui {
+    background: var(--bk-red-50); color: var(--bk-red); bottom: 0; box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    display: none; left: 0; padding: 0.6rem 1.25rem 0.7rem 1.25rem; position: fixed; width: 100%; z-index: 1100;
+}
+#blazor-error-ui .dismiss { cursor: pointer; position: absolute; right: 0.75rem; top: 0.5rem; }

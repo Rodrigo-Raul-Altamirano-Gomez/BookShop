@@ -1,0 +1,76 @@
+@page "/libros/{Id:int}"
+
+@if (noEncontrado)
+{
+    <PageTitle>Página no encontrada · BookShop</PageTitle>
+    <div class="container-xl pt-5">
+        <EmptyState Titulo="No encontramos lo que buscas." Texto="Puede que el libro ya no esté disponible." TextoAccion="Ir al catálogo" Url="catalogo" />
+    </div>
+}
+else if (libro == null)
+{
+    <div class="container-xl pt-4 placeholder-glow" aria-hidden="true">
+        <span class="placeholder col-4 mb-4"></span>
+        <div class="row g-5">
+            <div class="col-4"><div class="bk-cover placeholder w-100" style="box-shadow:none"></div></div>
+            <div class="col-7">
+                <span class="placeholder placeholder-lg col-9 mb-3"></span>
+                <span class="placeholder col-6 mb-3"></span>
+                <span class="placeholder col-3 mb-4"></span>
+                <span class="placeholder placeholder-lg col-4 mb-4"></span>
+                <span class="placeholder col-12"></span><span class="placeholder col-10"></span><span class="placeholder col-8"></span>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <PageTitle>@libro.Titulo · BookShop</PageTitle>
+    <div class="container-xl pt-4">
+        <nav aria-label="Ruta">
+            <ol class="breadcrumb bk-breadcrumb mb-4">
+                <li class="breadcrumb-item"><a href="">Inicio</a></li>
+                <li class="breadcrumb-item"><a href="catalogo">Catálogo</a></li>
+                <li class="breadcrumb-item"><a href="categorias/@libro.Categoria.Id">@libro.Categoria.Nombre</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@libro.Titulo</li>
+            </ol>
+        </nav>
+        <div class="row g-5">
+            <div class="col-4"><BookCover Libro="libro" /></div>
+            <div class="col-7">
+                <h1 class="bk-display mb-2">@libro.Titulo</h1>
+                <p class="mb-2 text-muted">
+                    de <a href="autores/@libro.Autor.Id" class="fw-semibold">@libro.Autor.Nombre</a>
+                    · <a href="editoriales/@libro.Editorial.Id">@libro.Editorial.Nombre</a>
+                    · <a href="categorias/@libro.Categoria.Id">@libro.Categoria.Nombre</a>
+                </p>
+                <a href="libros/@libro.Id#resenas" class="d-inline-flex align-items-center gap-2 text-decoration-none small text-body">
+                    <RatingStars Promedio="libro.PuntuacionPromedio" />
+                    <span class="bk-num"><strong>@libro.PuntuacionPromedio.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)</strong> <span class="text-muted">(@libro.CantidadResenas @(libro.CantidadResenas == 1 ? "reseña" : "reseñas"))</span></span>
+                </a>
+                <hr class="bk-divider">
+                <PriceTag Libro="libro" Grande="true" />
+                @if (libro.Stock > 0)
+                {
+                    <p class="small mt-1 mb-4"><i class="bi bi-check2 text-success"></i> En stock: <strong class="bk-num">@libro.Stock</strong> @(libro.Stock == 1 ? "unidad" : "unidades")</p>
+                }
+                else
+                {
+                    <p class="small mt-1 mb-4 text-danger fw-semibold"><i class="bi bi-x-circle me-1"></i>Agotado · Sin stock por ahora</p>
+                }
+                <div class="d-flex gap-2 mt-3">
+                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="Comparar"><i class="bi bi-layout-split me-1"></i>Comparar</button>
+                </div>
+                <hr class="bk-divider">
+                <h2 class="h3">Sinopsis</h2>
+                <p style="max-width:40rem">@libro.Sinopsis</p>
+                <dl class="bk-spec mt-4 mb-0">
+                    <div><dt>ISBN</dt><dd>@libro.Isbn</dd></div>
+                    <div><dt>Idioma</dt><dd>@libro.Idioma</dd></div>
+                    <div><dt>Páginas</dt><dd>@libro.Paginas</dd></div>
+                    <div><dt>Año</dt><dd>@libro.AnioPublicacion</dd></div>
+                </dl>
+            </div>
+        </div>
+    </div>
+}

@@ -1,0 +1,45 @@
+@page "/autores/{Id:int}"
+@page "/categorias/{Id:int}"
+@page "/editoriales/{Id:int}"
+
+@if (noEncontrado)
+{
+    <PageTitle>Página no encontrada · BookShop</PageTitle>
+    <div class="container-xl pt-5">
+        <EmptyState Titulo="No encontramos lo que buscas." Texto="Puede que el enlace esté mal escrito o que la página ya no exista." TextoAccion="Explorar" Url="explorar/autores" />
+    </div>
+}
+else if (entidad == null)
+{
+    <div class="container-xl pt-4 placeholder-glow" aria-hidden="true">
+        <span class="placeholder col-3 mb-4"></span>
+        <div class="d-flex gap-4 align-items-start mb-5 pb-4">
+            <div class="bk-entity-img placeholder m-0" style="width:7.5rem;max-width:none"></div>
+            <div class="flex-grow-1"><span class="placeholder col-2"></span><span class="placeholder placeholder-lg col-5 d-block my-2"></span><span class="placeholder col-8"></span></div>
+        </div>
+    </div>
+}
+else
+{
+    <PageTitle>@entidad.Nombre · BookShop</PageTitle>
+    <div class="container-xl pt-4">
+        <nav aria-label="Ruta">
+            <ol class="breadcrumb bk-breadcrumb mb-4">
+                <li class="breadcrumb-item"><a href="">Inicio</a></li>
+                <li class="breadcrumb-item"><a href="explorar/@Entidades.Ruta(entidad.Tipo)">@Entidades.Plural(entidad.Tipo)</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@entidad.Nombre</li>
+            </ol>
+        </nav>
+        <div class="d-flex gap-4 align-items-start mb-5 pb-4 border-bottom" style="border-color:var(--bk-line)!important">
+            <ImagenEntidad Entidad="entidad" Clase="m-0 flex-shrink-0" Estilo="width:7.5rem;max-width:none;font-size:2.5rem" />
+            <div class="flex-grow-1">
+                <p class="bk-caption mb-1">@Entidades.Singular(entidad.Tipo)</p>
+                <h1 class="mb-2">@entidad.Nombre</h1>
+                <p class="text-muted mb-0" style="max-width:44rem">@entidad.Descripcion</p>
+            </div>
+        </div>
+        <h2 class="mb-3">Libros</h2>
+        @* RF05.2: los libros de la entidad en una vista de resultados, sin el filtro de la propia entidad *@
+        <ResultsView Endpoint="@($"libros/entidad/{entidad.Id}")" PermiteOrden="true" SignificadoPeriodo="registro" FiltroOculto="entidad.Tipo" />
+    </div>
+}

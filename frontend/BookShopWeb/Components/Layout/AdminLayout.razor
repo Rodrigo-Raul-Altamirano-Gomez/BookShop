@@ -1,0 +1,32 @@
+@* Diseño de administración (UX-UI §3.2, §6.18): menú lateral de 240 px y barra superior *@
+@inherits LayoutComponentBase
+
+<a class="bk-skip" href="#contenido">Saltar al contenido</a>
+<div class="bk-admin">
+    <nav class="bk-admin-nav" aria-label="Administración">
+        <a class="bk-logo d-block px-2 mb-1" href="admin/libros" style="font-size:1.35rem">Book<span>Shop</span></a>
+        <div class="small text-muted px-2">Administración</div>
+        <p class="bk-caption">Catálogo</p>
+        <NavLink href="admin/libros" ActiveClass=""><i class="bi bi-book"></i>Libros</NavLink>
+        <NavLink href="admin/autores" ActiveClass=""><i class="bi bi-person"></i>Autores</NavLink>
+        <NavLink href="admin/categorias" ActiveClass=""><i class="bi bi-tags"></i>Categorías</NavLink>
+        <NavLink href="admin/editoriales" ActiveClass=""><i class="bi bi-building"></i>Editoriales</NavLink>
+        <p class="bk-caption">Moderación</p>
+        <NavLink href="admin/devoluciones" ActiveClass=""><i class="bi bi-arrow-return-left"></i>Devoluciones</NavLink>
+        <NavLink href="admin/reportes-resenas" ActiveClass=""><i class="bi bi-flag"></i>Reportes de reseñas</NavLink>
+        <p class="bk-caption">Sistema</p>
+        <NavLink href="admin/configuracion" ActiveClass=""><i class="bi bi-sliders"></i>Configuración</NavLink>
+        <NavLink href="admin/reportes" ActiveClass=""><i class="bi bi-file-earmark-bar-graph"></i>Reportes PDF</NavLink>
+    </nav>
+    <div class="bk-admin-col">
+        <div class="bk-admin-top">
+            <a class="small fw-semibold text-decoration-none" href=""><i class="bi bi-box-arrow-up-right me-1"></i>Ver tienda</a>
+            <span class="bk-avatar">AD</span><span class="small fw-semibold">Administrador</span>
+            <a class="small text-decoration-none text-muted" href="auth/logout" @onclick="CerrarSesion" @onclick:preventDefault>Cerrar sesión</a>
+        </div>
+        <main id="contenido" class="bk-admin-main">
+            <ManejoErrores>@Body</ManejoErrores>
+        </main>
+    </div>
+</div>
+<ToastHost />

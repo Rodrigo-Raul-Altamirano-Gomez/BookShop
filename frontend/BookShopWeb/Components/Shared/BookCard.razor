@@ -1,0 +1,23 @@
+@* Tarjeta de libro (UX-UI §6.3): toda la tarjeta es un enlace al detalle *@
+<div class="position-relative">
+    <a class="bk-book @(Libro.Stock == 0 ? "is-out" : "")" href="libros/@Libro.Id" title="@Libro.Titulo">
+        <BookCover Libro="Libro" />
+        <div class="bk-book-title">@Libro.Titulo</div>
+        <div class="bk-book-author">@Libro.Autor.Nombre</div>
+        <PriceTag Libro="Libro" />
+        @if (Libro.Stock == 0)
+        {
+            <span class="bk-tag bk-tag-out mt-1">Agotado</span>
+        }
+    </a>
+    @if (PermiteQuitar)
+    {
+        <button type="button" class="btn btn-sm btn-light bk-card-remove" aria-label="Quitar @Libro.Titulo de la lista" @onclick="() => OnQuitar.InvokeAsync(Libro)"><i class="bi bi-x-lg"></i></button>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Libro Libro { get; set; } = default!;
+    [Parameter] public bool PermiteQuitar { get; set; }
+    [Parameter] public EventCallback<Libro> OnQuitar { get; set; }
+}

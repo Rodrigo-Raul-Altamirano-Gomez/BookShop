@@ -1,0 +1,10 @@
+@* Quien no inició sesión va a /login y vuelve a la página después (UX-UI §3.3) *@
+@inject NavigationManager Navegacion
+
+@code {
+    protected override void OnInitialized()
+    {
+        string volver = "/" + Navegacion.ToBaseRelativePath(Navegacion.Uri);
+        Navegacion.NavigateTo("login?aviso=1&volver=" + Uri.EscapeDataString(volver));
+    }
+}

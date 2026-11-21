@@ -1,0 +1,80 @@
+@page "/"
+
+<PageTitle>Inicio · BookShop</PageTitle>
+
+<section class="border-bottom" style="border-color:var(--bk-line)!important">
+    <div class="container-xl py-5">
+        <div class="row align-items-end g-5">
+            <div class="col-7">
+                <p class="bk-caption mb-2">Librería en línea</p>
+                <h1 class="bk-display mb-3">Encuentra tu próxima lectura.</h1>
+                <p class="text-muted mb-4" style="max-width:34rem">Novelas, ensayos y poesía de autores que vale la pena descubrir. Busca por título o explora por categoría, autor y editorial.</p>
+                <form class="bk-search" style="max-width:36rem" role="search" @onsubmit="Buscar">
+                    <i class="bi bi-search"></i>
+                    <input class="form-control" type="search" placeholder="¿Qué libro buscas?" aria-label="Buscar libros por título" @bind="busqueda"
+                           style="font-size:1rem;padding-top:.8rem;padding-bottom:.8rem;background:var(--bk-surface);border-color:var(--bk-line-strong)" />
+                </form>
+            </div>
+            <div class="col-5">
+                <div class="d-flex align-items-end justify-content-end gap-3" aria-hidden="true">
+                    <div style="width:7.5rem;transform:rotate(-3deg)"><div class="bk-cover bk-cover-type bk-c3"><span class="t">El cartógrafo ciego</span><span class="a">Lucía Ferrán</span></div></div>
+                    <div style="width:9.5rem"><div class="bk-cover bk-cover-type bk-c1"><span class="t">La casa de los relojes</span><span class="a">Inés Valdivia</span></div></div>
+                    <div style="width:7rem;transform:rotate(2.5deg)"><div class="bk-cover bk-cover-type bk-c2"><span class="t">Mareas del sur</span><span class="a">Tomás Arguedas</span></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container-xl">
+    @if (novedades == null || novedades.Count > 0)
+    {
+        <ShelfSection Id="s-nov" Titulo="Novedades" VerTodosUrl="secciones/novedades">
+            @if (novedades == null)
+            {
+                <PlaceholderLibros />
+            }
+            else
+            {
+                @foreach (Libro libro in novedades)
+                {
+                    <div><BookCard Libro="libro" /></div>
+                }
+            }
+        </ShelfSection>
+    }
+
+    <section class="mt-5 pt-2" aria-labelledby="s-exp">
+        <h2 id="s-exp" class="mb-4">Explorar</h2>
+        <div class="bk-panel">
+            @for (int i = 0; i < tipos.Length; i++)
+            {
+                TipoEntidad tipo = tipos[i];
+                if (i > 0)
+                {
+                    <hr class="bk-divider">
+                }
+                <div class="d-flex justify-content-between align-items-baseline mb-3">
+                    <h3 class="mb-0">@Entidades.Plural(tipo)</h3>
+                    <a class="bk-more" href="explorar/@Entidades.Ruta(tipo)">@(tipo == TipoEntidad.AUTOR ? "Ver todos" : "Ver todas") <i class="bi bi-arrow-right"></i></a>
+                </div>
+                <div class="bk-shelf">
+                    @if (!entidades.ContainsKey(tipo))
+                    {
+                        @for (int j = 0; j < 8; j++)
+                        {
+                            <div class="placeholder-glow text-center" aria-hidden="true"><div class="bk-entity-img placeholder"></div><span class="placeholder col-8 mt-2"></span></div>
+                        }
+                    }
+                    else
+                    {
+                        @foreach (Entidad entidad in entidades[tipo])
+                        {
+                            <div><EntityCard Entidad="entidad" /></div>
+                        }
+                    }
+                </div>
+            }
+        </div>
+    </section>
+</div>

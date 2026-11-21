@@ -1,0 +1,42 @@
+@* Agregar un descuento a un libro (UX-UI §10.2–10.3) *@
+<div class="modal fade" id="m-descuento" tabindex="-1" aria-labelledby="m-descuento-t" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content p-2" @onsubmit="Guardar">
+            <div class="modal-header border-0 pb-0">
+                <div><h2 class="modal-title h3" id="m-descuento-t">Agregar descuento</h2><div class="small text-muted">@libro?.Titulo</div></div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <label class="form-label" for="dp">Porcentaje</label>
+                <div class="input-group mb-3" style="max-width:9rem">
+                    <input class="form-control bk-num" id="dp" type="number" min="1" max="99" required @bind="porcentaje" />
+                    <span class="input-group-text">%</span>
+                </div>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <label class="form-label" for="dd">Desde</label>
+                        <input class="form-control @(error != null ? "is-invalid" : "")" id="dd" type="date" required aria-describedby="dd-err" @bind="desde" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" for="dh">Hasta</label>
+                        <input class="form-control @(error != null ? "is-invalid" : "")" id="dh" type="date" required min="@desde?.ToString("yyyy-MM-dd")" aria-describedby="dd-err" @bind="hasta" />
+                    </div>
+                    @if (error != null)
+                    {
+                        <div class="col-12 mt-1"><div class="text-danger small" id="dd-err">@error</div></div>
+                    }
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" disabled="@guardando">Cancelar</button>
+                <button type="submit" class="btn btn-primary" disabled="@guardando">
+                    @if (guardando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                    }
+                    Agregar descuento
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

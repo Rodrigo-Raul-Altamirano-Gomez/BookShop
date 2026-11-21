@@ -1,0 +1,19 @@
+﻿@* Diseño de la tienda (UX-UI §6.18): encabezado, contenido, pie, barra de comparación y avisos *@
+@inherits LayoutComponentBase
+
+<a class="bk-skip" href="#contenido">Saltar al contenido</a>
+<Encabezado />
+
+<main id="contenido">
+    <ManejoErrores>@Body</ManejoErrores>
+</main>
+
+<footer class="bk-footer">
+    <div class="container-xl d-flex justify-content-between gap-2">
+        <span><span class="bk-logo fs-6">Book<span>Shop</span></span> · Trabajo académico, Programación 3</span>
+        <span><a class="text-reset" href="catalogo">Catálogo</a> · <a class="text-reset" href="explorar/autores">Explorar</a></span>
+    </div>
+</footer>
+
+<CompareBar />
+<ToastHost />

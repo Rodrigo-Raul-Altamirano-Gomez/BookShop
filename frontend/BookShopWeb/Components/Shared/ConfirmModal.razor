@@ -1,0 +1,20 @@
+@* Confirmación de una acción irreversible (UX-UI §6.10) *@
+
+<div class="modal fade" id="@id" tabindex="-1" aria-labelledby="@(id)-t" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content p-2">
+            <div class="modal-header border-0 pb-0"><h2 class="modal-title h3" id="@(id)-t">@(titulo ?? Titulo)</h2></div>
+            <div class="modal-body">@(mensaje ?? Mensaje)</div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" disabled="@procesando">Volver</button>
+                <button type="button" class="btn @((peligro ?? Peligro) ? "btn-danger" : "btn-primary")" disabled="@procesando" @onclick="Confirmar">
+                    @if (procesando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                    }
+                    @(textoAccion ?? TextoAccion)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

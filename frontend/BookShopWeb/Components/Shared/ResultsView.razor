@@ -1,0 +1,123 @@
+@* Vista de resultados de libros (UX-UI §6.7, ERS RF08). La búsqueda, los filtros, el orden y la página viajan en la URL. *@
+<div class="row g-5">
+    <aside class="col-3">
+        @* Enter en un campo aplica ese filtro (evento change); el formulario no se envía *@
+        <form class="bk-filters" aria-label="Filtros" @onsubmit="() => { }">
+            <div class="d-flex align-items-baseline mb-3">
+                <p class="bk-caption mb-0">Filtros</p>
+                @if (HayFiltros)
+                {
+                    <button type="button" class="btn btn-link btn-sm p-0 ms-auto" @onclick="LimpiarTodo">Limpiar todo</button>
+                }
+            </div>
+            <div class="bk-filter-group">
+                <label class="form-label" for="f-q">Título</label>
+                <input class="form-control" id="f-q" type="search" placeholder="Buscar por título" @bind="q" @bind:after="Navegar" />
+            </div>
+            @if (resultado != null)
+            {
+                @if (FiltroOculto != TipoEntidad.CATEGORIA)
+                {
+                    <CheckFilter Clave="categoria" Titulo="Categoría" Plural="categorías" Opciones="resultado.Categorias" Seleccionadas="categorias" OnCambio="ids => CambiarSeleccion(categorias, ids)" />
+                }
+                @if (FiltroOculto != TipoEntidad.AUTOR)
+                {
+                    <CheckFilter Clave="autor" Titulo="Autor" Plural="autores" Opciones="resultado.Autores" Seleccionadas="autores" OnCambio="ids => CambiarSeleccion(autores, ids)" />
+                }
+                @if (FiltroOculto != TipoEntidad.EDITORIAL)
+                {
+                    <CheckFilter Clave="editorial" Titulo="Editorial" Plural="editoriales" Opciones="resultado.Editoriales" Seleccionadas="editoriales" OnCambio="ids => CambiarSeleccion(editoriales, ids)" />
+                }
+                <div class="bk-filter-group">
+                    <label class="form-label" for="f-idioma">Idioma</label>
+                    <select class="form-select" id="f-idioma" @bind="idioma" @bind:after="Navegar">
+                        <option value="">Todos</option>
+                        @foreach (string opcion in resultado.Idiomas)
+                        {
+                            <option value="@opcion">@opcion</option>
+                        }
+                    </select>
+                </div>
+            }
+            <fieldset class="bk-filter-group">
+                <legend class="form-label">Precio</legend>
+                <div class="d-flex gap-2 align-items-center">
+                    <div class="input-group input-group-sm"><span class="input-group-text">S/</span><input class="form-control" type="number" min="0" step="0.01" placeholder="Mín." aria-label="Precio mínimo" @bind="min" @bind:after="Navegar" /></div>
+                    <span class="text-muted">–</span>
+                    <div class="input-group input-group-sm"><span class="input-group-text">S/</span><input class="form-control" type="number" min="0" step="0.01" placeholder="Máx." aria-label="Precio máximo" @bind="max" @bind:after="Navegar" /></div>
+                </div>
+            </fieldset>
+            <fieldset class="bk-filter-group border-0">
+                <legend class="form-label">Período</legend>
+                <div class="row g-2">
+                    <div class="col-6"><label class="small text-muted" for="f-des">Desde</label><input class="form-control form-control-sm" id="f-des" type="date" @bind="desde" @bind:after="Navegar" /></div>
+                    <div class="col-6"><label class="small text-muted" for="f-has">Hasta</label><input class="form-control form-control-sm" id="f-has" type="date" @bind="hasta" @bind:after="Navegar" /></div>
+                </div>
+                <div class="form-text mt-2">@(SignificadoPeriodo == "ventas" ? "Fecha de las ventas consideradas." : "Fecha de registro del libro.")</div>
+            </fieldset>
+        </form>
+    </aside>
+
+    <section class="col-9" aria-label="Resultados">
+        <div class="bk-toolbar">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                @if (resultado != null)
+                {
+                    <span class="small text-muted bk-num">@resultado.Total @(resultado.Total == 1 ? "libro" : "libros")</span>
+                    @foreach (var chip in Chips())
+                    {
+                        <span class="bk-chip">@chip.Texto <button type="button" aria-label="Quitar @chip.Valor del filtro @chip.Grupo.ToLower()" @onclick="chip.Quitar"><i class="bi bi-x"></i></button></span>
+                    }
+                    @if (HayFiltros)
+                    {
+                        <button type="button" class="btn btn-sm btn-link text-decoration-none" @onclick="LimpiarTodo">Limpiar filtros</button>
+                    }
+                }
+            </div>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                @if (PermiteOrden)
+                {
+                    <label class="small text-muted text-nowrap" for="orden">Ordenar por</label>
+                    <select class="form-select form-select-sm" id="orden" style="width:auto" @bind="orden" @bind:after="Navegar">
+                        <option value="titulo-asc">Título A–Z</option>
+                        <option value="titulo-desc">Título Z–A</option>
+                        <option value="precio-asc">Precio: menor a mayor</option>
+                        <option value="precio-desc">Precio: mayor a menor</option>
+                    </select>
+                }
+                else
+                {
+                    <span class="small text-muted"><i class="bi bi-info-circle me-1"></i>Ordenado por @CriterioOrden</span>
+                }
+            </div>
+        </div>
+
+        @if (cargando)
+        {
+            <div class="bk-grid-4"><PlaceholderLibros Cantidad="12" /></div>
+        }
+        else if (resultado!.Libros.Count == 0)
+        {
+            @if (HayFiltros || TituloVacio == null)
+            {
+                <EmptyState Titulo="No se encontraron libros." Texto="Prueba con otra búsqueda o quita algunos filtros." TextoAccion="Limpiar filtros" OnAccion="LimpiarTodo" />
+            }
+            else
+            {
+                <EmptyState Titulo="@TituloVacio" Texto="@TextoVacio" TextoAccion="@AccionVacia" Url="@UrlVacia" />
+            }
+        }
+        else
+        {
+            <div class="bk-grid-4">
+                @foreach (Libro libro in resultado.Libros)
+                {
+                    <div><BookCard Libro="libro" PermiteQuitar="PermiteQuitar" OnQuitar="OnQuitar" /></div>
+                }
+            </div>
+            <div class="d-flex justify-content-center mt-5">
+                <Paginacion Pagina="resultado.Pagina" TotalPaginas="resultado.TotalPaginas" OnCambio="CambiarPagina" />
+            </div>
+        }
+    </section>
+</div>

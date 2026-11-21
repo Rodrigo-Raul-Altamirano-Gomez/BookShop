@@ -1,0 +1,26 @@
+@* Estante (UX-UI §6.8): título, explicación opcional, "Ver todos" y una fila de 8 tarjetas *@
+<section class="mt-5" aria-labelledby="@Id">
+    <div class="bk-shelf-head">
+        @if (Explicacion != null)
+        {
+            <div><h2 id="@Id">@Titulo</h2><p class="small text-muted mb-0 mt-1">@Explicacion</p></div>
+        }
+        else
+        {
+            <h2 id="@Id">@Titulo</h2>
+        }
+        @if (VerTodosUrl != null)
+        {
+            <a class="bk-more" href="@VerTodosUrl">Ver todos <i class="bi bi-arrow-right"></i></a>
+        }
+    </div>
+    <div class="bk-shelf">@ChildContent</div>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public string Id { get; set; } = "";
+    [Parameter, EditorRequired] public string Titulo { get; set; } = "";
+    [Parameter] public string? Explicacion { get; set; }
+    [Parameter] public string? VerTodosUrl { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

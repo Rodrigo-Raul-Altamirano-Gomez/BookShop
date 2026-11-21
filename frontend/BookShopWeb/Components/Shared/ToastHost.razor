@@ -1,0 +1,17 @@
+@* Avisos breves abajo a la derecha (UX-UI §6.10) *@
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    @foreach (Aviso aviso in Aviso.Avisos)
+    {
+        <div class="toast bk-toast show" role="status" aria-live="polite">
+            <div class="d-flex align-items-center gap-3 px-3 py-2">
+                <i class="bi bi-check2-circle"></i><span>@aviso.Texto</span>
+                @if (aviso.EnlaceTexto != null)
+                {
+                    <a class="ms-auto fw-semibold" href="@aviso.EnlaceUrl">@aviso.EnlaceTexto</a>
+                }
+                <button type="button" class="btn-close btn-close-white @(aviso.EnlaceTexto == null ? "ms-auto" : "")" aria-label="Cerrar" @onclick="() => Aviso.Quitar(aviso)"></button>
+            </div>
+        </div>
+    }
+</div>

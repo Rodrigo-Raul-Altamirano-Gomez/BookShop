@@ -1,0 +1,18 @@
+@* Foto de perfil circular; sin foto, las iniciales (UX-UI §5.8) *@
+<span class="bk-avatar" style="@Estilo">
+    @if (!string.IsNullOrEmpty(Usuario?.Foto))
+    {
+        <img src="@Usuario.Foto" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />
+    }
+    else
+    {
+        @Formato.Iniciales(Usuario?.NombreCompleto ?? Nombre ?? "")
+    }
+</span>
+
+@code {
+    [Parameter] public Usuario? Usuario { get; set; }
+    // Nombre de respaldo mientras se cargan los datos del usuario
+    [Parameter] public string? Nombre { get; set; }
+    [Parameter] public string? Estilo { get; set; }
+}

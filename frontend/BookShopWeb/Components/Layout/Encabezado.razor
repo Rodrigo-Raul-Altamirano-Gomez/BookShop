@@ -1,0 +1,65 @@
+@* Encabezado de la tienda (UX-UI §3.2): fijo arriba; la zona derecha depende del rol *@
+<header class="bk-header">
+    <div class="container-xl bk-header-inner">
+        <a class="bk-logo" href="">Book<span>Shop</span></a>
+        <nav class="bk-nav d-flex gap-4" aria-label="Principal">
+            <NavLink href="catalogo" ActiveClass="">Catálogo</NavLink>
+            <div class="dropdown">
+                <a href="#" role="button" @onclick:preventDefault data-bs-toggle="dropdown" aria-expanded="false" aria-current="@(EnExplorar ? "page" : null)">Explorar <i class="bi bi-chevron-down small"></i></a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="explorar/autores">Autores</a></li>
+                    <li><a class="dropdown-item" href="explorar/categorias">Categorías</a></li>
+                    <li><a class="dropdown-item" href="explorar/editoriales">Editoriales</a></li>
+                </ul>
+            </div>
+        </nav>
+        <form class="bk-search mx-auto" role="search" @onsubmit="Buscar">
+            <i class="bi bi-search"></i>
+            <input class="form-control" type="search" placeholder="Buscar libros por título" aria-label="Buscar libros por título" @bind="busqueda" />
+        </form>
+        <div class="d-flex align-items-center gap-2">
+            <AuthorizeView>
+                <NotAuthorized>
+                    @* El carrito pide iniciar sesión (UX-UI §3.3) *@
+                    <a class="btn btn-icon bk-cart-btn" href="@UrlLogin()" aria-label="Carrito"><i class="bi bi-bag fs-5"></i></a>
+                    <a class="btn btn-sm btn-primary" href="login">Iniciar sesión</a>
+                    <a class="small fw-semibold text-decoration-none ms-1" href="registro">Registrarse</a>
+                </NotAuthorized>
+                <Authorized>
+                    @if (SesionUsuario.EsAdmin(context.User))
+                    {
+                        <a class="btn btn-sm btn-primary" href="admin/libros"><i class="bi bi-speedometer2 me-1"></i>Panel de administración</a>
+                        <a class="small text-decoration-none text-muted ms-2" href="auth/logout" @onclick="CerrarSesion" @onclick:preventDefault>Cerrar sesión</a>
+                    }
+                    else
+                    {
+                        <a class="btn btn-icon bk-cart-btn" href="carrito" aria-label="Carrito"><i class="bi bi-bag fs-5"></i></a>
+                        <div class="dropdown">
+                            <button type="button" class="btn btn-sm d-flex align-items-center gap-2 border-0" data-bs-toggle="dropdown" aria-expanded="false">
+                                <Avatar Usuario="UsuarioActual.Datos" Nombre="@context.User.Identity?.Name" />
+                                <span class="fw-semibold">@PrimerNombre(UsuarioActual.Datos?.NombreCompleto ?? context.User.Identity?.Name)</span>
+                                <i class="bi bi-chevron-down small"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><h6 class="dropdown-header">Compras</h6></li>
+                                <li><a class="dropdown-item" href="cuenta/pedidos">Pedidos</a></li>
+                                <li><a class="dropdown-item" href="cuenta/solicitudes">Mis solicitudes</a></li>
+                                <li><a class="dropdown-item" href="cuenta/cupones">Cupones</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header">Mi biblioteca</h6></li>
+                                <li><a class="dropdown-item" href="listas">Mis listas</a></li>
+                                <li><a class="dropdown-item" href="cuenta/seguimientos">Seguimientos</a></li>
+                                <li><a class="dropdown-item" href="cuenta/resenas">Mis reseñas</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header">Cuenta</h6></li>
+                                <li><a class="dropdown-item" href="cuenta/perfil">Perfil</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="auth/logout" @onclick="CerrarSesion" @onclick:preventDefault>Cerrar sesión</a></li>
+                            </ul>
+                        </div>
+                    }
+                </Authorized>
+            </AuthorizeView>
+        </div>
+    </div>
+</header>

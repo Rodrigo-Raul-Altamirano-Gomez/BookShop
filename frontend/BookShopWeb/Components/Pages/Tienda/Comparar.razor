@@ -1,0 +1,86 @@
+@page "/comparar"
+
+<PageTitle>Comparación · BookShop</PageTitle>
+
+<div class="container-xl pt-4">
+    <nav aria-label="Ruta"><ol class="breadcrumb bk-breadcrumb mb-2"><li class="breadcrumb-item"><a href="">Inicio</a></li><li class="breadcrumb-item active" aria-current="page">Comparación</li></ol></nav>
+    <h1 class="mb-4">Comparación</h1>
+
+    @if (cargando)
+    {
+        <div class="bk-table-wrap placeholder-glow p-4" aria-hidden="true">
+            @for (int i = 0; i < 8; i++)
+            {
+                <span class="placeholder col-12 mb-3"></span>
+            }
+        </div>
+    }
+    else if (libros.Count < 2)
+    {
+        <EmptyState Titulo="Elige dos libros para compararlos." Texto="Usa el botón «Comparar» en el detalle de cada libro." TextoAccion="Ir al catálogo" Url="catalogo" />
+    }
+    else
+    {
+        Libro x = libros[0];
+        Libro y = libros[1];
+        <div class="bk-table-wrap">
+            <table class="table bk-table mb-0">
+                <thead><tr><th style="width:20%">Atributo</th><th>Libro 1</th><th>Libro 2</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td></td>
+                        @foreach (Libro libro in libros)
+                        {
+                            <td>
+                                <div class="d-flex gap-3 align-items-start">
+                                    <div style="width:5.5rem"><BookCover Libro="libro" /></div>
+                                    <div>
+                                        <a class="bk-line-title" href="libros/@libro.Id">@libro.Titulo</a><br>
+                                        <button type="button" class="btn btn-sm btn-link text-decoration-none text-muted mt-1" @onclick="() => Quitar(libro.Id)">Quitar</button>
+                                    </div>
+                                </div>
+                            </td>
+                        }
+                    </tr>
+                    @foreach (var fila in FilasDeTexto(x, y))
+                    {
+                        <tr>
+                            <th scope="row" class="fw-semibold" style="@Diferencia(fila.ValorX, fila.ValorY)">@fila.Atributo</th>
+                            <td>@fila.ValorX</td>
+                            <td>@fila.ValorY</td>
+                        </tr>
+                    }
+                    <tr>
+                        <th scope="row" class="fw-semibold" style="@Diferencia(x.PrecioFinal.ToString(), y.PrecioFinal.ToString())">Precio final</th>
+                        <td><PriceTag Libro="x" /></td>
+                        <td><PriceTag Libro="y" /></td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="fw-semibold" style="@Diferencia(Promedio(x), Promedio(y))">Puntuación</th>
+                        @foreach (Libro libro in libros)
+                        {
+                            <td><RatingStars Promedio="libro.PuntuacionPromedio" /> <span class="bk-num">@Promedio(libro)</span></td>
+                        }
+                    </tr>
+                    <tr>
+                        <th scope="row" class="fw-semibold" style="@Diferencia(Disponibilidad(x), Disponibilidad(y))">Disponibilidad</th>
+                        @foreach (Libro libro in libros)
+                        {
+                            <td>
+                                @if (libro.Stock > 0)
+                                {
+                                    @($"En stock ({libro.Stock})")
+                                }
+                                else
+                                {
+                                    <span class="text-danger fw-semibold">Agotado</span>
+                                }
+                            </td>
+                        }
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="small text-muted mt-3"><span class="d-inline-block align-middle me-1" style="width:.9rem;height:.9rem;background:var(--bk-green-50);border-radius:2px"></span>Atributos en los que los libros difieren.</p>
+    }
+</div>

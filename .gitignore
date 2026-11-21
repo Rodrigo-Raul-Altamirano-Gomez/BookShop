@@ -1,0 +1,14 @@
+# Credenciales de la base de datos
+db.properties
+
+# Backend (Maven, IntelliJ)
+target/
+.idea/
+*.iml
+
+# Frontend (.NET, Visual Studio)
+bin/
+obj/
+.vs/
+*.user
+frontend/BookShopWeb/wwwroot/img/subidas/

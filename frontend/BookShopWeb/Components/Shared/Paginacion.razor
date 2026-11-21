@@ -1,0 +1,40 @@
+@* Paginación (UX-UI §6.7): anterior, siguiente, la primera, la última y las vecinas de la actual *@
+@if (TotalPaginas > 1)
+{
+    <nav aria-label="Páginas de resultados">
+        <ul class="pagination @(Pequena ? "pagination-sm" : "") mb-0">
+            <li class="page-item @(Pagina <= 1 ? "disabled" : "")">
+                <button type="button" class="page-link" aria-label="Anterior" disabled="@(Pagina <= 1)" @onclick="() => OnCambio.InvokeAsync(Pagina - 1)"><i class="bi bi-chevron-left"></i></button>
+            </li>
+            @{ int anterior = 0; }
+            @for (int p = 1; p <= TotalPaginas; p++)
+            {
+                if (p != 1 && p != TotalPaginas && Math.Abs(p - Pagina) > 1) continue;
+                if (p - anterior > 1)
+                {
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                }
+                int numero = p;
+                anterior = p;
+                if (numero == Pagina)
+                {
+                    <li class="page-item active"><span class="page-link" aria-current="page">@numero</span></li>
+                }
+                else
+                {
+                    <li class="page-item"><button type="button" class="page-link" @onclick="() => OnCambio.InvokeAsync(numero)">@numero</button></li>
+                }
+            }
+            <li class="page-item @(Pagina >= TotalPaginas ? "disabled" : "")">
+                <button type="button" class="page-link" aria-label="Siguiente" disabled="@(Pagina >= TotalPaginas)" @onclick="() => OnCambio.InvokeAsync(Pagina + 1)"><i class="bi bi-chevron-right"></i></button>
+            </li>
+        </ul>
+    </nav>
+}
+
+@code {
+    [Parameter] public int Pagina { get; set; } = 1;
+    [Parameter] public int TotalPaginas { get; set; } = 1;
+    [Parameter] public bool Pequena { get; set; }
+    [Parameter] public EventCallback<int> OnCambio { get; set; }
+}

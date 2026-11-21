@@ -1,0 +1,30 @@
+@* Alta y edición de una dirección (UX-UI §9.10); también se usa desde el resumen de compra *@
+
+<div class="modal fade" id="m-direccion" tabindex="-1" aria-labelledby="m-direccion-t" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content p-2" @onsubmit="Guardar">
+            <div class="modal-header border-0 pb-0"><h2 class="modal-title h3" id="m-direccion-t">@(direccion.Id == 0 ? "Agregar dirección" : "Editar dirección")</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+            <div class="modal-body">
+                <label class="form-label" for="d-alias">Alias</label>
+                <input class="form-control mb-1" id="d-alias" placeholder="Casa, Oficina…" required maxlength="50" aria-describedby="d-alias-ayuda" @bind="direccion.Alias" />
+                <div class="form-text mb-3" id="d-alias-ayuda">Un nombre corto para reconocerla.</div>
+                <label class="form-label" for="d-dir">Dirección</label>
+                <input class="form-control mb-3" id="d-dir" required maxlength="200" @bind="direccion.Detalle" />
+                <div class="row g-3">
+                    <div class="col-6"><label class="form-label" for="d-dis">Distrito</label><input class="form-control" id="d-dis" required maxlength="100" @bind="direccion.Distrito" /></div>
+                    <div class="col-6"><label class="form-label" for="d-ciu">Ciudad</label><input class="form-control" id="d-ciu" required maxlength="100" @bind="direccion.Ciudad" /></div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" disabled="@guardando">Cancelar</button>
+                <button type="submit" class="btn btn-primary" disabled="@guardando">
+                    @if (guardando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                    }
+                    Guardar dirección
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

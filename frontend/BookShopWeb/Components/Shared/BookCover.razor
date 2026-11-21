@@ -1,0 +1,20 @@
+@* Portada del libro; sin imagen (o si no carga), la portada tipográfica (UX-UI §5.8) *@
+@if (!string.IsNullOrEmpty(Libro.Portada) && !imagenFallida)
+{
+    <div class="bk-cover @(Pequena ? "bk-cover-sm" : "")" role="img" aria-label="Portada de @Libro.Titulo">
+        <img src="@Libro.Portada" alt="" @onerror="() => imagenFallida = true" />
+    </div>
+}
+else
+{
+    <div class="bk-cover bk-cover-type bk-c@(Libro.Id % 6) @(Pequena ? "bk-cover-sm" : "")" role="img" aria-label="Portada de @Libro.Titulo">
+        <span class="t">@Libro.Titulo</span><span class="a">@Libro.Autor.Nombre</span>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public Libro Libro { get; set; } = default!;
+    [Parameter] public bool Pequena { get; set; }
+
+    private bool imagenFallida;
+}

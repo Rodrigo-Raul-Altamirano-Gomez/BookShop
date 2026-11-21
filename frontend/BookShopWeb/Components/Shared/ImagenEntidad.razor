@@ -1,0 +1,31 @@
+@* Imagen de autor (circular), categoría o editorial; sin imagen, las iniciales (UX-UI §5.8) *@
+<div class="bk-entity-img @(Entidad.Tipo == TipoEntidad.AUTOR ? "round" : "") @Clase" style="@Estilo">
+    @if (!string.IsNullOrEmpty(Entidad.Imagen) && !imagenFallida)
+    {
+        <img src="@Entidad.Imagen" alt="@TextoAlternativo" @onerror="() => imagenFallida = true" />
+    }
+    else
+    {
+        @Formato.Iniciales(Entidad.Nombre)
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Entidad Entidad { get; set; } = default!;
+    [Parameter] public string? Clase { get; set; }
+    [Parameter] public string? Estilo { get; set; }
+
+    private bool imagenFallida;
+    private string? imagenAnterior;
+
+    private string TextoAlternativo => Entidad.Tipo == TipoEntidad.AUTOR ? "Retrato de " + Entidad.Nombre : Entidad.Nombre;
+
+    protected override void OnParametersSet()
+    {
+        if (Entidad.Imagen != imagenAnterior)
+        {
+            imagenFallida = false;
+            imagenAnterior = Entidad.Imagen;
+        }
+    }
+}

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Retrato de Julián Ortega">
+<rect width="200" height="200" fill="#E8DEEA"/>
+<circle cx="100" cy="100" r="78" fill="#FFFFFF" opacity=".35"/>
+
+<path d="M40 200c4-36 28-56 60-56s56 20 60 56z" fill="#24513F"/>
+<rect x="90" y="122" width="20" height="26" rx="8" fill="#7A5238"/>
+<path d="M88 146l12 10 12-10" fill="none" stroke="#FFFFFF" stroke-opacity=".5" stroke-width="3"/>
+<ellipse cx="100" cy="94" rx="28" ry="33" fill="#7A5238"/>
+<path d='M70 86c0-22 14-34 30-34s30 12 30 34l-6-10c-6 4-14 6-24 6s-18-2-24-6z' fill='#5B3A22'/>
+<rect x='80' y='92' width='16' height='10' rx='4' fill='none' stroke='#1E1A16' stroke-width='2.5'/><rect x='104' y='92' width='16' height='10' rx='4' fill='none' stroke='#1E1A16' stroke-width='2.5'/><path d='M96 97h8' stroke='#1E1A16' stroke-width='2.5'/>
+</svg>

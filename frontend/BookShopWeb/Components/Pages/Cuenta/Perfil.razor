@@ -1,0 +1,110 @@
+@page "/cuenta/perfil"
+@layout AccountLayout
+@attribute [Authorize(Roles = "CLIENTE")]
+
+<PageTitle>Perfil · BookShop</PageTitle>
+
+<div class="bk-page-head"><h1>Perfil</h1></div>
+
+@if (usuario == null)
+{
+    <section class="bk-panel placeholder-glow" style="max-width:40rem" aria-hidden="true">
+        <div class="d-flex align-items-center gap-3 mb-4"><span class="bk-avatar placeholder" style="width:4.5rem;height:4.5rem"></span><span class="placeholder col-5"></span></div>
+        <span class="placeholder col-12 mb-3"></span><span class="placeholder col-12"></span>
+    </section>
+}
+else if (!editando)
+{
+    <section class="bk-panel" style="max-width:40rem" aria-labelledby="t-datos">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <Avatar Usuario="usuario" Estilo="width:4.5rem;height:4.5rem;font-size:1.25rem" />
+            <div class="flex-grow-1"><h2 class="h3 mb-0" id="t-datos">@usuario.NombreCompleto</h2><div class="small text-muted">Cliente desde el @Formato.Fecha(usuario.FechaRegistro)</div></div>
+        </div>
+        <dl class="bk-kv row g-0 mb-0">
+            <div class="col-6"><dt>Nombre completo</dt><dd>@usuario.NombreCompleto</dd></div>
+            <div class="col-6"><dt>Fecha de nacimiento</dt><dd class="bk-num">@Formato.Fecha(usuario.FechaNacimiento)</dd></div>
+            <div class="col-6"><dt>Correo</dt><dd>@usuario.Correo</dd></div>
+            <div class="col-6"><dt>Contraseña</dt><dd>••••••••</dd></div>
+        </dl>
+        <div class="d-flex justify-content-end gap-2 pt-3 mt-2 border-top" style="border-color:var(--bk-line)!important">
+            <button type="button" class="btn btn-outline-secondary" @onclick="AbrirCambioContrasena"><i class="bi bi-key me-2"></i>Cambiar contraseña</button>
+            <button type="button" class="btn btn-primary" @onclick="Editar"><i class="bi bi-pencil me-2"></i>Editar datos</button>
+        </div>
+    </section>
+
+    @* Desactivar cuenta: separado y al final, para que no se pulse por error (UX-UI §9.9) *@
+    <section class="bk-panel mt-4" style="max-width:40rem" aria-labelledby="t-desactivar">
+        <div class="d-flex align-items-center gap-3">
+            <div class="flex-grow-1">
+                <h2 class="h3 mb-1" id="t-desactivar">Desactivar cuenta</h2>
+                <p class="small text-muted mb-0">Se cerrará tu sesión. Tus pedidos, listas, reseñas y cupones se conservan, y puedes reactivarla al iniciar sesión.</p>
+            </div>
+            <button type="button" class="btn btn-outline-danger flex-shrink-0" @onclick="() => confirmacion.Mostrar()">Desactivar cuenta</button>
+        </div>
+    </section>
+}
+else
+{
+    <form class="bk-panel" style="max-width:40rem" aria-labelledby="t-editar" @onsubmit="Guardar">
+        <h2 class="h3 mb-3" id="t-editar">Editar datos</h2>
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <Avatar Usuario="edicion" Estilo="width:4.5rem;height:4.5rem;font-size:1.25rem" />
+            <div class="d-flex gap-2">
+                <label class="btn btn-sm btn-outline-secondary mb-0" for="foto">Cambiar foto</label>
+                <InputFile id="foto" class="d-none" accept=".jpg,.jpeg,.png" OnChange="CambiarFoto" />
+                @if (edicion.Foto != null)
+                {
+                    <button type="button" class="btn btn-sm btn-link text-decoration-none text-danger" @onclick="() => edicion.Foto = null">Quitar foto</button>
+                }
+            </div>
+        </div>
+        <label class="form-label" for="n">Nombre completo</label>
+        <input class="form-control mb-3" id="n" required maxlength="100" @bind="edicion.NombreCompleto" />
+        <label class="form-label" for="f">Fecha de nacimiento</label>
+        <input class="form-control mb-3" id="f" type="date" required style="max-width:14rem" @bind="edicion.FechaNacimiento" />
+        <label class="form-label" for="c">Correo</label>
+        <input class="form-control mb-1" id="c" value="@edicion.Correo" readonly style="background:var(--bk-sunken)" aria-describedby="c-ayuda" />
+        <div class="form-text mb-3" id="c-ayuda">El correo no se puede cambiar.</div>
+        <div class="d-flex justify-content-end gap-2 pt-3 border-top" style="border-color:var(--bk-line)!important">
+            <button type="button" class="btn btn-outline-secondary" @onclick="() => editando = false" disabled="@guardando">Cancelar</button>
+            <button type="submit" class="btn btn-primary" disabled="@guardando">
+                @if (guardando)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                }
+                Guardar cambios
+            </button>
+        </div>
+    </form>
+}
+
+<div class="modal fade" id="m-clave" tabindex="-1" aria-labelledby="m-clave-t" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content p-2" @onsubmit="CambiarContrasena">
+            <div class="modal-header border-0 pb-0"><h2 class="modal-title h3" id="m-clave-t">Cambiar contraseña</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+            <div class="modal-body">
+                <label class="form-label" for="ca">Contraseña actual</label>
+                <input class="form-control @(errorActual != null ? "is-invalid" : "") mb-1" id="ca" type="password" autocomplete="current-password" required aria-describedby="ca-err" @bind="actual" />
+                <div class="invalid-feedback mb-2" id="ca-err">@errorActual</div>
+                <label class="form-label mt-2" for="cn">Nueva contraseña</label>
+                <input class="form-control mb-3" id="cn" type="password" autocomplete="new-password" required @bind="nueva" />
+                <label class="form-label" for="cc">Confirmar nueva contraseña</label>
+                <input class="form-control @(errorConfirmacion ? "is-invalid" : "")" id="cc" type="password" autocomplete="new-password" required aria-describedby="cc-err" @bind="confirmacionNueva" />
+                <div class="invalid-feedback" id="cc-err">Las contraseñas no coinciden.</div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" disabled="@cambiandoClave">Cancelar</button>
+                <button type="submit" class="btn btn-primary" disabled="@cambiandoClave">
+                    @if (cambiandoClave)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                    }
+                    Cambiar contraseña
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<ConfirmModal @ref="confirmacion" Titulo="¿Desactivar tu cuenta?" Mensaje="Se cerrará tu sesión. Podrás reactivarla iniciando sesión con tu contraseña."
+              TextoAccion="Sí, desactivar" Peligro="true" OnConfirmar="Desactivar" />

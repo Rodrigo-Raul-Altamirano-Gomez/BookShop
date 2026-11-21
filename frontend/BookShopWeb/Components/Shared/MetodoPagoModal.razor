@@ -1,0 +1,55 @@
+@* Alta y edición de un método de pago (UX-UI §9.11); también se usa desde el resumen de compra *@
+
+<div class="modal fade" id="m-metodo" tabindex="-1" aria-labelledby="m-metodo-t" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content p-2" @onsubmit="Guardar">
+            <div class="modal-header border-0 pb-0"><h2 class="modal-title h3" id="m-metodo-t">@(metodo.Id == 0 ? "Agregar método de pago" : "Editar método de pago")</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+            <div class="modal-body">
+                <ul class="nav nav-underline mb-3" role="tablist">
+                    <li class="nav-item"><button type="button" class="nav-link @(metodo.Tipo == TipoMetodoPago.TARJETA ? "active" : "")" role="tab" aria-selected="@(metodo.Tipo == TipoMetodoPago.TARJETA ? "true" : "false")" @onclick="() => CambiarTipo(TipoMetodoPago.TARJETA)">Tarjeta</button></li>
+                    <li class="nav-item"><button type="button" class="nav-link @(metodo.Tipo == TipoMetodoPago.BILLETERA ? "active" : "")" role="tab" aria-selected="@(metodo.Tipo == TipoMetodoPago.BILLETERA ? "true" : "false")" @onclick="() => CambiarTipo(TipoMetodoPago.BILLETERA)">Billetera digital</button></li>
+                </ul>
+                @if (metodo.Tipo == TipoMetodoPago.TARJETA)
+                {
+                    <div role="tabpanel">
+                        <label class="form-label" for="m-tit">Titular</label>
+                        <input class="form-control mb-3" id="m-tit" required maxlength="100" @bind="metodo.Titular" />
+                        <label class="form-label" for="m-num">Número</label>
+                        <input class="form-control bk-num @(errorNumero != null ? "is-invalid" : "")" id="m-num" inputmode="numeric" required pattern="\d{16}" maxlength="16"
+                               title="16 dígitos" aria-describedby="m-num-err" @bind="metodo.Numero" />
+                        <div class="invalid-feedback" id="m-num-err">@errorNumero</div>
+                        <label class="form-label mt-3" for="m-ven">Vencimiento</label>
+                        <input class="form-control" id="m-ven" placeholder="MM/AA" required pattern="(0[1-9]|1[0-2])/\d{2}" maxlength="5" title="MM/AA" style="max-width:8rem" @bind="metodo.FechaVencimiento" />
+                    </div>
+                }
+                else
+                {
+                    <div role="tabpanel">
+                        <label class="form-label" for="b-pro">Proveedor</label>
+                        <select class="form-select mb-3" id="b-pro" @bind="metodo.Proveedor">
+                            <option value="Yape">Yape</option>
+                            <option value="Plin">Plin</option>
+                        </select>
+                        <label class="form-label" for="b-tit">Titular</label>
+                        <input class="form-control mb-3" id="b-tit" required maxlength="100" @bind="metodo.Titular" />
+                        <label class="form-label" for="b-cel">Celular</label>
+                        <input class="form-control bk-num @(errorNumero != null ? "is-invalid" : "")" id="b-cel" inputmode="numeric" required pattern="\d{9}" maxlength="9"
+                               title="9 dígitos" aria-describedby="b-cel-err b-cel-ayuda" @bind="metodo.Numero" />
+                        <div class="invalid-feedback" id="b-cel-err">@errorNumero</div>
+                        <div class="form-text" id="b-cel-ayuda">9 dígitos.</div>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" disabled="@guardando">Cancelar</button>
+                <button type="submit" class="btn btn-primary" disabled="@guardando">
+                    @if (guardando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                    }
+                    Guardar método
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
