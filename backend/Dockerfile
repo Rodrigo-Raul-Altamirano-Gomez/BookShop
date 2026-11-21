@@ -10,13 +10,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends unzip curl && r
 RUN curl -fsSL -o /tmp/gf.zip https://download.eclipse.org/ee4j/glassfish/glassfish-8.0.0.zip \
  && unzip -q /tmp/gf.zip -d /opt && rm /tmp/gf.zip
 ENV PATH="/opt/glassfish8/bin:${PATH}"
-# Memoria acotada para planes pequeños
+COPY --from=build /src/bookshop-rs/target/bookshop.war /tmp/bookshop.war
+# Se configura y se despliega el WAR al construir la imagen (si falla, falla el build).
+# Se quitan los listeners IIOP (no se usan y Render los sondea generando errores) y se acota la memoria.
 RUN asadmin start-domain \
  && asadmin delete-jvm-options '-Xmx512m' \
  && asadmin create-jvm-options '-Xmx320m' \
- && asadmin set configs.config.server-config.network-config.network-listeners.network-listener.http-listener-1.port=8080 \
+ && (asadmin delete-iiop-listener orb-listener-1 || true) \
+ && (asadmin delete-iiop-listener SSL || true) \
+ && (asadmin delete-iiop-listener SSL_MUTUALAUTH || true) \
+ && asadmin deploy --name bookshop --contextroot bookshop /tmp/bookshop.war \
+ && asadmin list-applications \
  && asadmin stop-domain
-COPY --from=build /src/bookshop-rs/target/bookshop.war /opt/glassfish8/glassfish/domains/domain1/autodeploy/bookshop.war
 EXPOSE 8080
 # Variables: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
 CMD ["asadmin", "start-domain", "--verbose"]
