@@ -18,6 +18,9 @@ public partial class AdminEntidades
     [Inject] private IWebHostEnvironment Entorno { get; set; } = default!;
     [Inject] private AvisoService Aviso { get; set; } = default!;
 
+    // "autores", "categorias" o "editoriales"; al cambiar, Blazor vuelve a cargar la página
+    [Parameter] public string Ruta { get; set; } = "";
+
     [SupplyParameterFromQuery] public string? Q { get; set; }
     [SupplyParameterFromQuery] public string? Estado { get; set; }
     [SupplyParameterFromQuery] public int? Pagina { get; set; }
@@ -34,16 +37,14 @@ public partial class AdminEntidades
 
     private int TotalPaginas => Math.Max(1, (resultado!.Total + TamanoPagina - 1) / TamanoPagina);
 
-    // "autores", "categorias" o "editoriales", según la ruta de la página
-    private string Ruta => Navegacion.ToBaseRelativePath(Navegacion.Uri).Split('?')[0].Split('/')[1];
-
     protected override async Task OnParametersSetAsync()
     {
         TipoEntidad nuevoTipo = Entidades.DesdeRuta(Ruta);
-        if (nuevoTipo != tipo || registrados == null)
+        if (nuevoTipo != tipo)
         {
             tipo = nuevoTipo;
             registrados = null;
+            resultado = null;
         }
         busqueda = Q ?? "";
         estado = Estado ?? "";

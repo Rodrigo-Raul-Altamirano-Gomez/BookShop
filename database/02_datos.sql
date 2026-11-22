@@ -54,7 +54,7 @@ INSERT INTO entidad (id_entidad, tipo, nombre, descripcion, imagen, activo) VALU
 (10, 'AUTOR', 'Hugo Benavides',  'Autor de fantasía épica y lector incansable de bibliotecas antiguas.', 'img/autor/hugo-benavides.svg', 1),
 (11, 'AUTOR', 'Elena Castañeda', 'Novelista. Escribe cartas, diarios y ciudades que no duermen.', 'img/autor/elena-castaneda.svg', 1),
 (12, 'AUTOR', 'Pablo Iturbe',    'Físico y divulgador científico. Explica el mundo con metáforas sencillas.', 'img/autor/pablo-iturbe.svg', 1),
-(13, 'AUTOR', 'Mariana Soto',    'Historiadora de la vida cotidiana en el siglo XIX.', NULL, 1);
+(13, 'AUTOR', 'Mariana Soto',    'Historiadora de la vida cotidiana en el siglo XIX.', 'img/autor/mariana-soto.svg', 1);
 
 -- Categorías
 INSERT INTO entidad (id_entidad, tipo, nombre, descripcion, imagen, activo) VALUES
