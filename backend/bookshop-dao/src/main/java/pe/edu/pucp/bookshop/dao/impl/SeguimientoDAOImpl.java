@@ -10,29 +10,71 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 public class SeguimientoDAOImpl implements SeguimientoDAO {
 
+    // Solo las entidades activas (RF04.2), con la misma forma que la búsqueda de Explorar
     @Override
-    public List<SeguimientoEntidad> listarPorUsuario(int idUsuario, TipoEntidad tipo) throws SQLException {
+    public int contar(int idUsuario, TipoEntidad tipo, String texto) throws SQLException {
         String sql = """
-            select s.fecha, e.id_entidad, e.tipo, e.nombre, e.descripcion, e.imagen, e.activo
+            select count(*)
             from seguimiento_entidad s
             join entidad e on e.id_entidad = s.fid_entidad
-            where s.fid_usuario = ? and e.tipo = ?
+            where s.fid_usuario = ? and e.tipo = ? and e.activo = 1
         """;
-        List<SeguimientoEntidad> seguimientos = new ArrayList<>();
+        if (texto != null) {
+            sql += " and e.nombre like concat('%', ?, '%')";
+        }
         try (Connection con = DBManager.getInstance().getConnection();
              PreparedStatement pstm = con.prepareStatement(sql)) {
-            pstm.setInt(1, idUsuario);
-            pstm.setString(2, tipo.name());
+            int i = 0;
+            pstm.setInt(++i, idUsuario);
+            pstm.setString(++i, tipo.name());
+            if (texto != null) {
+                pstm.setString(++i, texto);
+            }
+            try (ResultSet rs = pstm.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
+    }
+
+    // orden: "fecha" (seguido recientemente), "nombre-desc" o, por defecto, por nombre ascendente
+    @Override
+    public List<Entidad> listarPagina(int idUsuario, TipoEntidad tipo, String texto, String orden, int pagina, int tamano) throws SQLException {
+        String sql = """
+            select e.id_entidad, e.tipo, e.nombre, e.descripcion, e.imagen, e.activo
+            from seguimiento_entidad s
+            join entidad e on e.id_entidad = s.fid_entidad
+            where s.fid_usuario = ? and e.tipo = ? and e.activo = 1
+        """;
+        if (texto != null) {
+            sql += " and e.nombre like concat('%', ?, '%')";
+        }
+        if ("fecha".equals(orden)) {
+            sql += " order by s.fecha desc";
+        } else if ("nombre-desc".equals(orden)) {
+            sql += " order by e.nombre desc";
+        } else {
+            sql += " order by e.nombre";
+        }
+        sql += " limit ?, ?";
+        List<Entidad> entidades = new ArrayList<>();
+        try (Connection con = DBManager.getInstance().getConnection();
+             PreparedStatement pstm = con.prepareStatement(sql)) {
+            int i = 0;
+            pstm.setInt(++i, idUsuario);
+            pstm.setString(++i, tipo.name());
+            if (texto != null) {
+                pstm.setString(++i, texto);
+            }
+            pstm.setInt(++i, (pagina - 1) * tamano);
+            pstm.setInt(++i, tamano);
             try (ResultSet rs = pstm.executeQuery()) {
                 while (rs.next()) {
-                    SeguimientoEntidad seguimiento = new SeguimientoEntidad();
-                    seguimiento.setFecha(rs.getObject("fecha", LocalDateTime.class));
                     Entidad entidad = new Entidad();
                     entidad.setId(rs.getInt("id_entidad"));
                     entidad.setTipo(TipoEntidad.valueOf(rs.getString("tipo")));
@@ -40,12 +82,11 @@ public class SeguimientoDAOImpl implements SeguimientoDAO {
                     entidad.setDescripcion(rs.getString("descripcion"));
                     entidad.setImagen(rs.getString("imagen"));
                     entidad.setActivo(rs.getBoolean("activo"));
-                    seguimiento.setEntidad(entidad);
-                    seguimientos.add(seguimiento);
+                    entidades.add(entidad);
                 }
             }
         }
-        return seguimientos;
+        return entidades;
     }
 
     @Override

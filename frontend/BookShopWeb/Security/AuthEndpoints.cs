@@ -51,8 +51,9 @@ public static class AuthEndpoints
         endpoints.MapGet("/auth/logout", async (HttpContext context) =>
         {
             await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            // El carrito vive en la sesión: se pierde al cerrarla (ERS §2.1)
+            // El carrito y la comparación viven en la sesión: se pierden al cerrarla (ERS §2.1)
             context.Response.Cookies.Delete("bk-carrito");
+            context.Response.Cookies.Delete("bk-comparacion");
             return Results.LocalRedirect("/");
         });
 

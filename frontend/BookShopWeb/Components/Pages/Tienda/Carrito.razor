@@ -41,7 +41,7 @@
                     @foreach (LineaCompra linea in resumen.Lineas)
                     {
                         <div class="bk-line" @key="linea.Libro.Id">
-                            <a href="libros/@linea.Libro.Id" tabindex="-1" aria-hidden="true"><BookCover Libro="linea.Libro" /></a>
+                            <a href="libros/@linea.Libro.Id" aria-hidden="true"><BookCover Libro="linea.Libro" /></a>
                             <div>
                                 <a class="bk-line-title" href="libros/@linea.Libro.Id">@linea.Libro.Titulo</a>
                                 <div class="small text-muted mb-2">@linea.Libro.Autor.Nombre</div>

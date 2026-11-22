@@ -91,7 +91,15 @@ Dos servicios web con Docker, conectados al repositorio y desplegados automátic
 
 El `Dockerfile` del backend compila el WAR, lo despliega en GlassFish 8 al construir la imagen, fija la zona horaria de Lima y acota la memoria de la JVM al plan gratuito (512 MB).
 
-### Otro servidor con Docker (por ejemplo, AWS EC2)
+Las imágenes que se suben desde la aplicación (fotos, portadas, imágenes de autores, categorías y editoriales) se guardan en `wwwroot/img/subidas` del front. En Render ese disco se borra en cada despliegue y cada vez que el servicio se suspende, así que allí las imágenes subidas no se conservan.
+
+### AWS EC2 sin contenedores (presentación)
+
+- **Backend:** GlassFish 8 y el WAR, igual que en la instalación local, con las variables `DB_*` y la zona horaria `America/Lima`.
+- **Front:** `dotnet publish frontend/BookShopWeb -c Release -o <carpeta>` y ejecutar `dotnet BookShopWeb.dll` en esa carpeta (por ejemplo, como servicio), con la variable `ApiUrl`.
+- **Imágenes subidas:** viven en `<carpeta>/wwwroot/img/subidas`. Al publicar una versión nueva, copiarla **encima** de la anterior, sin borrar esa carpeta; si se borra, las rutas que guarda la base de datos quedan sin imagen.
+
+### Otro servidor con Docker
 
 Las mismas imágenes sirven en cualquier máquina con Docker:
 

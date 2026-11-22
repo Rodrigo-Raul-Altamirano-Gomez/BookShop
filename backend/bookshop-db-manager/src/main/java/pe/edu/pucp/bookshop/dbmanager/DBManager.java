@@ -60,4 +60,9 @@ public class DBManager {
     public Connection getConnection() throws SQLException {
         return pool.getConnection();
     }
+
+    // Al detener o redesplegar la aplicación se cierran sus conexiones; si no, quedan abiertas en la base de datos
+    public void cerrar() {
+        pool.close();
+    }
 }

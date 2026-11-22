@@ -26,7 +26,7 @@ else
         @foreach (Resena resena in resenas)
         {
             <div class="bk-line" style="grid-template-columns:3.5rem 1fr">
-                <a href="libros/@resena.Libro.Id" tabindex="-1" aria-hidden="true"><BookCover Libro="resena.Libro" Pequena="true" /></a>
+                <a href="libros/@resena.Libro.Id" aria-hidden="true"><BookCover Libro="resena.Libro" Pequena="true" /></a>
                 <div>
                     <div class="d-flex align-items-baseline gap-3">
                         <a class="bk-line-title" href="libros/@resena.Libro.Id">@resena.Libro.Titulo</a>

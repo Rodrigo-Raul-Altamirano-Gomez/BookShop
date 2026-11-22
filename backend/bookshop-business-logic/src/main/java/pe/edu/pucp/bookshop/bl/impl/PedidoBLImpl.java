@@ -112,8 +112,11 @@ public class PedidoBLImpl implements PedidoBL {
     public Pedido pagar(SolicitudCompra solicitud) throws BusinessLogicException {
         try {
             // Dos clientes pueden comprar a la vez el último ejemplar: se bloquean los libros del carrito hasta
-            // terminar, y quien llega después espera y luego ve el stock ya descontado
-            for (ItemCarrito item : solicitud.items()) {
+            // terminar, y quien llega después espera y luego ve el stock ya descontado. Se bloquean siempre en
+            // orden de id: si cada compra siguiera el orden de su carrito, dos compras podrían esperarse entre sí
+            List<ItemCarrito> enOrden = new ArrayList<>(solicitud.items());
+            enOrden.sort((a, b) -> a.idLibro() - b.idLibro());
+            for (ItemCarrito item : enOrden) {
                 libroDAO.bloquear(item.idLibro());
             }
 

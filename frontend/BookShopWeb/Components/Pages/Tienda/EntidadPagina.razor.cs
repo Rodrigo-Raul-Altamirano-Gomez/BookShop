@@ -37,6 +37,13 @@ public partial class EntidadPagina
             noEncontrado = true;
             return;
         }
+        // RF04.2: lo inactivo no se muestra en la tienda (el administrador sí la ve)
+        if (!esAdmin && !entidad!.Activo)
+        {
+            entidad = null;
+            noEncontrado = true;
+            return;
+        }
         if (idUsuario > 0 && !esAdmin)
         {
             siguiendo = await new HttpClientUtils<bool>().Get($"seguimientos/usuario/{idUsuario}/entidad/{Id}");

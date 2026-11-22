@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "bookshop-web",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "frontend/BookShopWeb", "--launch-profile", "http"],
+      "port": 5245
+    }
+  ]
+}

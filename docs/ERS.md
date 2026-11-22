@@ -240,7 +240,7 @@ Los tiempos de seguimiento son de minutos para poder demostrar el flujo en clase
 **Catálogo**
 
 1. El Administrador lista, consulta, registra y edita libros, autores, categorías y editoriales, con sus imágenes.
-2. Activa o desactiva cada uno. Lo inactivo no se muestra a clientes ni a visitantes, pero se conserva en los pedidos, listas y reseñas existentes.
+2. Activa o desactiva cada uno. Lo inactivo no se muestra a clientes ni a visitantes, pero se conserva en los pedidos, listas y reseñas existentes. Un libro cuyo autor, categoría o editorial está inactivo tampoco se muestra.
 3. Al registrar un libro elige autor, categoría y editorial entre los activos. Estas referencias no se pueden cambiar después.
 4. Actualiza el precio y el stock de cada libro.
 
@@ -376,7 +376,7 @@ Define los criterios de toda vista de resultados (sección 2.3).
 6. Un cliente puede reportar una reseña ajena indicando un motivo (ofensiva, spam, no relacionada u otro) y un comentario.
 7. El reporte guarda una copia del texto y la puntuación de la reseña en ese momento, para que el Administrador vea el contenido original.
 8. No puede reportar otra vez la misma reseña mientras tenga un reporte propio `PENDIENTE` sobre ella.
-9. Las reseñas ocultas por moderación (RF04) no se muestran ni cuentan para el promedio.
+9. Las reseñas ocultas por moderación (RF04) no se muestran ni cuentan para el promedio. Solo su autor la sigue viendo, marcada como oculta.
 
 ---
 
@@ -580,6 +580,8 @@ Los tres reportes son PDF que se generan al solicitarlos y no se almacenan.
 | RF03 | Máximo de intentos de devolución | Solicitudes por pedido, contando las rechazadas y las retiradas. |
 | RF04 | "Configurar el envío" | Un costo fijo por pedido. |
 | RF04 | Moderar reseñas | El Administrador puede ocultar cualquier reseña por su cuenta; además, aceptar un reporte oculta la reseña reportada. |
+| RF04 | Qué oculta desactivar un autor, una categoría o una editorial | También sus libros: un libro solo se muestra si él y sus tres referencias están activos. Su página y la de sus libros aparecen como no disponibles. |
+| RF10 | Reseña propia oculta | Su autor la sigue viendo, marcada como oculta, para saber por qué no puede publicar otra sobre el mismo libro. |
 | RF08 | Filtros y órdenes | Se conservan todos los filtros y se añade el período. Solo quedan los órdenes por precio y por título. Las secciones de libros del inicio (Novedades y recomendaciones) tienen su propia vista, sin selector de orden. |
 | RF08, RF12–RF14 | Significado del período | Una sola regla: en lo calculado con ventas delimita las ventas y reseñas usadas; en lo demás filtra por fecha de registro. |
 | RF10 | Qué es una "compra válida" | El libro está en un pedido `ENTREGADO`. |

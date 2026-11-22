@@ -2,6 +2,7 @@ package pe.edu.pucp.bookshop.bl.impl;
 
 import pe.edu.pucp.bookshop.bl.LibroBL;
 import pe.edu.pucp.bookshop.bl.exception.BusinessLogicException;
+import pe.edu.pucp.bookshop.bl.exception.DatosCambiadosException;
 import pe.edu.pucp.bookshop.bl.exception.NoEncontradoException;
 import pe.edu.pucp.bookshop.bl.exception.PersistenciaException;
 import pe.edu.pucp.bookshop.dao.LibroDAO;
@@ -396,10 +397,15 @@ public class LibroBLImpl implements LibroBL {
         }
     }
 
+    // stockAnterior: el stock que vio el administrador al abrir la edición. Si mientras tanto se vendió o se
+    // repuso algún ejemplar, no se guarda, para no pisar el stock real
     @Override
-    public void modificar(Libro libro) throws BusinessLogicException {
+    public void modificar(Libro libro, int stockAnterior) throws BusinessLogicException {
         try {
-            libroDAO.modificar(libro);
+            if (libroDAO.modificar(libro, stockAnterior) == 0) {
+                int actual = libroDAO.obtener(libro.getId(), LocalDate.now()).getStock();
+                throw new DatosCambiadosException("El stock cambió a " + actual + " mientras editabas. Revisa y vuelve a guardar.");
+            }
         } catch (SQLException ex) {
             throw new PersistenciaException(ex);
         }

@@ -158,7 +158,7 @@ La página de inicio de sesión muestra arriba el aviso *"Inicia sesión para co
 | *Comparar* | Sí | Sí | Sí |
 | Formulario de reseña | No | Si cumple RF10 | No |
 | Votar y reportar reseñas | Sí (pide sesión) | Sí, en reseñas ajenas | No |
-| Reseñas ocultas | No | No | Sí, con fondo hundido y la etiqueta *Oculta* |
+| Reseñas ocultas | No | Solo la propia, con la etiqueta *Oculta* | Sí, con fondo hundido y la etiqueta *Oculta* |
 | Botones *Ocultar* y *Mostrar* | No | No | Sí |
 
 ---
@@ -1151,8 +1151,7 @@ A4 horizontal.
 |---|---|
 | Contraste | Texto ≥ 4.5:1; componentes ≥ 3:1. La paleta de §5.2 cumple. |
 | Foco | Anillo visible de 3 px en todo elemento interactivo (`:focus-visible`, en `theme.css`). |
-| Teclado | Todo es operable con teclado. Los diálogos atrapan el foco y lo devuelven al cerrar; `Esc` cierra diálogos y menús (Bootstrap). |
-| Saltar navegación | El primer elemento de cada página es *"Saltar al contenido"*, visible al recibir el foco. |
+| Teclado | La aplicación se usa con el mouse; el teclado sirve para escribir y para enviar con `Enter`. Los diálogos de Bootstrap cierran con `Esc`. |
 | Semántica | `header`, `nav` (con `aria-label`), `main` y `footer`. Un solo `h1` por página, sin saltar niveles. Las migas usan `nav aria-label="Ruta"`. |
 | Imágenes | Portadas con `aria-label="Portada de {título}"`; la decoración del inicio lleva `aria-hidden`. |
 | Formularios | Un `label` asociado a cada campo; los grupos de radios usan `fieldset` + `legend`. Los errores se enlazan con `aria-describedby`. |

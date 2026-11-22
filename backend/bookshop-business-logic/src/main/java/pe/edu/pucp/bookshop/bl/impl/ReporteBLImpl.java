@@ -6,7 +6,7 @@ import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
-import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.util.JRLoader;
 import pe.edu.pucp.bookshop.bl.ReporteBL;
 import pe.edu.pucp.bookshop.bl.exception.BusinessLogicException;
@@ -18,6 +18,8 @@ import pe.edu.pucp.bookshop.dao.impl.UsuarioDAOImpl;
 import pe.edu.pucp.bookshop.model.EstadoPedido;
 import pe.edu.pucp.bookshop.model.Rol;
 import pe.edu.pucp.bookshop.model.Usuario;
+import pe.edu.pucp.bookshop.model.dto.FilaReporteCliente;
+import pe.edu.pucp.bookshop.model.dto.FilaReporteLibro;
 import pe.edu.pucp.bookshop.model.dto.Venta;
 
 import java.sql.SQLException;
@@ -42,24 +44,24 @@ public class ReporteBLImpl implements ReporteBL {
     @Override
     public byte[] generarReporteLibros(LocalDate desde, LocalDate hasta, Integer limite) throws BusinessLogicException {
         try {
-            Map<Integer, Map<String, Object>> porLibro = new HashMap<>();
+            Map<Integer, FilaReporteLibro> porLibro = new HashMap<>();
             for (Venta venta : pedidoDAO.listarVentas(EstadoPedido.VENTA_VALIDA, desde, hasta)) {
-                Map<String, Object> fila = porLibro.get(venta.libro().getId());
+                FilaReporteLibro fila = porLibro.get(venta.libro().getId());
                 if (fila == null) {
-                    fila = new HashMap<>();
-                    fila.put("titulo", venta.libro().getTitulo());
-                    fila.put("categoria", venta.libro().getCategoria().getNombre());
-                    fila.put("autor", venta.libro().getAutor().getNombre());
-                    fila.put("editorial", venta.libro().getEditorial().getNombre());
-                    fila.put("cantidad", 0);
-                    fila.put("monto", 0.0);
+                    fila = new FilaReporteLibro();
+                    fila.setTitulo(venta.libro().getTitulo());
+                    fila.setCategoria(venta.libro().getCategoria().getNombre());
+                    fila.setAutor(venta.libro().getAutor().getNombre());
+                    fila.setEditorial(venta.libro().getEditorial().getNombre());
+                    fila.setCantidad(0);
+                    fila.setMonto(0.0);
                     porLibro.put(venta.libro().getId(), fila);
                 }
-                fila.put("cantidad", (Integer) fila.get("cantidad") + venta.cantidad());
-                fila.put("monto", Math.round(((Double) fila.get("monto") + venta.subtotal()) * 100) / 100.0);
+                fila.setCantidad(fila.getCantidad() + venta.cantidad());
+                fila.setMonto(Math.round((fila.getMonto() + venta.subtotal()) * 100) / 100.0);
             }
-            List<Map<String, Object>> filas = new ArrayList<>(porLibro.values());
-            filas.sort((a, b) -> Double.compare((Double) b.get("monto"), (Double) a.get("monto")));
+            List<FilaReporteLibro> filas = new ArrayList<>(porLibro.values());
+            filas.sort((a, b) -> Double.compare(b.getMonto(), a.getMonto()));
             if (limite != null && filas.size() > limite) {
                 filas = filas.subList(0, limite);
             }
@@ -100,21 +102,21 @@ public class ReporteBLImpl implements ReporteBL {
             }
 
             LocalDate hoy = LocalDate.now();
-            List<Map<String, Object>> filas = new ArrayList<>();
+            List<FilaReporteCliente> filas = new ArrayList<>();
             for (Usuario cliente : usuarioDAO.listarPorRol(Rol.CLIENTE)) {
                 int id = cliente.getId();
-                Map<String, Object> fila = new HashMap<>();
-                fila.put("nombre", cliente.getNombreCompleto());
-                fila.put("correo", cliente.getCorreo());
-                fila.put("estado", cliente.getActivo() ? "Activa" : "Desactivada");
-                fila.put("diasUso", (int) ChronoUnit.DAYS.between(cliente.getFechaRegistro().toLocalDate(), hoy));
-                fila.put("gasto", Math.round(gasto.getOrDefault(id, 0.0) * 100) / 100.0);
-                fila.put("categoria", masComprado(categorias.get(id)));
-                fila.put("autor", masComprado(autores.get(id)));
-                fila.put("editorial", masComprado(editoriales.get(id)));
+                FilaReporteCliente fila = new FilaReporteCliente();
+                fila.setNombre(cliente.getNombreCompleto());
+                fila.setCorreo(cliente.getCorreo());
+                fila.setEstado(cliente.getActivo() ? "Activa" : "Desactivada");
+                fila.setDiasUso((int) ChronoUnit.DAYS.between(cliente.getFechaRegistro().toLocalDate(), hoy));
+                fila.setGasto(Math.round(gasto.getOrDefault(id, 0.0) * 100) / 100.0);
+                fila.setCategoria(masComprado(categorias.get(id)));
+                fila.setAutor(masComprado(autores.get(id)));
+                fila.setEditorial(masComprado(editoriales.get(id)));
                 filas.add(fila);
             }
-            filas.sort((a, b) -> Double.compare((Double) b.get("gasto"), (Double) a.get("gasto")));
+            filas.sort((a, b) -> Double.compare(b.getGasto(), a.getGasto()));
             if (limite != null && filas.size() > limite) {
                 filas = filas.subList(0, limite);
             }
@@ -139,8 +141,9 @@ public class ReporteBLImpl implements ReporteBL {
         return nombre;
     }
 
-    // Llena la plantilla con las filas y el encabezado común (período, fecha de generación y cantidad de resultados)
-    private byte[] generarPdf(String plantilla, LocalDate desde, LocalDate hasta, List<Map<String, Object>> filas) {
+    // Llena la plantilla con las filas (FilaReporteLibro o FilaReporteCliente) y el encabezado común
+    // (período, fecha de generación y cantidad de resultados)
+    private byte[] generarPdf(String plantilla, LocalDate desde, LocalDate hasta, List<?> filas) {
         DateTimeFormatter fecha = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         String periodo = (desde != null ? desde.format(fecha) : "el inicio") + " – " + (hasta != null ? hasta.format(fecha) : "hoy");
         Map<String, Object> parametros = new HashMap<>();
@@ -150,7 +153,7 @@ public class ReporteBLImpl implements ReporteBL {
         parametros.put("resultados", filas.size());
         try {
             JasperReport reporte = (JasperReport) JRLoader.loadObject(getClass().getResourceAsStream(plantilla));
-            JasperPrint documento = JasperFillManager.fillReport(reporte, parametros, new JRMapCollectionDataSource(new ArrayList<>(filas)));
+            JasperPrint documento = JasperFillManager.fillReport(reporte, parametros, new JRBeanCollectionDataSource(filas));
             return JasperExportManager.exportReportToPdf(documento);
         } catch (JRException ex) {
             // Un error de la plantilla no es del uso normal: se informa como fallo del servidor

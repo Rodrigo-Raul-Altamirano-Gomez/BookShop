@@ -27,7 +27,7 @@ Recorrido de unos 15 minutos por las capacidades de los tres incrementos. Usa lo
 2. *Continuar*: en el resumen de compra elegir dirección y método de pago, y aplicar el cupón `BK7Q2` (10 %).
 3. *Pagar*. El pago simulado se rechaza 1 de cada 5 veces; si sale, se muestra el aviso y se puede reintentar.
 4. En la confirmación, *Descargar comprobante* abre el PDF en una pestaña nueva.
-5. **Pedidos:** el pedido nuevo está *En almacén*. El hilo lo pasa a *En camino* y luego a *Entregado* en uno o dos minutos por paso; se vuelve a él al final de la demostración.
+5. **Pedidos:** el pedido nuevo está *En almacén*. El hilo lo pasa a *En camino* y luego a *Entregado* en uno a tres minutos por paso; se vuelve a él al final de la demostración.
 
 ## 4. Posventa (2 min)
 

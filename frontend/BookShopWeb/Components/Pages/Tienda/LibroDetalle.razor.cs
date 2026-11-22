@@ -66,6 +66,14 @@ public partial class LibroDetalle
             noEncontrado = true;
             return;
         }
+        // RF04.2: si el libro, su autor, su categoría o su editorial están inactivos, no se muestra en la tienda
+        // (el administrador sí lo ve, para moderar sus reseñas)
+        if (!esAdmin && (!libro!.Activo || !libro.Autor.Activo || !libro.Categoria.Activo || !libro.Editorial.Activo))
+        {
+            libro = null;
+            noEncontrado = true;
+            return;
+        }
         Task<ResenasLibro?> pedidoResenas = new HttpClientUtils<ResenasLibro>().Get($"resenas/libro/{Id}?usuario={idUsuario}&ocultas={esAdmin}");
         Task<ResultadoLibros?> pedidoSimilares = new HttpClientUtils<ResultadoLibros>().Get($"libros/{Id}/similares?tamano=8");
         if (idUsuario > 0 && !esAdmin)

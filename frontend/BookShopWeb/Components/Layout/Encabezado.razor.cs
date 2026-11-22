@@ -27,7 +27,15 @@ public partial class Encabezado : IDisposable
         var usuario = (await AuthState).User;
         if (usuario.Identity?.IsAuthenticated == true)
         {
-            await UsuarioActual.Cargar(SesionUsuario.Id(usuario));
+            // El encabezado está fuera de ManejoErrores: si el API falla, se queda con el nombre de la sesión
+            // en lugar de romper la página
+            try
+            {
+                await UsuarioActual.Cargar(SesionUsuario.Id(usuario));
+            }
+            catch (Exception)
+            {
+            }
         }
         await Comparacion.Cargar();
         await Carrito.Cargar();

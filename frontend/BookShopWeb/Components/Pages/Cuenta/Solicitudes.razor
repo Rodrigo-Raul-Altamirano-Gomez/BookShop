@@ -36,7 +36,7 @@ else if (EnReportes)
             Libro libro = reporte.Resena.Libro;
             <article class="bk-panel">
                 <div class="d-flex align-items-start gap-3">
-                    <a href="libros/@libro.Id" class="flex-shrink-0" style="width:2.6rem" tabindex="-1"><BookCover Libro="libro" Pequena="true" /></a>
+                    <a href="libros/@libro.Id" class="flex-shrink-0" style="width:2.6rem"><BookCover Libro="libro" Pequena="true" /></a>
                     <div class="flex-grow-1">
                         <h2 class="h3 mb-1">Reseña en <a href="libros/@libro.Id">@libro.Titulo</a></h2>
                         <p class="small text-muted bk-num mb-2">Reportada el @Formato.Fecha(reporte.Fecha) · Motivo: @Etiquetas.Motivo(reporte.Motivo)</p>
@@ -71,7 +71,7 @@ else
         {
             <article class="bk-panel">
                 <div class="d-flex align-items-start gap-3">
-                    <a href="cuenta/pedidos/@solicitud.Pedido.Id" class="flex-shrink-0" tabindex="-1"><CoverStack Libros="solicitud.Pedido.Detalles.Select(d => d.Libro).ToList()" /></a>
+                    <a href="cuenta/pedidos/@solicitud.Pedido.Id" class="flex-shrink-0"><CoverStack Libros="solicitud.Pedido.Detalles.Select(d => d.Libro).ToList()" /></a>
                     <div class="flex-grow-1">
                         <h2 class="h3 mb-1">Pedido <a href="cuenta/pedidos/@solicitud.Pedido.Id">N.º @solicitud.Pedido.Id</a></h2>
                         <p class="small text-muted bk-num mb-2">Solicitada el @Formato.Fecha(solicitud.Fecha) · Motivo: @Etiquetas.Motivo(solicitud.Motivo)</p>

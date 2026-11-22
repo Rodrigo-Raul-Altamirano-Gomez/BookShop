@@ -2,7 +2,6 @@ package pe.edu.pucp.bookshop.bl.hilo;
 
 import pe.edu.pucp.bookshop.bl.CuponBL;
 import pe.edu.pucp.bookshop.bl.PedidoBL;
-import pe.edu.pucp.bookshop.bl.exception.BusinessLogicException;
 import pe.edu.pucp.bookshop.bl.impl.CuponBLImpl;
 import pe.edu.pucp.bookshop.bl.impl.PedidoBLImpl;
 
@@ -19,7 +18,7 @@ public class SeguimientoHilo extends Thread {
             try {
                 pedidoBL.avanzarSeguimiento();
                 cuponBL.emitirCupones();
-            } catch (BusinessLogicException ex) {
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
             try {

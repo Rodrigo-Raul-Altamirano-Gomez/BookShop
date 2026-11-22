@@ -112,10 +112,21 @@ public partial class AdminLibro
         }
         else
         {
-            await new HttpClientUtils<object>().Put($"libros/{Id}", edicion);
-            await RecargarLibro();
-            editando = false;
-            Aviso.Mostrar("Cambios guardados");
+            try
+            {
+                // Se envía el stock que se cargó al abrir la edición: si mientras tanto hubo ventas, no se pisa
+                await new HttpClientUtils<object>().Put($"libros/{Id}?stockAnterior={libro!.Stock}", edicion);
+                await RecargarLibro();
+                editando = false;
+                Aviso.Mostrar("Cambios guardados");
+            }
+            catch (ApiException ex) when (ex.Estado == 412)
+            {
+                // Sigue en edición con el stock actual, para que el administrador lo revise y vuelva a guardar
+                Aviso.Mostrar(ex.Message);
+                await RecargarLibro();
+                edicion.Stock = libro!.Stock;
+            }
         }
         guardando = false;
     }

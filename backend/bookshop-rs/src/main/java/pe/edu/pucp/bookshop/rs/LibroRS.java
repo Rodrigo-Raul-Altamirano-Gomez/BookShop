@@ -102,11 +102,12 @@ public class LibroRS {
         return libroBL.insertar(libro);
     }
 
+    // stockAnterior: el stock que tenía el libro al abrir la edición
     @PUT
     @Path("{id}")
-    public void modificar(@PathParam("id") int id, Libro libro) throws BusinessLogicException {
+    public void modificar(@PathParam("id") int id, @QueryParam("stockAnterior") int stockAnterior, Libro libro) throws BusinessLogicException {
         libro.setId(id);
-        libroBL.modificar(libro);
+        libroBL.modificar(libro, stockAnterior);
     }
 
     @PUT

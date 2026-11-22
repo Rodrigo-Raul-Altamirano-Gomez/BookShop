@@ -25,6 +25,6 @@ public interface LibroBL {
     ResultadoPagina<Libro> listarAdmin(String texto, String estado, int pagina, int tamano) throws BusinessLogicException;
     ConteoLibros contar() throws BusinessLogicException;
     Libro insertar(Libro libro) throws BusinessLogicException;
-    void modificar(Libro libro) throws BusinessLogicException;
+    void modificar(Libro libro, int stockAnterior) throws BusinessLogicException;
     void cambiarActivo(int id, boolean activo) throws BusinessLogicException;
 }

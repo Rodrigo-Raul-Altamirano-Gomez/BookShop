@@ -25,9 +25,9 @@ public class LibroDAOImpl implements LibroDAO {
     private static final String CONSULTA_LIBRO = """
         select l.id_libro, l.isbn, l.titulo, l.sinopsis, l.idioma, l.paginas, l.anio_publicacion,
                l.precio, l.stock, l.portada, l.activo, l.fecha_registro,
-               a.id_entidad as id_autor, a.nombre as nombre_autor,
-               c.id_entidad as id_categoria, c.nombre as nombre_categoria,
-               e.id_entidad as id_editorial, e.nombre as nombre_editorial,
+               a.id_entidad as id_autor, a.nombre as nombre_autor, a.activo as activo_autor,
+               c.id_entidad as id_categoria, c.nombre as nombre_categoria, c.activo as activo_categoria,
+               e.id_entidad as id_editorial, e.nombre as nombre_editorial, e.activo as activo_editorial,
                d.id_descuento, d.porcentaje, d.fecha_inicio, d.fecha_fin,
                (select avg(r.puntuacion) from resena r where r.fid_libro = l.id_libro and r.activa = 1) as promedio,
                (select count(*) from resena r where r.fid_libro = l.id_libro and r.activa = 1) as cantidad_resenas
@@ -38,9 +38,10 @@ public class LibroDAOImpl implements LibroDAO {
         left join descuento d on d.fid_libro = l.id_libro and ? between d.fecha_inicio and d.fecha_fin
     """;
 
+    // Los que se muestran en la tienda: el libro y sus tres referencias activos (RF04.2)
     @Override
     public List<Libro> listarActivos(LocalDate hoy) throws SQLException {
-        String sql = CONSULTA_LIBRO + " where l.activo = 1";
+        String sql = CONSULTA_LIBRO + " where l.activo = 1 and a.activo = 1 and c.activo = 1 and e.activo = 1";
         List<Libro> libros = new ArrayList<>();
         try (Connection con = DBManager.getInstance().getConnection();
              PreparedStatement pstm = con.prepareStatement(sql)) {
@@ -169,13 +170,14 @@ public class LibroDAOImpl implements LibroDAO {
         }
     }
 
-    // RN06: el autor, la categoría y la editorial no se actualizan
+    // RN06: el autor, la categoría y la editorial no se actualizan.
+    // Solo se actualiza si el stock sigue siendo stockAnterior; devuelve las filas actualizadas (0 si cambió)
     @Override
-    public void modificar(Libro libro) throws SQLException {
+    public int modificar(Libro libro, int stockAnterior) throws SQLException {
         String sql = """
             update libro set isbn = ?, titulo = ?, sinopsis = ?, idioma = ?, paginas = ?, anio_publicacion = ?,
                              precio = ?, stock = ?, portada = ?
-            where id_libro = ?
+            where id_libro = ? and stock = ?
         """;
         try (Connection con = DBManager.getInstance().getConnection();
              PreparedStatement pstm = con.prepareStatement(sql)) {
@@ -189,7 +191,8 @@ public class LibroDAOImpl implements LibroDAO {
             pstm.setInt(8, libro.getStock());
             pstm.setString(9, libro.getPortada());
             pstm.setInt(10, libro.getId());
-            pstm.executeUpdate();
+            pstm.setInt(11, stockAnterior);
+            return pstm.executeUpdate();
         }
     }
 
@@ -260,14 +263,17 @@ public class LibroDAOImpl implements LibroDAO {
         Entidad autor = new Entidad();
         autor.setId(rs.getInt("id_autor"));
         autor.setNombre(rs.getString("nombre_autor"));
+        autor.setActivo(rs.getBoolean("activo_autor"));
         libro.setAutor(autor);
         Entidad categoria = new Entidad();
         categoria.setId(rs.getInt("id_categoria"));
         categoria.setNombre(rs.getString("nombre_categoria"));
+        categoria.setActivo(rs.getBoolean("activo_categoria"));
         libro.setCategoria(categoria);
         Entidad editorial = new Entidad();
         editorial.setId(rs.getInt("id_editorial"));
         editorial.setNombre(rs.getString("nombre_editorial"));
+        editorial.setActivo(rs.getBoolean("activo_editorial"));
         libro.setEditorial(editorial);
 
         int idDescuento = rs.getInt("id_descuento");
