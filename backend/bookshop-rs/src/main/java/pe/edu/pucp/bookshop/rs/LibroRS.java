@@ -18,6 +18,8 @@ import pe.edu.pucp.bookshop.model.dto.ConteoLibros;
 import pe.edu.pucp.bookshop.model.dto.ResultadoLibros;
 import pe.edu.pucp.bookshop.model.dto.ResultadoPagina;
 
+import java.util.List;
+
 @Path("libros")
 @Produces("application/json")
 @Consumes("application/json")
@@ -40,6 +42,38 @@ public class LibroRS {
     @Path("entidad/{idEntidad}")
     public ResultadoLibros listarPorEntidad(@PathParam("idEntidad") int idEntidad, @BeanParam ParametrosLibros parametros) throws BusinessLogicException {
         return libroBL.listarPorEntidad(idEntidad, parametros.aFiltro());
+    }
+
+    // Recomendaciones (RF12–RF14), con los mismos parámetros que toda vista de resultados
+    @GET
+    @Path("mas-vendidos")
+    public ResultadoLibros listarMasVendidos(@BeanParam ParametrosLibros parametros) throws BusinessLogicException {
+        return libroBL.listarMasVendidos(parametros.aFiltro());
+    }
+
+    @GET
+    @Path("mas-populares")
+    public ResultadoLibros listarMasPopulares(@BeanParam ParametrosLibros parametros) throws BusinessLogicException {
+        return libroBL.listarMasPopulares(parametros.aFiltro());
+    }
+
+    @GET
+    @Path("para-ti/usuario/{idUsuario}")
+    public ResultadoLibros listarParaTi(@PathParam("idUsuario") int idUsuario, @BeanParam ParametrosLibros parametros) throws BusinessLogicException {
+        return libroBL.listarParaTi(idUsuario, parametros.aFiltro());
+    }
+
+    @GET
+    @Path("{id}/similares")
+    public ResultadoLibros listarSimilares(@PathParam("id") int id, @BeanParam ParametrosLibros parametros) throws BusinessLogicException {
+        return libroBL.listarSimilares(id, parametros.aFiltro());
+    }
+
+    // carrito: los ids de los libros del carrito (?carrito=1&carrito=5)
+    @GET
+    @Path("complementarios")
+    public ResultadoLibros listarComplementarios(@QueryParam("carrito") List<Integer> carrito, @BeanParam ParametrosLibros parametros) throws BusinessLogicException {
+        return libroBL.listarComplementarios(carrito, parametros.aFiltro());
     }
 
     @GET

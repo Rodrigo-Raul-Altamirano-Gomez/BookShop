@@ -14,6 +14,14 @@ public static class DocumentosEndpoints
             return Results.File(pdf, "application/pdf");
         }).RequireAuthorization();
 
+        // RF18 y RF19: reportes del administrador (tipo: libros o clientes; ?desde=&hasta=&limite=)
+        endpoints.MapGet("/reportes/{tipo}", async (string tipo, HttpContext context) =>
+        {
+            byte[] pdf = await new HttpClientUtils<object>().GetArchivo($"reportes/{tipo}{context.Request.QueryString}");
+            context.Response.Headers.ContentDisposition = $"inline; filename=\"reporte-{tipo}.pdf\"";
+            return Results.File(pdf, "application/pdf");
+        }).RequireAuthorization(politica => politica.RequireRole("ADMINISTRADOR"));
+
         return endpoints;
     }
 }

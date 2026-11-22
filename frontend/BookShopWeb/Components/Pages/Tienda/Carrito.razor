@@ -69,6 +69,24 @@
                 </div>
             </aside>
         </div>
+
+        @* RF11.6 y RF12.4–6: sugerencias complementarias; si no hay, la sección no se muestra *@
+        @if (complementarios == null || complementarios.Count > 0)
+        {
+            <ShelfSection Id="t-comp" Titulo="También suelen llevarse" Explicacion="Libros que suelen comprarse junto con los de tu carrito." VerTodosUrl="secciones/complementarios">
+                @if (complementarios == null)
+                {
+                    <PlaceholderLibros />
+                }
+                else
+                {
+                    @foreach (Libro libro in complementarios)
+                    {
+                        <div><BookCard Libro="libro" /></div>
+                    }
+                }
+            </ShelfSection>
+        }
     }
 </div>
 

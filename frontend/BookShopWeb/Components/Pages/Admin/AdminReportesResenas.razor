@@ -1,0 +1,63 @@
+@page "/admin/reportes-resenas"
+@layout AdminLayout
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+
+<PageTitle>Reportes de reseñas · Administración · BookShop</PageTitle>
+
+<div class="bk-page-head"><div><h1>Reportes de reseñas</h1><p class="small text-muted mb-0 mt-1">Reseñas que los clientes reportaron. También puedes ocultar cualquier reseña desde el detalle del libro.</p></div></div>
+
+<div style="max-width:52rem">
+    @if (resultado == null)
+    {
+        <div class="d-grid gap-3" aria-hidden="true">
+            @for (int i = 0; i < 2; i++)
+            {
+                <div class="bk-panel placeholder-glow"><span class="placeholder col-4 mb-2"></span><span class="placeholder col-10 mb-3"></span><span class="placeholder col-6"></span></div>
+            }
+        </div>
+    }
+    else if (resultado.Total == 0)
+    {
+        <div class="bk-panel"><EmptyState Titulo="No hay reportes pendientes." /></div>
+    }
+    else
+    {
+        <div class="d-grid gap-3">
+            @foreach (ReporteResena reporte in resultado.Elementos)
+            {
+                Libro libro = reporte.Resena.Libro;
+                <article class="bk-panel">
+                    <div class="d-flex gap-3">
+                        <a href="libros/@libro.Id" class="flex-shrink-0" style="width:3.25rem" tabindex="-1"><BookCover Libro="libro" Pequena="true" /></a>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                                <div>
+                                    <p class="bk-caption mb-1">Reseña en</p>
+                                    <a class="bk-line-title" href="libros/@libro.Id">@libro.Titulo</a>
+                                    <div class="small text-muted">Escrita por @reporte.Resena.Usuario.NombreCompleto · @Formato.Fecha(reporte.Resena.Fecha)</div>
+                                </div>
+                                <StatusBadge Texto="Pendiente" Tipo="warn" />
+                            </div>
+                            @* RF04.8: el contenido reportado, como estaba al reportarlo *@
+                            <blockquote class="bk-quote mb-3">
+                                <span role="img" aria-label="@reporte.PuntuacionReportada de 5 estrellas"><RatingStars Promedio="reporte.PuntuacionReportada" /></span>
+                                <p class="mb-0 mt-1">@reporte.ContenidoReportado</p>
+                            </blockquote>
+                            <div class="small"><strong>Reportado por @reporte.Usuario.NombreCompleto</strong> · Motivo: @Etiquetas.Motivo(reporte.Motivo)<div class="text-muted">@reporte.Comentario</div></div>
+                            <div class="d-flex gap-2 mt-3 pt-3 border-top" style="border-color:var(--bk-line)!important">
+                                <button type="button" class="btn btn-sm btn-primary" @onclick="() => PedirOcultar(reporte)">Ocultar reseña</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => PedirMantener(reporte)">Mantener visible</button>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            }
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <span class="small text-muted bk-num">@Rango()</span>
+            <Paginacion Pagina="Pagina ?? 1" TotalPaginas="TotalPaginas" Pequena="true" OnCambio="pagina => Navegacion.NavigateTo(Ruta(pagina))" />
+        </div>
+    }
+</div>
+
+<ConfirmModal @ref="confirmacion" OnConfirmar="Resolver" />

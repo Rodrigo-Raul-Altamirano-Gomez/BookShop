@@ -58,6 +58,17 @@ public record ResumenCompra
 // Para calcular el resumen basta con Items e IdCupon; para pagar va todo, con el resumen que vio el cliente
 public record SolicitudCompra(int IdUsuario, List<ItemCarrito> Items, int? IdDireccion, int? IdMetodoPago, int? IdCupon, ResumenCompra? Preparado);
 
+// Reseñas del detalle de un libro: la propia primero; el resumen cuenta solo las visibles.
+// Distribucion: cantidad de reseñas de 5, 4, 3, 2 y 1 estrellas.
+public record ResenasLibro
+{
+    public List<Resena> Resenas { get; init; } = new();
+    public double Promedio { get; init; }
+    public int Cantidad { get; init; }
+    public List<int> Distribucion { get; init; } = new();
+    public bool PuedeResenar { get; init; }
+}
+
 // Detalle de un pedido con lo que decide sus acciones (cancelar y devolver)
 public record PedidoDetalle
 {

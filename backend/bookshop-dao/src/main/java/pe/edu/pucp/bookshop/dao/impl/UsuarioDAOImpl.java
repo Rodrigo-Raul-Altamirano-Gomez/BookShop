@@ -12,6 +12,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UsuarioDAOImpl implements UsuarioDAO {
 
@@ -110,6 +112,26 @@ public class UsuarioDAOImpl implements UsuarioDAO {
             pstm.setInt(2, id);
             pstm.executeUpdate();
         }
+    }
+
+    @Override
+    public List<Usuario> listarPorRol(Rol rol) throws SQLException {
+        String sql = """
+            select id_usuario, correo, nombre_completo, fecha_nacimiento, contrasena, foto, rol, activo, fecha_registro
+            from usuario
+            where rol = ?
+        """;
+        List<Usuario> usuarios = new ArrayList<>();
+        try (Connection con = DBManager.getInstance().getConnection();
+             PreparedStatement pstm = con.prepareStatement(sql)) {
+            pstm.setString(1, rol.name());
+            try (ResultSet rs = pstm.executeQuery()) {
+                while (rs.next()) {
+                    usuarios.add(mapear(rs));
+                }
+            }
+        }
+        return usuarios;
     }
 
     private Usuario mapear(ResultSet rs) throws SQLException {

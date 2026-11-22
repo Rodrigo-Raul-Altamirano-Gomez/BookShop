@@ -1,24 +1,21 @@
 @page "/secciones/{Tipo}"
+@page "/secciones/similares/{LibroId:int}"
 
-@* "Ver todos" de las secciones de libros del inicio (UX-UI §8.7). En este incremento: Novedades. *@
-@if (Tipo == "novedades")
-{
-    <PageTitle>Novedades · BookShop</PageTitle>
-    <div class="container-xl pt-4">
-        <nav aria-label="Ruta"><ol class="breadcrumb bk-breadcrumb mb-2"><li class="breadcrumb-item"><a href="">Inicio</a></li><li class="breadcrumb-item active" aria-current="page">Novedades</li></ol></nav>
-        <h1 class="mb-1">Novedades</h1>
-        <p class="text-muted mb-4">Los libros agregados más recientemente al catálogo.</p>
-        <ResultsView Endpoint="libros/novedades" PermiteOrden="false" CriterioOrden="fecha de registro" SignificadoPeriodo="registro" />
-    </div>
-}
-else
+@* "Ver todos" de las secciones de libros (UX-UI §8.7): sin selector de orden, cada una con su criterio *@
+@if (noEncontrada)
 {
     <PageTitle>Página no encontrada · BookShop</PageTitle>
     <div class="container-xl pt-5">
         <EmptyState Titulo="No encontramos lo que buscas." Texto="Puede que el enlace esté mal escrito o que la página ya no exista." TextoAccion="Ir al catálogo" Url="catalogo" />
     </div>
 }
-
-@code {
-    [Parameter] public string Tipo { get; set; } = "";
+else if (endpoint != null)
+{
+    <PageTitle>@titulo · BookShop</PageTitle>
+    <div class="container-xl pt-4">
+        <nav aria-label="Ruta"><ol class="breadcrumb bk-breadcrumb mb-2"><li class="breadcrumb-item"><a href="">Inicio</a></li><li class="breadcrumb-item active" aria-current="page">@titulo</li></ol></nav>
+        <h1 class="mb-1">@titulo</h1>
+        <p class="text-muted mb-4">@explicacion</p>
+        <ResultsView Endpoint="@endpoint" PermiteOrden="false" CriterioOrden="@criterio" SignificadoPeriodo="@periodo" />
+    </div>
 }

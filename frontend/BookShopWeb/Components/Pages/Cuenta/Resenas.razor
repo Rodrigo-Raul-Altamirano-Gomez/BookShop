@@ -1,0 +1,47 @@
+@page "/cuenta/resenas"
+@layout AccountLayout
+@attribute [Authorize(Roles = "CLIENTE")]
+
+<PageTitle>Mis reseñas · BookShop</PageTitle>
+
+@* RF10.3 (UX-UI §9.8): libro, puntuación, fecha y comentario *@
+<div class="bk-page-head"><h1>Mis reseñas</h1></div>
+
+@if (resenas == null)
+{
+    <div class="bk-panel placeholder-glow" aria-hidden="true">
+        @for (int i = 0; i < 3; i++)
+        {
+            <div class="d-flex gap-3 py-3"><div class="bk-cover placeholder" style="width:3.5rem;box-shadow:none"></div><div class="flex-grow-1"><span class="placeholder col-5 mb-2"></span><span class="placeholder col-2 mb-2"></span><span class="placeholder col-10"></span></div></div>
+        }
+    </div>
+}
+else if (resenas.Count == 0)
+{
+    <div class="bk-panel"><EmptyState Titulo="No has escrito reseñas." Texto="Puedes reseñar los libros de tus pedidos entregados desde su página." /></div>
+}
+else
+{
+    <div class="bk-panel py-0">
+        @foreach (Resena resena in resenas)
+        {
+            <div class="bk-line" style="grid-template-columns:3.5rem 1fr">
+                <a href="libros/@resena.Libro.Id" tabindex="-1" aria-hidden="true"><BookCover Libro="resena.Libro" Pequena="true" /></a>
+                <div>
+                    <div class="d-flex align-items-baseline gap-3">
+                        <a class="bk-line-title" href="libros/@resena.Libro.Id">@resena.Libro.Titulo</a>
+                        <span class="ms-auto" role="img" aria-label="@resena.Puntuacion de 5 estrellas"><RatingStars Promedio="resena.Puntuacion" /></span>
+                    </div>
+                    <div class="small text-muted bk-num mb-2">
+                        @Formato.Fecha(resena.Fecha)
+                        @if (!resena.Activa)
+                        {
+                            <StatusBadge Texto="Oculta" />
+                        }
+                    </div>
+                    <p class="mb-0">@resena.Comentario</p>
+                </div>
+            </div>
+        }
+    </div>
+}

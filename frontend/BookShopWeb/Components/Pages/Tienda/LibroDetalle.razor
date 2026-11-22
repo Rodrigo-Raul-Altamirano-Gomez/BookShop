@@ -67,6 +67,18 @@ else
                     </div>
                 }
                 <div class="d-flex gap-2 mt-3">
+                    @* RF06.1: Deseados y Favoritos son independientes (botones alternables, UX-UI §6.1) *@
+                    @if (!esAdmin)
+                    {
+                        bool enFavoritos = listas.Contains(TipoLista.FAVORITOS);
+                        bool enDeseados = listas.Contains(TipoLista.DESEADOS);
+                        <button type="button" class="btn btn-sm btn-outline-primary" aria-pressed="@(enFavoritos ? "true" : "false")" disabled="@(cambiandoLista != null)" @onclick="() => AlternarLista(TipoLista.FAVORITOS)">
+                            <i class="bi @(enFavoritos ? "bi-heart-fill" : "bi-heart") me-1"></i>@(enFavoritos ? "En favoritos" : "Favoritos")
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" aria-pressed="@(enDeseados ? "true" : "false")" disabled="@(cambiandoLista != null)" @onclick="() => AlternarLista(TipoLista.DESEADOS)">
+                            <i class="bi @(enDeseados ? "bi-bookmark-fill" : "bi-bookmark") me-1"></i>@(enDeseados ? "En deseados" : "Deseados")
+                        </button>
+                    }
                     <button type="button" class="btn btn-sm btn-outline-primary" @onclick="Comparar"><i class="bi bi-layout-split me-1"></i>Comparar</button>
                 </div>
                 <hr class="bk-divider">
@@ -80,5 +92,168 @@ else
                 </dl>
             </div>
         </div>
+
+        @* Reseñas (RF10, UX-UI §8.3) *@
+        <section id="resenas" class="mt-5 pt-3" aria-labelledby="t-res">
+            <div class="bk-shelf-head"><h2 id="t-res">Reseñas</h2></div>
+            @if (resenas == null)
+            {
+                <div class="row g-5 placeholder-glow" aria-hidden="true">
+                    <div class="col-4"><span class="placeholder placeholder-lg col-4 mb-2"></span><span class="placeholder col-8 mb-3"></span><span class="placeholder col-12" style="height:6rem"></span></div>
+                    <div class="col-8"><span class="placeholder col-12 mb-2"></span><span class="placeholder col-10 mb-4"></span><span class="placeholder col-12 mb-2"></span><span class="placeholder col-9"></span></div>
+                </div>
+            }
+            else
+            {
+                <div class="row g-5">
+                    <div class="col-4">
+                        <div class="d-flex align-items-baseline gap-2"><span class="bk-num" style="font-family:var(--bk-font-serif);font-size:3rem;font-weight:500;line-height:1">@resenas.Promedio.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)</span><span class="text-muted">de 5</span></div>
+                        <RatingStars Promedio="resenas.Promedio" Clase="fs-5 my-1 d-block" />
+                        <p class="small text-muted">@resenas.Cantidad @(resenas.Cantidad == 1 ? "reseña" : "reseñas")</p>
+                        <div class="bk-dist mt-3" aria-label="Distribución de puntuaciones">
+                            @for (int i = 0; i < 5; i++)
+                            {
+                                int cantidadEstrellas = resenas.Distribucion[i];
+                                int ancho = resenas.Cantidad > 0 ? cantidadEstrellas * 100 / resenas.Cantidad : 0;
+                                <span>@(5 - i)</span><span class="bar"><span style="width:@(ancho)%"></span></span><span class="bk-num text-muted">@cantidadEstrellas</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-8">
+                        @if (resenas.PuedeResenar || editando != null)
+                        {
+                            <form class="bk-panel mb-4" aria-labelledby="t-form" @onsubmit="GuardarResena">
+                                <h3 id="t-form" class="mb-3">@(editando != null ? "Editar tu reseña" : "Escribe tu reseña")</h3>
+                                <fieldset class="mb-3">
+                                    <legend class="form-label">Tu puntuación</legend>
+                                    <div class="bk-rating-input">
+                                        @for (int estrellas = 5; estrellas >= 1; estrellas--)
+                                        {
+                                            int valor = estrellas;
+                                            <input type="radio" name="p" id="p@(valor)" checked="@(puntuacion == valor)" @onchange="() => puntuacion = valor" />
+                                            <label for="p@(valor)" aria-label="@valor de 5 estrellas">★</label>
+                                        }
+                                    </div>
+                                </fieldset>
+                                <label class="form-label" for="c-res">Comentario</label>
+                                <textarea class="form-control mb-3" id="c-res" rows="3" required maxlength="2000" placeholder="¿Qué te pareció el libro?" @bind="comentario"></textarea>
+                                <div class="d-flex justify-content-end gap-2">
+                                    @if (editando != null)
+                                    {
+                                        <button type="button" class="btn btn-outline-secondary" disabled="@guardandoResena" @onclick="() => editando = null">Cancelar</button>
+                                    }
+                                    <button type="submit" class="btn btn-primary" disabled="@guardandoResena">
+                                        @if (guardandoResena)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                                        }
+                                        @(editando != null ? "Guardar cambios" : "Publicar reseña")
+                                    </button>
+                                </div>
+                            </form>
+                        }
+                        @if (resenas.Resenas.Count == 0)
+                        {
+                            <p class="text-muted">Aún no hay reseñas de este libro.</p>
+                        }
+                        @foreach (Resena resena in ResenasVisibles())
+                        {
+                            bool propia = resena.Usuario.Id == idUsuario;
+                            if (propia && editando != null) continue;
+                            <article class="bk-review" style="@(resena.Activa ? "" : "background:var(--bk-sunken);margin:0 -1rem;padding-left:1rem;padding-right:1rem;border-radius:var(--bk-radius)")">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <Avatar Usuario="resena.Usuario" />
+                                    <div>
+                                        <strong>@resena.Usuario.NombreCompleto@(propia ? " · tu reseña" : "")</strong>
+                                        @if (!resena.Activa)
+                                        {
+                                            <StatusBadge Texto="Oculta" />
+                                        }
+                                        <div class="small text-muted bk-num">@Formato.Fecha(resena.Fecha)</div>
+                                    </div>
+                                    <span class="ms-auto" role="img" aria-label="@resena.Puntuacion de 5 estrellas"><RatingStars Promedio="resena.Puntuacion" /></span>
+                                </div>
+                                <p class="mb-2">@resena.Comentario</p>
+                                <div class="d-flex gap-3 small">
+                                    @if (propia)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-link text-decoration-none" @onclick="() => EditarResena(resena)">Editar</button>
+                                        <button type="button" class="btn btn-sm btn-link text-decoration-none text-danger" @onclick="PedirEliminarResena">Eliminar</button>
+                                    }
+                                    else if (esAdmin)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" disabled="@(moderando == resena.Id)" @onclick="() => CambiarVisibilidad(resena)">@(resena.Activa ? "Ocultar" : "Mostrar")</button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-sm btn-link text-decoration-none" aria-pressed="@(resena.VotadaPorMi ? "true" : "false")" disabled="@(votando == resena.Id)" @onclick="() => AlternarVoto(resena)">
+                                            <i class="bi @(resena.VotadaPorMi ? "bi-hand-thumbs-up-fill" : "bi-hand-thumbs-up") me-1"></i>Útil (@resena.VotosUtiles)
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-link text-decoration-none text-muted" @onclick="() => AbrirReporte(resena)"><i class="bi bi-flag me-1"></i>Reportar</button>
+                                    }
+                                </div>
+                            </article>
+                        }
+                        @if (ResenasRestantes() > 0)
+                        {
+                            <button type="button" class="btn btn-outline-secondary w-100 mt-3" @onclick="() => visibles += 5">Ver más reseñas (@ResenasRestantes())</button>
+                        }
+                    </div>
+                </div>
+            }
+        </section>
+
+        @* Libros similares (RF12.1–3) *@
+        @if (similares == null || similares.Count > 0)
+        {
+            <ShelfSection Id="t-sim" Titulo="Libros similares" VerTodosUrl="@($"secciones/similares/{libro.Id}")">
+                @if (similares == null)
+                {
+                    <PlaceholderLibros />
+                }
+                else
+                {
+                    @foreach (Libro similar in similares)
+                    {
+                        <div><BookCard Libro="similar" /></div>
+                    }
+                }
+            </ShelfSection>
+        }
     </div>
 }
+
+@* Reportar una reseña ajena (RF10.6) *@
+<div class="modal fade" id="m-reportar" tabindex="-1" aria-labelledby="m-reportar-t" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content p-2" @onsubmit="EnviarReporte">
+            <div class="modal-header border-0 pb-0"><h2 class="modal-title h3" id="m-reportar-t">Reportar reseña</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+            <div class="modal-body">
+                <fieldset class="mb-3">
+                    <legend class="form-label">Motivo</legend>
+                    @foreach (MotivoReporte opcion in Enum.GetValues<MotivoReporte>())
+                    {
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="mot-rep" id="mr-@opcion" checked="@(motivoReporte == opcion)" @onchange="() => motivoReporte = opcion" />
+                            <label class="form-check-label" for="mr-@opcion">@Etiquetas.Motivo(opcion)</label>
+                        </div>
+                    }
+                </fieldset>
+                <label class="form-label" for="rc">Comentario</label>
+                <textarea class="form-control" id="rc" rows="3" required maxlength="1000" placeholder="Cuéntanos qué está mal con esta reseña" @bind="comentarioReporte"></textarea>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" disabled="@enviandoReporte">Cancelar</button>
+                <button type="submit" class="btn btn-primary" disabled="@enviandoReporte">
+                    @if (enviandoReporte)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                    }
+                    Enviar reporte
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<ConfirmModal @ref="confirmacion" Titulo="¿Eliminar tu reseña?" Mensaje="Se quitará tu reseña de este libro." TextoAccion="Sí, eliminar" Peligro="true" OnConfirmar="EliminarResena" />

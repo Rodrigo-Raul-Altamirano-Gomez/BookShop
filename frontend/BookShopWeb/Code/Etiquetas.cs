@@ -47,6 +47,14 @@ public static class Etiquetas
         _ => "Otro"
     };
 
+    public static string Motivo(MotivoReporte motivo) => motivo switch
+    {
+        MotivoReporte.OFENSIVA => "Ofensiva",
+        MotivoReporte.SPAM => "Spam",
+        MotivoReporte.NO_RELACIONADA => "No relacionada con el libro",
+        _ => "Otro"
+    };
+
     // Método de pago con su número enmascarado: "Tarjeta •••• •••• •••• 4821" o "Yape ••••• 4321"
     public static string MetodoPago(MetodoPago metodo)
     {

@@ -27,21 +27,26 @@
 </section>
 
 <div class="container-xl">
-    @if (novedades == null || novedades.Count > 0)
+    @* RF07.3: los estantes de 8 libros; uno vacío no se muestra (UX-UI §6.8) *@
+    @foreach (Estante estante in estantes)
     {
-        <ShelfSection Id="s-nov" Titulo="Novedades" VerTodosUrl="secciones/novedades">
-            @if (novedades == null)
-            {
-                <PlaceholderLibros />
-            }
-            else
-            {
-                @foreach (Libro libro in novedades)
+        List<Libro>? libros = librosEstante.GetValueOrDefault(estante.Tipo);
+        @if (libros == null || libros.Count > 0)
+        {
+            <ShelfSection Id="@("s-" + estante.Tipo)" Titulo="@estante.Titulo" Explicacion="@estante.Explicacion" VerTodosUrl="@("secciones/" + estante.Tipo)">
+                @if (libros == null)
                 {
-                    <div><BookCard Libro="libro" /></div>
+                    <PlaceholderLibros />
                 }
-            }
-        </ShelfSection>
+                else
+                {
+                    @foreach (Libro libro in libros)
+                    {
+                        <div><BookCard Libro="libro" /></div>
+                    }
+                }
+            </ShelfSection>
+        }
     }
 
     <section class="mt-5 pt-2" aria-labelledby="s-exp">

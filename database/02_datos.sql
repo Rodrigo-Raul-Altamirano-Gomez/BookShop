@@ -10,17 +10,35 @@ INSERT INTO usuario (id_usuario, correo, nombre_completo, fecha_nacimiento, cont
 (1, 'admin@admin.bookshop', 'Administrador BookShop', '1990-01-15', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', NULL, 'ADMINISTRADOR', 1, '2025-01-10 09:00:00'),
 (2, 'ana@correo.com',  'Ana Torres Vega',     '1996-04-12', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', NULL, 'CLIENTE', 1, '2025-02-03 10:30:00'),
 (3, 'luis@correo.com', 'Luis Paredes Ríos',   '1989-09-30', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', NULL, 'CLIENTE', 1, '2025-05-21 18:10:00'),
-(4, 'rosa@correo.com', 'Rosa Medina Salas',   '2000-12-02', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', NULL, 'CLIENTE', 0, '2025-08-14 12:45:00');
+(4, 'rosa@correo.com', 'Rosa Medina Salas',   '2000-12-02', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', NULL, 'CLIENTE', 0, '2025-08-14 12:45:00'),
+(5, 'carla@correo.com',  'Carla Mendoza Ruiz',     '1994-07-21', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', NULL, 'CLIENTE', 1, '2025-03-11 09:20:00'),
+(6, 'jorge@correo.com',  'Jorge Salinas Paz',      '1985-02-14', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', NULL, 'CLIENTE', 1, '2025-04-02 16:05:00'),
+(7, 'lucia@correo.com',  'Lucía Romero Díaz',      '1999-11-03', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', NULL, 'CLIENTE', 1, '2025-06-18 11:40:00'),
+(8, 'martin@correo.com', 'Martín Vega Soto',       '1991-05-30', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', NULL, 'CLIENTE', 1, '2025-09-09 20:15:00'),
+(9, 'sofia@correo.com',  'Sofía Herrera León',     '2001-08-08', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', NULL, 'CLIENTE', 1, '2026-01-20 13:30:00'),
+(10, 'andres@correo.com', 'Andrés Castillo Ugarte', '1997-03-17', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', NULL, 'CLIENTE', 1, '2026-10-01 10:00:00');
 
 INSERT INTO direccion (fid_usuario, alias, direccion, distrito, ciudad, predeterminada, activa) VALUES
 (2, 'Casa',    'Jr. Domeyer 214',            'Barranco',   'Lima', 1, 1),
 (2, 'Oficina', 'Av. Javier Prado Este 1580', 'San Isidro', 'Lima', 0, 1),
-(3, 'Casa',    'Av. Brasil 1250',            'Jesús María', 'Lima', 1, 1);
+(3, 'Casa',    'Av. Brasil 1250',            'Jesús María', 'Lima', 1, 1),
+(4, 'Casa',    'Calle Los Pinos 340',        'Surco',       'Lima', 1, 1),
+(5, 'Casa',    'Av. Arequipa 2890',          'Lince',       'Lima', 1, 1),
+(6, 'Casa',    'Jr. Huallaga 512',           'Cercado',     'Lima', 1, 1),
+(7, 'Casa',    'Calle Tarata 160',           'Miraflores',  'Lima', 1, 1),
+(8, 'Casa',    'Av. La Marina 2355',         'San Miguel',  'Lima', 1, 1),
+(9, 'Casa',    'Av. Universitaria 1801',     'San Martín de Porres', 'Lima', 1, 1);
 
 INSERT INTO metodo_pago (fid_usuario, tipo, titular, numero, fecha_vencimiento, proveedor, predeterminado, activo) VALUES
 (2, 'TARJETA',   'Ana Torres',   '4111222233334821', '08/28', NULL,   1, 1),
 (2, 'BILLETERA', 'Ana Torres',   '987654321',        NULL,    'Yape', 0, 1),
-(3, 'TARJETA',   'Luis Paredes', '5500111122223344', '11/27', NULL,   1, 1);
+(3, 'TARJETA',   'Luis Paredes', '5500111122223344', '11/27', NULL,   1, 1),
+(4, 'TARJETA',   'Rosa Medina',    '4000123412341111', '03/28', NULL,   1, 1),
+(5, 'TARJETA',   'Carla Mendoza',  '4000123412342222', '06/29', NULL,   1, 1),
+(6, 'BILLETERA', 'Jorge Salinas',  '912345678',        NULL,    'Plin', 1, 1),
+(7, 'TARJETA',   'Lucía Romero',   '4000123412343333', '01/28', NULL,   1, 1),
+(8, 'BILLETERA', 'Martín Vega',    '923456789',        NULL,    'Yape', 1, 1),
+(9, 'TARJETA',   'Sofía Herrera',  '4000123412344444', '10/30', NULL,   1, 1);
 
 -- Autores
 INSERT INTO entidad (id_entidad, tipo, nombre, descripcion, imagen, activo) VALUES
@@ -185,3 +203,107 @@ INSERT INTO solicitud_devolucion (fid_pedido, motivo, comentario, estado, fecha)
 (1006, 'PRODUCTO_DANADO',     'El libro llegó con la tapa doblada y varias páginas manchadas.', 'ACEPTADA',  NOW() - INTERVAL 43 DAY),
 (1009, 'YA_NO_LO_QUIERO',     'Me regalaron el mismo libro antes de que llegara el pedido.',    'RECHAZADA', NOW() - INTERVAL 8 DAY),
 (1013, 'PRODUCTO_EQUIVOCADO', 'Recibí otra edición distinta a la que pedí.',                     'PENDIENTE', NOW() - INTERVAL 1 DAY);
+
+-- Historial de otros clientes, para que las recomendaciones y los reportes muestren resultados.
+-- Cada uno tiene sus gustos (fantasía, historia, poesía, viajes) y comparten libros con Ana.
+-- Los importes se calculan al final con los precios de los libros. Ninguno está contado para cupón:
+-- al arrancar, el hilo cuenta los que corresponden y emite los cupones (RN10).
+INSERT INTO pedido (id_pedido, fid_usuario, fid_direccion, fid_metodo_pago, fid_cupon, estado, fecha_compra, fecha_salida, fecha_entrega,
+                    fecha_cancelacion, fecha_devolucion, codigo_transaccion, codigo_seguimiento, subtotal, descuento_cupon, costo_envio, total, contado_para_cupon) VALUES
+(1014, 5, 5, 5, NULL, 'ENTREGADO', NOW() - INTERVAL 80 DAY, NOW() - INTERVAL 80 DAY + INTERVAL 2 MINUTE, NOW() - INTERVAL 80 DAY + INTERVAL 4 MINUTE, NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 80 DAY, '%Y%m%d'), '-5A14'), 'SG-C5A1-1014', 0, 0, 10.00, 0, 0),
+(1015, 5, 5, 5, NULL, 'ENTREGADO', NOW() - INTERVAL 50 DAY, NOW() - INTERVAL 50 DAY + INTERVAL 2 MINUTE, NOW() - INTERVAL 50 DAY + INTERVAL 4 MINUTE, NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 50 DAY, '%Y%m%d'), '-5A15'), 'SG-C5A2-1015', 0, 0, 10.00, 0, 0),
+(1016, 5, 5, 5, NULL, 'ENTREGADO', NOW() - INTERVAL 25 DAY, NOW() - INTERVAL 25 DAY + INTERVAL 2 MINUTE, NOW() - INTERVAL 25 DAY + INTERVAL 4 MINUTE, NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 25 DAY, '%Y%m%d'), '-5A16'), 'SG-C5A3-1016', 0, 0, 10.00, 0, 0),
+(1017, 5, 5, 5, NULL, 'ENTREGADO', NOW() - INTERVAL 8 DAY,  NOW() - INTERVAL 8 DAY + INTERVAL 2 MINUTE,  NOW() - INTERVAL 8 DAY + INTERVAL 4 MINUTE,  NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 8 DAY, '%Y%m%d'), '-5A17'),  'SG-C5A4-1017', 0, 0, 10.00, 0, 0),
+(1018, 6, 6, 6, NULL, 'ENTREGADO', NOW() - INTERVAL 90 DAY, NOW() - INTERVAL 90 DAY + INTERVAL 2 MINUTE, NOW() - INTERVAL 90 DAY + INTERVAL 4 MINUTE, NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 90 DAY, '%Y%m%d'), '-6B18'), 'SG-J6B1-1018', 0, 0, 10.00, 0, 0),
+(1019, 6, 6, 6, NULL, 'ENTREGADO', NOW() - INTERVAL 60 DAY, NOW() - INTERVAL 60 DAY + INTERVAL 2 MINUTE, NOW() - INTERVAL 60 DAY + INTERVAL 4 MINUTE, NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 60 DAY, '%Y%m%d'), '-6B19'), 'SG-J6B2-1019', 0, 0, 10.00, 0, 0),
+(1020, 6, 6, 6, NULL, 'ENTREGADO', NOW() - INTERVAL 35 DAY, NOW() - INTERVAL 35 DAY + INTERVAL 2 MINUTE, NOW() - INTERVAL 35 DAY + INTERVAL 4 MINUTE, NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 35 DAY, '%Y%m%d'), '-6B20'), 'SG-J6B3-1020', 0, 0, 10.00, 0, 0),
+(1021, 6, 6, 6, NULL, 'ENTREGADO', NOW() - INTERVAL 12 DAY, NOW() - INTERVAL 12 DAY + INTERVAL 2 MINUTE, NOW() - INTERVAL 12 DAY + INTERVAL 4 MINUTE, NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 12 DAY, '%Y%m%d'), '-6B21'), 'SG-J6B4-1021', 0, 0, 10.00, 0, 0),
+(1022, 6, 6, 6, NULL, 'CANCELADO', NOW() - INTERVAL 20 DAY, NULL, NULL, NOW() - INTERVAL 20 DAY + INTERVAL 1 MINUTE, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 20 DAY, '%Y%m%d'), '-6B22'), 'SG-J6B5-1022', 0, 0, 10.00, 0, 0),
+(1023, 7, 7, 7, NULL, 'ENTREGADO', NOW() - INTERVAL 70 DAY, NOW() - INTERVAL 70 DAY + INTERVAL 2 MINUTE, NOW() - INTERVAL 70 DAY + INTERVAL 4 MINUTE, NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 70 DAY, '%Y%m%d'), '-7C23'), 'SG-L7C1-1023', 0, 0, 10.00, 0, 0),
+(1024, 7, 7, 7, NULL, 'ENTREGADO', NOW() - INTERVAL 45 DAY, NOW() - INTERVAL 45 DAY + INTERVAL 2 MINUTE, NOW() - INTERVAL 45 DAY + INTERVAL 4 MINUTE, NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 45 DAY, '%Y%m%d'), '-7C24'), 'SG-L7C2-1024', 0, 0, 10.00, 0, 0),
+(1025, 7, 7, 7, NULL, 'ENTREGADO', NOW() - INTERVAL 20 DAY, NOW() - INTERVAL 20 DAY + INTERVAL 2 MINUTE, NOW() - INTERVAL 20 DAY + INTERVAL 4 MINUTE, NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 20 DAY, '%Y%m%d'), '-7C25'), 'SG-L7C3-1025', 0, 0, 10.00, 0, 0),
+(1026, 7, 7, 7, NULL, 'ENTREGADO', NOW() - INTERVAL 6 DAY,  NOW() - INTERVAL 6 DAY + INTERVAL 2 MINUTE,  NOW() - INTERVAL 6 DAY + INTERVAL 4 MINUTE,  NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 6 DAY, '%Y%m%d'), '-7C26'),  'SG-L7C4-1026', 0, 0, 10.00, 0, 0),
+(1027, 8, 8, 8, NULL, 'ENTREGADO', NOW() - INTERVAL 75 DAY, NOW() - INTERVAL 75 DAY + INTERVAL 2 MINUTE, NOW() - INTERVAL 75 DAY + INTERVAL 4 MINUTE, NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 75 DAY, '%Y%m%d'), '-8D27'), 'SG-M8D1-1027', 0, 0, 10.00, 0, 0),
+(1028, 8, 8, 8, NULL, 'ENTREGADO', NOW() - INTERVAL 40 DAY, NOW() - INTERVAL 40 DAY + INTERVAL 2 MINUTE, NOW() - INTERVAL 40 DAY + INTERVAL 4 MINUTE, NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 40 DAY, '%Y%m%d'), '-8D28'), 'SG-M8D2-1028', 0, 0, 10.00, 0, 0),
+(1029, 8, 8, 8, NULL, 'ENTREGADO', NOW() - INTERVAL 18 DAY, NOW() - INTERVAL 18 DAY + INTERVAL 2 MINUTE, NOW() - INTERVAL 18 DAY + INTERVAL 4 MINUTE, NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 18 DAY, '%Y%m%d'), '-8D29'), 'SG-M8D3-1029', 0, 0, 10.00, 0, 0),
+(1030, 8, 8, 8, NULL, 'ENTREGADO', NOW() - INTERVAL 4 DAY,  NOW() - INTERVAL 4 DAY + INTERVAL 2 MINUTE,  NOW() - INTERVAL 4 DAY + INTERVAL 4 MINUTE,  NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 4 DAY, '%Y%m%d'), '-8D30'),  'SG-M8D4-1030', 0, 0, 10.00, 0, 0),
+(1031, 9, 9, 9, NULL, 'ENTREGADO', NOW() - INTERVAL 55 DAY, NOW() - INTERVAL 55 DAY + INTERVAL 2 MINUTE, NOW() - INTERVAL 55 DAY + INTERVAL 4 MINUTE, NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 55 DAY, '%Y%m%d'), '-9E31'), 'SG-S9E1-1031', 0, 0, 10.00, 0, 0),
+(1032, 9, 9, 9, NULL, 'ENTREGADO', NOW() - INTERVAL 30 DAY, NOW() - INTERVAL 30 DAY + INTERVAL 2 MINUTE, NOW() - INTERVAL 30 DAY + INTERVAL 4 MINUTE, NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 30 DAY, '%Y%m%d'), '-9E32'), 'SG-S9E2-1032', 0, 0, 10.00, 0, 0),
+(1033, 9, 9, 9, NULL, 'ENTREGADO', NOW() - INTERVAL 10 DAY, NOW() - INTERVAL 10 DAY + INTERVAL 2 MINUTE, NOW() - INTERVAL 10 DAY + INTERVAL 4 MINUTE, NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 10 DAY, '%Y%m%d'), '-9E33'), 'SG-S9E3-1033', 0, 0, 10.00, 0, 0),
+(1034, 9, 9, 9, NULL, 'ENTREGADO', NOW() - INTERVAL 2 DAY,  NOW() - INTERVAL 2 DAY + INTERVAL 2 MINUTE,  NOW() - INTERVAL 2 DAY + INTERVAL 4 MINUTE,  NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 2 DAY, '%Y%m%d'), '-9E34'),  'SG-S9E4-1034', 0, 0, 10.00, 0, 0),
+(1035, 4, 4, 4, NULL, 'ENTREGADO', NOW() - INTERVAL 150 DAY, NOW() - INTERVAL 150 DAY + INTERVAL 2 MINUTE, NOW() - INTERVAL 150 DAY + INTERVAL 4 MINUTE, NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 150 DAY, '%Y%m%d'), '-4F35'), 'SG-R4F1-1035', 0, 0, 10.00, 0, 0);
+
+-- Una unidad de cada libro, a su precio actual y sin descuento
+INSERT INTO detalle_pedido (fid_pedido, fid_libro, cantidad, precio_unitario, descuento_unitario, subtotal)
+SELECT p.id, l.id_libro, 1, l.precio, 0, l.precio
+FROM (SELECT 1014 AS id, 3 AS libro UNION ALL SELECT 1014, 10 UNION ALL SELECT 1015, 18 UNION ALL SELECT 1015, 25
+      UNION ALL SELECT 1016, 1 UNION ALL SELECT 1016, 16 UNION ALL SELECT 1017, 36 UNION ALL SELECT 1017, 2
+      UNION ALL SELECT 1018, 6 UNION ALL SELECT 1018, 21 UNION ALL SELECT 1019, 13 UNION ALL SELECT 1019, 34
+      UNION ALL SELECT 1020, 12 UNION ALL SELECT 1020, 27 UNION ALL SELECT 1021, 4 UNION ALL SELECT 1021, 19
+      UNION ALL SELECT 1022, 37 UNION ALL SELECT 1023, 7 UNION ALL SELECT 1023, 14 UNION ALL SELECT 1024, 15
+      UNION ALL SELECT 1024, 20 UNION ALL SELECT 1025, 5 UNION ALL SELECT 1025, 29 UNION ALL SELECT 1026, 32
+      UNION ALL SELECT 1026, 23 UNION ALL SELECT 1027, 1 UNION ALL SELECT 1027, 2 UNION ALL SELECT 1028, 3
+      UNION ALL SELECT 1028, 18 UNION ALL SELECT 1029, 11 UNION ALL SELECT 1029, 17 UNION ALL SELECT 1030, 8
+      UNION ALL SELECT 1030, 26 UNION ALL SELECT 1031, 9 UNION ALL SELECT 1031, 24 UNION ALL SELECT 1032, 35
+      UNION ALL SELECT 1032, 1 UNION ALL SELECT 1033, 2 UNION ALL SELECT 1033, 11 UNION ALL SELECT 1034, 16
+      UNION ALL SELECT 1035, 28 UNION ALL SELECT 1035, 31) p
+JOIN libro l ON l.id_libro = p.libro;
+
+UPDATE pedido p
+JOIN (SELECT fid_pedido, SUM(subtotal) AS suma FROM detalle_pedido GROUP BY fid_pedido) d ON d.fid_pedido = p.id_pedido
+SET p.subtotal = d.suma, p.total = d.suma + p.costo_envio
+WHERE p.id_pedido >= 1014;
+
+-- Reseñas de libros entregados. La 27 está oculta por moderación (su reporte fue aceptado).
+INSERT INTO resena (id_resena, fid_usuario, fid_libro, puntuacion, comentario, fecha, activa) VALUES
+(1,  2, 2,  5, 'Una novela luminosa sobre la costa y la familia. El último capítulo es perfecto.', NOW() - INTERVAL 95 DAY, 1),
+(2,  2, 3,  4, 'Mapas imposibles y una prosa muy cuidada. El ritmo decae un poco a la mitad.', NOW() - INTERVAL 70 DAY, 1),
+(3,  2, 6,  4, 'Divulgación cercana y bien documentada. Se lee como una novela.', NOW() - INTERVAL 110 DAY, 1),
+(4,  2, 13, 3, 'Interesante, aunque esperaba más profundidad en los capítulos finales.', NOW() - INTERVAL 100 DAY, 1),
+(5,  2, 10, 5, 'La mejor fantasía que leí este año. La biblioteca es un personaje más.', NOW() - INTERVAL 15 DAY, 1),
+(6,  3, 25, 4, 'Buena precuela: explica muy bien el origen de la biblioteca.', NOW() - INTERVAL 25 DAY, 1),
+(7,  3, 26, 3, 'La idea es original, pero algunos capítulos se repiten.', NOW() - INTERVAL 24 DAY, 1),
+(8,  5, 3,  5, 'Me atrapó desde el primer capítulo. Quiero leer la segunda parte ya.', NOW() - INTERVAL 75 DAY, 1),
+(9,  5, 10, 5, 'Emocionante y tierna a la vez. Ideal para quien ama los libros.', NOW() - INTERVAL 74 DAY, 1),
+(10, 5, 18, 4, 'Continúa bien la historia del cartógrafo, aunque el final queda abierto.', NOW() - INTERVAL 45 DAY, 1),
+(11, 5, 1,  5, 'Una casa llena de secretos. La estructura por habitaciones funciona muy bien.', NOW() - INTERVAL 20 DAY, 1),
+(12, 5, 16, 4, 'Muy bien escrita: el desierto se siente en cada página.', NOW() - INTERVAL 19 DAY, 1),
+(13, 6, 6,  5, 'Un ensayo histórico excelente sobre un tema poco tratado.', NOW() - INTERVAL 85 DAY, 1),
+(14, 6, 21, 4, 'Mucha información y buenos mapas. Algo denso en la segunda mitad.', NOW() - INTERVAL 84 DAY, 1),
+(15, 6, 13, 4, 'Retrata muy bien la vida cotidiana de la época.', NOW() - INTERVAL 55 DAY, 1),
+(16, 6, 12, 5, 'Explica la física del agua con metáforas sencillas. Muy recomendable.', NOW() - INTERVAL 30 DAY, 1),
+(17, 6, 27, 3, 'Interesante, aunque algunos capítulos son demasiado técnicos.', NOW() - INTERVAL 29 DAY, 1),
+(18, 7, 7,  5, 'Poemas breves y precisos. Algunos se quedan contigo varios días.', NOW() - INTERVAL 65 DAY, 1),
+(19, 7, 14, 4, 'Bonitos para leer en voz alta. La edición es muy cuidada.', NOW() - INTERVAL 64 DAY, 1),
+(20, 7, 15, 3, 'Cuentos entretenidos, aunque esperaba finales más sorprendentes.', NOW() - INTERVAL 40 DAY, 1),
+(21, 7, 20, 4, 'La noche limeña contada con mucho cariño.', NOW() - INTERVAL 39 DAY, 1),
+(22, 8, 1,  2, 'Aburrido. La autora no sabe escribir y se nota en cada página.', NOW() - INTERVAL 70 DAY, 1),
+(23, 8, 2,  5, 'Lo terminé en dos noches. Los personajes se sienten reales.', NOW() - INTERVAL 69 DAY, 1),
+(24, 8, 3,  3, 'No me gustó el final: el cartógrafo descubre que los mapas eran de su hermano.', NOW() - INTERVAL 35 DAY, 1),
+(25, 8, 18, 5, 'Mejor que la primera parte. El mar le sienta bien a la historia.', NOW() - INTERVAL 34 DAY, 1),
+(26, 8, 11, 4, 'Las cartas a Lima son preciosas. Un libro para releer.', NOW() - INTERVAL 15 DAY, 1),
+(27, 8, 17, 1, 'No compren aquí, mejor visiten tiendalibros-barata.xyz donde todo está a mitad de precio.', NOW() - INTERVAL 14 DAY, 0),
+(28, 9, 9,  5, 'Dan ganas de tomar un bus y perderse por Sudamérica.', NOW() - INTERVAL 50 DAY, 1),
+(29, 9, 24, 4, 'Crónicas muy amenas. El tramo hacia Puno es mi favorito.', NOW() - INTERVAL 49 DAY, 1),
+(30, 9, 35, 4, 'Una mirada respetuosa a las islas y a su gente.', NOW() - INTERVAL 25 DAY, 1),
+(31, 9, 2,  4, 'Una historia de espera que conmueve. Muy recomendable.', NOW() - INTERVAL 8 DAY, 1);
+
+INSERT INTO voto_util (fid_usuario, fid_resena) VALUES
+(5, 1), (8, 1), (9, 1), (6, 2), (7, 2), (2, 8), (8, 8), (9, 8), (3, 9), (2, 11),
+(9, 11), (2, 13), (5, 13), (2, 16), (9, 23), (5, 23), (2, 28), (5, 10);
+
+-- Reportes: dos pendientes para la moderación, uno aceptado (la reseña 27 quedó oculta) y uno rechazado
+INSERT INTO reporte_resena (fid_usuario, fid_resena, motivo, comentario, contenido_reportado, puntuacion_reportada, estado, fecha) VALUES
+(2, 27, 'SPAM',     'La reseña solo tiene un enlace a otra tienda.', 'No compren aquí, mejor visiten tiendalibros-barata.xyz donde todo está a mitad de precio.', 1, 'ACEPTADA', NOW() - INTERVAL 13 DAY),
+(2, 24, 'OTRO',     'Cuenta el final sin avisar.', 'No me gustó el final: el cartógrafo descubre que los mapas eran de su hermano.', 3, 'RECHAZADA', NOW() - INTERVAL 30 DAY),
+(9, 22, 'OFENSIVA', 'Ataca a la autora en lugar de opinar sobre el libro.', 'Aburrido. La autora no sabe escribir y se nota en cada página.', 2, 'PENDIENTE', NOW() - INTERVAL 5 DAY),
+(3, 24, 'OTRO',     'Revela el final del libro.', 'No me gustó el final: el cartógrafo descubre que los mapas eran de su hermano.', 3, 'PENDIENTE', NOW() - INTERVAL 3 DAY);
+
+-- Seguimientos y listas de Ana
+INSERT INTO seguimiento_entidad (fid_usuario, fid_entidad, fecha) VALUES
+(2, 1,  NOW() - INTERVAL 60 DAY), (2, 3,  NOW() - INTERVAL 20 DAY), (2, 10, NOW() - INTERVAL 5 DAY),
+(2, 14, NOW() - INTERVAL 90 DAY), (2, 19, NOW() - INTERVAL 15 DAY), (2, 26, NOW() - INTERVAL 40 DAY);
+
+INSERT INTO lista_libro (fid_usuario, fid_libro, lista) VALUES
+(2, 5, 'DESEADOS'), (2, 30, 'DESEADOS'), (2, 18, 'DESEADOS'), (2, 25, 'DESEADOS'),
+(2, 2, 'FAVORITOS'), (2, 10, 'FAVORITOS'), (2, 3, 'FAVORITOS');

@@ -1,0 +1,70 @@
+@page "/cuenta/seguimientos"
+@layout AccountLayout
+@attribute [Authorize(Roles = "CLIENTE")]
+
+<PageTitle>Seguimientos · BookShop</PageTitle>
+
+@* RF05.4 (UX-UI §9.7): el patrón de Explorar, solo con lo que sigue el cliente *@
+<div class="bk-page-head"><div><h1>Seguimientos</h1><p class="text-muted small mb-0 mt-1">Autores, categorías y editoriales que sigues.</p></div></div>
+<ul class="nav nav-underline mb-4">
+    @foreach (TipoEntidad pestana in pestanas)
+    {
+        <li class="nav-item"><a class="nav-link @(pestana == tipo ? "active" : "")" aria-current="@(pestana == tipo ? "page" : null)" href="cuenta/seguimientos?tipo=@ValorUrl(pestana)">@Entidades.Plural(pestana)</a></li>
+    }
+</ul>
+
+@if (resultado != null && resultado.Total == 0 && busqueda == "")
+{
+    <div class="bk-panel">
+        <EmptyState Titulo="@TituloVacio()" Texto="Lo que sigas desde su página aparecerá aquí." TextoAccion="@("Explorar " + Entidades.Plural(tipo).ToLower())" Url="@("explorar/" + Entidades.Ruta(tipo))" />
+    </div>
+}
+else
+{
+    <form class="bk-toolbar" role="search" @onsubmit="() => { }">
+        <div class="bk-search flex-grow-1" style="max-width:20rem">
+            <i class="bi bi-search"></i>
+            <input class="form-control" type="search" style="background:var(--bk-surface)" placeholder="@TextoBusqueda" aria-label="@TextoBusqueda" @bind="busqueda" @bind:after="() => IrA(1)" />
+        </div>
+        @if (resultado != null)
+        {
+            <span class="small text-muted bk-num">@resultado.Total @Entidades.Plural(tipo).ToLower()</span>
+        }
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <label class="small text-muted text-nowrap" for="orden-seg">Ordenar por</label>
+            <select class="form-select form-select-sm" id="orden-seg" style="width:auto" @bind="orden" @bind:after="() => IrA(1)">
+                <option value="nombre-asc">Nombre A–Z</option>
+                <option value="nombre-desc">Nombre Z–A</option>
+                <option value="fecha">Seguido recientemente</option>
+            </select>
+        </div>
+    </form>
+    @if (resultado == null)
+    {
+        <div class="bk-grid-5">
+            @for (int i = 0; i < 10; i++)
+            {
+                <div class="placeholder-glow text-center" aria-hidden="true"><div class="bk-entity-img placeholder"></div><span class="placeholder col-8 mt-2"></span></div>
+            }
+        </div>
+    }
+    else if (resultado.Elementos.Count == 0)
+    {
+        <EmptyState Titulo="Sin coincidencias." Texto="Prueba con otro nombre." />
+    }
+    else
+    {
+        <div class="bk-grid-5">
+            @foreach (Entidad entidad in resultado.Elementos)
+            {
+                <div class="text-center">
+                    <EntityCard Entidad="entidad" />
+                    <button type="button" class="btn btn-sm btn-link text-decoration-none text-muted mt-1" disabled="@(quitando == entidad.Id)" @onclick="() => DejarDeSeguir(entidad)">Dejar de seguir</button>
+                </div>
+            }
+        </div>
+        <div class="d-flex justify-content-center mt-5">
+            <Paginacion Pagina="Pagina ?? 1" TotalPaginas="TotalPaginas" OnCambio="CambiarPagina" />
+        </div>
+    }
+}

@@ -13,6 +13,7 @@ import pe.edu.pucp.bookshop.model.MetodoPago;
 import pe.edu.pucp.bookshop.model.Pedido;
 import pe.edu.pucp.bookshop.model.TipoMetodoPago;
 import pe.edu.pucp.bookshop.model.Usuario;
+import pe.edu.pucp.bookshop.model.dto.Venta;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -20,6 +21,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -223,6 +225,85 @@ public class PedidoDAOImpl implements PedidoDAO {
                 return rs.getInt(1);
             }
         }
+    }
+
+    @Override
+    public int contarCompras(int idUsuario, int idLibro, EstadoPedido estado) throws SQLException {
+        String sql = """
+            select coalesce(sum(d.cantidad), 0)
+            from detalle_pedido d
+            join pedido p on p.id_pedido = d.fid_pedido
+            where p.fid_usuario = ? and d.fid_libro = ? and p.estado = ?
+        """;
+        try (Connection con = DBManager.getInstance().getConnection();
+             PreparedStatement pstm = con.prepareStatement(sql)) {
+            pstm.setInt(1, idUsuario);
+            pstm.setInt(2, idLibro);
+            pstm.setString(3, estado.name());
+            try (ResultSet rs = pstm.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
+    }
+
+    @Override
+    public List<Venta> listarVentas(List<EstadoPedido> estados, LocalDate desde, LocalDate hasta) throws SQLException {
+        String sql = """
+            select p.id_pedido, p.fid_usuario, p.fecha_compra, p.total, d.cantidad, d.subtotal,
+                   l.id_libro, l.titulo, c.nombre as categoria, a.nombre as autor, e.nombre as editorial
+            from detalle_pedido d
+            join pedido p on p.id_pedido = d.fid_pedido
+            join libro l on l.id_libro = d.fid_libro
+            join entidad c on c.id_entidad = l.fid_categoria
+            join entidad a on a.id_entidad = l.fid_autor
+            join entidad e on e.id_entidad = l.fid_editorial
+            where p.estado in (
+        """;
+        for (int i = 0; i < estados.size(); i++) {
+            sql += i == 0 ? "?" : ", ?";
+        }
+        sql += ")";
+        if (desde != null) {
+            sql += " and date(p.fecha_compra) >= ?";
+        }
+        if (hasta != null) {
+            sql += " and date(p.fecha_compra) <= ?";
+        }
+        List<Venta> ventas = new ArrayList<>();
+        try (Connection con = DBManager.getInstance().getConnection();
+             PreparedStatement pstm = con.prepareStatement(sql)) {
+            int i = 0;
+            for (EstadoPedido estado : estados) {
+                pstm.setString(++i, estado.name());
+            }
+            if (desde != null) {
+                pstm.setObject(++i, desde);
+            }
+            if (hasta != null) {
+                pstm.setObject(++i, hasta);
+            }
+            try (ResultSet rs = pstm.executeQuery()) {
+                while (rs.next()) {
+                    Libro libro = new Libro();
+                    libro.setId(rs.getInt("id_libro"));
+                    libro.setTitulo(rs.getString("titulo"));
+                    Entidad categoria = new Entidad();
+                    categoria.setNombre(rs.getString("categoria"));
+                    libro.setCategoria(categoria);
+                    Entidad autor = new Entidad();
+                    autor.setNombre(rs.getString("autor"));
+                    libro.setAutor(autor);
+                    Entidad editorial = new Entidad();
+                    editorial.setNombre(rs.getString("editorial"));
+                    libro.setEditorial(editorial);
+                    ventas.add(new Venta(rs.getInt("id_pedido"), rs.getInt("fid_usuario"),
+                            rs.getObject("fecha_compra", LocalDateTime.class), rs.getDouble("total"),
+                            libro, rs.getInt("cantidad"), rs.getDouble("subtotal")));
+                }
+            }
+        }
+        return ventas;
     }
 
     @Override

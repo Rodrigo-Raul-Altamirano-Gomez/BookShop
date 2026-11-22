@@ -37,6 +37,13 @@ else
                 <h1 class="mb-2">@entidad.Nombre</h1>
                 <p class="text-muted mb-0" style="max-width:44rem">@entidad.Descripcion</p>
             </div>
+            @* RF05.3: seguir o dejar de seguir (botón alternable, UX-UI §6.1) *@
+            @if (!esAdmin)
+            {
+                <button type="button" class="btn btn-outline-primary flex-shrink-0" aria-pressed="@(siguiendo ? "true" : "false")" disabled="@cambiando" @onclick="AlternarSeguimiento">
+                    <i class="bi @(siguiendo ? "bi-check-lg" : "bi-plus-lg") me-1"></i>@(siguiendo ? "Siguiendo" : "Seguir")
+                </button>
+            }
         </div>
         <h2 class="mb-3">Libros</h2>
         @* RF05.2: los libros de la entidad en una vista de resultados, sin el filtro de la propia entidad *@

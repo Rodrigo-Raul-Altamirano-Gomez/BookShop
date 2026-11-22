@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- RF19 · Clientes por monto gastado (UX-UI §11.3), A4 horizontal. JasperReports 7.0.6.
+     Se edita en Jaspersoft Studio 7 y se compila a reporte-clientes.jasper, que es el que carga ReporteBLImpl.
+     Filas: un mapa por cliente (nombre, correo, estado, diasUso, gasto, categoria, autor, editorial), ya ordenadas por gasto. -->
+<jasperReport name="reporte-clientes" language="java" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="762" leftMargin="40" rightMargin="40" topMargin="36" bottomMargin="30" whenNoDataType="AllSectionsNoDetail" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e01">
+	<property name="net.sf.jasperreports.export.pdf.metadata.title" value="Clientes por monto gastado · BookShop"/>
+	<style name="Normal" default="true" forecolor="#1E1A16" fontName="Public Sans" fontSize="9.0"/>
+	<style name="Muted" style="Normal" forecolor="#6E655B"/>
+	<style name="Caption" style="Normal" forecolor="#6E655B" fontSize="7.5" bold="true"/>
+	<style name="Titulo" style="Normal" fontName="Newsreader" fontSize="18.0"/>
+	<parameter name="periodo" class="java.lang.String"/>
+	<parameter name="generado" class="java.lang.String"/>
+	<parameter name="resultados" class="java.lang.Integer"/>
+	<field name="nombre" class="java.lang.String"/>
+	<field name="correo" class="java.lang.String"/>
+	<field name="estado" class="java.lang.String"/>
+	<field name="diasUso" class="java.lang.Integer"/>
+	<field name="gasto" class="java.lang.Double"/>
+	<field name="categoria" class="java.lang.String"/>
+	<field name="autor" class="java.lang.String"/>
+	<field name="editorial" class="java.lang.String"/>
+	<variable name="totalGasto" calculation="Sum" class="java.lang.Double">
+		<expression><![CDATA[$F{gasto}]]></expression>
+	</variable>
+	<title height="74">
+		<element kind="staticText" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e02" x="0" y="0" width="300" height="26" markup="styled" style="Titulo">
+			<text><![CDATA[Book<style forecolor="#24513F">Shop</style>]]></text>
+		</element>
+		<element kind="staticText" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e03" x="0" y="28" width="460" height="26" style="Titulo">
+			<text><![CDATA[Clientes por monto gastado]]></text>
+		</element>
+		<element kind="textField" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e04" x="462" y="12" width="300" height="42" hTextAlign="Right" vTextAlign="Bottom" style="Normal">
+			<expression><![CDATA["Período: " + $P{periodo} + "\nGenerado: " + $P{generado} + "\nResultados: " + $P{resultados}]]></expression>
+		</element>
+		<element kind="line" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e05" x="0" y="62" width="762" height="1">
+			<pen lineWidth="0.75" lineColor="#E3DCD0"/>
+		</element>
+	</title>
+	<columnHeader height="22">
+		<element kind="staticText" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e06" x="0" y="0" width="30" height="20" hTextAlign="Right" vTextAlign="Middle" style="Caption">
+			<text><![CDATA[#]]></text>
+			<box rightPadding="6"/>
+		</element>
+		<element kind="staticText" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e07" x="30" y="0" width="210" height="20" vTextAlign="Middle" style="Caption">
+			<text><![CDATA[CLIENTE]]></text>
+		</element>
+		<element kind="staticText" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e08" x="240" y="0" width="80" height="20" vTextAlign="Middle" style="Caption">
+			<text><![CDATA[ESTADO]]></text>
+		</element>
+		<element kind="staticText" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e09" x="320" y="0" width="70" height="20" hTextAlign="Right" vTextAlign="Middle" style="Caption">
+			<text><![CDATA[DÍAS DE USO]]></text>
+		</element>
+		<element kind="staticText" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e10" x="390" y="0" width="90" height="20" hTextAlign="Right" vTextAlign="Middle" style="Caption">
+			<text><![CDATA[GASTO]]></text>
+			<box rightPadding="10"/>
+		</element>
+		<element kind="staticText" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e11" x="480" y="0" width="90" height="20" vTextAlign="Middle" style="Caption">
+			<text><![CDATA[CATEGORÍA]]></text>
+		</element>
+		<element kind="staticText" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e12" x="570" y="0" width="100" height="20" vTextAlign="Middle" style="Caption">
+			<text><![CDATA[AUTOR]]></text>
+		</element>
+		<element kind="staticText" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e13" x="670" y="0" width="92" height="20" vTextAlign="Middle" style="Caption">
+			<text><![CDATA[EDITORIAL]]></text>
+		</element>
+		<element kind="line" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e14" x="0" y="20" width="762" height="1">
+			<pen lineWidth="1.5" lineColor="#1E1A16"/>
+		</element>
+	</columnHeader>
+	<detail>
+		<band height="32" splitType="Prevent">
+			<element kind="textField" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e15" x="0" y="5" width="30" height="13" hTextAlign="Right" style="Muted">
+				<expression><![CDATA[$V{REPORT_COUNT}]]></expression>
+				<box rightPadding="6"/>
+			</element>
+			<element kind="textField" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e16" x="30" y="5" width="210" height="13" style="Normal">
+				<expression><![CDATA[$F{nombre}]]></expression>
+			</element>
+			<element kind="textField" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e17" x="30" y="17" width="210" height="12" fontSize="8.0" style="Muted">
+				<expression><![CDATA[$F{correo}]]></expression>
+			</element>
+			<element kind="textField" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e18" x="240" y="5" width="80" height="13" style="Normal">
+				<expression><![CDATA[$F{estado}]]></expression>
+			</element>
+			<element kind="textField" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e19" x="320" y="5" width="70" height="13" hTextAlign="Right" style="Normal">
+				<expression><![CDATA[$F{diasUso}]]></expression>
+			</element>
+			<element kind="textField" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e20" x="390" y="5" width="90" height="13" pattern="S/ #,##0.00" hTextAlign="Right" style="Normal">
+				<expression><![CDATA[$F{gasto}]]></expression>
+				<box rightPadding="10"/>
+			</element>
+			<element kind="textField" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e21" x="480" y="5" width="90" height="13" style="Normal">
+				<expression><![CDATA[$F{categoria}]]></expression>
+			</element>
+			<element kind="textField" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e22" x="570" y="5" width="100" height="13" style="Normal">
+				<expression><![CDATA[$F{autor}]]></expression>
+			</element>
+			<element kind="textField" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e23" x="670" y="5" width="92" height="13" style="Normal">
+				<expression><![CDATA[$F{editorial}]]></expression>
+			</element>
+			<element kind="line" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e24" x="0" y="31" width="762" height="1">
+				<pen lineWidth="0.75" lineColor="#E3DCD0"/>
+			</element>
+		</band>
+	</detail>
+	<summary height="58">
+		<element kind="staticText" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e25" x="30" y="8" width="210" height="16" bold="true" style="Normal">
+			<text><![CDATA[Total]]></text>
+		</element>
+		<element kind="textField" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e26" x="390" y="8" width="90" height="16" pattern="S/ #,##0.00" hTextAlign="Right" bold="true" style="Normal">
+			<expression><![CDATA[$V{totalGasto} != null ? $V{totalGasto} : 0.0]]></expression>
+			<box rightPadding="10"/>
+		</element>
+		<element kind="staticText" uuid="7d4e9a20-3f5a-4c6d-8e22-9a8b7c6d5e27" x="0" y="38" width="762" height="14" fontSize="8.0" style="Muted">
+			<text><![CDATA[Gasto: suma de los pedidos del período que no están cancelados ni devueltos. Categoría, autor y editorial: los más comprados en el período, por unidades.]]></text>
+		</element>
+	</summary>
+</jasperReport>

@@ -34,6 +34,16 @@ function leerSesion(nombre) {
     return parte ? decodeURIComponent(parte.substring(nombre.length + 1)) : null;
 }
 
+// Reportes PDF (UX-UI §10.8): la pestaña se abre en el mismo clic (así el navegador no la bloquea)
+// y el PDF se muestra en ella cuando llega; mientras tanto, el botón dice "Generando…".
+// Si el navegador bloquea la pestaña, el PDF se abre en la actual.
+async function abrirPdf(url) {
+    const pestana = window.open("", "_blank") || window;
+    const respuesta = await fetch(url);
+    const pdf = await respuesta.blob();
+    pestana.location = URL.createObjectURL(pdf);
+}
+
 // Envía las credenciales ya validadas a /auth/login, que firma la cookie de sesión y redirige
 function iniciarSesion(correo, contrasena, volver) {
     const form = document.createElement("form");

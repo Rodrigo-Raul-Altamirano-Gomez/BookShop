@@ -82,10 +82,22 @@ public partial class ResultsView : IDisposable
         cargando = true;
         string consulta = new Uri(Navegacion.Uri).Query;
         LeerUrl(consulta);
-        // Los parámetros de la URL tienen los mismos nombres que los del API
+        // Los parámetros de la URL tienen los mismos nombres que los del API. El endpoint puede traer los suyos
+        // (por ejemplo, los libros del carrito en complementarios).
+        if (Endpoint.Contains('?') && consulta != "")
+        {
+            consulta = "&" + consulta[1..];
+        }
         resultado = await new HttpClientUtils<ResultadoLibros>().Get(Endpoint + consulta);
         cargando = false;
         await OnCargado.InvokeAsync(resultado!.Total);
+    }
+
+    // Tras quitar un libro de una lista, la vista se vuelve a pedir con los mismos filtros
+    public async Task Recargar()
+    {
+        await Cargar();
+        StateHasChanged();
     }
 
     private void LeerUrl(string consulta)

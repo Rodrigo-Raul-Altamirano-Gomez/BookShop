@@ -15,12 +15,7 @@
     <li class="nav-item"><a class="nav-link @(EnReportes ? "active" : "")" aria-current="@(EnReportes ? "page" : null)" href="cuenta/solicitudes?tipo=reportes">Reportes de reseñas</a></li>
 </ul>
 
-@if (EnReportes)
-{
-    @* Las reseñas y sus reportes llegan en el incremento 3 *@
-    <EmptyState Titulo="No has reportado reseñas." Texto="Puedes reportar una reseña desde el detalle de un libro." />
-}
-else if (solicitudes == null)
+@if ((EnReportes && reportes == null) || (!EnReportes && solicitudes == null))
 {
     <div class="d-grid gap-3" aria-hidden="true">
         @for (int i = 0; i < 2; i++)
@@ -29,7 +24,43 @@ else if (solicitudes == null)
         }
     </div>
 }
-else if (solicitudes.Count == 0)
+else if (EnReportes && reportes!.Count == 0)
+{
+    <EmptyState Titulo="No has reportado reseñas." Texto="Puedes reportar una reseña desde el detalle de un libro." />
+}
+else if (EnReportes)
+{
+    <div class="d-grid gap-3">
+        @foreach (ReporteResena reporte in reportes!)
+        {
+            Libro libro = reporte.Resena.Libro;
+            <article class="bk-panel">
+                <div class="d-flex align-items-start gap-3">
+                    <a href="libros/@libro.Id" class="flex-shrink-0" style="width:2.6rem" tabindex="-1"><BookCover Libro="libro" Pequena="true" /></a>
+                    <div class="flex-grow-1">
+                        <h2 class="h3 mb-1">Reseña en <a href="libros/@libro.Id">@libro.Titulo</a></h2>
+                        <p class="small text-muted bk-num mb-2">Reportada el @Formato.Fecha(reporte.Fecha) · Motivo: @Etiquetas.Motivo(reporte.Motivo)</p>
+                        @* RF10.7: el contenido como estaba al reportarlo *@
+                        <blockquote class="bk-quote mb-2">
+                            <div class="small"><strong>@reporte.Resena.Usuario.NombreCompleto</strong> <span class="ms-1" role="img" aria-label="@reporte.PuntuacionReportada de 5 estrellas"><RatingStars Promedio="reporte.PuntuacionReportada" /></span></div>
+                            <p class="mb-0 mt-1">@reporte.ContenidoReportado</p>
+                        </blockquote>
+                        <p class="mb-0"><span class="text-muted">Tu comentario:</span> @reporte.Comentario</p>
+                    </div>
+                    <StatusBadge Texto="@Etiquetas.Estado(reporte.Estado)" Tipo="@Etiquetas.Tipo(reporte.Estado)" />
+                </div>
+                @if (reporte.Estado == EstadoSolicitud.PENDIENTE)
+                {
+                    <div class="d-flex gap-3 mt-3 pt-3 border-top" style="border-color:var(--bk-line)!important">
+                        <button type="button" class="btn btn-sm btn-link text-decoration-none" @onclick="() => AbrirEdicion(reporte)">Editar</button>
+                        <button type="button" class="btn btn-sm btn-link text-decoration-none text-danger" @onclick="() => PedirRetiro(reporte)">Retirar</button>
+                    </div>
+                }
+            </article>
+        }
+    </div>
+}
+else if (solicitudes!.Count == 0)
 {
     <EmptyState Titulo="No has pedido devoluciones." Texto="Puedes pedirla desde el detalle de un pedido entregado." TextoAccion="Ver mis pedidos" Url="cuenta/pedidos" />
 }
@@ -61,18 +92,31 @@ else
     </div>
 }
 
+@* Edición de una solicitud o un reporte pendiente: el motivo (con las opciones de su tipo) y el comentario *@
 <div class="modal fade" id="m-edit" tabindex="-1" aria-labelledby="m-edit-t" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <form class="modal-content p-2" @onsubmit="Guardar">
-            <div class="modal-header border-0 pb-0"><h2 class="modal-title h3" id="m-edit-t">Editar solicitud de devolución</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+            <div class="modal-header border-0 pb-0"><h2 class="modal-title h3" id="m-edit-t">@(EnReportes ? "Editar reporte" : "Editar solicitud de devolución")</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
             <div class="modal-body">
                 <label class="form-label" for="e-mot">Motivo</label>
-                <select class="form-select mb-3" id="e-mot" @bind="motivo">
-                    @foreach (MotivoDevolucion opcion in Enum.GetValues<MotivoDevolucion>())
-                    {
-                        <option value="@opcion">@Etiquetas.Motivo(opcion)</option>
-                    }
-                </select>
+                @if (EnReportes)
+                {
+                    <select class="form-select mb-3" id="e-mot" @bind="motivoReporte">
+                        @foreach (MotivoReporte opcion in Enum.GetValues<MotivoReporte>())
+                        {
+                            <option value="@opcion">@Etiquetas.Motivo(opcion)</option>
+                        }
+                    </select>
+                }
+                else
+                {
+                    <select class="form-select mb-3" id="e-mot" @bind="motivo">
+                        @foreach (MotivoDevolucion opcion in Enum.GetValues<MotivoDevolucion>())
+                        {
+                            <option value="@opcion">@Etiquetas.Motivo(opcion)</option>
+                        }
+                    </select>
+                }
                 <label class="form-label" for="e-com">Comentario</label>
                 <textarea class="form-control" id="e-com" rows="3" required maxlength="1000" @bind="comentario"></textarea>
             </div>
@@ -90,5 +134,4 @@ else
     </div>
 </div>
 
-<ConfirmModal @ref="confirmacion" Titulo="¿Retirar esta solicitud?" Mensaje="La solicitud pasará a «Retirada» y contará como un intento de devolución."
-              TextoAccion="Sí, retirar" Peligro="true" OnConfirmar="Retirar" />
+<ConfirmModal @ref="confirmacion" TextoAccion="Sí, retirar" Peligro="true" OnConfirmar="Retirar" />

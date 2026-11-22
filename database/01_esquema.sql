@@ -80,7 +80,7 @@ CREATE TABLE descuento (
   FOREIGN KEY (fid_libro) REFERENCES libro(id_libro)
 );
 
--- Las reseñas se publican en el incremento 3; la tabla ya existe porque el detalle y la comparación muestran el promedio
+-- activa = 0: oculta por moderación (no se muestra ni cuenta en el promedio)
 CREATE TABLE resena (
   id_resena    INT AUTO_INCREMENT PRIMARY KEY,
   fid_usuario  INT NOT NULL,
@@ -90,6 +90,49 @@ CREATE TABLE resena (
   fecha        DATETIME NOT NULL,
   activa       TINYINT(1) NOT NULL,
   UNIQUE (fid_usuario, fid_libro),
+  FOREIGN KEY (fid_usuario) REFERENCES usuario(id_usuario),
+  FOREIGN KEY (fid_libro) REFERENCES libro(id_libro)
+);
+
+CREATE TABLE voto_util (
+  fid_usuario  INT NOT NULL,
+  fid_resena   INT NOT NULL,
+  PRIMARY KEY (fid_usuario, fid_resena),
+  FOREIGN KEY (fid_usuario) REFERENCES usuario(id_usuario),
+  FOREIGN KEY (fid_resena) REFERENCES resena(id_resena)
+);
+
+-- Guarda una copia del texto y la puntuación de la reseña al momento de reportarla (RF10.7)
+CREATE TABLE reporte_resena (
+  id_reporte_resena     INT AUTO_INCREMENT PRIMARY KEY,
+  fid_usuario           INT NOT NULL,
+  fid_resena            INT NOT NULL,
+  motivo                VARCHAR(30) NOT NULL,   -- OFENSIVA, SPAM, NO_RELACIONADA, OTRO
+  comentario            TEXT NOT NULL,
+  contenido_reportado   TEXT NOT NULL,
+  puntuacion_reportada  INT NOT NULL,
+  estado                VARCHAR(20) NOT NULL,   -- PENDIENTE, ACEPTADA, RECHAZADA, RETIRADA
+  fecha                 DATETIME NOT NULL,
+  FOREIGN KEY (fid_usuario) REFERENCES usuario(id_usuario),
+  FOREIGN KEY (fid_resena) REFERENCES resena(id_resena)
+);
+
+-- La entidad ya tiene su tipo (autor, categoría o editorial)
+CREATE TABLE seguimiento_entidad (
+  fid_usuario  INT NOT NULL,
+  fid_entidad  INT NOT NULL,
+  fecha        DATETIME NOT NULL,
+  PRIMARY KEY (fid_usuario, fid_entidad),
+  FOREIGN KEY (fid_usuario) REFERENCES usuario(id_usuario),
+  FOREIGN KEY (fid_entidad) REFERENCES entidad(id_entidad)
+);
+
+-- Deseados y Favoritos: un libro puede estar en las dos, una vez en cada una (RF06.2)
+CREATE TABLE lista_libro (
+  fid_usuario  INT NOT NULL,
+  fid_libro    INT NOT NULL,
+  lista        VARCHAR(20) NOT NULL,            -- DESEADOS, FAVORITOS
+  PRIMARY KEY (fid_usuario, fid_libro, lista),
   FOREIGN KEY (fid_usuario) REFERENCES usuario(id_usuario),
   FOREIGN KEY (fid_libro) REFERENCES libro(id_libro)
 );

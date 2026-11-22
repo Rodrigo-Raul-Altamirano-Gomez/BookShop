@@ -17,6 +17,7 @@ public partial class Carrito
 
     private int idUsuario;
     private ResumenCompra? resumen;
+    private List<Libro>? complementarios;
     private bool actualizando;
     private ConfirmModal confirmacion = default!;
 
@@ -35,6 +36,9 @@ public partial class Carrito
         // RF11.1: el backend deja fuera los libros inactivos o agotados y limita cada cantidad a su stock
         await CarritoSesion.Reemplazar(resumen!.Lineas);
         actualizando = false;
+        // Las sugerencias dependen de los libros del carrito
+        string ids = string.Join("&", CarritoSesion.Items.Select(i => "carrito=" + i.IdLibro));
+        complementarios = (await new HttpClientUtils<ResultadoLibros>().Get("libros/complementarios?tamano=8&" + ids))!.Libros;
     }
 
     private async Task CambiarCantidad(LineaCompra linea, int cantidad)

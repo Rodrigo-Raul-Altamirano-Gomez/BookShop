@@ -1,0 +1,36 @@
+@page "/admin/reportes"
+@layout AdminLayout
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+
+<PageTitle>Reportes PDF · Administración · BookShop</PageTitle>
+
+@* RF18 y RF19 (UX-UI §10.8): período, límite opcional y el PDF en una pestaña nueva *@
+<div class="bk-page-head"><div><h1>Reportes PDF</h1><p class="small text-muted mb-0 mt-1">No cuentan los pedidos cancelados ni devueltos. El PDF se abre en una pestaña nueva.</p></div></div>
+
+<div class="row g-4">
+    @foreach (Formulario formulario in formularios)
+    {
+        <div class="col-6">
+            <form class="bk-panel h-100" @onsubmit="() => Generar(formulario)">
+                <h2 class="h3 mb-1"><i class="bi @formulario.Icono me-2 text-muted"></i>@formulario.Titulo</h2>
+                <p class="small text-muted mb-4">@formulario.Descripcion</p>
+                <div class="row g-3 mb-3">
+                    <div class="col-6"><label class="form-label" for="@(formulario.Tipo)-d">Desde</label><input class="form-control" id="@(formulario.Tipo)-d" type="date" required @bind="formulario.Desde" /></div>
+                    <div class="col-6"><label class="form-label" for="@(formulario.Tipo)-h">Hasta</label><input class="form-control" id="@(formulario.Tipo)-h" type="date" required min="@formulario.Desde?.ToString("yyyy-MM-dd")" @bind="formulario.Hasta" /></div>
+                </div>
+                <label class="form-label" for="@(formulario.Tipo)-l">Límite de resultados <span class="text-muted fw-normal">(opcional)</span></label>
+                <input class="form-control mb-4 bk-num" id="@(formulario.Tipo)-l" type="number" min="1" placeholder="Todos" style="max-width:10rem" @bind="formulario.Limite" />
+                <button type="submit" class="btn btn-primary" disabled="@formulario.Generando">
+                    @if (formulario.Generando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>@("Generando…")
+                    }
+                    else
+                    {
+                        <i class="bi bi-file-earmark-pdf me-2"></i>@("Generar PDF")
+                    }
+                </button>
+            </form>
+        </div>
+    }
+</div>

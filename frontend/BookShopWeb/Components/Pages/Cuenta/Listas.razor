@@ -1,0 +1,22 @@
+@page "/listas"
+@attribute [Authorize(Roles = "CLIENTE")]
+
+@* RF06.3 (UX-UI §9.6): a todo el ancho, sin el menú de Mi cuenta, con una pestaña por lista *@
+<PageTitle>@(EsFavoritos ? "Favoritos" : "Deseados") · BookShop</PageTitle>
+
+<div class="container-xl pt-4">
+    <nav aria-label="Ruta"><ol class="breadcrumb bk-breadcrumb mb-2"><li class="breadcrumb-item"><a href="cuenta/pedidos">Mi cuenta</a></li><li class="breadcrumb-item active" aria-current="page">Mis listas</li></ol></nav>
+    <h1 class="mb-1">Mis listas</h1>
+    <p class="text-muted mb-4">@(EsFavoritos ? "Los libros que más te gustaron. Solo tú ves esta lista." : "Libros que quieres comprar más adelante. Solo tú ves esta lista.")</p>
+    <ul class="nav nav-underline mb-4">
+        <li class="nav-item"><a class="nav-link @(EsFavoritos ? "" : "active")" aria-current="@(EsFavoritos ? null : "page")" href="listas?lista=deseados">Deseados</a></li>
+        <li class="nav-item"><a class="nav-link @(EsFavoritos ? "active" : "")" aria-current="@(EsFavoritos ? "page" : null)" href="listas?lista=favoritos">Favoritos</a></li>
+    </ul>
+    @if (idUsuario > 0)
+    {
+        <ResultsView @ref="vista" Endpoint="@($"listas/{(EsFavoritos ? TipoLista.FAVORITOS : TipoLista.DESEADOS)}/usuario/{idUsuario}")"
+                     PermiteOrden="true" SignificadoPeriodo="registro" PermiteQuitar="true" OnQuitar="Quitar"
+                     TituloVacio="Aún no guardaste libros aquí." TextoVacio="Usa el botón del detalle de cada libro."
+                     AccionVacia="Explorar el catálogo" UrlVacia="catalogo" />
+    }
+</div>

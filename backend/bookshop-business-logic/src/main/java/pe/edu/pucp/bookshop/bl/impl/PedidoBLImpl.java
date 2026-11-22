@@ -119,37 +119,7 @@ public class PedidoBLImpl implements PedidoBL {
 
             // RF15.4: se recalcula con los datos actuales y se compara con lo que vio el cliente
             ResumenCompra actual = calcularResumen(solicitud);
-            ResumenCompra preparado = solicitud.preparado();
-            List<String> cambios = new ArrayList<>();
-            for (LineaCompra antes : preparado.lineas()) {
-                LineaCompra ahora = null;
-                for (LineaCompra linea : actual.lineas()) {
-                    if (linea.libro().getId().equals(antes.libro().getId())) {
-                        ahora = linea;
-                    }
-                }
-                String titulo = "«" + antes.libro().getTitulo() + "»";
-                if (ahora == null) {
-                    cambios.add(titulo + " ya no está disponible.");
-                    continue;
-                }
-                if (ahora.cantidad() < antes.cantidad()) {
-                    cambios.add(ahora.cantidad() == 1 ? "Solo queda 1 unidad de " + titulo + "."
-                            : "Solo quedan " + ahora.cantidad() + " unidades de " + titulo + ".");
-                }
-                if (!ahora.libro().getPrecioFinal().equals(antes.libro().getPrecioFinal())) {
-                    cambios.add("El precio de " + titulo + " cambió de "
-                            + String.format(Locale.US, "S/ %,.2f", antes.libro().getPrecioFinal()) + " a "
-                            + String.format(Locale.US, "S/ %,.2f", ahora.libro().getPrecioFinal()) + ".");
-                }
-            }
-            if (preparado.cupon() != null && actual.cupon() == null) {
-                cambios.add("El cupón " + preparado.cupon().getCodigo() + " ya no se puede usar.");
-            }
-            if (actual.costoEnvio() != preparado.costoEnvio()) {
-                cambios.add("El costo de envío cambió de " + String.format(Locale.US, "S/ %,.2f", preparado.costoEnvio())
-                        + " a " + String.format(Locale.US, "S/ %,.2f", actual.costoEnvio()) + ".");
-            }
+            List<String> cambios = buscarCambios(solicitud.preparado(), actual);
             if (!cambios.isEmpty()) {
                 throw new DatosCambiadosException(String.join("\n", cambios));
             }
@@ -208,6 +178,42 @@ public class PedidoBLImpl implements PedidoBL {
         } finally {
             TransactionContext.close();
         }
+    }
+
+    // RF15.4: lo que cambió entre el resumen que vio el cliente y el actual, un texto por cambio
+    // (un libro que ya no está, menos stock, otro precio, el cupón que ya no se puede usar u otro costo de envío)
+    private List<String> buscarCambios(ResumenCompra preparado, ResumenCompra actual) {
+        List<String> cambios = new ArrayList<>();
+        for (LineaCompra antes : preparado.lineas()) {
+            LineaCompra ahora = null;
+            for (LineaCompra linea : actual.lineas()) {
+                if (linea.libro().getId().equals(antes.libro().getId())) {
+                    ahora = linea;
+                }
+            }
+            String titulo = "«" + antes.libro().getTitulo() + "»";
+            if (ahora == null) {
+                cambios.add(titulo + " ya no está disponible.");
+                continue;
+            }
+            if (ahora.cantidad() < antes.cantidad()) {
+                cambios.add(ahora.cantidad() == 1 ? "Solo queda 1 unidad de " + titulo + "."
+                        : "Solo quedan " + ahora.cantidad() + " unidades de " + titulo + ".");
+            }
+            if (!ahora.libro().getPrecioFinal().equals(antes.libro().getPrecioFinal())) {
+                cambios.add("El precio de " + titulo + " cambió de "
+                        + String.format(Locale.US, "S/ %,.2f", antes.libro().getPrecioFinal()) + " a "
+                        + String.format(Locale.US, "S/ %,.2f", ahora.libro().getPrecioFinal()) + ".");
+            }
+        }
+        if (preparado.cupon() != null && actual.cupon() == null) {
+            cambios.add("El cupón " + preparado.cupon().getCodigo() + " ya no se puede usar.");
+        }
+        if (actual.costoEnvio() != preparado.costoEnvio()) {
+            cambios.add("El costo de envío cambió de " + String.format(Locale.US, "S/ %,.2f", preparado.costoEnvio())
+                    + " a " + String.format(Locale.US, "S/ %,.2f", actual.costoEnvio()) + ".");
+        }
+        return cambios;
     }
 
     // RF03.1–2: filtro por estado (null: todos) y orden por fecha de compra o por total
