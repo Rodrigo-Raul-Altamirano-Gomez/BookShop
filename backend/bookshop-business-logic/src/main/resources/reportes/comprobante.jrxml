@@ -118,7 +118,7 @@
 			</element>
 		</band>
 	</detail>
-	<summary height="140">
+	<summary height="100">
 		<element kind="staticText" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a26" x="279" y="14" width="130" height="16" style="Normal">
 			<text><![CDATA[Subtotal]]></text>
 		</element>
@@ -147,12 +147,6 @@
 		</element>
 		<element kind="textField" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a34" positionType="Float" x="389" y="72" width="110" height="22" pattern="S/ #,##0.00" hTextAlign="Right" vTextAlign="Middle" fontName="Newsreader" fontSize="14.0" bold="true" style="Normal">
 			<expression><![CDATA[$P{total}]]></expression>
-		</element>
-		<element kind="line" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a35" positionType="Float" x="0" y="116" width="499" height="1">
-			<pen lineWidth="0.75" lineColor="#E3DCD0"/>
-		</element>
-		<element kind="staticText" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a36" positionType="Float" x="0" y="122" width="499" height="14" fontSize="8.0" style="Muted">
-			<text><![CDATA[Pago simulado con fines académicos. Este documento no tiene validez tributaria.]]></text>
 		</element>
 	</summary>
 </jasperReport>

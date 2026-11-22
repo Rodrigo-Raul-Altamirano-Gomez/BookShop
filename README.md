@@ -41,7 +41,17 @@ mysql -h <host> -u <usuario> -p < database/02_datos.sql
 
 ### 2. Backend
 
-1. Copiar `backend/bookshop-rs/src/main/resources/db.properties.ejemplo` como `db.properties` en la misma carpeta y completar los datos de la base. Ese archivo no se sube a git. También se pueden usar las variables de entorno `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` y `DB_PASSWORD`, que tienen prioridad.
+1. Crear `backend/bookshop-rs/src/main/resources/db.properties` con los datos de la base (el archivo no se sube a git):
+
+```
+host=<host>
+port=3306
+database=bookshop
+user=<usuario>
+password=<contraseña>
+```
+
+   También se pueden usar las variables de entorno `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` y `DB_PASSWORD`, que tienen prioridad. Ojo: `mvn package` incluye `db.properties` dentro del WAR, así que ese WAR no debe compartirse.
 2. Compilar y desplegar:
 
 ```
@@ -80,36 +90,14 @@ Todos tienen la contraseña `123456`.
 
 ## Despliegue
 
-### Render (desarrollo)
+### AWS EC2 (sin contenedores)
 
-Dos servicios web con Docker, conectados al repositorio y desplegados automáticamente al subir cambios a `main`:
+Backend y front en la misma máquina, contra una base MySQL en AWS RDS (ejecutar antes `01_esquema.sql` y `02_datos.sql`, como en la instalación local).
 
-| Servicio | Directorio raíz | Variables de entorno |
-|---|---|---|
-| Backend | `backend` | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` |
-| Front | `frontend` | `ApiUrl` (URL pública del backend terminada en `/bookshop/services/`) |
-
-El `Dockerfile` del backend compila el WAR, lo despliega en GlassFish 8 al construir la imagen, fija la zona horaria de Lima y acota la memoria de la JVM al plan gratuito (512 MB).
-
-Las imágenes que se suben desde la aplicación (fotos, portadas, imágenes de autores, categorías y editoriales) se guardan en `wwwroot/img/subidas` del front. En Render ese disco se borra en cada despliegue y cada vez que el servicio se suspende, así que allí las imágenes subidas no se conservan.
-
-### AWS EC2 sin contenedores (presentación)
-
-- **Backend:** GlassFish 8 y el WAR, igual que en la instalación local, con las variables `DB_*` y la zona horaria `America/Lima`.
-- **Front:** `dotnet publish frontend/BookShopWeb -c Release -o <carpeta>` y ejecutar `dotnet BookShopWeb.dll` en esa carpeta (por ejemplo, como servicio), con la variable `ApiUrl`.
-- **Imágenes subidas:** viven en `<carpeta>/wwwroot/img/subidas`. Al publicar una versión nueva, copiarla **encima** de la anterior, sin borrar esa carpeta; si se borra, las rutas que guarda la base de datos quedan sin imagen.
-
-### Otro servidor con Docker
-
-Las mismas imágenes sirven en cualquier máquina con Docker:
-
-```
-docker build -t bookshop-api backend
-docker run -d -p 8080:8080 -e DB_HOST=<host> -e DB_PORT=3306 -e DB_NAME=bookshop -e DB_USER=<usuario> -e DB_PASSWORD=<contraseña> bookshop-api
-
-docker build -t bookshop-web frontend
-docker run -d -p 80:8080 -e ApiUrl=http://<servidor>:8080/bookshop/services/ bookshop-web
-```
+- **Backend:** GlassFish 8 y el WAR, como en la instalación local: `cd backend && mvn clean package`, y desplegar `bookshop-rs/target/bookshop.war` con `asadmin deploy --force=true --name bookshop --contextroot bookshop`. La zona horaria del servidor debe ser `America/Lima` (las fechas de los pedidos y del seguimiento las genera Java). Los datos de la base van en `db.properties` (queda dentro del WAR) o en las variables `DB_*`.
+- **Front:** `dotnet publish frontend/BookShopWeb -c Release -o <carpeta>` y ejecutar `dotnet BookShopWeb.dll` en esa carpeta (por ejemplo, como servicio). Como el front llama al API desde el servidor, con ambos en la misma máquina basta el valor por defecto de `ApiUrl` (`http://localhost:8080/bookshop/services/`) y no depende de la IP pública. Si el backend estuviera en otra máquina, se define la variable de entorno `ApiUrl` (terminada en `/services/`) o se cambia en `appsettings.json`.
+- **Red:** en el grupo de seguridad solo hace falta abrir el puerto del front; el 8080 del backend no tiene que ser público.
+- **Imágenes subidas:** las fotos, portadas e imágenes de autores, categorías y editoriales que se suben desde la aplicación viven en `<carpeta>/wwwroot/img/subidas`. Al publicar una versión nueva, copiarla **encima** de la anterior, sin borrar esa carpeta; si se borra, las rutas que guarda la base de datos quedan sin imagen.
 
 ## Plantillas de los PDF
 
