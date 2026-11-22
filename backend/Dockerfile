@@ -14,10 +14,13 @@ RUN curl -fsSL -o /tmp/gf.zip https://download.eclipse.org/ee4j/glassfish/glassf
 ENV PATH="/opt/glassfish8/bin:${PATH}"
 COPY --from=build /src/bookshop-rs/target/bookshop.war /tmp/bookshop.war
 # Se configura y se despliega el WAR al construir la imagen (si falla, falla el build).
-# Se quitan los listeners IIOP (no se usan y Render los sondea generando errores) y se acota la memoria.
+# Se quitan los listeners IIOP (no se usan y Render los sondea generando errores) y se acota la memoria:
+# el plan gratuito de Render tiene 512 MB para todo el proceso, y además del heap la JVM usa memoria propia
+# (clases, código compilado, hilos). Con -Xmx320m el total llegaba al límite al generar un PDF y Render
+# reiniciaba el servicio. Con estas opciones el proceso queda en unos 340 MB.
 RUN asadmin start-domain \
  && asadmin delete-jvm-options '-Xmx512m' \
- && asadmin create-jvm-options '-Xmx320m' \
+ && asadmin create-jvm-options '-Xmx192m:-Xss512k:-XX\:MaxMetaspaceSize=200m:-XX\:ReservedCodeCacheSize=48m:-XX\:TieredStopAtLevel=1:-XX\:MaxDirectMemorySize=32m:-XX\:+UseSerialGC' \
  && (asadmin delete-iiop-listener orb-listener-1 || true) \
  && (asadmin delete-iiop-listener SSL || true) \
  && (asadmin delete-iiop-listener SSL_MUTUALAUTH || true) \
