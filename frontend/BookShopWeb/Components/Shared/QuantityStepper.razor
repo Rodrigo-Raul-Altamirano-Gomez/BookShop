@@ -1,0 +1,6 @@
+@* Selector de cantidad (UX-UI §6.15): de 1 al máximo; en los límites, el botón correspondiente se deshabilita *@
+<div class="bk-stepper @(Pequeno ? "bk-stepper-sm" : "")" role="group" aria-label="@Etiqueta">
+    <button type="button" aria-label="Quitar uno" disabled="@(Deshabilitado || Valor <= 1)" @onclick="() => Cambiar(Valor - 1)">−</button>
+    <input @key="version" type="number" min="1" max="@Maximo" value="@Valor" aria-label="Cantidad" disabled="@Deshabilitado" @onchange="Escribir" />
+    <button type="button" aria-label="Agregar uno" disabled="@(Deshabilitado || Valor >= Maximo)" @onclick="() => Cambiar(Valor + 1)">+</button>
+</div>

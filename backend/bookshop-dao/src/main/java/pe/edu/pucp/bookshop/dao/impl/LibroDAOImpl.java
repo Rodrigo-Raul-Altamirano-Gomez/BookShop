@@ -2,6 +2,7 @@ package pe.edu.pucp.bookshop.dao.impl;
 
 import pe.edu.pucp.bookshop.dao.LibroDAO;
 import pe.edu.pucp.bookshop.dbmanager.DBManager;
+import pe.edu.pucp.bookshop.dbmanager.TransactionContext;
 import pe.edu.pucp.bookshop.model.Descuento;
 import pe.edu.pucp.bookshop.model.Entidad;
 import pe.edu.pucp.bookshop.model.Libro;
@@ -199,6 +200,44 @@ public class LibroDAOImpl implements LibroDAO {
              PreparedStatement pstm = con.prepareStatement(sql)) {
             pstm.setBoolean(1, activo);
             pstm.setInt(2, id);
+            pstm.executeUpdate();
+        }
+    }
+
+    // Bloquea la fila del libro hasta que termine la transacción: otra compra del mismo libro espera
+    @Override
+    public void bloquear(int id) throws SQLException {
+        String sql = "select id_libro from libro where id_libro = ? for update";
+        Connection con = TransactionContext.getConnection();
+        try (PreparedStatement pstm = con.prepareStatement(sql)) {
+            pstm.setInt(1, id);
+            pstm.executeQuery().close();
+        }
+    }
+
+    @Override
+    public void descontarStock(int id, int cantidad) throws SQLException {
+        String sql = "update libro set stock = stock - ? where id_libro = ?";
+        Connection con = TransactionContext.getConnection();
+        try (PreparedStatement pstm = con.prepareStatement(sql)) {
+            pstm.setInt(1, cantidad);
+            pstm.setInt(2, id);
+            pstm.executeUpdate();
+        }
+    }
+
+    // Devuelve al stock las unidades de cada libro del pedido
+    @Override
+    public void reponerStock(int idPedido) throws SQLException {
+        String sql = """
+            update libro l
+            join detalle_pedido d on d.fid_libro = l.id_libro
+            set l.stock = l.stock + d.cantidad
+            where d.fid_pedido = ?
+        """;
+        Connection con = TransactionContext.getConnection();
+        try (PreparedStatement pstm = con.prepareStatement(sql)) {
+            pstm.setInt(1, idPedido);
             pstm.executeUpdate();
         }
     }

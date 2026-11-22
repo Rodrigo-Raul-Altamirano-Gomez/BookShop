@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Familias de fuentes de los PDF (Google Fonts, licencia OFL). El peso 600 hace de negrita. -->
+<fontFamilies>
+	<fontFamily name="Newsreader">
+		<normal>fuentes/Newsreader-Regular.ttf</normal>
+		<bold>fuentes/Newsreader-SemiBold.ttf</bold>
+		<pdfEncoding>Identity-H</pdfEncoding>
+		<pdfEmbedded>true</pdfEmbedded>
+	</fontFamily>
+	<fontFamily name="Public Sans">
+		<normal>fuentes/PublicSans-Regular.ttf</normal>
+		<bold>fuentes/PublicSans-SemiBold.ttf</bold>
+		<pdfEncoding>Identity-H</pdfEncoding>
+		<pdfEmbedded>true</pdfEmbedded>
+	</fontFamily>
+</fontFamilies>

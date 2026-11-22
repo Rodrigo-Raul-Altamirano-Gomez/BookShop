@@ -1,0 +1,56 @@
+@page "/admin/devoluciones"
+@layout AdminLayout
+@attribute [Authorize(Roles = "ADMINISTRADOR")]
+
+<PageTitle>Devoluciones · Administración · BookShop</PageTitle>
+
+<div class="bk-page-head"><div><h1>Devoluciones</h1><p class="small text-muted mb-0 mt-1">Solicitudes pendientes de revisión.</p></div></div>
+
+@if (resultado != null && resultado.Total == 0)
+{
+    <div class="bk-panel"><EmptyState Titulo="No hay solicitudes pendientes." /></div>
+}
+else
+{
+    <div class="bk-table-wrap">
+        <table class="table bk-table">
+            <thead><tr><th>Pedido</th><th>Cliente</th><th>Fecha de entrega</th><th class="text-end">Total</th><th>Motivo y comentario</th><th class="text-end"><span class="visually-hidden">Acciones</span></th></tr></thead>
+            <tbody>
+                @if (resultado == null)
+                {
+                    @for (int i = 0; i < 4; i++)
+                    {
+                        <tr class="placeholder-glow" aria-hidden="true"><td colspan="6"><span class="placeholder col-12"></span></td></tr>
+                    }
+                }
+                else
+                {
+                    @foreach (SolicitudDevolucion solicitud in resultado.Elementos)
+                    {
+                        Pedido pedido = solicitud.Pedido;
+                        <tr>
+                            <td><div class="d-flex align-items-center gap-3"><CoverStack Libros="pedido.Detalles.Select(d => d.Libro).ToList()" /><span class="fw-semibold text-nowrap">N.º @pedido.Id</span></div></td>
+                            <td>@pedido.Usuario.NombreCompleto<br><span class="small text-muted">@pedido.Usuario.Correo</span></td>
+                            <td class="bk-num">@Formato.Fecha(pedido.FechaEntrega!.Value)</td>
+                            <td class="text-end bk-num">@Formato.Soles(pedido.Total)</td>
+                            <td style="max-width:22rem"><strong class="small">@Etiquetas.Motivo(solicitud.Motivo)</strong><div class="small text-muted">@solicitud.Comentario</div></td>
+                            <td class="text-end text-nowrap">
+                                <button type="button" class="btn btn-sm btn-primary" @onclick="() => PedirAceptar(solicitud)">Aceptar</button>
+                                <button type="button" class="btn btn-sm btn-outline-danger ms-1" @onclick="() => PedirRechazar(solicitud)">Rechazar</button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (resultado != null)
+    {
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <span class="small text-muted bk-num">@Rango()</span>
+            <Paginacion Pagina="Pagina ?? 1" TotalPaginas="TotalPaginas" Pequena="true" OnCambio="pagina => Navegacion.NavigateTo(Ruta(pagina))" />
+        </div>
+    }
+}
+
+<ConfirmModal @ref="confirmacion" OnConfirmar="Resolver" />

@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- RF17 · Comprobante de compra (UX-UI §11.1), A4 vertical. JasperReports 7.0.6.
+     Se edita en Jaspersoft Studio 7 y se compila a comprobante.jasper, que es el que carga PedidoBLImpl.
+     Filas: los detalles del pedido (DetallePedido). Fuentes: Newsreader y Public Sans (resources/fuentes) y DejaVu Sans Mono para los códigos (jasperreports-fonts). -->
+<jasperReport name="comprobante" language="java" pageWidth="595" pageHeight="842" columnWidth="499" leftMargin="48" rightMargin="48" topMargin="44" bottomMargin="36" whenNoDataType="AllSectionsNoDetail" uuid="3d0c2f4e-6b1a-4c55-9a0e-2f7b1c9d8e01">
+	<property name="net.sf.jasperreports.export.pdf.metadata.title" value="Comprobante de compra · BookShop"/>
+	<style name="Normal" default="true" forecolor="#1E1A16" fontName="Public Sans" fontSize="9.5"/>
+	<style name="Muted" style="Normal" forecolor="#6E655B"/>
+	<style name="Caption" style="Normal" forecolor="#6E655B" fontSize="7.5" bold="true"/>
+	<style name="Titulo" style="Normal" fontName="Newsreader" fontSize="18.0"/>
+	<style name="Codigo" style="Normal" fontName="DejaVu Sans Mono" fontSize="9.0"/>
+	<style name="Descuento" style="Normal" forecolor="#9C3D25"/>
+	<parameter name="numero" class="java.lang.Integer"/>
+	<parameter name="fechaCompra" class="java.lang.String"/>
+	<parameter name="cliente" class="java.lang.String"/>
+	<parameter name="correo" class="java.lang.String"/>
+	<parameter name="envio" class="java.lang.String"/>
+	<parameter name="pago" class="java.lang.String"/>
+	<parameter name="transaccion" class="java.lang.String"/>
+	<parameter name="seguimiento" class="java.lang.String"/>
+	<parameter name="subtotal" class="java.lang.Double"/>
+	<parameter name="cupon" class="java.lang.String"/>
+	<parameter name="descuentoCupon" class="java.lang.Double"/>
+	<parameter name="costoEnvio" class="java.lang.Double"/>
+	<parameter name="total" class="java.lang.Double"/>
+	<field name="titulo" class="java.lang.String">
+		<description><![CDATA[libro.titulo]]></description>
+	</field>
+	<field name="autor" class="java.lang.String">
+		<description><![CDATA[libro.autor.nombre]]></description>
+	</field>
+	<field name="cantidad" class="java.lang.Integer"/>
+	<field name="precioUnitario" class="java.lang.Double"/>
+	<field name="descuentoUnitario" class="java.lang.Double"/>
+	<field name="subtotal" class="java.lang.Double"/>
+	<title height="196">
+		<element kind="staticText" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a01" x="0" y="0" width="200" height="30" markup="styled" style="Titulo">
+			<text><![CDATA[Book<style forecolor="#24513F">Shop</style>]]></text>
+		</element>
+		<element kind="staticText" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a02" x="0" y="30" width="200" height="14" style="Muted">
+			<text><![CDATA[Librería en línea]]></text>
+		</element>
+		<element kind="staticText" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a03" x="219" y="0" width="280" height="26" hTextAlign="Right" style="Titulo">
+			<text><![CDATA[Comprobante de compra]]></text>
+		</element>
+		<element kind="textField" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a04" x="219" y="28" width="280" height="14" hTextAlign="Right" style="Normal">
+			<expression><![CDATA["Pedido N.º " + $P{numero} + " · " + $P{fechaCompra}]]></expression>
+		</element>
+		<element kind="staticText" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a05" x="0" y="74" width="240" height="12" style="Caption">
+			<text><![CDATA[CLIENTE]]></text>
+		</element>
+		<element kind="textField" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a06" x="0" y="88" width="240" height="30" markup="styled" style="Normal">
+			<expression><![CDATA["<b>" + $P{cliente} + "</b>\n" + $P{correo}]]></expression>
+		</element>
+		<element kind="staticText" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a07" x="259" y="74" width="240" height="12" style="Caption">
+			<text><![CDATA[ENVÍO]]></text>
+		</element>
+		<element kind="textField" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a08" x="259" y="88" width="240" height="30" style="Normal">
+			<expression><![CDATA[$P{envio}]]></expression>
+		</element>
+		<element kind="staticText" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a09" x="0" y="130" width="240" height="12" style="Caption">
+			<text><![CDATA[PAGO]]></text>
+		</element>
+		<element kind="textField" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a10" x="0" y="144" width="240" height="30" style="Normal">
+			<expression><![CDATA[$P{pago} + "\nTransacción " + $P{transaccion}]]></expression>
+		</element>
+		<element kind="staticText" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a11" x="259" y="130" width="240" height="12" style="Caption">
+			<text><![CDATA[SEGUIMIENTO]]></text>
+		</element>
+		<element kind="textField" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a12" x="259" y="144" width="240" height="16" style="Codigo">
+			<expression><![CDATA[$P{seguimiento}]]></expression>
+		</element>
+	</title>
+	<columnHeader height="22">
+		<element kind="staticText" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a13" x="0" y="0" width="229" height="20" vTextAlign="Middle" style="Caption">
+			<text><![CDATA[LIBRO]]></text>
+		</element>
+		<element kind="staticText" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a14" x="229" y="0" width="50" height="20" hTextAlign="Right" vTextAlign="Middle" style="Caption">
+			<text><![CDATA[CANT.]]></text>
+		</element>
+		<element kind="staticText" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a15" x="279" y="0" width="75" height="20" hTextAlign="Right" vTextAlign="Middle" style="Caption">
+			<text><![CDATA[PRECIO UNIT.]]></text>
+		</element>
+		<element kind="staticText" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a16" x="354" y="0" width="70" height="20" hTextAlign="Right" vTextAlign="Middle" style="Caption">
+			<text><![CDATA[DESCUENTO]]></text>
+		</element>
+		<element kind="staticText" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a17" x="424" y="0" width="75" height="20" hTextAlign="Right" vTextAlign="Middle" style="Caption">
+			<text><![CDATA[SUBTOTAL]]></text>
+		</element>
+		<element kind="line" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a18" x="0" y="20" width="499" height="1">
+			<pen lineWidth="1.5" lineColor="#1E1A16"/>
+		</element>
+	</columnHeader>
+	<detail>
+		<band height="34" splitType="Prevent">
+			<element kind="textField" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a19" x="0" y="5" width="229" height="13" style="Normal">
+				<expression><![CDATA[$F{titulo}]]></expression>
+			</element>
+			<element kind="textField" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a20" x="0" y="18" width="229" height="12" style="Muted">
+				<expression><![CDATA[$F{autor}]]></expression>
+			</element>
+			<element kind="textField" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a21" x="229" y="5" width="50" height="13" hTextAlign="Right" style="Normal">
+				<expression><![CDATA[$F{cantidad}]]></expression>
+			</element>
+			<element kind="textField" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a22" x="279" y="5" width="75" height="13" pattern="S/ #,##0.00" hTextAlign="Right" style="Normal">
+				<expression><![CDATA[$F{precioUnitario}]]></expression>
+			</element>
+			<element kind="textField" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a23" x="354" y="5" width="70" height="13" hTextAlign="Right" style="Descuento">
+				<expression><![CDATA[$F{descuentoUnitario} > 0
+	? "− " + new java.text.DecimalFormat("S/ #,##0.00", java.text.DecimalFormatSymbols.getInstance(java.util.Locale.US)).format($F{descuentoUnitario})
+	: "—"]]></expression>
+			</element>
+			<element kind="textField" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a24" x="424" y="5" width="75" height="13" pattern="S/ #,##0.00" hTextAlign="Right" style="Normal">
+				<expression><![CDATA[$F{subtotal}]]></expression>
+			</element>
+			<element kind="line" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a25" x="0" y="33" width="499" height="1">
+				<pen lineWidth="0.75" lineColor="#E3DCD0"/>
+			</element>
+		</band>
+	</detail>
+	<summary height="140">
+		<element kind="staticText" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a26" x="279" y="14" width="130" height="16" style="Normal">
+			<text><![CDATA[Subtotal]]></text>
+		</element>
+		<element kind="textField" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a27" x="409" y="14" width="90" height="16" pattern="S/ #,##0.00" hTextAlign="Right" style="Normal">
+			<expression><![CDATA[$P{subtotal}]]></expression>
+		</element>
+		<element kind="textField" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a28" x="279" y="30" width="130" height="16" removeLineWhenBlank="true" style="Normal">
+			<printWhenExpression><![CDATA[$P{cupon} != null]]></printWhenExpression>
+			<expression><![CDATA[$P{cupon}]]></expression>
+		</element>
+		<element kind="textField" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a29" x="409" y="30" width="90" height="16" removeLineWhenBlank="true" pattern="− S/ #,##0.00" hTextAlign="Right" style="Descuento">
+			<printWhenExpression><![CDATA[$P{cupon} != null]]></printWhenExpression>
+			<expression><![CDATA[$P{descuentoCupon}]]></expression>
+		</element>
+		<element kind="staticText" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a30" positionType="Float" x="279" y="46" width="130" height="16" style="Normal">
+			<text><![CDATA[Envío]]></text>
+		</element>
+		<element kind="textField" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a31" positionType="Float" x="409" y="46" width="90" height="16" pattern="S/ #,##0.00" hTextAlign="Right" style="Normal">
+			<expression><![CDATA[$P{costoEnvio}]]></expression>
+		</element>
+		<element kind="line" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a32" positionType="Float" x="279" y="66" width="220" height="1">
+			<pen lineWidth="0.75" lineColor="#E3DCD0"/>
+		</element>
+		<element kind="staticText" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a33" positionType="Float" x="279" y="72" width="130" height="22" vTextAlign="Middle" style="Normal">
+			<text><![CDATA[Total]]></text>
+		</element>
+		<element kind="textField" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a34" positionType="Float" x="389" y="72" width="110" height="22" pattern="S/ #,##0.00" hTextAlign="Right" vTextAlign="Middle" fontName="Newsreader" fontSize="14.0" bold="true" style="Normal">
+			<expression><![CDATA[$P{total}]]></expression>
+		</element>
+		<element kind="line" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a35" positionType="Float" x="0" y="116" width="499" height="1">
+			<pen lineWidth="0.75" lineColor="#E3DCD0"/>
+		</element>
+		<element kind="staticText" uuid="0a6f2b1e-2a1c-4d1f-8b3e-1c2d3e4f5a36" positionType="Float" x="0" y="122" width="499" height="14" fontSize="8.0" style="Muted">
+			<text><![CDATA[Pago simulado con fines académicos. Este documento no tiene validez tributaria.]]></text>
+		</element>
+	</summary>
+</jasperReport>

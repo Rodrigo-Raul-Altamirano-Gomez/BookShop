@@ -94,6 +94,67 @@ CREATE TABLE resena (
   FOREIGN KEY (fid_libro) REFERENCES libro(id_libro)
 );
 
+-- Se desactiva al usarse en una compra; es utilizable si está activo y no venció (ERS §2.2)
+CREATE TABLE cupon (
+  id_cupon           INT AUTO_INCREMENT PRIMARY KEY,
+  fid_usuario        INT NOT NULL,
+  codigo             VARCHAR(10) NOT NULL,
+  porcentaje         INT NOT NULL,
+  fecha_emision      DATE NOT NULL,
+  fecha_vencimiento  DATE NOT NULL,
+  activo             TINYINT(1) NOT NULL,
+  FOREIGN KEY (fid_usuario) REFERENCES usuario(id_usuario)
+);
+
+-- El número del pedido es su id; empieza en 1001 (N.º 1001)
+CREATE TABLE pedido (
+  id_pedido           INT AUTO_INCREMENT PRIMARY KEY,
+  fid_usuario         INT NOT NULL,
+  fid_direccion       INT NOT NULL,
+  fid_metodo_pago     INT NOT NULL,
+  fid_cupon           INT,                         -- opcional
+  estado              VARCHAR(20) NOT NULL,        -- EN_ALMACEN, EN_CAMINO, ENTREGADO, CANCELADO, DEVUELTO
+  fecha_compra        DATETIME NOT NULL,
+  fecha_salida        DATETIME,
+  fecha_entrega       DATETIME,
+  fecha_cancelacion   DATETIME,
+  fecha_devolucion    DATETIME,
+  codigo_transaccion  VARCHAR(30) NOT NULL,
+  codigo_seguimiento  VARCHAR(30) NOT NULL,
+  subtotal            DECIMAL(10,2) NOT NULL,
+  descuento_cupon     DECIMAL(10,2) NOT NULL,
+  costo_envio         DECIMAL(10,2) NOT NULL,
+  total               DECIMAL(10,2) NOT NULL,
+  contado_para_cupon  TINYINT(1) NOT NULL,
+  FOREIGN KEY (fid_usuario) REFERENCES usuario(id_usuario),
+  FOREIGN KEY (fid_direccion) REFERENCES direccion(id_direccion),
+  FOREIGN KEY (fid_metodo_pago) REFERENCES metodo_pago(id_metodo_pago),
+  FOREIGN KEY (fid_cupon) REFERENCES cupon(id_cupon)
+) AUTO_INCREMENT = 1001;
+
+-- Precio y descuento del momento de la compra (importes históricos)
+CREATE TABLE detalle_pedido (
+  id_detalle_pedido   INT AUTO_INCREMENT PRIMARY KEY,
+  fid_pedido          INT NOT NULL,
+  fid_libro           INT NOT NULL,
+  cantidad            INT NOT NULL,
+  precio_unitario     DECIMAL(10,2) NOT NULL,      -- precio sin descuento
+  descuento_unitario  DECIMAL(10,2) NOT NULL,      -- rebaja por unidad del descuento vigente
+  subtotal            DECIMAL(10,2) NOT NULL,
+  FOREIGN KEY (fid_pedido) REFERENCES pedido(id_pedido),
+  FOREIGN KEY (fid_libro) REFERENCES libro(id_libro)
+);
+
+CREATE TABLE solicitud_devolucion (
+  id_solicitud_devolucion  INT AUTO_INCREMENT PRIMARY KEY,
+  fid_pedido               INT NOT NULL,
+  motivo                   VARCHAR(30) NOT NULL,   -- PRODUCTO_DANADO, PRODUCTO_EQUIVOCADO, YA_NO_LO_QUIERO, OTRO
+  comentario               TEXT NOT NULL,
+  estado                   VARCHAR(20) NOT NULL,   -- PENDIENTE, ACEPTADA, RECHAZADA, RETIRADA
+  fecha                    DATETIME NOT NULL,
+  FOREIGN KEY (fid_pedido) REFERENCES pedido(id_pedido)
+);
+
 -- Una sola fila (id_configuracion = 1)
 CREATE TABLE configuracion (
   id_configuracion            INT PRIMARY KEY,

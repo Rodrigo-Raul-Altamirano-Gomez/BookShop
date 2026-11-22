@@ -1,0 +1,16 @@
+@* Pila de portadas (UX-UI §6.19): identifica un pedido por sus libros; hasta 3 portadas y "+n" si hay más *@
+<div class="bk-cover-stack" role="img" aria-label="@string.Join(", ", Libros.Select(l => l.Titulo))">
+    @foreach (Libro libro in Libros.Take(Maximo))
+    {
+        <div class="bk-cover-stack-item"><BookCover Libro="libro" Pequena="true" /></div>
+    }
+    @if (Libros.Count > Maximo)
+    {
+        <span class="bk-cover-stack-more">+@(Libros.Count - Maximo)</span>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public List<Libro> Libros { get; set; } = new();
+    [Parameter] public int Maximo { get; set; } = 3;
+}

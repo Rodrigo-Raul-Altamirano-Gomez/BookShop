@@ -27,6 +27,13 @@ public class MetodoPagoRS {
         return metodoPagoBL.listarPorUsuario(idUsuario);
     }
 
+    // Los que se ofrecen al pagar: activos y no vencidos
+    @GET
+    @Path("usuario/{idUsuario}/vigentes")
+    public List<MetodoPago> listarVigentesPorUsuario(@PathParam("idUsuario") int idUsuario) throws BusinessLogicException {
+        return metodoPagoBL.listarVigentesPorUsuario(idUsuario);
+    }
+
     @POST
     public MetodoPago insertar(MetodoPago metodoPago) throws BusinessLogicException {
         return metodoPagoBL.insertar(metodoPago);

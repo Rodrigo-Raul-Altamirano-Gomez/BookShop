@@ -1,0 +1,57 @@
+@page "/cuenta/cupones"
+@layout AccountLayout
+@attribute [Authorize(Roles = "CLIENTE")]
+
+<PageTitle>Cupones · BookShop</PageTitle>
+
+<div class="bk-page-head">
+    <div>
+        <h1>Cupones</h1>
+        <p class="text-muted small mb-0 mt-1">Los recibes al acumular pedidos entregados. Úsalos en el resumen de compra.</p>
+    </div>
+    <a class="btn btn-primary" href="catalogo"><i class="bi bi-book me-2"></i>Ir al catálogo</a>
+</div>
+
+@if (cupones == null)
+{
+    <div class="d-grid gap-3" style="max-width:40rem" aria-hidden="true">
+        @for (int i = 0; i < 2; i++)
+        {
+            <div class="bk-coupon placeholder-glow"><span class="placeholder col-2"></span><div class="flex-grow-1"><span class="placeholder col-4 mb-2"></span><span class="placeholder col-6"></span></div></div>
+        }
+    </div>
+}
+else if (cupones.Count == 0)
+{
+    <EmptyState Titulo="Aún no tienes cupones." Texto="Recibirás uno al acumular pedidos entregados." TextoAccion="Explorar el catálogo" Url="catalogo" />
+}
+else
+{
+    @* RF02.12 y UX-UI §9.5: primero los utilizables; los demás, atenuados *@
+    <div class="d-grid gap-3" style="max-width:40rem">
+        @foreach (Cupon cupon in cupones)
+        {
+            <div class="bk-coupon @(cupon.Utilizable ? "" : "is-off")">
+                <span class="pct">@cupon.Porcentaje %</span>
+                <div class="flex-grow-1">
+                    <span class="bk-code fs-6">@cupon.Codigo</span>
+                    <div class="small text-muted bk-num mt-1">
+                        @if (cupon.Utilizable)
+                        {
+                            @($"Vence el {Formato.Fecha(cupon.FechaVencimiento)}")
+                        }
+                        else if (cupon.Pedido != null)
+                        {
+                            @($"Usado en el pedido N.º {cupon.Pedido.Id}")
+                        }
+                        else
+                        {
+                            @($"Venció el {Formato.Fecha(cupon.FechaVencimiento)}")
+                        }
+                    </div>
+                </div>
+                <StatusBadge Texto="@(cupon.Utilizable ? "Disponible" : "No disponible")" Tipo="@(cupon.Utilizable ? "ok" : "neutral")" />
+            </div>
+        }
+    </div>
+}

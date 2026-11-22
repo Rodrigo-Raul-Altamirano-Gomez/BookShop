@@ -1,0 +1,16 @@
+@* Tarjeta con un radio para elegir dirección, método de pago o cupón (UX-UI §6.16); toda la tarjeta es clicable *@
+<label class="bk-choice h-100 @(Cupon ? "bk-choice-coupon" : "") @Clase">
+    <input class="form-check-input" type="radio" name="@Grupo" checked="@Seleccionada" @onchange="() => OnElegir.InvokeAsync()" />
+    @ChildContent
+</label>
+
+@code {
+    // name del grupo de radios
+    [Parameter, EditorRequired] public string Grupo { get; set; } = "";
+    [Parameter] public bool Seleccionada { get; set; }
+    // Variante "cupón": el lenguaje visual de la tarjeta de cupón (UX-UI §6.17)
+    [Parameter] public bool Cupon { get; set; }
+    [Parameter] public string? Clase { get; set; }
+    [Parameter] public EventCallback OnElegir { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

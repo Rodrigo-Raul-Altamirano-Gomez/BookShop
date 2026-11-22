@@ -34,4 +34,39 @@ public record ConteoLibros
 
 public record Credenciales(string Correo, string Contrasena);
 
+// Un libro del carrito de la sesión
+public record ItemCarrito(int IdLibro, int Cantidad);
+
+public record LineaCompra
+{
+    public Libro Libro { get; init; } = new();
+    public int Cantidad { get; init; }
+    public decimal Subtotal { get; init; }
+}
+
+// Importes del carrito y del resumen de compra; Cupon es null si no se aplica ninguno
+public record ResumenCompra
+{
+    public List<LineaCompra> Lineas { get; init; } = new();
+    public Cupon? Cupon { get; init; }
+    public decimal Subtotal { get; init; }
+    public decimal DescuentoCupon { get; init; }
+    public decimal CostoEnvio { get; init; }
+    public decimal Total { get; init; }
+}
+
+// Para calcular el resumen basta con Items e IdCupon; para pagar va todo, con el resumen que vio el cliente
+public record SolicitudCompra(int IdUsuario, List<ItemCarrito> Items, int? IdDireccion, int? IdMetodoPago, int? IdCupon, ResumenCompra? Preparado);
+
+// Detalle de un pedido con lo que decide sus acciones (cancelar y devolver)
+public record PedidoDetalle
+{
+    public Pedido Pedido { get; init; } = new();
+    public int CancelacionesRestantes { get; init; }
+    public DateOnly? DevolucionHasta { get; init; }
+    public bool DevolucionEnPlazo { get; init; }
+    public bool DevolucionPendiente { get; init; }
+    public int SolicitudesRestantes { get; init; }
+}
+
 public record CambioContrasena(string Actual, string Nueva);

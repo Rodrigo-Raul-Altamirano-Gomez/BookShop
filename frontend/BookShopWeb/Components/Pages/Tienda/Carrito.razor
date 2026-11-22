@@ -1,0 +1,75 @@
+@page "/carrito"
+@attribute [Authorize(Roles = "CLIENTE")]
+
+<PageTitle>Carrito · BookShop</PageTitle>
+
+<div class="container-xl pt-4">
+    @if (resumen == null)
+    {
+        <div class="placeholder-glow" aria-hidden="true">
+            <span class="placeholder placeholder-lg col-3 mb-4"></span>
+            <div class="row g-5">
+                <div class="col-8">
+                    <div class="bk-panel">
+                        @for (int i = 0; i < 2; i++)
+                        {
+                            <div class="d-flex gap-3 mb-4"><div class="bk-cover placeholder" style="width:4.5rem;box-shadow:none"></div><div class="flex-grow-1"><span class="placeholder col-6 mb-2"></span><span class="placeholder col-3 mb-3"></span><span class="placeholder col-4"></span></div></div>
+                        }
+                    </div>
+                </div>
+                <div class="col-4"><div class="bk-panel"><span class="placeholder col-5 mb-3"></span><span class="placeholder col-12 mb-2"></span><span class="placeholder col-12 mb-4"></span><span class="placeholder placeholder-lg col-12"></span></div></div>
+            </div>
+        </div>
+    }
+    else if (resumen.Lineas.Count == 0)
+    {
+        <h1 class="mb-4">Carrito</h1>
+        <div class="bk-panel">
+            <EmptyState Titulo="Tu carrito está vacío." Texto="Agrega libros desde su página de detalle." TextoAccion="Explorar el catálogo" Url="catalogo" />
+        </div>
+    }
+    else
+    {
+        <div class="d-flex align-items-baseline justify-content-between mb-4">
+            <h1 class="mb-0">Carrito <span class="text-muted fs-5 fw-normal" style="font-family:var(--bk-font-sans)">(@CarritoSesion.Cantidad @(CarritoSesion.Cantidad == 1 ? "libro" : "libros"))</span></h1>
+            <button type="button" class="btn btn-sm btn-link text-decoration-none text-danger" @onclick="PedirVaciar">Vaciar carrito</button>
+        </div>
+
+        <div class="row g-5">
+            <section class="col-8" aria-label="Libros del carrito">
+                <div class="bk-panel py-0">
+                    @foreach (LineaCompra linea in resumen.Lineas)
+                    {
+                        <div class="bk-line" @key="linea.Libro.Id">
+                            <a href="libros/@linea.Libro.Id" tabindex="-1" aria-hidden="true"><BookCover Libro="linea.Libro" /></a>
+                            <div>
+                                <a class="bk-line-title" href="libros/@linea.Libro.Id">@linea.Libro.Titulo</a>
+                                <div class="small text-muted mb-2">@linea.Libro.Autor.Nombre</div>
+                                <div class="mb-3"><PriceTag Libro="linea.Libro" Etiqueta="true" /></div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <QuantityStepper Valor="linea.Cantidad" ValorChanged="cantidad => CambiarCantidad(linea, cantidad)" Maximo="linea.Libro.Stock"
+                                                     Pequeno="true" Etiqueta="@($"Cantidad de {linea.Libro.Titulo}")" />
+                                    <button type="button" class="btn btn-sm btn-link text-decoration-none text-muted" @onclick="() => Quitar(linea)">Quitar</button>
+                                </div>
+                            </div>
+                            <div class="text-end"><span class="small text-muted d-block">Subtotal</span><strong class="bk-num">@Formato.Soles(linea.Subtotal)</strong></div>
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <aside class="col-4">
+                <div class="bk-panel bk-summary" style="position:sticky;top:5.5rem" aria-live="polite">
+                    <h2 class="h3 mb-3">Resumen</h2>
+                    <dl><dt>Subtotal</dt><dd>@Formato.Soles(resumen.Subtotal)</dd><dt>Envío</dt><dd>@Formato.Soles(resumen.CostoEnvio)</dd></dl>
+                    <hr class="bk-divider my-3">
+                    <dl><dt class="fw-semibold text-body">Total</dt><dd class="total">@Formato.Soles(resumen.Total)</dd></dl>
+                    <a class="btn btn-primary btn-lg w-100 mt-4 @(actualizando ? "disabled" : "")" href="compra" aria-disabled="@(actualizando ? "true" : null)">Continuar</a>
+                    <p class="small text-muted text-center mt-3 mb-0">Elegirás la dirección y el pago en el siguiente paso.</p>
+                </div>
+            </aside>
+        </div>
+    }
+</div>
+
+<ConfirmModal @ref="confirmacion" Titulo="¿Vaciar el carrito?" TextoAccion="Sí, vaciar carrito" Peligro="true" OnConfirmar="Vaciar" />

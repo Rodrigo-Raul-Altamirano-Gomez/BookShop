@@ -1,0 +1,179 @@
+@page "/compra"
+@attribute [Authorize(Roles = "CLIENTE")]
+
+<PageTitle>Resumen de compra · BookShop</PageTitle>
+
+<div class="container-xl pt-4">
+    <nav aria-label="Ruta"><ol class="breadcrumb bk-breadcrumb mb-2"><li class="breadcrumb-item"><a href="carrito">Carrito</a></li><li class="breadcrumb-item active" aria-current="page">Resumen de compra</li></ol></nav>
+    <h1 class="mb-4">Resumen de compra</h1>
+
+    @if (resumen == null)
+    {
+        <div class="row g-5 placeholder-glow" aria-hidden="true">
+            <div class="col-8">
+                @for (int i = 0; i < 3; i++)
+                {
+                    <span class="placeholder col-4 mb-3"></span>
+                    <div class="row row-cols-2 g-3 mb-5"><div class="col"><div class="bk-panel"><span class="placeholder col-5 mb-2"></span><span class="placeholder col-10"></span></div></div><div class="col"><div class="bk-panel"><span class="placeholder col-5 mb-2"></span><span class="placeholder col-10"></span></div></div></div>
+                }
+            </div>
+            <div class="col-4"><div class="bk-panel"><span class="placeholder col-5 mb-3"></span><span class="placeholder col-12 mb-2"></span><span class="placeholder col-12 mb-4"></span><span class="placeholder placeholder-lg col-12"></span></div></div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-5">
+            <div class="col-8">
+                <section class="mb-5" aria-labelledby="t-dir">
+                    <div class="bk-step"><span class="bk-step-n">1</span><h2 id="t-dir" class="h3 mb-0">Dirección de envío</h2></div>
+                    <div class="row row-cols-2 g-3" role="radiogroup" aria-labelledby="t-dir">
+                        @foreach (Direccion direccion in direcciones)
+                        {
+                            <div class="col">
+                                <ChoiceCard Grupo="dir" Seleccionada="idDireccion == direccion.Id" OnElegir="() => idDireccion = direccion.Id">
+                                    <span>
+                                        <strong>@direccion.Alias</strong>
+                                        @if (direccion.Predeterminada)
+                                        {
+                                            <span class="bk-status bk-status-neutral ms-1">Predeterminada</span>
+                                        }
+                                        <br><span class="small text-muted">@direccion.Detalle, @direccion.Distrito, @direccion.Ciudad</span>
+                                    </span>
+                                </ChoiceCard>
+                            </div>
+                        }
+                        <div class="col"><button type="button" class="bk-choice bk-choice-add w-100 h-100" @onclick="() => modalDireccion.Abrir()"><i class="bi bi-plus-lg"></i> Agregar dirección</button></div>
+                    </div>
+                </section>
+
+                <section class="mb-5" aria-labelledby="t-pago">
+                    <div class="bk-step"><span class="bk-step-n">2</span><h2 id="t-pago" class="h3 mb-0">Método de pago</h2></div>
+                    <div class="row row-cols-2 g-3" role="radiogroup" aria-labelledby="t-pago">
+                        @foreach (MetodoPago metodo in metodos)
+                        {
+                            <div class="col">
+                                <ChoiceCard Grupo="pago" Seleccionada="idMetodoPago == metodo.Id" OnElegir="() => idMetodoPago = metodo.Id">
+                                    <span>
+                                        @if (metodo.Tipo == TipoMetodoPago.TARJETA)
+                                        {
+                                            <strong><i class="bi bi-credit-card me-1"></i>Tarjeta</strong>
+                                        }
+                                        else
+                                        {
+                                            <strong><i class="bi bi-phone me-1"></i>@metodo.Proveedor</strong>
+                                        }
+                                        @if (metodo.Predeterminado)
+                                        {
+                                            <span class="bk-status bk-status-neutral ms-1">Predeterminado</span>
+                                        }
+                                        <br>
+                                        <span class="small text-muted bk-num">
+                                            @Formato.Enmascarar(metodo.Numero) · @(metodo.Tipo == TipoMetodoPago.TARJETA ? "vence " + metodo.FechaVencimiento : metodo.Titular)
+                                        </span>
+                                    </span>
+                                </ChoiceCard>
+                            </div>
+                        }
+                        <div class="col"><button type="button" class="bk-choice bk-choice-add w-100 h-100" @onclick="() => modalMetodo.Abrir()"><i class="bi bi-plus-lg"></i> Agregar método de pago</button></div>
+                    </div>
+                </section>
+
+                <section aria-labelledby="t-cup">
+                    <div class="bk-step"><span class="bk-step-n">3</span><h2 id="t-cup" class="h3 mb-0">Cupón <span class="text-muted fw-normal">(opcional)</span></h2></div>
+                    @if (cupones.Count == 0)
+                    {
+                        <p class="text-muted mb-0">No tienes cupones disponibles.</p>
+                    }
+                    else
+                    {
+                        <div class="row row-cols-2 g-3" role="radiogroup" aria-labelledby="t-cup">
+                            @foreach (Cupon cupon in cupones)
+                            {
+                                <div class="col">
+                                    <ChoiceCard Grupo="cup" Cupon="true" Seleccionada="idCupon == cupon.Id" OnElegir="() => ElegirCupon(cupon.Id)">
+                                        <span class="pct">@cupon.Porcentaje %</span>
+                                        <span><span class="bk-code">@cupon.Codigo</span><br><span class="small text-muted bk-num">Vence el @Formato.Fecha(cupon.FechaVencimiento)</span></span>
+                                    </ChoiceCard>
+                                </div>
+                            }
+                            <div class="col">
+                                <ChoiceCard Grupo="cup" Clase="align-items-center" Seleccionada="idCupon == null" OnElegir="() => ElegirCupon(null)">
+                                    <span><strong>Sin cupón</strong><br><span class="small text-muted">Pagar el precio completo</span></span>
+                                </ChoiceCard>
+                            </div>
+                        </div>
+                    }
+                    <p class="small text-muted mt-2 mb-0">Solo se muestran tus cupones utilizables. <a href="cuenta/cupones">Ver mis cupones</a></p>
+                </section>
+            </div>
+
+            <aside class="col-4">
+                <div style="position:sticky;top:5.5rem">
+                    @if (cambios != null)
+                    {
+                        <div class="alert alert-warning" role="alert">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <div>
+                                <strong>Algunos datos cambiaron desde que preparaste la compra.</strong> Revisa el resumen y vuelve a pagar.
+                                <ul class="mb-0 mt-2 ps-3 small">
+                                    @foreach (string cambio in cambios)
+                                    {
+                                        <li>@cambio</li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    }
+                    @if (rechazado)
+                    {
+                        <div class="alert alert-danger" role="alert"><i class="bi bi-x-circle"></i><div><strong>Pago rechazado.</strong> Puedes intentarlo de nuevo o elegir otro método de pago.</div></div>
+                    }
+
+                    <div class="bk-panel bk-summary" aria-live="polite">
+                        <h2 class="h3 mb-3">Tu pedido</h2>
+                        <div class="d-grid gap-3 mb-3">
+                            @foreach (LineaCompra linea in resumen.Lineas)
+                            {
+                                <div class="bk-mini">
+                                    <BookCover Libro="linea.Libro" Pequena="true" />
+                                    <span>@linea.Libro.Titulo <span class="text-muted">× @linea.Cantidad</span></span>
+                                    <span class="bk-num">@Formato.Soles(linea.Subtotal)</span>
+                                </div>
+                            }
+                        </div>
+                        <hr class="bk-divider my-3">
+                        <dl>
+                            <dt>Subtotal</dt><dd>@Formato.Soles(resumen.Subtotal)</dd>
+                            @if (resumen.Cupon != null)
+                            {
+                                <dt>Cupón @resumen.Cupon.Codigo (@resumen.Cupon.Porcentaje %)</dt><dd class="minus">− @Formato.Soles(resumen.DescuentoCupon)</dd>
+                            }
+                            <dt>Envío</dt><dd>@Formato.Soles(resumen.CostoEnvio)</dd>
+                        </dl>
+                        <hr class="bk-divider my-3">
+                        <dl><dt class="fw-semibold text-body">Total</dt><dd class="total">@Formato.Soles(resumen.Total)</dd></dl>
+                        <button type="button" class="btn btn-primary btn-lg w-100 mt-4" disabled="@(pagando || idDireccion == null || idMetodoPago == null)" @onclick="Pagar">
+                            @if (pagando)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>@("Procesando pago…")
+                            }
+                            else
+                            {
+                                @($"Pagar {Formato.Soles(resumen.Total)}")
+                            }
+                        </button>
+                        @if (idDireccion == null || idMetodoPago == null)
+                        {
+                            <p class="form-text text-center mb-0">Agrega una dirección de envío y un método de pago para continuar.</p>
+                        }
+                        <p class="small text-muted text-center mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Pago simulado: no se realiza ningún cargo real.</p>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    }
+</div>
+
+@* RF15.2: lo que se agrega aquí queda guardado en el perfil *@
+<DireccionModal @ref="modalDireccion" IdUsuario="idUsuario" TextoGuardado="Dirección guardada en tu perfil" OnGuardado="DireccionGuardada" />
+<MetodoPagoModal @ref="modalMetodo" IdUsuario="idUsuario" TextoGuardado="Método de pago guardado en tu perfil" OnGuardado="MetodoGuardado" />

@@ -11,6 +11,7 @@ public partial class Encabezado : IDisposable
     [Inject] private NavigationManager Navegacion { get; set; } = default!;
     [Inject] private UsuarioActual UsuarioActual { get; set; } = default!;
     [Inject] private ComparacionService Comparacion { get; set; } = default!;
+    [Inject] private CarritoService Carrito { get; set; } = default!;
     [CascadingParameter] private Task<AuthenticationState> AuthState { get; set; } = default!;
 
     private string busqueda = "";
@@ -21,6 +22,7 @@ public partial class Encabezado : IDisposable
     protected override async Task OnInitializedAsync()
     {
         UsuarioActual.Cambio += Refrescar;
+        Carrito.Cambio += Refrescar;
         Navegacion.LocationChanged += AlNavegar;
         var usuario = (await AuthState).User;
         if (usuario.Identity?.IsAuthenticated == true)
@@ -28,6 +30,7 @@ public partial class Encabezado : IDisposable
             await UsuarioActual.Cargar(SesionUsuario.Id(usuario));
         }
         await Comparacion.Cargar();
+        await Carrito.Cargar();
     }
 
     private void Buscar()
@@ -59,6 +62,7 @@ public partial class Encabezado : IDisposable
     public void Dispose()
     {
         UsuarioActual.Cambio -= Refrescar;
+        Carrito.Cambio -= Refrescar;
         Navegacion.LocationChanged -= AlNavegar;
     }
 }

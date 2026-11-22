@@ -13,6 +13,7 @@ builder.Services.AddCookieAuth();
 // Estado compartido de la sesión del usuario
 builder.Services.AddScoped<AvisoService>();
 builder.Services.AddScoped<ComparacionService>();
+builder.Services.AddScoped<CarritoService>();
 builder.Services.AddScoped<UsuarioActual>();
 
 // URL del API: appsettings.json o la variable de entorno ApiUrl
@@ -29,6 +30,7 @@ app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages:
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapAuthEndpoints();
+app.MapDocumentosEndpoints();
 
 app.UseAntiforgery();
 // MapStaticAssets sirve lo que existe al compilar; UseStaticFiles, también las imágenes subidas después

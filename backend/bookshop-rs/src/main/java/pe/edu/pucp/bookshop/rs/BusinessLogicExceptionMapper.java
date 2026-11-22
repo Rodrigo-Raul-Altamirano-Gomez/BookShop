@@ -6,7 +6,10 @@ import jakarta.ws.rs.ext.Provider;
 import pe.edu.pucp.bookshop.bl.exception.BusinessLogicException;
 import pe.edu.pucp.bookshop.bl.exception.CredencialesInvalidasException;
 import pe.edu.pucp.bookshop.bl.exception.CuentaDesactivadaException;
+import pe.edu.pucp.bookshop.bl.exception.DatosCambiadosException;
 import pe.edu.pucp.bookshop.bl.exception.NoEncontradoException;
+import pe.edu.pucp.bookshop.bl.exception.OperacionNoPermitidaException;
+import pe.edu.pucp.bookshop.bl.exception.PagoRechazadoException;
 import pe.edu.pucp.bookshop.bl.exception.PersistenciaException;
 import pe.edu.pucp.bookshop.bl.exception.RegistroDuplicadoException;
 
@@ -21,6 +24,9 @@ public class BusinessLogicExceptionMapper implements ExceptionMapper<BusinessLog
         if (ex instanceof CuentaDesactivadaException) estado = 403;
         if (ex instanceof NoEncontradoException) estado = 404;
         if (ex instanceof RegistroDuplicadoException) estado = 409;
+        if (ex instanceof PagoRechazadoException) estado = 402;
+        if (ex instanceof DatosCambiadosException) estado = 412;
+        if (ex instanceof OperacionNoPermitidaException) estado = 422;
         if (ex instanceof PersistenciaException) {
             estado = 500;
             ex.getCause().printStackTrace();

@@ -36,6 +36,17 @@ public class HttpClientUtils<T>
         return await Leer(await http.DeleteAsync(Api.Url + ruta));
     }
 
+    // Un archivo (por ejemplo, un PDF) tal como lo envía el API
+    public async Task<byte[]> GetArchivo(string ruta)
+    {
+        HttpResponseMessage respuesta = await http.GetAsync(Api.Url + ruta);
+        if (!respuesta.IsSuccessStatusCode)
+        {
+            throw new ApiException((int)respuesta.StatusCode, await respuesta.Content.ReadAsStringAsync());
+        }
+        return await respuesta.Content.ReadAsByteArrayAsync();
+    }
+
     private StringContent Cuerpo(object datos)
     {
         string json = JsonConvert.SerializeObject(datos, opciones);

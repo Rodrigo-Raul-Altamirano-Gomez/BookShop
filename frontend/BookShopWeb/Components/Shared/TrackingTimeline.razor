@@ -1,0 +1,38 @@
+@* Seguimiento del pedido (UX-UI §6.13): Compra, Salida del almacén y Entrega; un pedido cancelado oculta los hitos
+   no alcanzados y agrega la Cancelación; uno devuelto agrega la Devolución *@
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h3 mb-0">Seguimiento</h2>
+    <span class="small"><span class="bk-code">@Pedido.CodigoSeguimiento</span></span>
+</div>
+<ol class="bk-timeline">
+    @foreach (var (nombre, fecha) in Hitos())
+    {
+        @if (fecha != null)
+        {
+            <li class="done"><span class="dot"></span><div class="label fw-semibold">@nombre</div><div class="when">@Formato.FechaHora(fecha.Value)</div></li>
+        }
+        else if (Pedido.Estado != EstadoPedido.CANCELADO)
+        {
+            <li><span class="dot"></span><div class="label">@nombre</div><div class="when">Pendiente</div></li>
+        }
+    }
+    @if (Pedido.FechaCancelacion != null)
+    {
+        <li class="done"><span class="dot" style="background:var(--bk-red);border-color:var(--bk-red)"></span><div class="label fw-semibold text-danger">Cancelación</div><div class="when">@Formato.FechaHora(Pedido.FechaCancelacion.Value)</div></li>
+    }
+    @if (Pedido.FechaDevolucion != null)
+    {
+        <li class="done"><span class="dot" style="background:var(--bk-ochre);border-color:var(--bk-ochre)"></span><div class="label fw-semibold" style="color:var(--bk-ochre)">Devolución</div><div class="when">@Formato.FechaHora(Pedido.FechaDevolucion.Value)</div></li>
+    }
+</ol>
+
+@code {
+    [Parameter, EditorRequired] public Pedido Pedido { get; set; } = default!;
+
+    private List<(string, DateTime?)> Hitos() => new()
+    {
+        ("Compra", Pedido.FechaCompra),
+        ("Salida del almacén", Pedido.FechaSalida),
+        ("Entrega", Pedido.FechaEntrega)
+    };
+}

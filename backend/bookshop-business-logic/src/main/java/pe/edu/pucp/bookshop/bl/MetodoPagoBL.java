@@ -7,6 +7,7 @@ import java.util.List;
 
 public interface MetodoPagoBL {
     List<MetodoPago> listarPorUsuario(int idUsuario) throws BusinessLogicException;
+    List<MetodoPago> listarVigentesPorUsuario(int idUsuario) throws BusinessLogicException;
     MetodoPago insertar(MetodoPago metodoPago) throws BusinessLogicException;
     void modificar(MetodoPago metodoPago) throws BusinessLogicException;
     void marcarPredeterminado(MetodoPago metodoPago) throws BusinessLogicException;

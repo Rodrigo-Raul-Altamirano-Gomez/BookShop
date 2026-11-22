@@ -1,0 +1,146 @@
+@page "/cuenta/pedidos/{Id:int}"
+@layout AccountLayout
+@attribute [Authorize(Roles = "CLIENTE")]
+
+@if (noEncontrado)
+{
+    <PageTitle>Página no encontrada · BookShop</PageTitle>
+    <EmptyState Titulo="No encontramos lo que buscas." Texto="Puede que el pedido no exista." TextoAccion="Ver mis pedidos" Url="cuenta/pedidos" />
+}
+else if (detalle == null)
+{
+    <div class="placeholder-glow" aria-hidden="true">
+        <span class="placeholder col-2 mb-3"></span>
+        <span class="placeholder placeholder-lg col-5 mb-2"></span>
+        <span class="placeholder col-3 mb-4"></span>
+        <div class="row g-4">
+            <div class="col-7"><div class="bk-panel"><span class="placeholder col-12 mb-3"></span><span class="placeholder col-12 mb-3"></span><span class="placeholder col-8"></span></div></div>
+            <div class="col-5"><div class="bk-panel"><span class="placeholder col-6 mb-3"></span><span class="placeholder col-10 mb-3"></span><span class="placeholder col-10 mb-3"></span><span class="placeholder col-10"></span></div></div>
+        </div>
+    </div>
+}
+else
+{
+    Pedido pedido = detalle.Pedido;
+    <PageTitle>Pedido N.º @pedido.Id · BookShop</PageTitle>
+    <nav aria-label="Ruta"><ol class="breadcrumb bk-breadcrumb mb-2"><li class="breadcrumb-item"><a href="cuenta/pedidos">Pedidos</a></li><li class="breadcrumb-item active" aria-current="page">N.º @pedido.Id</li></ol></nav>
+    <div class="d-flex align-items-center gap-3 mb-1"><h1 class="mb-0">Pedido N.º @pedido.Id</h1><StatusBadge Texto="@Etiquetas.Estado(pedido.Estado)" Tipo="@Etiquetas.Tipo(pedido.Estado)" /></div>
+    <p class="text-muted small bk-num mb-4">Fecha de compra: @Formato.Fecha(pedido.FechaCompra), @pedido.FechaCompra.ToString("HH:mm")</p>
+
+    <div class="row g-4">
+        <div class="col-7">
+            <div class="bk-table-wrap">
+                <table class="table bk-table">
+                    <thead><tr><th>Libro</th><th class="text-end">Cant.</th><th class="text-end">Precio</th><th class="text-end">Subtotal</th></tr></thead>
+                    <tbody>
+                        @foreach (DetallePedido linea in pedido.Detalles)
+                        {
+                            <tr>
+                                <td><div class="d-flex align-items-center gap-2"><div style="width:2rem;flex-shrink:0"><BookCover Libro="linea.Libro" Pequena="true" /></div><a class="text-reset" href="libros/@linea.Libro.Id">@linea.Libro.Titulo</a></div></td>
+                                <td class="text-end bk-num">@linea.Cantidad</td>
+                                <td class="text-end bk-num">
+                                    @Formato.Soles(linea.PrecioUnitario - linea.DescuentoUnitario)
+                                    @if (linea.DescuentoUnitario > 0)
+                                    {
+                                        <br><span class="small text-muted text-decoration-line-through">@Formato.Soles(linea.PrecioUnitario)</span>
+                                    }
+                                </td>
+                                <td class="text-end bk-num">@Formato.Soles(linea.Subtotal)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="bk-summary ms-auto mt-3" style="max-width:20rem">
+                <dl>
+                    <dt>Subtotal</dt><dd>@Formato.Soles(pedido.Subtotal)</dd>
+                    @if (pedido.Cupon != null)
+                    {
+                        <dt>Cupón @pedido.Cupon.Codigo (@pedido.Cupon.Porcentaje %)</dt><dd class="minus">− @Formato.Soles(pedido.DescuentoCupon)</dd>
+                    }
+                    <dt>Envío</dt><dd>@Formato.Soles(pedido.CostoEnvio)</dd>
+                    <dt class="fw-semibold text-body pt-2">Total</dt><dd class="total pt-2">@Formato.Soles(pedido.Total)</dd>
+                </dl>
+            </div>
+        </div>
+
+        <aside class="col-5">
+            <div class="bk-panel mb-3"><TrackingTimeline Pedido="pedido" /></div>
+            <div class="bk-panel mb-3">
+                <dl class="bk-kv mb-0">
+                    <dt>Dirección</dt><dd>@pedido.Direccion.Alias · @pedido.Direccion.Detalle, @pedido.Direccion.Distrito, @pedido.Direccion.Ciudad</dd>
+                    <dt>Método de pago</dt><dd class="bk-num">@Etiquetas.MetodoPago(pedido.MetodoPago)</dd>
+                    <dt>Código de transacción</dt><dd class="mb-0"><span class="bk-code">@pedido.CodigoTransaccion</span></dd>
+                </dl>
+            </div>
+            @* Acciones según el estado (UX-UI §9.3) *@
+            <div class="d-grid gap-2">
+                <a class="btn btn-primary" href="comprobantes/@pedido.Id" target="_blank"><i class="bi bi-file-earmark-arrow-down me-2"></i>Descargar comprobante</a>
+                @if (pedido.Estado == EstadoPedido.EN_ALMACEN && detalle.CancelacionesRestantes > 0)
+                {
+                    <button type="button" class="btn btn-outline-danger" @onclick="PedirCancelar">Cancelar pedido</button>
+                }
+                else if (pedido.Estado == EstadoPedido.EN_ALMACEN)
+                {
+                    <button type="button" class="btn btn-outline-danger" disabled aria-describedby="ayuda-cancelar">Cancelar pedido</button>
+                    <p class="form-text text-center mb-0" id="ayuda-cancelar">Alcanzaste el límite de cancelaciones de este mes.</p>
+                }
+                else if (pedido.Estado == EstadoPedido.EN_CAMINO)
+                {
+                    <button type="button" class="btn btn-outline-danger" disabled aria-describedby="ayuda-cancelar">Cancelar pedido</button>
+                    <p class="form-text text-center mb-0" id="ayuda-cancelar">Solo se pueden cancelar pedidos en almacén.</p>
+                }
+                else if (pedido.Estado == EstadoPedido.ENTREGADO && detalle.DevolucionPendiente)
+                {
+                    <div class="alert alert-warning mb-0"><i class="bi bi-hourglass-split"></i><div>Solicitud de devolución en revisión. <a href="cuenta/solicitudes">Ver en Mis solicitudes</a></div></div>
+                }
+                else if (pedido.Estado == EstadoPedido.ENTREGADO && detalle.DevolucionEnPlazo && detalle.SolicitudesRestantes > 0)
+                {
+                    <button type="button" class="btn btn-outline-secondary" aria-describedby="ayuda-devolucion" @onclick="AbrirDevolucion">Solicitar devolución</button>
+                    <p class="form-text text-center mb-0" id="ayuda-devolucion">Puedes solicitarla hasta el @Formato.Fecha(detalle.DevolucionHasta!.Value).</p>
+                }
+                else if (pedido.Estado == EstadoPedido.ENTREGADO && detalle.DevolucionEnPlazo)
+                {
+                    <button type="button" class="btn btn-outline-secondary" disabled aria-describedby="ayuda-devolucion">Solicitar devolución</button>
+                    <p class="form-text text-center mb-0" id="ayuda-devolucion">Alcanzaste el límite de solicitudes de devolución de este pedido.</p>
+                }
+            </div>
+        </aside>
+    </div>
+}
+
+@* Solicitud de devolución (RF03.6) *@
+<div class="modal fade" id="m-dev" tabindex="-1" aria-labelledby="m-dev-t" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content p-2" @onsubmit="EnviarDevolucion">
+            <div class="modal-header border-0 pb-0"><h2 class="modal-title h3" id="m-dev-t">Solicitar devolución</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+            <div class="modal-body">
+                <p class="text-muted small">La devolución es del pedido completo. Si se acepta, el pedido pasará a «Devuelto».</p>
+                <fieldset class="mb-3">
+                    <legend class="form-label">Motivo</legend>
+                    @foreach (MotivoDevolucion opcion in Enum.GetValues<MotivoDevolucion>())
+                    {
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="mot" id="mot-@opcion" checked="@(motivo == opcion)" @onchange="() => motivo = opcion" />
+                            <label class="form-check-label" for="mot-@opcion">@Etiquetas.Motivo(opcion)</label>
+                        </div>
+                    }
+                </fieldset>
+                <label class="form-label" for="dev-com">Comentario</label>
+                <textarea class="form-control" id="dev-com" rows="3" required maxlength="1000" @bind="comentario"></textarea>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" disabled="@enviando">Cancelar</button>
+                <button type="submit" class="btn btn-primary" disabled="@enviando">
+                    @if (enviando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                    }
+                    Enviar solicitud
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<ConfirmModal @ref="confirmacion" TextoAccion="Sí, cancelar pedido" Peligro="true" OnConfirmar="Cancelar" />

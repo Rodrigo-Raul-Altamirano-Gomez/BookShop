@@ -14,6 +14,9 @@ public static class Formato
     public static string Fecha(DateOnly fecha) => fecha.ToString("dd/MM/yyyy");
     public static string Fecha(DateTime fecha) => fecha.ToString("dd/MM/yyyy");
 
+    // dd/mm/aaaa hh:mm
+    public static string FechaHora(DateTime fecha) => fecha.ToString("dd/MM/yyyy HH:mm");
+
     // **** **** **** 1234 (tarjeta) o ••••• 4321 (celular)
     public static string Enmascarar(string numero)
     {

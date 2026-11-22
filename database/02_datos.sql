@@ -14,11 +14,13 @@ INSERT INTO usuario (id_usuario, correo, nombre_completo, fecha_nacimiento, cont
 
 INSERT INTO direccion (fid_usuario, alias, direccion, distrito, ciudad, predeterminada, activa) VALUES
 (2, 'Casa',    'Jr. Domeyer 214',            'Barranco',   'Lima', 1, 1),
-(2, 'Oficina', 'Av. Javier Prado Este 1580', 'San Isidro', 'Lima', 0, 1);
+(2, 'Oficina', 'Av. Javier Prado Este 1580', 'San Isidro', 'Lima', 0, 1),
+(3, 'Casa',    'Av. Brasil 1250',            'Jesús María', 'Lima', 1, 1);
 
 INSERT INTO metodo_pago (fid_usuario, tipo, titular, numero, fecha_vencimiento, proveedor, predeterminado, activo) VALUES
-(2, 'TARJETA',   'Ana Torres', '4111222233334821', '08/28', NULL,   1, 1),
-(2, 'BILLETERA', 'Ana Torres', '987654321',        NULL,    'Yape', 0, 1);
+(2, 'TARJETA',   'Ana Torres',   '4111222233334821', '08/28', NULL,   1, 1),
+(2, 'BILLETERA', 'Ana Torres',   '987654321',        NULL,    'Yape', 0, 1),
+(3, 'TARJETA',   'Luis Paredes', '5500111122223344', '11/27', NULL,   1, 1);
 
 -- Autores
 INSERT INTO entidad (id_entidad, tipo, nombre, descripcion, imagen, activo) VALUES
@@ -124,3 +126,62 @@ INSERT INTO descuento (fid_libro, porcentaje, fecha_inicio, fecha_fin) VALUES
 (15, 20, CURDATE(),                    CURDATE() + INTERVAL 30 DAY),
 (21, 10, CURDATE() + INTERVAL 5 DAY,   CURDATE() + INTERVAL 20 DAY),
 (30, 30, CURDATE() - INTERVAL 3 DAY,   CURDATE() + INTERVAL 12 DAY);
+
+-- Historial de pedidos, relativo a la fecha de carga. Cada pedido salió del almacén a los 2 minutos y se entregó a los 4.
+-- Ana tiene 8 pedidos que ya cuentan para cupón: recibió un cupón con el 3.º (BK3M8, usado en el N.º 1004)
+-- y otro con el 6.º (BK7Q2, utilizable). Con un pedido más que cuente, recibirá el siguiente.
+-- Ana: N.º 1006 devuelto, N.º 1009 con una devolución rechazada, N.º 1010 dentro del plazo de devolución y N.º 1011 cancelado este mes.
+-- Luis: N.º 1013 con una devolución pendiente de revisión.
+INSERT INTO cupon (id_cupon, fid_usuario, codigo, porcentaje, fecha_emision, fecha_vencimiento, activo) VALUES
+(1, 2, 'BK3M8', 10, CURDATE() - INTERVAL 93 DAY, CURDATE() - INTERVAL 63 DAY, 0),
+(2, 2, 'BK7Q2', 10, CURDATE() - INTERVAL 13 DAY, CURDATE() + INTERVAL 17 DAY, 1);
+
+INSERT INTO pedido (id_pedido, fid_usuario, fid_direccion, fid_metodo_pago, fid_cupon, estado, fecha_compra, fecha_salida, fecha_entrega,
+                    fecha_cancelacion, fecha_devolucion, codigo_transaccion, codigo_seguimiento, subtotal, descuento_cupon, costo_envio, total, contado_para_cupon) VALUES
+(1001, 2, 1, 1, NULL, 'ENTREGADO', NOW() - INTERVAL 120 DAY, NOW() - INTERVAL 120 DAY + INTERVAL 2 MINUTE, NOW() - INTERVAL 120 DAY + INTERVAL 4 MINUTE,
+ NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 120 DAY, '%Y%m%d'), '-4F1A'), 'SG-K2M8-7QX1', 121.00, 0.00, 10.00, 131.00, 1),
+(1002, 2, 1, 2, NULL, 'ENTREGADO', NOW() - INTERVAL 110 DAY, NOW() - INTERVAL 110 DAY + INTERVAL 2 MINUTE, NOW() - INTERVAL 110 DAY + INTERVAL 4 MINUTE,
+ NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 110 DAY, '%Y%m%d'), '-9B07'), 'SG-P4T1-3WZ9', 111.00, 0.00, 10.00, 121.00, 1),
+(1003, 2, 2, 1, NULL, 'ENTREGADO', NOW() - INTERVAL 100 DAY, NOW() - INTERVAL 100 DAY + INTERVAL 2 MINUTE, NOW() - INTERVAL 100 DAY + INTERVAL 4 MINUTE,
+ NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 100 DAY, '%Y%m%d'), '-C3E5'), 'SG-H7N2-8KD4', 109.80, 0.00, 10.00, 119.80, 1),
+(1004, 2, 1, 1, 1,    'ENTREGADO', NOW() - INTERVAL 80 DAY,  NOW() - INTERVAL 80 DAY + INTERVAL 2 MINUTE,  NOW() - INTERVAL 80 DAY + INTERVAL 4 MINUTE,
+ NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 80 DAY, '%Y%m%d'), '-71AD'), 'SG-R9F3-2LM6', 104.00, 10.40, 10.00, 103.60, 1),
+(1005, 2, 1, 1, NULL, 'ENTREGADO', NOW() - INTERVAL 60 DAY,  NOW() - INTERVAL 60 DAY + INTERVAL 2 MINUTE,  NOW() - INTERVAL 60 DAY + INTERVAL 4 MINUTE,
+ NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 60 DAY, '%Y%m%d'), '-E28B'), 'SG-W5Y8-1QC7', 116.00, 0.00, 10.00, 126.00, 1),
+(1006, 2, 1, 2, NULL, 'DEVUELTO',  NOW() - INTERVAL 45 DAY,  NOW() - INTERVAL 45 DAY + INTERVAL 2 MINUTE,  NOW() - INTERVAL 45 DAY + INTERVAL 4 MINUTE,
+ NULL, NOW() - INTERVAL 41 DAY, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 45 DAY, '%Y%m%d'), '-5D90'), 'SG-B3V6-9TN2', 93.00, 0.00, 10.00, 103.00, 0),
+(1007, 2, 1, 1, NULL, 'ENTREGADO', NOW() - INTERVAL 20 DAY,  NOW() - INTERVAL 20 DAY + INTERVAL 2 MINUTE,  NOW() - INTERVAL 20 DAY + INTERVAL 4 MINUTE,
+ NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 20 DAY, '%Y%m%d'), '-A64F'), 'SG-M1K7-4ZR3', 119.50, 0.00, 10.00, 129.50, 1),
+(1008, 2, 2, 1, NULL, 'ENTREGADO', NOW() - INTERVAL 15 DAY,  NOW() - INTERVAL 15 DAY + INTERVAL 2 MINUTE,  NOW() - INTERVAL 15 DAY + INTERVAL 4 MINUTE,
+ NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 15 DAY, '%Y%m%d'), '-3C1E'), 'SG-T6D2-7PH5', 123.00, 0.00, 10.00, 133.00, 1),
+(1009, 2, 1, 1, NULL, 'ENTREGADO', NOW() - INTERVAL 10 DAY,  NOW() - INTERVAL 10 DAY + INTERVAL 2 MINUTE,  NOW() - INTERVAL 10 DAY + INTERVAL 4 MINUTE,
+ NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 10 DAY, '%Y%m%d'), '-F8B2'), 'SG-Z4Q9-6JS1', 107.00, 0.00, 10.00, 117.00, 1),
+(1010, 2, 1, 1, NULL, 'ENTREGADO', NOW() - INTERVAL 3 DAY,   NOW() - INTERVAL 3 DAY + INTERVAL 2 MINUTE,   NOW() - INTERVAL 3 DAY + INTERVAL 4 MINUTE,
+ NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 3 DAY, '%Y%m%d'), '-0D7C'), 'SG-C8L5-3NA6', 105.00, 0.00, 10.00, 115.00, 0),
+(1011, 2, 1, 2, NULL, 'CANCELADO', NOW() - INTERVAL 1 DAY,   NULL, NULL,
+ NOW() - INTERVAL 1 DAY + INTERVAL 1 MINUTE, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 1 DAY, '%Y%m%d'), '-96E3'), 'SG-G2X7-5VB8', 41.00, 0.00, 10.00, 51.00, 0),
+(1012, 3, 3, 3, NULL, 'ENTREGADO', NOW() - INTERVAL 30 DAY,  NOW() - INTERVAL 30 DAY + INTERVAL 2 MINUTE,  NOW() - INTERVAL 30 DAY + INTERVAL 4 MINUTE,
+ NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 30 DAY, '%Y%m%d'), '-2A5F'), 'SG-N9R4-8EW2', 112.00, 0.00, 10.00, 122.00, 1),
+(1013, 3, 3, 3, NULL, 'ENTREGADO', NOW() - INTERVAL 2 DAY,   NOW() - INTERVAL 2 DAY + INTERVAL 2 MINUTE,   NOW() - INTERVAL 2 DAY + INTERVAL 4 MINUTE,
+ NULL, NULL, CONCAT('TX-', DATE_FORMAT(NOW() - INTERVAL 2 DAY, '%Y%m%d'), '-B71D'), 'SG-F3H6-1YK9', 116.00, 0.00, 10.00, 126.00, 0);
+
+-- El N.º 1006 llevó «La casa de los relojes» con su descuento del 15 % de ese momento
+INSERT INTO detalle_pedido (fid_pedido, fid_libro, cantidad, precio_unitario, descuento_unitario, subtotal) VALUES
+(1001, 6,  1, 72.00, 0.00, 72.00), (1001, 9,  1, 49.00, 0.00, 49.00),
+(1002, 13, 1, 66.00, 0.00, 66.00), (1002, 4,  1, 45.00, 0.00, 45.00),
+(1003, 2,  2, 54.90, 0.00, 109.80),
+(1004, 3,  1, 69.00, 0.00, 69.00), (1004, 7,  1, 35.00, 0.00, 35.00),
+(1005, 11, 1, 52.00, 0.00, 52.00), (1005, 14, 2, 32.00, 0.00, 64.00),
+(1006, 1,  1, 60.00, 9.00, 51.00), (1006, 19, 1, 42.00, 0.00, 42.00),
+(1007, 10, 1, 64.50, 0.00, 64.50), (1007, 17, 1, 55.00, 0.00, 55.00),
+(1008, 21, 1, 79.00, 0.00, 79.00), (1008, 20, 1, 44.00, 0.00, 44.00),
+(1009, 12, 1, 78.00, 0.00, 78.00), (1009, 23, 1, 29.00, 0.00, 29.00),
+(1010, 8,  1, 58.00, 0.00, 58.00), (1010, 24, 1, 47.00, 0.00, 47.00),
+(1011, 15, 1, 41.00, 0.00, 41.00),
+(1012, 25, 1, 62.00, 0.00, 62.00), (1012, 26, 1, 50.00, 0.00, 50.00),
+(1013, 28, 1, 68.00, 0.00, 68.00), (1013, 34, 1, 48.00, 0.00, 48.00);
+
+INSERT INTO solicitud_devolucion (fid_pedido, motivo, comentario, estado, fecha) VALUES
+(1006, 'PRODUCTO_DANADO',     'El libro llegó con la tapa doblada y varias páginas manchadas.', 'ACEPTADA',  NOW() - INTERVAL 43 DAY),
+(1009, 'YA_NO_LO_QUIERO',     'Me regalaron el mismo libro antes de que llegara el pedido.',    'RECHAZADA', NOW() - INTERVAL 8 DAY),
+(1013, 'PRODUCTO_EQUIVOCADO', 'Recibí otra edición distinta a la que pedí.',                     'PENDIENTE', NOW() - INTERVAL 1 DAY);

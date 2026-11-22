@@ -18,4 +18,8 @@ public interface LibroDAO {
     int insertar(Libro libro) throws SQLException;
     void modificar(Libro libro) throws SQLException;
     void cambiarActivo(int id, boolean activo) throws SQLException;
+    // Usan la conexión de TransactionContext
+    void bloquear(int id) throws SQLException;
+    void descontarStock(int id, int cantidad) throws SQLException;
+    void reponerStock(int idPedido) throws SQLException;
 }

@@ -19,5 +19,21 @@
             <artifactId>bookshop-dao</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- Reportes PDF: llenar las plantillas compiladas (.jasper), exportarlas a PDF y las fuentes DejaVu -->
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports</artifactId>
+            <version>7.0.6</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports-pdf</artifactId>
+            <version>7.0.6</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports-fonts</artifactId>
+            <version>7.0.6</version>
+        </dependency>
     </dependencies>
 </project>

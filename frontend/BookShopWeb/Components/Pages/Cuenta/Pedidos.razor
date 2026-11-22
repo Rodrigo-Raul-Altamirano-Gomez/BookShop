@@ -1,0 +1,75 @@
+@page "/cuenta/pedidos"
+@layout AccountLayout
+@attribute [Authorize(Roles = "CLIENTE")]
+
+<PageTitle>Pedidos · BookShop</PageTitle>
+
+<div class="bk-page-head"><h1>Pedidos</h1></div>
+
+@if (sinPedidos)
+{
+    <div class="bk-panel">
+        <EmptyState Titulo="Aún no tienes pedidos." Texto="Cuando compres un libro, aparecerá aquí." TextoAccion="Explorar el catálogo" Url="catalogo" />
+    </div>
+}
+else
+{
+    @* RF03.2: filtro por estado y orden por fecha o por total; todo en la URL *@
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <a class="bk-chip bk-chip-toggle @(Estado == null ? "active" : "")" href="@Url(null, Orden, 1)" aria-pressed="@(Estado == null ? "true" : "false")">Todos</a>
+        @foreach (EstadoPedido opcion in Enum.GetValues<EstadoPedido>())
+        {
+            <a class="bk-chip bk-chip-toggle @(Estado == opcion.ToString() ? "active" : "")" href="@Url(opcion.ToString(), Orden, 1)" aria-pressed="@(Estado == opcion.ToString() ? "true" : "false")">@Etiquetas.Estado(opcion)</a>
+        }
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <label class="small text-muted text-nowrap" for="ord">Ordenar por</label>
+            <select class="form-select form-select-sm" id="ord" style="width:auto" value="@(Orden ?? "fecha-desc")" @onchange="CambiarOrden">
+                <option value="fecha-desc">Más recientes</option>
+                <option value="fecha-asc">Más antiguos</option>
+                <option value="total-desc">Mayor total</option>
+                <option value="total-asc">Menor total</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="bk-table-wrap">
+        <table class="table table-hover bk-table">
+            <thead><tr><th>Pedido</th><th>Fecha de compra</th><th class="text-end">Libros</th><th class="text-end">Total</th><th>Estado</th><th class="text-end"><span class="visually-hidden">Acciones</span></th></tr></thead>
+            <tbody>
+                @if (resultado == null)
+                {
+                    @for (int i = 0; i < 5; i++)
+                    {
+                        <tr class="placeholder-glow" aria-hidden="true"><td colspan="6"><span class="placeholder col-12"></span></td></tr>
+                    }
+                }
+                else if (resultado.Elementos.Count == 0)
+                {
+                    <tr><td colspan="6" class="text-center text-muted py-5">No tienes pedidos en este estado.</td></tr>
+                }
+                else
+                {
+                    @foreach (Pedido pedido in resultado.Elementos)
+                    {
+                        @* Toda la fila abre el detalle (UX-UI §6.12) *@
+                        <tr class="is-link" @onclick="() => Abrir(pedido)">
+                            <td><div class="d-flex align-items-center gap-3"><CoverStack Libros="pedido.Detalles.Select(d => d.Libro).ToList()" /><span class="fw-semibold text-nowrap">N.º @pedido.Id</span></div></td>
+                            <td class="bk-num">@Formato.Fecha(pedido.FechaCompra)</td>
+                            <td class="text-end bk-num">@pedido.Unidades</td>
+                            <td class="text-end bk-num">@Formato.Soles(pedido.Total)</td>
+                            <td><StatusBadge Texto="@Etiquetas.Estado(pedido.Estado)" Tipo="@Etiquetas.Tipo(pedido.Estado)" /></td>
+                            <td class="text-end"><a class="btn btn-sm btn-link text-decoration-none" href="cuenta/pedidos/@pedido.Id" @onclick:stopPropagation="true">Ver detalle</a></td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (resultado != null && resultado.Total > 0)
+    {
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <span class="small text-muted bk-num">@Rango()</span>
+            <Paginacion Pagina="Pagina ?? 1" TotalPaginas="TotalPaginas" Pequena="true" OnCambio="pagina => Navegacion.NavigateTo(Url(Estado, Orden, pagina))" />
+        </div>
+    }
+}

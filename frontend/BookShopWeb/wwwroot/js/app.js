@@ -23,7 +23,7 @@ function irArriba() {
     window.scrollTo({ top: 0 });
 }
 
-// Datos de la sesión del navegador (comparación y, más adelante, carrito).
+// Datos de la sesión del navegador (comparación y carrito).
 // Es una cookie sin fecha de expiración: la comparten las pestañas y se borra al cerrar el navegador.
 function guardarSesion(nombre, valor) {
     document.cookie = nombre + "=" + encodeURIComponent(valor) + "; path=/; SameSite=Lax";

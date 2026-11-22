@@ -6,6 +6,8 @@ COPY . .
 RUN mvn -B -q -DskipTests -Dmaven.compiler.release=21 package
 
 FROM eclipse-temurin:21-jre
+# Hora de Perú: las fechas de los pedidos y del seguimiento las genera Java (LocalDateTime.now())
+ENV TZ=America/Lima
 RUN apt-get update && apt-get install -y --no-install-recommends unzip curl && rm -rf /var/lib/apt/lists/*
 RUN curl -fsSL -o /tmp/gf.zip https://download.eclipse.org/ee4j/glassfish/glassfish-8.0.0.zip \
  && unzip -q /tmp/gf.zip -d /opt && rm /tmp/gf.zip

@@ -33,7 +33,13 @@
                     }
                     else
                     {
-                        <a class="btn btn-icon bk-cart-btn" href="carrito" aria-label="Carrito"><i class="bi bi-bag fs-5"></i></a>
+                        <a class="btn btn-icon bk-cart-btn" href="carrito" aria-label="Carrito, @Carrito.Cantidad @(Carrito.Cantidad == 1 ? "libro" : "libros")">
+                            <i class="bi bi-bag fs-5"></i>
+                            @if (Carrito.Cantidad > 0)
+                            {
+                                <span class="bk-cart-count">@Carrito.Cantidad</span>
+                            }
+                        </a>
                         <div class="dropdown">
                             <button type="button" class="btn btn-sm d-flex align-items-center gap-2 border-0" data-bs-toggle="dropdown" aria-expanded="false">
                                 <Avatar Usuario="UsuarioActual.Datos" Nombre="@context.User.Identity?.Name" />

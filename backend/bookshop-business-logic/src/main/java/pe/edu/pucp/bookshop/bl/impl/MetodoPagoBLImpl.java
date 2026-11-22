@@ -8,8 +8,11 @@ import pe.edu.pucp.bookshop.dao.MetodoPagoDAO;
 import pe.edu.pucp.bookshop.dao.impl.MetodoPagoDAOImpl;
 import pe.edu.pucp.bookshop.dbmanager.TransactionContext;
 import pe.edu.pucp.bookshop.model.MetodoPago;
+import pe.edu.pucp.bookshop.model.TipoMetodoPago;
 
 import java.sql.SQLException;
+import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MetodoPagoBLImpl implements MetodoPagoBL {
@@ -20,6 +23,28 @@ public class MetodoPagoBLImpl implements MetodoPagoBL {
     public List<MetodoPago> listarPorUsuario(int idUsuario) throws BusinessLogicException {
         try {
             return metodoPagoDAO.listarActivosPorUsuario(idUsuario);
+        } catch (SQLException ex) {
+            throw new PersistenciaException(ex);
+        }
+    }
+
+    // RF15.1: al pagar se ofrecen los activos y no vencidos; una tarjeta vence al terminar su mes (MM/AA)
+    @Override
+    public List<MetodoPago> listarVigentesPorUsuario(int idUsuario) throws BusinessLogicException {
+        try {
+            YearMonth mesActual = YearMonth.now();
+            List<MetodoPago> vigentes = new ArrayList<>();
+            for (MetodoPago metodo : metodoPagoDAO.listarActivosPorUsuario(idUsuario)) {
+                if (metodo.getTipo() == TipoMetodoPago.TARJETA) {
+                    int mes = Integer.parseInt(metodo.getFechaVencimiento().substring(0, 2));
+                    int anio = 2000 + Integer.parseInt(metodo.getFechaVencimiento().substring(3, 5));
+                    if (YearMonth.of(anio, mes).isBefore(mesActual)) {
+                        continue;
+                    }
+                }
+                vigentes.add(metodo);
+            }
+            return vigentes;
         } catch (SQLException ex) {
             throw new PersistenciaException(ex);
         }

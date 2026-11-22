@@ -1,0 +1,94 @@
+@page "/cuenta/solicitudes"
+@layout AccountLayout
+@attribute [Authorize(Roles = "CLIENTE")]
+
+<PageTitle>Mis solicitudes · BookShop</PageTitle>
+
+<div class="bk-page-head">
+    <div>
+        <h1>Mis solicitudes</h1>
+        <p class="text-muted small mb-0 mt-1">@(EnReportes ? "Reseñas de otros clientes que reportaste para revisión." : "Devoluciones que pediste de tus pedidos entregados.")</p>
+    </div>
+</div>
+<ul class="nav nav-underline mb-4">
+    <li class="nav-item"><a class="nav-link @(EnReportes ? "" : "active")" aria-current="@(EnReportes ? null : "page")" href="cuenta/solicitudes">Devoluciones</a></li>
+    <li class="nav-item"><a class="nav-link @(EnReportes ? "active" : "")" aria-current="@(EnReportes ? "page" : null)" href="cuenta/solicitudes?tipo=reportes">Reportes de reseñas</a></li>
+</ul>
+
+@if (EnReportes)
+{
+    @* Las reseñas y sus reportes llegan en el incremento 3 *@
+    <EmptyState Titulo="No has reportado reseñas." Texto="Puedes reportar una reseña desde el detalle de un libro." />
+}
+else if (solicitudes == null)
+{
+    <div class="d-grid gap-3" aria-hidden="true">
+        @for (int i = 0; i < 2; i++)
+        {
+            <div class="bk-panel placeholder-glow"><span class="placeholder col-3 mb-2"></span><span class="placeholder col-5 mb-3"></span><span class="placeholder col-10"></span></div>
+        }
+    </div>
+}
+else if (solicitudes.Count == 0)
+{
+    <EmptyState Titulo="No has pedido devoluciones." Texto="Puedes pedirla desde el detalle de un pedido entregado." TextoAccion="Ver mis pedidos" Url="cuenta/pedidos" />
+}
+else
+{
+    <div class="d-grid gap-3">
+        @foreach (SolicitudDevolucion solicitud in solicitudes)
+        {
+            <article class="bk-panel">
+                <div class="d-flex align-items-start gap-3">
+                    <a href="cuenta/pedidos/@solicitud.Pedido.Id" class="flex-shrink-0" tabindex="-1"><CoverStack Libros="solicitud.Pedido.Detalles.Select(d => d.Libro).ToList()" /></a>
+                    <div class="flex-grow-1">
+                        <h2 class="h3 mb-1">Pedido <a href="cuenta/pedidos/@solicitud.Pedido.Id">N.º @solicitud.Pedido.Id</a></h2>
+                        <p class="small text-muted bk-num mb-2">Solicitada el @Formato.Fecha(solicitud.Fecha) · Motivo: @Etiquetas.Motivo(solicitud.Motivo)</p>
+                        <p class="mb-0">@solicitud.Comentario</p>
+                    </div>
+                    <StatusBadge Texto="@Etiquetas.Estado(solicitud.Estado)" Tipo="@Etiquetas.Tipo(solicitud.Estado)" />
+                </div>
+                @* RF03.10: solo las pendientes se editan o se retiran *@
+                @if (solicitud.Estado == EstadoSolicitud.PENDIENTE)
+                {
+                    <div class="d-flex gap-3 mt-3 pt-3 border-top" style="border-color:var(--bk-line)!important">
+                        <button type="button" class="btn btn-sm btn-link text-decoration-none" @onclick="() => AbrirEdicion(solicitud)">Editar</button>
+                        <button type="button" class="btn btn-sm btn-link text-decoration-none text-danger" @onclick="() => PedirRetiro(solicitud)">Retirar</button>
+                    </div>
+                }
+            </article>
+        }
+    </div>
+}
+
+<div class="modal fade" id="m-edit" tabindex="-1" aria-labelledby="m-edit-t" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content p-2" @onsubmit="Guardar">
+            <div class="modal-header border-0 pb-0"><h2 class="modal-title h3" id="m-edit-t">Editar solicitud de devolución</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+            <div class="modal-body">
+                <label class="form-label" for="e-mot">Motivo</label>
+                <select class="form-select mb-3" id="e-mot" @bind="motivo">
+                    @foreach (MotivoDevolucion opcion in Enum.GetValues<MotivoDevolucion>())
+                    {
+                        <option value="@opcion">@Etiquetas.Motivo(opcion)</option>
+                    }
+                </select>
+                <label class="form-label" for="e-com">Comentario</label>
+                <textarea class="form-control" id="e-com" rows="3" required maxlength="1000" @bind="comentario"></textarea>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" disabled="@guardando">Cancelar</button>
+                <button type="submit" class="btn btn-primary" disabled="@guardando">
+                    @if (guardando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                    }
+                    Guardar cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<ConfirmModal @ref="confirmacion" Titulo="¿Retirar esta solicitud?" Mensaje="La solicitud pasará a «Retirada» y contará como un intento de devolución."
+              TextoAccion="Sí, retirar" Peligro="true" OnConfirmar="Retirar" />

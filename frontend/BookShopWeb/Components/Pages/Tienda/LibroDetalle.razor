@@ -58,6 +58,14 @@ else
                 {
                     <p class="small mt-1 mb-4 text-danger fw-semibold"><i class="bi bi-x-circle me-1"></i>Agotado · Sin stock por ahora</p>
                 }
+                @* El administrador no compra (UX-UI §3.4); el visitante ve el botón y se le pide iniciar sesión *@
+                @if (!esAdmin)
+                {
+                    <div class="d-flex gap-2 align-items-stretch">
+                        <QuantityStepper @bind-Valor="cantidad" Maximo="libro.Stock" Deshabilitado="libro.Stock == 0" />
+                        <button type="button" class="btn btn-primary btn-lg" disabled="@(libro.Stock == 0)" @onclick="AgregarAlCarrito"><i class="bi bi-bag me-2"></i>Agregar al carrito</button>
+                    </div>
+                }
                 <div class="d-flex gap-2 mt-3">
                     <button type="button" class="btn btn-sm btn-outline-primary" @onclick="Comparar"><i class="bi bi-layout-split me-1"></i>Comparar</button>
                 </div>
