@@ -15,4 +15,4 @@ frontend/BookShopWeb/wwwroot/img/subidas/
 
 # Llaves y certificados (por ejemplo, la llave de EC2)
 despliegue/
-.claude/
+.claude
